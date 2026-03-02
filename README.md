@@ -108,7 +108,7 @@ data:
 
 ## Version
 
-1.4.01
+1.4.02
 
 ## Kompatibilität
 

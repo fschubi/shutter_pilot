@@ -241,11 +241,16 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
+    def _opts(self) -> dict:
+        """Safe access to options - never None."""
+        return self.config_entry.options or {}
+
     async def async_step_init(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show options menu."""
-        shutters = self.config_entry.options.get(CONF_SHUTTERS, [])
+        opts = self._opts()
+        shutters = opts.get(CONF_SHUTTERS, [])
         menu_opts = ["settings_menu", "add_shutter"]
         if shutters:
             menu_opts.append("edit_shutter")
@@ -254,7 +259,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             menu_options=menu_opts,
             description_placeholders={
-                "shutter_count": str(len(self.config_entry.options.get(CONF_SHUTTERS, []))),
+                "shutter_count": str(len(shutters)),
             },
         )
 
@@ -276,7 +281,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Finish options flow."""
-        return self.async_create_entry(title="", data=self.config_entry.options)
+        return self.async_create_entry(title="", data=self._opts())
 
     def _eid(self, val):
         if isinstance(val, list):
@@ -285,7 +290,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
 
     def _merge_and_back(self, new_opts: dict) -> FlowResult:
         """Merge new options with existing and return to init menu."""
-        merged = {**self.config_entry.options, **new_opts}
+        merged = {**self._opts(), **new_opts}
         self.hass.config_entries.async_update_entry(self.config_entry, options=merged)
         menu_opts = ["settings_menu", "add_shutter"]
         if merged.get(CONF_SHUTTERS):
@@ -328,7 +333,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTO_CHILDREN: self._eid(user_input.get(CONF_AUTO_CHILDREN)),
             })
 
-        o = self.config_entry.options.get
+        o = self._opts().get
         return self.async_show_form(
             step_id="settings_general",
             data_schema=vol.Schema({
@@ -395,7 +400,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_WE_SHUTTER_UP_MAX: user_input.get(CONF_LIVING_WE_UP_MAX, "06:00"),
                 CONF_WE_SHUTTER_DOWN: user_input.get(CONF_LIVING_WE_DOWN, "22:00"),
             })
-        o = self.config_entry.options.get
+        o = self._opts().get
         return self.async_show_form(
             step_id="settings_schedule_living",
             data_schema=vol.Schema({
@@ -429,7 +434,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_SLEEP_WE_UP_MAX: user_input.get(CONF_SLEEP_WE_UP_MAX, "06:00"),
                 CONF_SLEEP_WE_DOWN: user_input.get(CONF_SLEEP_WE_DOWN, "22:00"),
             })
-        o = self.config_entry.options.get
+        o = self._opts().get
         return self.async_show_form(
             step_id="settings_schedule_sleep",
             data_schema=vol.Schema({
@@ -463,7 +468,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_CHILDREN_WE_UP_MAX: user_input.get(CONF_CHILDREN_WE_UP_MAX, "06:00"),
                 CONF_CHILDREN_WE_DOWN: user_input.get(CONF_CHILDREN_WE_DOWN, "22:00"),
             })
-        o = self.config_entry.options.get
+        o = self._opts().get
         return self.async_show_form(
             step_id="settings_schedule_children",
             data_schema=vol.Schema({
@@ -485,7 +490,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Add a shutter configuration."""
         if user_input is not None:
-            shutters = list(self.config_entry.options.get(CONF_SHUTTERS, []))
+            shutters = list(self._opts().get(CONF_SHUTTERS, []))
             raw_cover = user_input.get(CONF_COVER_ENTITY_ID)
             cover_id = raw_cover[0] if isinstance(raw_cover, list) else (raw_cover or "")
             shutter_cfg = {
@@ -511,11 +516,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             if win_entity:
                 shutter_cfg[CONF_WINDOW_ENTITY_ID] = win_entity if isinstance(win_entity, str) else (win_entity[0] if win_entity else "")
             shutters.append(shutter_cfg)
-            new_options = {**self.config_entry.options, CONF_SHUTTERS: shutters}
+            new_options = {**self._opts(), CONF_SHUTTERS: shutters}
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=new_options
             )
-            _opts = ["settings", "add_shutter"]
+            _opts = ["settings_menu", "add_shutter"]
             if shutters:
                 _opts.append("edit_shutter")
             _opts.append("done")
@@ -534,14 +539,14 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Select shutter to edit or remove."""
-        shutters = list(self.config_entry.options.get(CONF_SHUTTERS, []))
+        shutters = list(self._opts().get(CONF_SHUTTERS, []))
 
         if user_input is not None:
             idx = user_input.get("shutter_index")
             action = user_input.get("action")
             if idx is not None and action == "remove":
                 shutters = [s for i, s in enumerate(shutters) if i != idx]
-                new_opts = {**self.config_entry.options, CONF_SHUTTERS: shutters}
+                new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, options=new_opts
                 )
@@ -566,7 +571,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Edit a shutter (form pre-filled)."""
-        shutters = list(self.config_entry.options.get(CONF_SHUTTERS, []))
+        shutters = list(self._opts().get(CONF_SHUTTERS, []))
         idx = getattr(self, "_edit_index", 0)
         if idx >= len(shutters):
             return self.async_abort(reason="not_found")
@@ -597,7 +602,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             if win_entity:
                 shutter_cfg[CONF_WINDOW_ENTITY_ID] = win_entity if isinstance(win_entity, str) else (win_entity[0] if win_entity else "")
             shutters[idx] = shutter_cfg
-            new_opts = {**self.config_entry.options, CONF_SHUTTERS: shutters}
+            new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
             self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
             return self.async_create_entry(title="", data=new_opts)
 

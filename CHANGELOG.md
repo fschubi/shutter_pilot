@@ -4,6 +4,12 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.4.02] - 2025-03-02
+
+### Behoben
+- **500 Internal Server Error** beim Konfigurieren: Options-Flow absicherung für `options=None`, Fehler „settings“ → „settings_menu“ korrigiert
+- Icon (Rollladen + Sonne) hinzugefügt – Bereitstellung für Home Assistant Brands Repository
+
 ## [1.4.01] - 2025-03-02
 
 ### Geändert
