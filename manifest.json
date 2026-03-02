@@ -1,0 +1,12 @@
+{
+  "domain": "shutter_pilot",
+  "name": "Shutter Pilot",
+  "codeowners": ["@fschubi"],
+  "config_flow": true,
+  "documentation": "https://github.com/fschubi/shutter_pilot",
+  "integration_type": "helper",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/fschubi/shutter_pilot/issues",
+  "requirements": [],
+  "version": "1.3.0"
+}
