@@ -92,21 +92,6 @@ data:
 ```
 
 ---
-
-## GitHub / Upload
-
-Repository: **https://github.com/fschubi/shutter_pilot**
-
-```bash
-# Bestehendes Projekt hochladen
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/fschubi/shutter_pilot.git
-git push -u origin main
-```
-
 ---
 
 ## Version
