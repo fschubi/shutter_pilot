@@ -4,6 +4,11 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.4.04] - 2025-03-02
+
+### Behoben
+- services.yaml hinzugefügt – behebt Fehler "Failed to load services.yaml for integration: shutter_pilot"
+
 ## [1.4.03] - 2025-03-02
 
 ### Behoben

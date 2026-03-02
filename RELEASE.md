@@ -8,7 +8,7 @@ Diese Anleitung erklärt, wie du eine neue Version von Shutter Pilot erstellst u
 
 1. **manifest.json**  
    `custom_components/shutter_pilot/manifest.json`  
-   → `"version": "1.4.01"` (neue Version eintragen)
+   → `"version": "1.4.04"` (neue Version eintragen)
 
 2. **README.md** (Root und custom_components)  
    → Abschnitt „Version“ auf die neue Versionsnummer setzen
@@ -32,7 +32,7 @@ Diese Anleitung erklärt, wie du eine neue Version von Shutter Pilot erstellst u
 
 3. **Commit erstellen**  
    - Unten links: Commit-Nachricht, z.B.:  
-     `Release v1.4.01: Einrichtung vereinfacht, HACS-Infos ergänzt`
+     `Release v1.4.04: services.yaml, 500-Fix, Konfigurationsanleitung`
    - Auf **„Commit to master“** klicken
 
 4. **Zu GitHub pushen**  
@@ -52,12 +52,12 @@ Diese Anleitung erklärt, wie du eine neue Version von Shutter Pilot erstellst u
    Rechts: **„Releases“** → **„Draft a new release“** (oder **„Create a new release“**)
 
 3. **Tag erstellen**  
-   - **Choose a tag:** `v1.4.01` eingeben  
-   - Wenn der Tag noch nicht existiert: **„+ Create new tag: v1.4.01 on publish“** wählen  
+   - **Choose a tag:** `v1.4.04` eingeben  
+   - Wenn der Tag noch nicht existiert: **„+ Create new tag: v1.4.04 on publish“** wählen  
    - **Target:** `master` (oder dein Standard-Branch)
 
 4. **Release-Titel**  
-   z.B.: `Shutter Pilot v1.4.01`
+   z.B.: `Shutter Pilot v1.4.04`
 
 5. **Beschreibung**  
    Aus `CHANGELOG.md` die Änderungen für diese Version kopieren, z.B.:
@@ -77,7 +77,7 @@ Diese Anleitung erklärt, wie du eine neue Version von Shutter Pilot erstellst u
 ## Schritt 3: Kontrolle
 
 - **HACS:** Nach einigen Minuten erscheint die neue Version bei Nutzern als Update
-- **Version:** Die Tag-Bezeichnung (z.B. `v1.4.01`) ist die Versionsnummer in HACS
+- **Version:** Die Tag-Bezeichnung (z.B. `v1.4.04`) ist die Versionsnummer in HACS
 - **manifest.json:** Die Version dort sollte mit dem Tag übereinstimmen (ohne `v`)
 
 ---

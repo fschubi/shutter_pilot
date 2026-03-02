@@ -1,0 +1,51 @@
+open_group:
+  name: Gruppe öffnen
+  description: Öffnet alle Rollläden der angegebenen Gruppe.
+  fields:
+    group:
+      name: Gruppe
+      description: living, sleep, children oder all
+      example: living
+      required: true
+      selector:
+        select:
+          options:
+            - living
+            - sleep
+            - children
+            - all
+
+close_group:
+  name: Gruppe schließen
+  description: Schließt alle Rollläden der angegebenen Gruppe.
+  fields:
+    group:
+      name: Gruppe
+      description: living, sleep, children oder all
+      example: all
+      required: true
+      selector:
+        select:
+          options:
+            - living
+            - sleep
+            - children
+            - all
+
+sun_protect_group:
+  name: Sonnenschutz Gruppe
+  description: Fährt alle Rollläden der Gruppe in Sonnenschutz-Position.
+  fields:
+    group:
+      name: Gruppe
+      description: living, sleep, children oder all
+      example: living
+      required: true
+      selector:
+        select:
+          options:
+            - living
+            - sleep
+            - children
+            - all
+

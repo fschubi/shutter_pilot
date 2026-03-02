@@ -96,7 +96,7 @@ data:
 
 ## Version
 
-1.4.03
+1.4.04
 
 ## Kompatibilität
 
