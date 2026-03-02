@@ -165,8 +165,8 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title="Shutter Pilot",
                 data={
-                    CONF_LATITUDE: user_input.get(CONF_LATITUDE) or self.hass.config.latitude,
-                    CONF_LONGITUDE: user_input.get(CONF_LONGITUDE) or self.hass.config.longitude,
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
                 },
                 options={
                     CONF_SHUTTERS: [],
@@ -222,12 +222,7 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_LATITUDE): vol.Coerce(float),
-                    vol.Optional(CONF_LONGITUDE): vol.Coerce(float),
-                }
-            ),
+            data_schema=vol.Schema({}),
         )
 
     @staticmethod
