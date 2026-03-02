@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+from copy import deepcopy
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -108,6 +111,60 @@ from .const import (
     CONF_CHILDREN_SUNSET_OFFSET,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+# Vollständige Standard-Optionen für Migration und sichere Optionen-Zugriffe
+DEFAULT_OPTIONS = {
+    CONF_SHUTTERS: [],
+    CONF_DRIVE_DELAY: DEFAULT_DRIVE_DELAY,
+    CONF_BRIGHTNESS_ENTITY_ID: "",
+    CONF_BRIGHTNESS_DOWN_THRESHOLD: DEFAULT_BRIGHTNESS_DOWN_THRESHOLD,
+    CONF_BRIGHTNESS_UP_THRESHOLD: DEFAULT_BRIGHTNESS_UP_THRESHOLD,
+    CONF_BRIGHTNESS_DOWN_TIME: DEFAULT_BRIGHTNESS_DOWN_TIME,
+    CONF_BRIGHTNESS_UP_TIME: DEFAULT_BRIGHTNESS_UP_TIME,
+    CONF_USE_ELEVATION: False,
+    CONF_ELEVATION_THRESHOLD: DEFAULT_ELEVATION_THRESHOLD,
+    CONF_W_SHUTTER_UP_MIN: "05:00",
+    CONF_W_SHUTTER_UP_MAX: "06:00",
+    CONF_W_SHUTTER_DOWN: "22:00",
+    CONF_WE_SHUTTER_UP_MIN: "05:00",
+    CONF_WE_SHUTTER_UP_MAX: "06:00",
+    CONF_WE_SHUTTER_DOWN: "22:00",
+    CONF_AUTO_LIVING: "",
+    CONF_AUTO_SLEEP: "",
+    CONF_AUTO_CHILDREN: "",
+    CONF_LIVING_TYPE_UP: TIME_TYPE_FIXED,
+    CONF_LIVING_TYPE_DOWN: TIME_TYPE_FIXED,
+    CONF_LIVING_W_UP_MIN: "05:00",
+    CONF_LIVING_W_UP_MAX: "06:00",
+    CONF_LIVING_W_DOWN: "22:00",
+    CONF_LIVING_WE_UP_MIN: "05:00",
+    CONF_LIVING_WE_UP_MAX: "06:00",
+    CONF_LIVING_WE_DOWN: "22:00",
+    CONF_SLEEP_TYPE_UP: TIME_TYPE_FIXED,
+    CONF_SLEEP_TYPE_DOWN: TIME_TYPE_FIXED,
+    CONF_SLEEP_W_UP_MIN: "05:00",
+    CONF_SLEEP_W_UP_MAX: "06:00",
+    CONF_SLEEP_W_DOWN: "22:00",
+    CONF_SLEEP_WE_UP_MIN: "05:00",
+    CONF_SLEEP_WE_UP_MAX: "06:00",
+    CONF_SLEEP_WE_DOWN: "22:00",
+    CONF_CHILDREN_TYPE_UP: TIME_TYPE_FIXED,
+    CONF_CHILDREN_TYPE_DOWN: TIME_TYPE_FIXED,
+    CONF_CHILDREN_W_UP_MIN: "05:00",
+    CONF_CHILDREN_W_UP_MAX: "06:00",
+    CONF_CHILDREN_W_DOWN: "22:00",
+    CONF_CHILDREN_WE_UP_MIN: "05:00",
+    CONF_CHILDREN_WE_UP_MAX: "06:00",
+    CONF_CHILDREN_WE_DOWN: "22:00",
+    CONF_LIVING_SUNRISE_OFFSET: 0,
+    CONF_LIVING_SUNSET_OFFSET: 0,
+    CONF_SLEEP_SUNRISE_OFFSET: 0,
+    CONF_SLEEP_SUNSET_OFFSET: 0,
+    CONF_CHILDREN_SUNRISE_OFFSET: 0,
+    CONF_CHILDREN_SUNSET_OFFSET: 0,
+}
+
 
 def _shutter_schema() -> dict:
     """Return schema for a single shutter."""
@@ -168,62 +225,29 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
                 },
-                options={
-                    CONF_SHUTTERS: [],
-                    CONF_DRIVE_DELAY: DEFAULT_DRIVE_DELAY,
-                    CONF_BRIGHTNESS_ENTITY_ID: "",
-                    CONF_BRIGHTNESS_DOWN_THRESHOLD: DEFAULT_BRIGHTNESS_DOWN_THRESHOLD,
-                    CONF_BRIGHTNESS_UP_THRESHOLD: DEFAULT_BRIGHTNESS_UP_THRESHOLD,
-                    CONF_BRIGHTNESS_DOWN_TIME: DEFAULT_BRIGHTNESS_DOWN_TIME,
-                    CONF_BRIGHTNESS_UP_TIME: DEFAULT_BRIGHTNESS_UP_TIME,
-                    CONF_USE_ELEVATION: False,
-                    CONF_ELEVATION_THRESHOLD: DEFAULT_ELEVATION_THRESHOLD,
-                    CONF_W_SHUTTER_UP_MIN: "05:00",
-                    CONF_W_SHUTTER_UP_MAX: "06:00",
-                    CONF_W_SHUTTER_DOWN: "22:00",
-                    CONF_WE_SHUTTER_UP_MIN: "05:00",
-                    CONF_WE_SHUTTER_UP_MAX: "06:00",
-                    CONF_WE_SHUTTER_DOWN: "22:00",
-                    CONF_AUTO_LIVING: "",
-                    CONF_AUTO_SLEEP: "",
-                    CONF_AUTO_CHILDREN: "",
-                    CONF_LIVING_TYPE_UP: TIME_TYPE_FIXED,
-                    CONF_LIVING_TYPE_DOWN: TIME_TYPE_FIXED,
-                    CONF_LIVING_W_UP_MIN: "05:00",
-                    CONF_LIVING_W_UP_MAX: "06:00",
-                    CONF_LIVING_W_DOWN: "22:00",
-                    CONF_LIVING_WE_UP_MIN: "05:00",
-                    CONF_LIVING_WE_UP_MAX: "06:00",
-                    CONF_LIVING_WE_DOWN: "22:00",
-                    CONF_SLEEP_TYPE_UP: TIME_TYPE_FIXED,
-                    CONF_SLEEP_TYPE_DOWN: TIME_TYPE_FIXED,
-                    CONF_SLEEP_W_UP_MIN: "05:00",
-                    CONF_SLEEP_W_UP_MAX: "06:00",
-                    CONF_SLEEP_W_DOWN: "22:00",
-                    CONF_SLEEP_WE_UP_MIN: "05:00",
-                    CONF_SLEEP_WE_UP_MAX: "06:00",
-                    CONF_SLEEP_WE_DOWN: "22:00",
-                    CONF_CHILDREN_TYPE_UP: TIME_TYPE_FIXED,
-                    CONF_CHILDREN_TYPE_DOWN: TIME_TYPE_FIXED,
-                    CONF_CHILDREN_W_UP_MIN: "05:00",
-                    CONF_CHILDREN_W_UP_MAX: "06:00",
-                    CONF_CHILDREN_W_DOWN: "22:00",
-                    CONF_CHILDREN_WE_UP_MIN: "05:00",
-                    CONF_CHILDREN_WE_UP_MAX: "06:00",
-                    CONF_CHILDREN_WE_DOWN: "22:00",
-                    CONF_LIVING_SUNRISE_OFFSET: 0,
-                    CONF_LIVING_SUNSET_OFFSET: 0,
-                    CONF_SLEEP_SUNRISE_OFFSET: 0,
-                    CONF_SLEEP_SUNSET_OFFSET: 0,
-                    CONF_CHILDREN_SUNRISE_OFFSET: 0,
-                    CONF_CHILDREN_SUNSET_OFFSET: 0,
-                },
+                options=deepcopy(DEFAULT_OPTIONS),
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({}),
         )
+
+    async def async_migrate_entry(
+        self, hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Migrate alte Konfigurationseinträge auf vollständige Optionen."""
+        opts = dict(entry.options or {})
+        defaults = DEFAULT_OPTIONS
+        needs_update = False
+        for key, default in defaults.items():
+            if key not in opts:
+                opts[key] = default
+                needs_update = True
+        if needs_update:
+            _LOGGER.info("Shutter Pilot: Migriere Konfigurationseintrag")
+            hass.config_entries.async_update_entry(entry, options=opts)
+        return True
 
     @staticmethod
     @callback
@@ -242,26 +266,39 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     def _opts(self) -> dict:
-        """Safe access to options - never None."""
-        return self.config_entry.options or {}
+        """Safe access to options - merge mit Defaults für alte/inkonsistente Einträge."""
+        raw = self.config_entry.options
+        if raw is None:
+            return dict(DEFAULT_OPTIONS)
+        opts = dict(raw)
+        for key, default in DEFAULT_OPTIONS.items():
+            if key not in opts:
+                opts[key] = default
+        return opts
 
     async def async_step_init(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show options menu."""
-        opts = self._opts()
-        shutters = opts.get(CONF_SHUTTERS, [])
-        menu_opts = ["settings_menu", "add_shutter"]
-        if shutters:
-            menu_opts.append("edit_shutter")
-        menu_opts.append("done")
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=menu_opts,
-            description_placeholders={
-                "shutter_count": str(len(shutters)),
-            },
-        )
+        try:
+            opts = self._opts()
+            shutters = opts.get(CONF_SHUTTERS, [])
+            if not isinstance(shutters, list):
+                shutters = []
+            menu_opts = ["settings_menu", "add_shutter"]
+            if shutters:
+                menu_opts.append("edit_shutter")
+            menu_opts.append("done")
+            return self.async_show_menu(
+                step_id="init",
+                menu_options=menu_opts,
+                description_placeholders={
+                    "shutter_count": str(len(shutters)),
+                },
+            )
+        except Exception as err:
+            _LOGGER.exception("Shutter Pilot Options-Flow Fehler: %s", err)
+            raise
 
     async def async_step_settings_menu(
         self, user_input: dict | None = None

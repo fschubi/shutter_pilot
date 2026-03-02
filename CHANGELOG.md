@@ -4,6 +4,12 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.4.03] - 2025-03-02
+
+### Behoben
+- **500 Internal Server Error** (Fortsetzung): Migration alter Konfigurationseinträge, DEFAULT_OPTIONS-Merge für inkonsistente Optionen, robustere Verarbeitung von `shutters`
+- TROUBLESHOOTING.md für Fehleranalyse ergänzt
+
 ## [1.4.02] - 2025-03-02
 
 ### Behoben
