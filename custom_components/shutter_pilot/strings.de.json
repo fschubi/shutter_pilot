@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Shutter Pilot einrichten",
-        "description": "Shutter Pilot nutzt automatisch Ihren Heimatstandort aus den Home Assistant-Einstellungen. Klicken Sie OK.\n\nNach der Einrichtung: Einstellungen → Geräte & Dienste → Shutter Pilot → Konfigurieren, um Rollläden hinzuzufügen und Zeitpläne einzurichten."
+        "description": "Shutter Pilot nutzt automatisch Ihren Heimatstandort. Klicken Sie OK.\n\nKonfiguration: Einstellungen → Geräte & Dienste → Tab „Integrationen“ → Shutter Pilot → Menü (⋮) → Konfigurieren"
       }
     },
     "error": {

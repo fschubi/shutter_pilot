@@ -7,7 +7,11 @@ Rollladensteuerung für Home Assistant mit Fenster-Trigger, Sunrise/Sunset, Auto
 1. HACS → Integrationen → Repository hinzufügen: `https://github.com/fschubi/shutter_pilot`
 2. Integration installieren
 3. Home Assistant neu starten
-4. Einstellungen → Geräte & Dienste → Shutter Pilot hinzufügen
+4. Einstellungen → Geräte & Dienste → + Integration hinzufügen → „Shutter Pilot“
+
+## Konfiguration (Rollläden hinzufügen)
+
+**Tab „Integrationen“** (nicht Geräte!) → Shutter Pilot → Menü (⋮) → Konfigurieren
 
 ## Features
 

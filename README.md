@@ -45,11 +45,23 @@ Rollladensteuerung für Home Assistant – inspiriert vom ioBroker Shuttercontro
 
 ## Konfiguration
 
+### Wo finde ich die Konfiguration?
+
+**Wichtig:** Nach der Installation über HACS findest du die Konfiguration **nicht** über die HACS-Karte (die zeigt nur Update-Status). Stattdessen:
+
+1. **Einstellungen** (Zahnrad) → **Geräte & Dienste**
+2. Tab **„Integrationen“** wählen (nicht „Geräte“)
+3. In der Liste nach **„Shutter Pilot“** suchen oder scrollen
+4. Auf **„Shutter Pilot“** klicken
+5. Oben rechts: **Menü (⋮)** → **„Konfigurieren“** wählen
+
+Dort erscheint das Menü: Rollladen hinzufügen, Einstellungen, Zeitpläne.
+
 ### Einrichtung
 
-1. Integration hinzufügen
-2. **Shutter Pilot** anklicken → **Konfigurieren**
-3. **Einstellungen** → Untermenü wählen:
+1. Integration hinzufügen (über „+ Integration hinzufügen“)
+2. **Shutter Pilot** unter Integrationen finden → Menü (⋮) → **Konfigurieren**
+3. Im Untermenü wählen:
    - **Allgemeine Einstellungen**: Helligkeitssensor, Lux-Schwellwerte, Verzögerung, Auto-Modi, Sonnenschutz
    - **Zeitplan Wohnbereich / Schlafbereich / Kinderbereich**: jeweils Fix- oder Sonnenzeiten, Offset
 4. **Rollladen hinzufügen**: Cover, Fenster-Sensor, Aussperrschutz, Drive-After-Close, Gruppe
@@ -96,7 +108,7 @@ data:
 
 ## Version
 
-1.4.0
+1.4.01
 
 ## Kompatibilität
 
