@@ -4,6 +4,16 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.4.05] - 2025-03-02
+
+### Behoben
+- **500 Internal Server Error**: Menu-Optionen auf Dict-Format umgestellt (kein Translation-Lookup mehr), zusätzliche Info-Logs zur Fehlersuche
+- services.yaml vereinfacht (example/required entfernt)
+- Unbenutzten Import entity_registry entfernt
+
+### Geändert
+- TROUBLESHOOTING.md: Anleitung für Debug-Logging ergänzt, falls keine Logs sichtbar sind
+
 ## [1.4.04] - 2025-03-02
 
 ### Behoben

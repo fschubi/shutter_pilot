@@ -14,6 +14,30 @@ Die genaue Fehlerursache steht in den Home Assistant Logs:
 
 Die Python-Fehlermeldung zeigt die genaue Ursache.
 
+### Wenn keine Logs erscheinen – Debug-Logging aktivieren
+
+Um sicherzugehen, dass Shutter Pilot-Meldungen sichtbar sind:
+
+**Variante A – Über die Oberfläche:**
+1. **Einstellungen** → **System** → **Logging**
+2. Unter „Integrierte Logger“: `custom_components.shutter_pilot` hinzufügen
+3. Log-Level auf **Debug** stellen
+4. Home Assistant neu starten
+
+**Variante B – Über configuration.yaml:**
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.shutter_pilot: debug
+```
+Dann Home Assistant neu starten.
+
+Beim Klick auf „Konfigurieren“ sollten nun Meldungen erscheinen:
+- `Shutter Pilot: Options-Flow wird erstellt` → Flow wurde gestartet
+- `Shutter Pilot: async_step_init aufgerufen` → Erster Schritt läuft
+- Fehlt die zweite Meldung, tritt der Fehler vor dem ersten Schritt auf.
+
 ## 2. Integration entfernen und neu hinzufügen
 
 Manchmal hilft ein kompletter Neustart der Konfiguration:

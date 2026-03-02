@@ -4,9 +4,6 @@ open_group:
   fields:
     group:
       name: Gruppe
-      description: living, sleep, children oder all
-      example: living
-      required: true
       selector:
         select:
           options:
@@ -21,9 +18,6 @@ close_group:
   fields:
     group:
       name: Gruppe
-      description: living, sleep, children oder all
-      example: all
-      required: true
       selector:
         select:
           options:
@@ -38,9 +32,6 @@ sun_protect_group:
   fields:
     group:
       name: Gruppe
-      description: living, sleep, children oder all
-      example: living
-      required: true
       selector:
         select:
           options:

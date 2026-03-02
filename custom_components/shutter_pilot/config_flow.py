@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import selector
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
@@ -255,6 +255,7 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> ShutterPilotOptionsFlow:
         """Get the options flow for this handler."""
+        _LOGGER.info("Shutter Pilot: Options-Flow wird erstellt")
         return ShutterPilotOptionsFlow(config_entry)
 
 
@@ -280,15 +281,20 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show options menu."""
+        _LOGGER.info("Shutter Pilot: async_step_init aufgerufen")
         try:
             opts = self._opts()
             shutters = opts.get(CONF_SHUTTERS, [])
             if not isinstance(shutters, list):
                 shutters = []
-            menu_opts = ["settings_menu", "add_shutter"]
+            # Dict-Format für menu_options (kein Translation-Lookup nötig)
+            menu_opts = {
+                "settings_menu": "Einstellungen",
+                "add_shutter": "Rollladen hinzufügen",
+            }
             if shutters:
-                menu_opts.append("edit_shutter")
-            menu_opts.append("done")
+                menu_opts["edit_shutter"] = "Rollladen bearbeiten"
+            menu_opts["done"] = "Fertig"
             return self.async_show_menu(
                 step_id="init",
                 menu_options=menu_opts,
@@ -329,14 +335,18 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         """Merge new options with existing and return to init menu."""
         merged = {**self._opts(), **new_opts}
         self.hass.config_entries.async_update_entry(self.config_entry, options=merged)
-        menu_opts = ["settings_menu", "add_shutter"]
-        if merged.get(CONF_SHUTTERS):
-            menu_opts.append("edit_shutter")
-        menu_opts.append("done")
+        shutters = merged.get(CONF_SHUTTERS, [])
+        menu_opts = {
+            "settings_menu": "Einstellungen",
+            "add_shutter": "Rollladen hinzufügen",
+        }
+        if shutters:
+            menu_opts["edit_shutter"] = "Rollladen bearbeiten"
+        menu_opts["done"] = "Fertig"
         return self.async_show_menu(
             step_id="init",
             menu_options=menu_opts,
-            description_placeholders={"shutter_count": str(len(merged.get(CONF_SHUTTERS, [])))},
+            description_placeholders={"shutter_count": str(len(shutters))},
         )
 
     async def async_step_settings_general(
@@ -557,10 +567,13 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=new_options
             )
-            _opts = ["settings_menu", "add_shutter"]
+            _opts = {
+                "settings_menu": "Einstellungen",
+                "add_shutter": "Rollladen hinzufügen",
+                "done": "Fertig",
+            }
             if shutters:
-                _opts.append("edit_shutter")
-            _opts.append("done")
+                _opts["edit_shutter"] = "Rollladen bearbeiten"
             return self.async_show_menu(
                 step_id="init",
                 menu_options=_opts,
