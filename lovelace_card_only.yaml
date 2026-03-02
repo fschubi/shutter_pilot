@@ -1,0 +1,124 @@
+# Shutter Pilot Control – NUR KARTE (in beliebiges Dashboard einfügen)
+# Dashboard → Bearbeiten → Karte hinzufügen → Manuelle Konfiguration
+# Kompletten Inhalt unten einfügen, dann "Einzelne Rollläden" mit deinen Cover-Entities anpassen.
+
+type: vertical-stack
+cards:
+  - type: markdown
+    content: "## Shutter Pilot"
+  # Gruppen: Wohnbereich
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Wohn hoch
+        icon: mdi:arrow-up
+        tap_action:
+          action: call-service
+          service: shutter_pilot.open_group
+          service_data:
+            group: living
+      - type: button
+        name: Wohn runter
+        icon: mdi:arrow-down
+        tap_action:
+          action: call-service
+          service: shutter_pilot.close_group
+          service_data:
+            group: living
+      - type: button
+        name: Wohn Sonne
+        icon: mdi:white-balance-sunny
+        tap_action:
+          action: call-service
+          service: shutter_pilot.sun_protect_group
+          service_data:
+            group: living
+  # Gruppen: Schlaf
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Schlaf hoch
+        icon: mdi:arrow-up
+        tap_action:
+          action: call-service
+          service: shutter_pilot.open_group
+          service_data:
+            group: sleep
+      - type: button
+        name: Schlaf runter
+        icon: mdi:arrow-down
+        tap_action:
+          action: call-service
+          service: shutter_pilot.close_group
+          service_data:
+            group: sleep
+      - type: button
+        name: Schlaf Sonne
+        icon: mdi:white-balance-sunny
+        tap_action:
+          action: call-service
+          service: shutter_pilot.sun_protect_group
+          service_data:
+            group: sleep
+  # Gruppen: Kinder
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Kinder hoch
+        icon: mdi:arrow-up
+        tap_action:
+          action: call-service
+          service: shutter_pilot.open_group
+          service_data:
+            group: children
+      - type: button
+        name: Kinder runter
+        icon: mdi:arrow-down
+        tap_action:
+          action: call-service
+          service: shutter_pilot.close_group
+          service_data:
+            group: children
+      - type: button
+        name: Kinder Sonne
+        icon: mdi:white-balance-sunny
+        tap_action:
+          action: call-service
+          service: shutter_pilot.sun_protect_group
+          service_data:
+            group: children
+  # Alle
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Alle hoch
+        icon: mdi:arrow-up-bold
+        tap_action:
+          action: call-service
+          service: shutter_pilot.open_group
+          service_data:
+            group: all
+      - type: button
+        name: Alle runter
+        icon: mdi:arrow-down-bold
+        tap_action:
+          action: call-service
+          service: shutter_pilot.close_group
+          service_data:
+            group: all
+      - type: button
+        name: Alle Sonne
+        icon: mdi:white-balance-sunny
+        tap_action:
+          action: call-service
+          service: shutter_pilot.sun_protect_group
+          service_data:
+            group: all
+  # Einzelne Rollläden – Entity-IDs durch deine ersetzen
+  - type: markdown
+    content: "### Einzeln"
+  - type: entities
+    entities:
+      - entity: cover.wohnzimmer
+      - entity: cover.schlafzimmer
+      - entity: cover.kinderzimmer

@@ -60,6 +60,21 @@ Rollladensteuerung für Home Assistant – inspiriert vom ioBroker Shuttercontro
 - Beispiel: `-30` bei Sonnenaufgang → 30 Minuten vor Sonnenaufgang
 - Beispiel: `15` bei Sonnenuntergang → 15 Minuten nach Sonnenuntergang
 
+### Shutter Pilot Control Card (Dashboard)
+
+Zum **Bedienen** der Rollläden steht eine fertige Lovelace-Karte bereit:
+
+1. **Dashboard** öffnen → **Bearbeiten** (oben rechts) → **Karte hinzufügen**
+2. **Manuelle Konfiguration** wählen
+3. Inhalt aus `lovelace_card_only.yaml` einfügen
+4. Unter „Einzelne Rollläden“ die Entity-IDs durch deine Cover-Entities ersetzen (z.B. `cover.wohnzimmer`)
+
+Die Karte enthält:
+- **Gruppen**: Wohnbereich, Schlaf, Kinder, Alle – jeweils Hoch / Runter / Sonnenschutz
+- **Einzelne Rollläden**: Direktsteuerung mit Positionsanzeige
+
+Alternativ: Vollständige Ansicht aus `lovelace_shutter_pilot_control.yaml` als neue Dashboard-View einfügen.
+
 ### Dienste
 
 ```yaml
