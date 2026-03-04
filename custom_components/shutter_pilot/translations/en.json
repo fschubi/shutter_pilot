@@ -1,0 +1,297 @@
+{
+  "config_flow": {
+    "options": {
+      "step": {
+        "init": {
+          "title": "Shutter Pilot options",
+          "description": "Choose an action. Currently {shutter_count} shutter(s) configured.",
+          "menu_options": {
+            "settings_menu": "Settings",
+            "add_shutter": "Add shutter",
+            "edit_shutter": "Edit shutter",
+            "done": "Done"
+          }
+        },
+        "settings_menu": {
+          "title": "Settings",
+          "description": "Choose the area to configure.",
+          "menu_options": {
+            "settings_general": "General settings (brightness, auto, sun protection)",
+            "settings_schedule_living": "Schedule Living",
+            "settings_schedule_sleep": "Schedule Sleep",
+            "settings_schedule_children": "Schedule Children"
+          }
+        },
+        "settings_general": {
+          "title": "General settings",
+          "description": "Brightness sensor, delay, auto modes, sun protection.",
+          "data": {
+            "brightness_entity_id": "Brightness sensor",
+            "brightness_down_threshold": "Lux threshold down",
+            "brightness_up_threshold": "Lux threshold up",
+            "brightness_down_time": "Time for down logic (HH:MM)",
+            "brightness_up_time": "Time for up logic (HH:MM)",
+            "drive_delay": "Delay between shutters (seconds)",
+            "use_elevation": "Sun protection by elevation",
+            "elevation_threshold": "Elevation threshold (°)",
+            "auto_living": "Auto mode Living",
+            "auto_sleep": "Auto mode Sleep",
+            "auto_children": "Auto mode Children"
+          }
+        },
+        "settings_schedule_living": {
+          "title": "Schedule Living",
+          "description": "Type (Fixed/Sunrise/Sunset), times, offset in minutes.",
+          "data": {
+            "living_type_up": "Type up",
+            "living_type_down": "Type down",
+            "living_sunrise_offset": "Sunrise offset (min., negative=before)",
+            "living_sunset_offset": "Sunset offset (min.)",
+            "living_w_up_min": "Weekday: Up from (HH:MM)",
+            "living_w_up_max": "Weekday: Up until (HH:MM)",
+            "living_w_down": "Weekday: Down (HH:MM)",
+            "living_we_up_min": "Weekend: Up from",
+            "living_we_up_max": "Weekend: Up until",
+            "living_we_down": "Weekend: Down"
+          }
+        },
+        "settings_schedule_sleep": {
+          "title": "Schedule Sleep",
+          "description": "Schedule for sleep area.",
+          "data": {
+            "sleep_type_up": "Type up",
+            "sleep_type_down": "Type down",
+            "sleep_sunrise_offset": "Sunrise offset (min.)",
+            "sleep_sunset_offset": "Sunset offset (min.)",
+            "sleep_w_up_min": "Weekday: Up from",
+            "sleep_w_up_max": "Weekday: Up until",
+            "sleep_w_down": "Weekday: Down",
+            "sleep_we_up_min": "Weekend: Up from",
+            "sleep_we_up_max": "Weekend: Up until",
+            "sleep_we_down": "Weekend: Down"
+          }
+        },
+        "settings_schedule_children": {
+          "title": "Schedule Children",
+          "description": "Schedule for children area.",
+          "data": {
+            "children_type_up": "Type up",
+            "children_type_down": "Type down",
+            "children_sunrise_offset": "Sunrise offset (min.)",
+            "children_sunset_offset": "Sunset offset (min.)",
+            "children_w_up_min": "Weekday: Up from",
+            "children_w_up_max": "Weekday: Up until",
+            "children_w_down": "Weekday: Down",
+            "children_we_up_min": "Weekend: Up from",
+            "children_we_up_max": "Weekend: Up until",
+            "children_we_down": "Weekend: Down"
+          }
+        },
+        "add_shutter": {
+          "title": "Add shutter",
+          "description": "Configure cover, window trigger and group.",
+          "data": {
+            "cover_entity_id": "Shutter / Cover",
+            "name": "Name",
+            "window_entity_id": "Window/door sensor (optional)",
+            "window_open_state": "Window state 'open' (e.g. on)",
+            "window_tilted_state": "Window state 'tilted' (e.g. tilted, none=disabled)",
+            "position_when_window_open": "Position when window open (%)",
+            "position_when_window_tilted": "Position when window tilted (%)",
+            "lock_protection": "Lock protection",
+            "min_position_when_open": "Minimum position when door open (%)",
+            "trigger_mode": "Trigger mode",
+            "group_up": "Group (Up)",
+            "group_down": "Group (Down)",
+            "position_open": "Position open (%)",
+            "position_closed": "Position closed (%)",
+            "position_sun_protect": "Sun protection position (%)",
+            "brightness_trigger": "Brightness reaction",
+            "drive_after_close": "Drive after close (when window still open at close time)"
+          }
+        },
+        "edit_shutter": {
+          "title": "Edit or remove shutter",
+          "description": "Select a shutter and the action.",
+          "data": {
+            "shutter_index": "Shutter",
+            "action": "Action"
+          }
+        },
+        "edit_shutter_form": {
+          "title": "Edit shutter",
+          "description": "Change shutter configuration."
+        }
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Shutter Pilot",
+        "description": "Shutter Pilot uses your home location automatically. Click OK.\n\nTo configure: Settings → Devices & Services → Integrations tab → Shutter Pilot → Menu (⋮) → Configure"
+      }
+    },
+    "error": {},
+    "abort": {
+      "already_configured": "Already configured",
+      "not_found": "Shutter not found"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Shutter Pilot options",
+        "description": "Choose an action. Currently {shutter_count} shutter(s) configured.",
+        "menu_options": {
+          "settings_menu": "Settings",
+          "add_shutter": "Add shutter",
+          "edit_shutter": "Edit shutter",
+          "done": "Done"
+        }
+      },
+      "settings_menu": {
+        "title": "Settings",
+        "description": "Choose the area to configure.",
+        "menu_options": {
+          "settings_general": "General settings (brightness, auto, sun protection)",
+          "settings_schedule_living": "Schedule Living",
+          "settings_schedule_sleep": "Schedule Sleep",
+          "settings_schedule_children": "Schedule Children"
+        }
+      },
+      "settings_general": {
+        "title": "General settings",
+        "description": "Brightness sensor, delay, auto modes, sun protection.",
+        "data": {
+          "brightness_entity_id": "Brightness sensor",
+          "brightness_down_threshold": "Lux threshold down",
+          "brightness_up_threshold": "Lux threshold up",
+          "brightness_down_time": "Time for down logic (HH:MM)",
+          "brightness_up_time": "Time for up logic (HH:MM)",
+          "drive_delay": "Delay between shutters (seconds)",
+          "use_elevation": "Sun protection by elevation",
+          "elevation_threshold": "Elevation threshold (°)",
+          "auto_living": "Auto mode Living",
+          "auto_sleep": "Auto mode Sleep",
+          "auto_children": "Auto mode Children"
+        }
+      },
+      "settings_schedule_living": {
+        "title": "Schedule Living",
+        "description": "Type (Fixed/Sunrise/Sunset), times, offset in minutes.",
+        "data": {
+          "living_type_up": "Type up",
+          "living_type_down": "Type down",
+          "living_sunrise_offset": "Sunrise offset (min., negative=before)",
+          "living_sunset_offset": "Sunset offset (min.)",
+          "living_w_up_min": "Weekday: Up from (HH:MM)",
+          "living_w_up_max": "Weekday: Up until (HH:MM)",
+          "living_w_down": "Weekday: Down (HH:MM)",
+          "living_we_up_min": "Weekend: Up from",
+          "living_we_up_max": "Weekend: Up until",
+          "living_we_down": "Weekend: Down"
+        }
+      },
+      "settings_schedule_sleep": {
+        "title": "Schedule Sleep",
+        "description": "Schedule for sleep area.",
+        "data": {
+          "sleep_type_up": "Type up",
+          "sleep_type_down": "Type down",
+          "sleep_sunrise_offset": "Sunrise offset (min.)",
+          "sleep_sunset_offset": "Sunset offset (min.)",
+          "sleep_w_up_min": "Weekday: Up from",
+          "sleep_w_up_max": "Weekday: Up until",
+          "sleep_w_down": "Weekday: Down",
+          "sleep_we_up_min": "Weekend: Up from",
+          "sleep_we_up_max": "Weekend: Up until",
+          "sleep_we_down": "Weekend: Down"
+        }
+      },
+      "settings_schedule_children": {
+        "title": "Schedule Children",
+        "description": "Schedule for children area.",
+        "data": {
+          "children_type_up": "Type up",
+          "children_type_down": "Type down",
+          "children_sunrise_offset": "Sunrise offset (min.)",
+          "children_sunset_offset": "Sunset offset (min.)",
+          "children_w_up_min": "Weekday: Up from",
+          "children_w_up_max": "Weekday: Up until",
+          "children_w_down": "Weekday: Down",
+          "children_we_up_min": "Weekend: Up from",
+          "children_we_up_max": "Weekend: Up until",
+          "children_we_down": "Weekend: Down"
+        }
+      },
+      "add_shutter": {
+        "title": "Add shutter",
+        "description": "Configure cover, window trigger and group.",
+        "data": {
+          "cover_entity_id": "Shutter / Cover",
+          "name": "Name",
+          "window_entity_id": "Window/door sensor (optional)",
+          "window_open_state": "Window state 'open' (e.g. on)",
+          "window_tilted_state": "Window state 'tilted' (e.g. tilted, none=disabled)",
+          "position_when_window_open": "Position when window open (%)",
+          "position_when_window_tilted": "Position when window tilted (%)",
+          "lock_protection": "Lock protection",
+          "min_position_when_open": "Minimum position when door open (%)",
+          "trigger_mode": "Trigger mode",
+          "group_up": "Group (Up)",
+          "group_down": "Group (Down)",
+          "position_open": "Position open (%)",
+          "position_closed": "Position closed (%)",
+          "position_sun_protect": "Sun protection position (%)",
+          "brightness_trigger": "Brightness reaction",
+          "drive_after_close": "Drive after close (when window still open at close time)"
+        }
+      },
+      "edit_shutter": {
+        "title": "Edit or remove shutter",
+        "description": "Select a shutter and the action.",
+        "data": {
+          "shutter_index": "Shutter",
+          "action": "Action"
+        }
+      },
+      "edit_shutter_form": {
+        "title": "Edit shutter",
+        "description": "Change shutter configuration."
+      }
+    }
+  },
+  "services": {
+    "open_group": {
+      "name": "Open group",
+      "description": "Opens all shutters of the selected group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "living, sleep, children or all"
+        }
+      }
+    },
+    "close_group": {
+      "name": "Close group",
+      "description": "Closes all shutters of the selected group.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "living, sleep, children or all"
+        }
+      }
+    },
+    "sun_protect_group": {
+      "name": "Sun protection group",
+      "description": "Drives all shutters of the group to sun protection position.",
+      "fields": {
+        "group": {
+          "name": "Group",
+          "description": "living, sleep, children or all"
+        }
+      }
+    }
+  }
+}
