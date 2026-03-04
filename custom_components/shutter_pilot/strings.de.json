@@ -4,6 +4,11 @@
       "user": {
         "title": "Shutter Pilot einrichten",
         "description": "Shutter Pilot nutzt automatisch Ihren Heimatstandort. Klicken Sie OK.\n\nKonfiguration: Einstellungen → Geräte & Dienste → Tab „Integrationen“ → Shutter Pilot → Menü (⋮) → Konfigurieren"
+      },
+      "shutters": {
+        "title": "Rollläden konfigurieren",
+        "description": "Rollläden hinzufügen und Gruppen sowie Fenster-Trigger zuordnen.",
+        "data": {}
       }
     },
     "error": {
@@ -30,13 +35,26 @@
       },
       "settings_menu": {
         "title": "Einstellungen",
-        "description": "Wähle den Bereich zum Konfigurieren."
+        "description": "Wähle den Bereich zum Konfigurieren.",
+        "menu_options": {
+          "settings_general": "Allgemeine Einstellungen (Helligkeit, Auto, Sonnenschutz)",
+          "settings_schedule_living": "Zeitplan Wohnbereich",
+          "settings_schedule_sleep": "Zeitplan Schlafbereich",
+          "settings_schedule_children": "Zeitplan Kinderbereich"
+        }
       },
       "settings_general": {
         "title": "Allgemeine Einstellungen",
         "description": "Helligkeitssensor, Verzögerung, Auto-Modi, Sonnenschutz.",
         "data": {
           "brightness_entity_id": "Helligkeitssensor",
+          "brightness_down_threshold": "Lux-Schwellwert Runter",
+          "brightness_up_threshold": "Lux-Schwellwert Hoch",
+          "brightness_down_time": "Zeit Runter-Logik (HH:MM)",
+          "brightness_up_time": "Zeit Hoch-Logik (HH:MM)",
+          "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)",
+          "use_elevation": "Sonnenschutz per Elevation",
+          "elevation_threshold": "Elevation-Schwellwert (°)",
           "auto_living": "Auto-Modus Wohnbereich",
           "auto_sleep": "Auto-Modus Schlafbereich",
           "auto_children": "Auto-Modus Kinderbereich"
@@ -44,69 +62,55 @@
       },
       "settings_schedule_living": {
         "title": "Zeitplan Wohnbereich",
+        "description": "Typ (Fix/Sonnenaufgang/Sonnenuntergang), Zeiten, Offset in Minuten.",
         "data": {
+          "living_type_up": "Typ Hoch",
+          "living_type_down": "Typ Runter",
           "living_sunrise_offset": "Offset Sonnenaufgang (Min., negativ=vorher)",
-          "living_sunset_offset": "Offset Sonnenuntergang (Min.)"
+          "living_sunset_offset": "Offset Sonnenuntergang (Min.)",
+          "living_w_up_min": "Woche: Hoch ab (HH:MM)",
+          "living_w_up_max": "Woche: Hoch bis (HH:MM)",
+          "living_w_down": "Woche: Runter (HH:MM)",
+          "living_we_up_min": "Wochenende: Hoch ab",
+          "living_we_up_max": "Wochenende: Hoch bis",
+          "living_we_down": "Wochenende: Runter"
         }
       },
-      "settings": {
-        "title": "Globale Einstellungen",
-        "description": "Helligkeit, Zeiten, Sonnenschutz, Auto-Modi.",
+      "settings_schedule_sleep": {
+        "title": "Zeitplan Schlafbereich",
+        "description": "Zeitplan für Schlafbereich.",
         "data": {
-          "brightness_entity_id": "Helligkeitssensor",
-          "brightness_down_threshold": "Lux-Schwellwert Runter",
-          "brightness_up_threshold": "Lux-Schwellwert Hoch",
-          "brightness_down_time": "Zeit ab: Runter-Logik (HH:MM)",
-          "brightness_up_time": "Zeit ab: Hoch-Logik (HH:MM)",
-          "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)",
-          "use_elevation": "Sonnenschutz per Elevation",
-          "elevation_threshold": "Elevation-Schwellwert (°)",
-          "auto_living": "Auto-Modus Wohnbereich (input_boolean/switch)",
-          "auto_sleep": "Auto-Modus Schlafbereich",
-          "auto_children": "Auto-Modus Kinderbereich",
-          "living_type_up": "Wohnbereich: Typ Hoch (Fix/Sonnenaufgang)",
-          "living_type_down": "Wohnbereich: Typ Runter (Fix/Sonnenuntergang)",
-          "living_w_up_min": "Wohnbereich Woche: Hoch ab",
-          "living_w_up_max": "Wohnbereich Woche: Hoch bis",
-          "living_w_down": "Wohnbereich Woche: Runter",
-          "living_we_up_min": "Wohnbereich WE: Hoch ab",
-          "living_we_up_max": "Wohnbereich WE: Hoch bis",
-          "living_we_down": "Wohnbereich WE: Runter",
-          "sleep_type_up": "Schlaf: Typ Hoch",
-          "sleep_type_down": "Schlaf: Typ Runter",
-          "sleep_w_up_min": "Schlaf Woche: Hoch ab",
-          "sleep_w_up_max": "Schlaf Woche: Hoch bis",
-          "sleep_w_down": "Schlaf Woche: Runter",
-          "sleep_we_up_min": "Schlaf WE: Hoch ab",
-          "sleep_we_up_max": "Schlaf WE: Hoch bis",
-          "sleep_we_down": "Schlaf WE: Runter",
-          "children_type_up": "Kinder: Typ Hoch",
-          "children_type_down": "Kinder: Typ Runter",
-          "children_w_up_min": "Kinder Woche: Hoch ab",
-          "children_w_up_max": "Kinder Woche: Hoch bis",
-          "children_w_down": "Kinder Woche: Runter",
-          "children_we_up_min": "Kinder WE: Hoch ab",
-          "children_we_up_max": "Kinder WE: Hoch bis",
-          "children_we_down": "Kinder WE: Runter",
-          "w_shutter_up_min": "Woche (Legacy): Hoch ab",
-          "w_shutter_up_max": "Woche (Legacy): Hoch bis",
-          "w_shutter_down": "Woche (Legacy): Runter",
-          "we_shutter_up_min": "Wochenende (Legacy): Hoch ab",
-          "we_shutter_up_max": "Wochenende (Legacy): Hoch bis",
-          "we_shutter_down": "Wochenende (Legacy): Runter"
+          "sleep_type_up": "Typ Hoch",
+          "sleep_type_down": "Typ Runter",
+          "sleep_sunrise_offset": "Offset Sonnenaufgang (Min.)",
+          "sleep_sunset_offset": "Offset Sonnenuntergang (Min.)",
+          "sleep_w_up_min": "Woche: Hoch ab",
+          "sleep_w_up_max": "Woche: Hoch bis",
+          "sleep_w_down": "Woche: Runter",
+          "sleep_we_up_min": "WE: Hoch ab",
+          "sleep_we_up_max": "WE: Hoch bis",
+          "sleep_we_down": "WE: Runter"
         }
       },
-      "edit_shutter": {
-        "title": "Rollladen bearbeiten oder löschen",
-        "description": "Wähle einen Rollladen und die Aktion.",
+      "settings_schedule_children": {
+        "title": "Zeitplan Kinderbereich",
+        "description": "Zeitplan für Kinderbereich.",
         "data": {
-          "shutter_index": "Rollladen",
-          "action": "Aktion"
+          "children_type_up": "Typ Hoch",
+          "children_type_down": "Typ Runter",
+          "children_sunrise_offset": "Offset Sonnenaufgang (Min.)",
+          "children_sunset_offset": "Offset Sonnenuntergang (Min.)",
+          "children_w_up_min": "Woche: Hoch ab",
+          "children_w_up_max": "Woche: Hoch bis",
+          "children_w_down": "Woche: Runter",
+          "children_we_up_min": "WE: Hoch ab",
+          "children_we_up_max": "WE: Hoch bis",
+          "children_we_down": "WE: Runter"
         }
       },
       "add_shutter": {
         "title": "Rollladen hinzufügen",
-        "description": "Konfiguriere Cover, Fenster-Trigger und Gruppe.",
+        "description": "Cover, Fenster-Trigger und Gruppe konfigurieren.",
         "data": {
           "cover_entity_id": "Rollladen / Cover",
           "name": "Name",
@@ -126,6 +130,19 @@
           "brightness_trigger": "Helligkeits-Reaktion",
           "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)"
         }
+      },
+      "edit_shutter": {
+        "title": "Rollladen bearbeiten oder löschen",
+        "description": "Rollladen und Aktion wählen.",
+        "data": {
+          "shutter_index": "Rollladen",
+          "action": "Aktion"
+        }
+      },
+      "edit_shutter_form": {
+        "title": "Rollladen bearbeiten",
+        "description": "Rollladen-Konfiguration ändern.",
+        "data": {}
       }
     }
   },
