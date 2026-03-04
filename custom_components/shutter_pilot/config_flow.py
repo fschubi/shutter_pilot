@@ -421,19 +421,19 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
                 vol.Optional(
                     CONF_AUTO_LIVING,
-                    default=[o(CONF_AUTO_LIVING)] if o(CONF_AUTO_LIVING) else [],
+                    default=o(CONF_AUTO_LIVING) or "",
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
                 vol.Optional(
                     CONF_AUTO_SLEEP,
-                    default=[o(CONF_AUTO_SLEEP)] if o(CONF_AUTO_SLEEP) else [],
+                    default=o(CONF_AUTO_SLEEP) or "",
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
                 vol.Optional(
                     CONF_AUTO_CHILDREN,
-                    default=[o(CONF_AUTO_CHILDREN)] if o(CONF_AUTO_CHILDREN) else [],
+                    default=o(CONF_AUTO_CHILDREN) or "",
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
