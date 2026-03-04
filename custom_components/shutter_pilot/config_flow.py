@@ -263,8 +263,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+        """Initialize options flow (delegate to base class)."""
+        super().__init__(config_entry)
 
     def _opts(self) -> dict:
         """Safe access to options - merge mit Defaults für alte/inkonsistente Einträge."""
