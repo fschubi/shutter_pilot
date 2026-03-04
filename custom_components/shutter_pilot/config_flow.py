@@ -419,23 +419,23 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                     CONF_ELEVATION_THRESHOLD,
                     default=o(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD),
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-                vol.Optional(CONF_AUTO_LIVING, default=o(CONF_AUTO_LIVING) or ""): vol.Any(
-                    vol.In([[], "", None]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
-                    ),
+                vol.Optional(
+                    CONF_AUTO_LIVING,
+                    default=[o(CONF_AUTO_LIVING)] if o(CONF_AUTO_LIVING) else [],
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
-                vol.Optional(CONF_AUTO_SLEEP, default=o(CONF_AUTO_SLEEP) or ""): vol.Any(
-                    vol.In([[], "", None]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
-                    ),
+                vol.Optional(
+                    CONF_AUTO_SLEEP,
+                    default=[o(CONF_AUTO_SLEEP)] if o(CONF_AUTO_SLEEP) else [],
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
-                vol.Optional(CONF_AUTO_CHILDREN, default=o(CONF_AUTO_CHILDREN) or ""): vol.Any(
-                    vol.In([[], "", None]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
-                    ),
+                vol.Optional(
+                    CONF_AUTO_CHILDREN,
+                    default=[o(CONF_AUTO_CHILDREN)] if o(CONF_AUTO_CHILDREN) else [],
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
             }),
         )
