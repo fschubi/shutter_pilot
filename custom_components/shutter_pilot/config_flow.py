@@ -48,6 +48,7 @@ from .const import (
     CONF_BRIGHTNESS_UP_THRESHOLD,
     CONF_BRIGHTNESS_DOWN_TIME,
     CONF_BRIGHTNESS_UP_TIME,
+    CONF_BRIGHTNESS_IGNORE_TIME,
     CONF_DRIVE_DELAY,
     DEFAULT_POSITION_OPEN,
     DEFAULT_POSITION_CLOSED,
@@ -122,6 +123,7 @@ DEFAULT_OPTIONS = {
     CONF_BRIGHTNESS_UP_THRESHOLD: DEFAULT_BRIGHTNESS_UP_THRESHOLD,
     CONF_BRIGHTNESS_DOWN_TIME: DEFAULT_BRIGHTNESS_DOWN_TIME,
     CONF_BRIGHTNESS_UP_TIME: DEFAULT_BRIGHTNESS_UP_TIME,
+    CONF_BRIGHTNESS_IGNORE_TIME: True,
     CONF_USE_ELEVATION: False,
     CONF_ELEVATION_THRESHOLD: DEFAULT_ELEVATION_THRESHOLD,
     CONF_W_SHUTTER_UP_MIN: "05:00",
@@ -374,6 +376,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_BRIGHTNESS_UP_TIME: user_input.get(
                     CONF_BRIGHTNESS_UP_TIME, DEFAULT_BRIGHTNESS_UP_TIME
                 ),
+                CONF_BRIGHTNESS_IGNORE_TIME: user_input.get(CONF_BRIGHTNESS_IGNORE_TIME, True),
                 CONF_USE_ELEVATION: user_input.get(CONF_USE_ELEVATION, False),
                 CONF_ELEVATION_THRESHOLD: user_input.get(
                     CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD
@@ -406,6 +409,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                     CONF_BRIGHTNESS_UP_TIME,
                     default=o(CONF_BRIGHTNESS_UP_TIME, DEFAULT_BRIGHTNESS_UP_TIME),
                 ): str,
+                vol.Optional(CONF_BRIGHTNESS_IGNORE_TIME, default=o(CONF_BRIGHTNESS_IGNORE_TIME, True)): bool,
                 vol.Optional(
                     CONF_DRIVE_DELAY,
                     default=o(CONF_DRIVE_DELAY, DEFAULT_DRIVE_DELAY),
@@ -415,14 +419,23 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                     CONF_ELEVATION_THRESHOLD,
                     default=o(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD),
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-                vol.Optional(CONF_AUTO_LIVING, default=o(CONF_AUTO_LIVING) or ""): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                vol.Optional(CONF_AUTO_LIVING, default=o(CONF_AUTO_LIVING) or ""): vol.Any(
+                    vol.In([[], "", None]),
+                    selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    ),
                 ),
-                vol.Optional(CONF_AUTO_SLEEP, default=o(CONF_AUTO_SLEEP) or ""): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                vol.Optional(CONF_AUTO_SLEEP, default=o(CONF_AUTO_SLEEP) or ""): vol.Any(
+                    vol.In([[], "", None]),
+                    selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    ),
                 ),
-                vol.Optional(CONF_AUTO_CHILDREN, default=o(CONF_AUTO_CHILDREN) or ""): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                vol.Optional(CONF_AUTO_CHILDREN, default=o(CONF_AUTO_CHILDREN) or ""): vol.Any(
+                    vol.In([[], "", None]),
+                    selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    ),
                 ),
             }),
         )

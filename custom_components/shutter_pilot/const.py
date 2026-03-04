@@ -51,6 +51,7 @@ CONF_BRIGHTNESS_DOWN_THRESHOLD = "brightness_down_threshold"
 CONF_BRIGHTNESS_UP_THRESHOLD = "brightness_up_threshold"
 CONF_BRIGHTNESS_DOWN_TIME = "brightness_down_time"
 CONF_BRIGHTNESS_UP_TIME = "brightness_up_time"
+CONF_BRIGHTNESS_IGNORE_TIME = "brightness_ignore_time"
 
 # Time config (per group) - Living, Sleep, Children each get full schedule
 # type_up / type_down: "fixed" | "sunrise" | "sunset"

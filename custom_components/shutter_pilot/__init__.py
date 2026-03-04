@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -21,6 +21,9 @@ from .elevation import setup_elevation_listener
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -68,6 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     await async_setup_services(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -98,6 +103,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok and DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
         del hass.data[DOMAIN][entry.entry_id]
-    return True
+    return unload_ok

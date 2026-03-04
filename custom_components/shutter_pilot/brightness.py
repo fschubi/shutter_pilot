@@ -24,6 +24,7 @@ from .const import (
     CONF_BRIGHTNESS_UP_THRESHOLD,
     CONF_BRIGHTNESS_DOWN_TIME,
     CONF_BRIGHTNESS_UP_TIME,
+    CONF_BRIGHTNESS_IGNORE_TIME,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_AUTO_LIVING,
     CONF_AUTO_SLEEP,
@@ -131,6 +132,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     up_time_str = entry.options.get(CONF_BRIGHTNESS_UP_TIME, "05:00") or "05:00"
     down_time = _parse_time(down_time_str)
     up_time = _parse_time(up_time_str)
+    ignore_time = bool(entry.options.get(CONF_BRIGHTNESS_IGNORE_TIME, True))
 
     shutters_down = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_DOWN, BRIGHTNESS_BOTH)]
     shutters_up = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_UP, BRIGHTNESS_BOTH)]
@@ -146,7 +148,10 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             return
 
         now = datetime.now()
-        is_up_window, is_down_window = _current_time_in_range(now, up_time, down_time)
+        if ignore_time:
+            is_up_window, is_down_window = True, True
+        else:
+            is_up_window, is_down_window = _current_time_in_range(now, up_time, down_time)
 
         # Down logic: time >= down_time AND lux <= down_threshold
         if is_down_window and lux <= down_threshold and shutters_down:
