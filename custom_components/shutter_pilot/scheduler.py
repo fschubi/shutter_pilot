@@ -147,7 +147,7 @@ def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
     key = {GROUP_LIVING: CONF_AUTO_LIVING, GROUP_SLEEP: CONF_AUTO_SLEEP, GROUP_CHILDREN: CONF_AUTO_CHILDREN}.get(group)
     if not key:
         return True
-    entity_id = opts.get(key, "").strip()
+    entity_id = str(opts.get(key) or "").strip()
     if not entity_id:
         return True
     state = hass.states.get(entity_id)

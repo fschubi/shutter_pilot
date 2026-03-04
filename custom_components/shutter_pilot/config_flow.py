@@ -254,9 +254,14 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> ShutterPilotOptionsFlow:
-        """Get the options flow for this handler."""
+        """Get the options flow for this handler.
+
+        In neuen Home-Assistant-Versionen wird der ConfigEntry intern
+        mit dem OptionsFlow verknüpft, daher wird er hier nicht mehr
+        an den Konstruktor übergeben.
+        """
         _LOGGER.info("Shutter Pilot: Options-Flow wird erstellt")
-        return ShutterPilotOptionsFlow(config_entry)
+        return ShutterPilotOptionsFlow()
 
 
 class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
@@ -332,6 +337,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         merged = {**self._opts(), **new_opts}
         self.hass.config_entries.async_update_entry(self.config_entry, options=merged)
         shutters = merged.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            shutters = []
         menu_opts = {
             "settings_menu": "Einstellungen",
             "add_shutter": "Rollladen hinzufügen",
@@ -533,7 +540,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Add a shutter configuration."""
         if user_input is not None:
-            shutters = list(self._opts().get(CONF_SHUTTERS, []))
+            _raw = self._opts().get(CONF_SHUTTERS, [])
+            shutters = list(_raw) if isinstance(_raw, list) else []
             raw_cover = user_input.get(CONF_COVER_ENTITY_ID)
             cover_id = raw_cover[0] if isinstance(raw_cover, list) else (raw_cover or "")
             shutter_cfg = {
@@ -585,7 +593,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Select shutter to edit or remove."""
-        shutters = list(self._opts().get(CONF_SHUTTERS, []))
+        _raw = self._opts().get(CONF_SHUTTERS, [])
+        shutters = list(_raw) if isinstance(_raw, list) else []
 
         if user_input is not None:
             idx = user_input.get("shutter_index")
@@ -617,7 +626,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Edit a shutter (form pre-filled)."""
-        shutters = list(self._opts().get(CONF_SHUTTERS, []))
+        _raw = self._opts().get(CONF_SHUTTERS, [])
+        shutters = list(_raw) if isinstance(_raw, list) else []
         idx = getattr(self, "_edit_index", 0)
         if idx >= len(shutters):
             return self.async_abort(reason="not_found")

@@ -87,6 +87,10 @@ def get_effective_close_position(
     min_pos = shutter.get(CONF_MIN_POSITION_WHEN_OPEN, 20)
     # If target would close further than min_pos, cap at min_pos
     # Cover: 0 = closed, 100 = open. So lower = more closed.
-    if target_position < min_pos:
-        return float(min_pos)
+    try:
+        min_pos_float = float(min_pos)
+    except (TypeError, ValueError):
+        min_pos_float = 20.0
+    if target_position < min_pos_float:
+        return min_pos_float
     return target_position
