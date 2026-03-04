@@ -34,6 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     shutters = entry.options.get(CONF_SHUTTERS, entry.data.get(CONF_SHUTTERS, []))
+    if not isinstance(shutters, list):
+        _LOGGER.warning(
+            "Invalid shutters options type in entry data: %r – resetting to empty list",
+            type(shutters),
+        )
+        shutters = []
     drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
     last_positions: dict[str, float] = {}
     trigger_heights: dict[str, float] = {}
@@ -74,7 +80,14 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     # Update cached data
     if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
         data = hass.data[DOMAIN][entry.entry_id]
-        data["shutters"] = entry.options.get(CONF_SHUTTERS, [])
+        shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in update listener: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
+        data["shutters"] = shutters
         data["drive_delay"] = entry.options.get(CONF_DRIVE_DELAY, 10)
     # Re-setup listeners with new config
     await setup_window_triggers(hass, entry)

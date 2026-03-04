@@ -60,6 +60,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     data["_window_unsubs"] = []
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        _LOGGER.warning(
+            "Invalid shutters options type in window triggers: %r – resetting to empty list",
+            type(shutters),
+        )
+        shutters = []
     last_positions = data["last_positions"]
     trigger_heights = data["trigger_heights"]
     trigger_actions = data["trigger_actions"]

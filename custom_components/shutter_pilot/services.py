@@ -82,6 +82,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async def open_group(call) -> None:
         group = call.data["group"]
         shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in open_group service: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
         shutters = _filter_shutters(shutters, group, use_up=True)
         await _drive_group(
             hass, shutters, 100, "open_group", drive_delay
@@ -90,6 +96,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async def close_group(call) -> None:
         group = call.data["group"]
         shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in close_group service: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
         shutters = _filter_shutters(shutters, group, use_up=False)
         await _drive_group(
             hass, shutters, 0, "close_group", drive_delay,
@@ -99,6 +111,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async def sun_protect_group(call) -> None:
         group = call.data["group"]
         shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in sun_protect_group service: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
         shutters = _filter_shutters(shutters, group, use_up=False)
         # Use first shutter's sun protect position or default 50
         pos = 50

@@ -41,13 +41,13 @@ from .window_helper import get_effective_close_position, is_window_open_or_tilte
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_time(tstr: str) -> time:
-    """Parse HH:MM string to time."""
+def _parse_time(tstr: str | None) -> time:
+    """Parse HH:MM string to time, robust gegen ungültige Werte."""
     try:
-        parts = tstr.strip().split(":")
+        parts = str(tstr or "16:00").strip().split(":")
         if len(parts) >= 2:
             return time(int(parts[0]), int(parts[1]))
-    except (ValueError, IndexError):
+    except (ValueError, IndexError, TypeError):
         pass
     return time(16, 0)  # default 16:00
 
@@ -95,17 +95,40 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         unsub()
     data["_brightness_unsubs"] = []
 
-    brightness_entity = entry.options.get(CONF_BRIGHTNESS_ENTITY_ID, "").strip() or ""
+    raw_brightness_entity = entry.options.get(CONF_BRIGHTNESS_ENTITY_ID, "")
+    brightness_entity = str(raw_brightness_entity or "").strip()
     if not brightness_entity:
         _LOGGER.debug("No brightness entity configured, skipping")
         return
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        _LOGGER.warning(
+            "Invalid shutters options type in brightness listener: %r – resetting to empty list",
+            type(shutters),
+        )
+        shutters = []
     opts = entry.options
-    down_threshold = int(entry.options.get(CONF_BRIGHTNESS_DOWN_THRESHOLD, 400))
-    up_threshold = int(entry.options.get(CONF_BRIGHTNESS_UP_THRESHOLD, 500))
-    down_time_str = entry.options.get(CONF_BRIGHTNESS_DOWN_TIME, "16:00")
-    up_time_str = entry.options.get(CONF_BRIGHTNESS_UP_TIME, "05:00")
+
+    raw_down = entry.options.get(CONF_BRIGHTNESS_DOWN_THRESHOLD, 400)
+    raw_up = entry.options.get(CONF_BRIGHTNESS_UP_THRESHOLD, 500)
+    try:
+        down_threshold = int(raw_down)
+    except (TypeError, ValueError):
+        _LOGGER.warning(
+            "Invalid brightness down threshold %r, falling back to 400", raw_down
+        )
+        down_threshold = 400
+    try:
+        up_threshold = int(raw_up)
+    except (TypeError, ValueError):
+        _LOGGER.warning(
+            "Invalid brightness up threshold %r, falling back to 500", raw_up
+        )
+        up_threshold = 500
+
+    down_time_str = entry.options.get(CONF_BRIGHTNESS_DOWN_TIME, "16:00") or "16:00"
+    up_time_str = entry.options.get(CONF_BRIGHTNESS_UP_TIME, "05:00") or "05:00"
     down_time = _parse_time(down_time_str)
     up_time = _parse_time(up_time_str)
 

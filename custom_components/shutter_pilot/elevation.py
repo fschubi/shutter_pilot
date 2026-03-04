@@ -62,8 +62,23 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
         return
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        _LOGGER.warning(
+            "Invalid shutters options type in elevation listener: %r – resetting to empty list",
+            type(shutters),
+        )
+        shutters = []
     opts = entry.options
-    threshold = float(entry.options.get(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD))
+    raw_threshold = entry.options.get(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD)
+    try:
+        threshold = float(raw_threshold)
+    except (TypeError, ValueError):
+        _LOGGER.warning(
+            "Invalid elevation_threshold %r, falling back to default %s",
+            raw_threshold,
+            DEFAULT_ELEVATION_THRESHOLD,
+        )
+        threshold = float(DEFAULT_ELEVATION_THRESHOLD)
 
     # sun.sun has elevation in attributes (HA 2024+)
     sun_entity = "sun.sun"

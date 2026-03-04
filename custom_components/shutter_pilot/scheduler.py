@@ -175,6 +175,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data.setdefault("drive_after_close_pending", {})
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        _LOGGER.warning(
+            "Invalid shutters options type in scheduler: %r – resetting to empty list",
+            type(shutters),
+        )
+        shutters = []
     drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
     opts = entry.options
 
