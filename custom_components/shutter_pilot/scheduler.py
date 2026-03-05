@@ -185,6 +185,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
     opts = entry.options
 
+    covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
+    covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
+
     async def drive_shutters(
         shutter_list: list[dict],
         position: float,
@@ -217,6 +220,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     {"entity_id": cover, "position": eff_pos},
                     blocking=True,
                 )
+                if position >= 50:
+                    covers_driven_up.add(cover)
+                    covers_driven_down.discard(cover)
+                else:
+                    covers_driven_down.add(cover)
+                    covers_driven_up.discard(cover)
                 if eff_pos != position:
                     _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
                 else:
@@ -229,6 +238,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not _is_auto_enabled(hass, opts, group_name):
             return
         filtered = _filter_by_group(shutters, group_name, use_group_up=True)
+        # Rollläden weglassen, die in dieser Phase schon automatisch hochgefahren wurden.
+        filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
             return
         hass.async_create_task(
@@ -240,6 +251,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not _is_auto_enabled(hass, opts, group_name):
             return
         filtered = _filter_by_group(shutters, group_name, use_group_up=False)
+        # Rollläden weglassen, die in dieser Phase schon automatisch runtergefahren wurden.
+        filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:
             return
         hass.async_create_task(

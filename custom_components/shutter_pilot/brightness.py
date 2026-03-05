@@ -97,13 +97,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     for unsub in data.get("_brightness_unsubs", []):
         unsub()
     data["_brightness_unsubs"] = []
-    # Per-Rollladen-Sperren:
-    # - locked_down: einmal automatisch geschlossen -> weitere „Runter“-Versuche
-    #   werden ignoriert, bis die „Hoch“-Logik wieder greift.
-    # - locked_up: einmal automatisch geöffnet -> weitere „Hoch“-Versuche
-    #   werden ignoriert, bis die „Runter“-Logik wieder greift.
-    locked_down: set[str] = data.setdefault("brightness_down_locked", set())
-    locked_up: set[str] = data.setdefault("brightness_up_locked", set())
+    # Gemeinsame Sperren mit Scheduler/Elevation: Rollladen in dieser Phase schon automatisch bewegt.
+    covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
+    covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
 
     raw_brightness_entity = entry.options.get(CONF_BRIGHTNESS_ENTITY_ID, "")
     brightness_entity = str(raw_brightness_entity or "").strip()
@@ -173,9 +169,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 if not _is_auto_enabled(hass, opts, grp):
                     continue
                 cover_entity = shutter[CONF_COVER_ENTITY_ID]
-                if cover_entity in locked_down:
-                    # Manueller Wunsch oder bereits geschlossen: in dieser Dunkel-Phase
-                    # nicht erneut automatisch schließen.
+                if cover_entity in covers_driven_down:
+                    # In dieser Dunkel-Phase schon automatisch runter gefahren (oder Scheduler/Elevation).
                     continue
                 pos = shutter.get(CONF_POSITION_CLOSED, 0)
                 drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
@@ -191,10 +186,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Brightness down")
                 )
-                locked_down.add(cover_entity)
-                # Gegensperre für „hoch“ aufheben: neue Dunkel-Phase gestartet.
-                if cover_entity in locked_up:
-                    locked_up.discard(cover_entity)
+                covers_driven_down.add(cover_entity)
+                covers_driven_up.discard(cover_entity)
                 if grp not in handled_groups_down:
                     handled_groups_down.add(grp)
                     hass.async_create_task(
@@ -209,18 +202,15 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 if not _is_auto_enabled(hass, opts, grp):
                     continue
                 cover_entity = shutter[CONF_COVER_ENTITY_ID]
-                if cover_entity in locked_up:
-                    # Bereits im aktuellen Helligkeits-Zyklus automatisch geöffnet –
-                    # weitere „Hoch“-Versuche ignorieren, bis wieder dunkel wird.
+                if cover_entity in covers_driven_up:
+                    # In dieser Hell-Phase schon automatisch hoch gefahren (z. B. Scheduler oder Helligkeit).
                     continue
                 pos = shutter.get(CONF_POSITION_OPEN, 100)
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Brightness up")
                 )
-                locked_up.add(cover_entity)
-                # Natürlicher Gegen-Impuls (hell geworden): „Runter“-Sperre aufheben.
-                if cover_entity in locked_down:
-                    locked_down.discard(cover_entity)
+                covers_driven_up.add(cover_entity)
+                covers_driven_down.discard(cover_entity)
                 if grp not in handled_groups_up:
                     handled_groups_up.add(grp)
                     hass.async_create_task(

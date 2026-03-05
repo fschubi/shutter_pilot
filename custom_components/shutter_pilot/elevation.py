@@ -104,12 +104,16 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 return
             elevation_fired["date"] = today
             handled_groups: set[str] = set()
+            covers_driven_down = data.setdefault("covers_driven_down", set())
+            covers_driven_up = data.setdefault("covers_driven_up", set())
             for shutter in shutters:
                 grp = shutter.get(CONF_GROUP_DOWN, GROUP_LIVING)
                 if not _is_auto_enabled(hass, opts, grp):
                     continue
                 cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
                 if not cover_entity:
+                    continue
+                if cover_entity in covers_driven_down:
                     continue
                 pos = shutter.get(CONF_POSITION_SUN_PROTECT, 50)
                 drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
@@ -125,6 +129,8 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Elevation down")
                 )
+                covers_driven_down.add(cover_entity)
+                covers_driven_up.discard(cover_entity)
                 if grp not in handled_groups:
                     handled_groups.add(grp)
                     hass.async_create_task(

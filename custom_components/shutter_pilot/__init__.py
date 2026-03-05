@@ -57,6 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "trigger_actions": trigger_actions,
         "brightness_down": brightness_down_state,
         "drive_after_close_pending": {},
+        # Gemeinsame Sperren: Rollladen wurde in dieser Phase schon automatisch hoch/runter gefahren.
+        # Verhindert, dass Helligkeit/Scheduler/Elevation manuelle Stellung sofort überschreiben.
+        "covers_driven_up": set(),
+        "covers_driven_down": set(),
     }
 
     async def _on_ha_started(_: Any) -> None:
