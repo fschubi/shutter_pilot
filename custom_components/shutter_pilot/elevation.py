@@ -27,6 +27,7 @@ from .const import (
     GROUP_CHILDREN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
+from .group_actions import run_group_light_action
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,6 +103,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if elevation_fired.get("date") == today:
                 return
             elevation_fired["date"] = today
+            handled_groups: set[str] = set()
             for shutter in shutters:
                 grp = shutter.get(CONF_GROUP_DOWN, GROUP_LIVING)
                 if not _is_auto_enabled(hass, opts, grp):
@@ -123,6 +125,11 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Elevation down")
                 )
+                if grp not in handled_groups:
+                    handled_groups.add(grp)
+                    hass.async_create_task(
+                        run_group_light_action(hass, entry, grp, "down")
+                    )
         else:
             # Sun above threshold – reset for next day
             if elevation_fired.get("date") == today:

@@ -58,7 +58,13 @@
           "elevation_threshold": "Elevation threshold (°)",
           "auto_living": "Auto mode Living",
           "auto_sleep": "Auto mode Sleep",
-          "auto_children": "Auto mode Children"
+          "auto_children": "Auto mode Children",
+          "living_down_light_entity": "Living group: light/switch for down",
+          "living_down_light_brightness": "Living group: brightness when going down (%)",
+          "sleep_down_light_entity": "Sleep group: light/switch for down",
+          "sleep_down_light_brightness": "Sleep group: brightness when going down (%)",
+          "children_down_light_entity": "Children group: light/switch for down",
+          "children_down_light_brightness": "Children group: brightness when going down (%)"
         }
       },
       "settings_schedule_living": {

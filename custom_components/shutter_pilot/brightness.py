@@ -38,6 +38,7 @@ from .const import (
     GROUP_CHILDREN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
+from .group_actions import run_group_light_action
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,6 +154,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         else:
             is_up_window, is_down_window = _current_time_in_range(now, up_time, down_time)
 
+        handled_groups_down: set[str] = set()
+        handled_groups_up: set[str] = set()
+
         # Down logic: time >= down_time AND lux <= down_threshold
         if is_down_window and lux <= down_threshold and shutters_down:
             data["brightness_down"] = True
@@ -175,6 +179,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Brightness down")
                 )
+                if grp not in handled_groups_down:
+                    handled_groups_down.add(grp)
+                    hass.async_create_task(
+                        run_group_light_action(hass, entry, grp, "down")
+                    )
 
         # Up logic: between up_time and down_time AND lux > up_threshold
         elif is_up_window and lux > up_threshold and shutters_up:
@@ -188,6 +197,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 hass.async_create_task(
                     _set_cover_position(hass, cover_entity, pos, "Brightness up")
                 )
+                if grp not in handled_groups_up:
+                    handled_groups_up.add(grp)
+                    hass.async_create_task(
+                        run_group_light_action(hass, entry, grp, "up")
+                    )
 
     unsub = async_track_state_change(
         hass, brightness_entity, _on_brightness_change

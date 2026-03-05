@@ -72,6 +72,7 @@ from .const import (
     CONF_WE_SHUTTER_DOWN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
+from .group_actions import run_group_light_action
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,6 +234,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.async_create_task(
             drive_shutters(filtered, 100, f"Schedule up ({group_name})", apply_lock_protection=False, group=group_name)
         )
+        hass.async_create_task(run_group_light_action(hass, entry, group_name, "up"))
 
     def _run_down(group_name: str) -> None:
         if not _is_auto_enabled(hass, opts, group_name):
@@ -246,6 +248,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 apply_lock_protection=True, group=group_name
             )
         )
+        hass.async_create_task(run_group_light_action(hass, entry, group_name, "down"))
 
     # Fixed-time schedule: run every minute, fire only once per event per day
     fired_today = data.setdefault("_scheduler_fired", {})

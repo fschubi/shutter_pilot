@@ -110,6 +110,13 @@ from .const import (
     CONF_SLEEP_SUNSET_OFFSET,
     CONF_CHILDREN_SUNRISE_OFFSET,
     CONF_CHILDREN_SUNSET_OFFSET,
+    CONF_LIVING_DOWN_LIGHT_ENTITY,
+    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS,
+    CONF_SLEEP_DOWN_LIGHT_ENTITY,
+    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS,
+    CONF_CHILDREN_DOWN_LIGHT_ENTITY,
+    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS,
+    DEFAULT_GROUP_LIGHT_BRIGHTNESS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -165,6 +172,12 @@ DEFAULT_OPTIONS = {
     CONF_SLEEP_SUNSET_OFFSET: 0,
     CONF_CHILDREN_SUNRISE_OFFSET: 0,
     CONF_CHILDREN_SUNSET_OFFSET: 0,
+    CONF_LIVING_DOWN_LIGHT_ENTITY: "",
+    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
+    CONF_SLEEP_DOWN_LIGHT_ENTITY: "",
+    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
+    CONF_CHILDREN_DOWN_LIGHT_ENTITY: "",
+    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
 }
 
 
@@ -384,6 +397,18 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_AUTO_LIVING: self._eid(user_input.get(CONF_AUTO_LIVING)),
                 CONF_AUTO_SLEEP: self._eid(user_input.get(CONF_AUTO_SLEEP)),
                 CONF_AUTO_CHILDREN: self._eid(user_input.get(CONF_AUTO_CHILDREN)),
+                CONF_LIVING_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_LIVING_DOWN_LIGHT_ENTITY)),
+                CONF_LIVING_DOWN_LIGHT_BRIGHTNESS: user_input.get(
+                    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
+                ),
+                CONF_SLEEP_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_SLEEP_DOWN_LIGHT_ENTITY)),
+                CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS: user_input.get(
+                    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
+                ),
+                CONF_CHILDREN_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_CHILDREN_DOWN_LIGHT_ENTITY)),
+                CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS: user_input.get(
+                    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
+                ),
             })
 
         o = self._opts().get
@@ -437,6 +462,36 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
                 ),
+                vol.Optional(
+                    CONF_LIVING_DOWN_LIGHT_ENTITY,
+                    default=o(CONF_LIVING_DOWN_LIGHT_ENTITY) or "",
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["light", "switch"]),
+                ),
+                vol.Optional(
+                    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS,
+                    default=o(CONF_LIVING_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                vol.Optional(
+                    CONF_SLEEP_DOWN_LIGHT_ENTITY,
+                    default=o(CONF_SLEEP_DOWN_LIGHT_ENTITY) or "",
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["light", "switch"]),
+                ),
+                vol.Optional(
+                    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS,
+                    default=o(CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+                vol.Optional(
+                    CONF_CHILDREN_DOWN_LIGHT_ENTITY,
+                    default=o(CONF_CHILDREN_DOWN_LIGHT_ENTITY) or "",
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["light", "switch"]),
+                ),
+                vol.Optional(
+                    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS,
+                    default=o(CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
             }),
         )
 

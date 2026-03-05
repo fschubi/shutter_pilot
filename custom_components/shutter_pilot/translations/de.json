@@ -176,7 +176,13 @@
           "elevation_threshold": "Elevation-Schwellwert (°)",
           "auto_living": "Auto-Modus Wohnbereich",
           "auto_sleep": "Auto-Modus Schlafbereich",
-          "auto_children": "Auto-Modus Kinderbereich"
+          "auto_children": "Auto-Modus Kinderbereich",
+          "living_down_light_entity": "Wohnbereich: Lampe/Steckdose bei Runter",
+          "living_down_light_brightness": "Wohnbereich: Helligkeit bei Runter (%)",
+          "sleep_down_light_entity": "Schlafbereich: Lampe/Steckdose bei Runter",
+          "sleep_down_light_brightness": "Schlafbereich: Helligkeit bei Runter (%)",
+          "children_down_light_entity": "Kinderbereich: Lampe/Steckdose bei Runter",
+          "children_down_light_brightness": "Kinderbereich: Helligkeit bei Runter (%)"
         }
       },
       "settings_schedule_living": {
