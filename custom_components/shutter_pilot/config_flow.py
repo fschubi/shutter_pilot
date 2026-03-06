@@ -412,17 +412,21 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             })
 
         o = self._opts().get
+
+        def _entity_list(key: str):
+            val = o(key)
+            if isinstance(val, list):
+                return val
+            return [val] if val else []
+
         return self.async_show_form(
             step_id="settings_general",
             data_schema=vol.Schema({
                 vol.Optional(
                     CONF_BRIGHTNESS_ENTITY_ID,
-                    default=o(CONF_BRIGHTNESS_ENTITY_ID) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="sensor"),
-                    ),
+                    default=_entity_list(CONF_BRIGHTNESS_ENTITY_ID),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor", multiple=True),
                 ),
                 vol.Optional(
                     CONF_BRIGHTNESS_DOWN_THRESHOLD,
@@ -452,38 +456,38 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
                 vol.Optional(
                     CONF_AUTO_LIVING,
-                    default=o(CONF_AUTO_LIVING) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    default=_entity_list(CONF_AUTO_LIVING),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["input_boolean", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
                     CONF_AUTO_SLEEP,
-                    default=o(CONF_AUTO_SLEEP) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    default=_entity_list(CONF_AUTO_SLEEP),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["input_boolean", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
                     CONF_AUTO_CHILDREN,
-                    default=o(CONF_AUTO_CHILDREN) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["input_boolean", "switch"]),
+                    default=_entity_list(CONF_AUTO_CHILDREN),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["input_boolean", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
                     CONF_LIVING_DOWN_LIGHT_ENTITY,
-                    default=o(CONF_LIVING_DOWN_LIGHT_ENTITY) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["light", "switch"]),
+                    default=_entity_list(CONF_LIVING_DOWN_LIGHT_ENTITY),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["light", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
@@ -492,11 +496,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                 vol.Optional(
                     CONF_SLEEP_DOWN_LIGHT_ENTITY,
-                    default=o(CONF_SLEEP_DOWN_LIGHT_ENTITY) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["light", "switch"]),
+                    default=_entity_list(CONF_SLEEP_DOWN_LIGHT_ENTITY),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["light", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
@@ -505,11 +509,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
                 vol.Optional(
                     CONF_CHILDREN_DOWN_LIGHT_ENTITY,
-                    default=o(CONF_CHILDREN_DOWN_LIGHT_ENTITY) or "",
-                ): vol.Any(
-                    vol.In([None, "", []]),
-                    selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["light", "switch"]),
+                    default=_entity_list(CONF_CHILDREN_DOWN_LIGHT_ENTITY),
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=["light", "switch"],
+                        multiple=True,
                     ),
                 ),
                 vol.Optional(
