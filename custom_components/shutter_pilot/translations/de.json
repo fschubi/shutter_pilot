@@ -108,7 +108,18 @@
             "position_closed": "Position Geschlossen (%)",
             "position_sun_protect": "Sonnenschutz-Position (%)",
             "brightness_trigger": "Helligkeits-Reaktion",
-            "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)"
+            "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)",
+            "off": "Aus",
+            "only_up": "Nur hoch",
+            "only_down": "Nur runter",
+            "up_down": "Hoch und runter",
+            "living": "Wohnbereich",
+            "sleep": "Schlafbereich",
+            "children": "Kinderbereich",
+            "all": "Alle",
+            "up": "Hoch",
+            "down": "Runter",
+            "both": "Beides"
           }
         },
         "edit_shutter": {
@@ -116,12 +127,46 @@
           "description": "Rollladen und Aktion wählen.",
           "data": {
             "shutter_index": "Rollladen",
-            "action": "Aktion"
+            "action": "Aktion",
+            "edit": "Bearbeiten",
+            "remove": "Entfernen"
           }
         },
         "edit_shutter_form": {
           "title": "Rollladen bearbeiten",
-          "description": "Rollladen-Konfiguration ändern."
+          "description": "Rollladen-Konfiguration ändern.",
+          "data": {
+            "cover_entity_id": "Rollladen / Cover",
+            "name": "Name",
+            "window_entity_id": "Fenster-/Türsensor (optional)",
+            "window_open_state": "Fenster-Status 'offen'",
+            "window_tilted_state": "Fenster-Status 'gekippt'",
+            "position_when_window_open": "Position bei geöffnetem Fenster (%)",
+            "position_when_window_tilted": "Position bei gekipptem Fenster (%)",
+            "lock_protection": "Aussperrschutz",
+            "min_position_when_open": "Mindest-Position wenn Tür offen (%)",
+            "trigger_mode": "Trigger-Modus",
+            "group_up": "Gruppe (Hoch)",
+            "group_down": "Gruppe (Runter)",
+            "position_open": "Position Offen (%)",
+            "position_closed": "Position Geschlossen (%)",
+            "position_sun_protect": "Sonnenschutz-Position (%)",
+            "brightness_trigger": "Helligkeits-Reaktion",
+            "drive_after_close": "Fahren nach Schließen",
+            "off": "Aus",
+            "only_up": "Nur hoch",
+            "only_down": "Nur runter",
+            "up_down": "Hoch und runter",
+            "living": "Wohnbereich",
+            "sleep": "Schlafbereich",
+            "children": "Kinderbereich",
+            "all": "Alle",
+            "up": "Hoch",
+            "down": "Runter",
+            "both": "Beides",
+            "edit": "Bearbeiten",
+            "remove": "Entfernen"
+          }
         }
       }
     }
@@ -253,7 +298,18 @@
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
           "brightness_trigger": "Helligkeits-Reaktion",
-          "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)"
+          "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)",
+          "off": "Aus",
+          "only_up": "Nur hoch",
+          "only_down": "Nur runter",
+          "up_down": "Hoch und runter",
+          "living": "Wohnbereich",
+          "sleep": "Schlafbereich",
+          "children": "Kinderbereich",
+          "all": "Alle",
+          "up": "Hoch",
+          "down": "Runter",
+          "both": "Beides"
         }
       },
       "edit_shutter": {
@@ -261,7 +317,9 @@
         "description": "Rollladen und Aktion wählen.",
         "data": {
           "shutter_index": "Rollladen",
-          "action": "Aktion"
+          "action": "Aktion",
+          "edit": "Bearbeiten",
+          "remove": "Entfernen"
         }
       },
       "edit_shutter_form": {
@@ -284,7 +342,18 @@
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
           "brightness_trigger": "Helligkeits-Reaktion",
-          "drive_after_close": "Fahren nach Schließen"
+          "drive_after_close": "Fahren nach Schließen",
+          "off": "Aus",
+          "only_up": "Nur hoch",
+          "only_down": "Nur runter",
+          "up_down": "Hoch und runter",
+          "living": "Wohnbereich",
+          "sleep": "Schlafbereich",
+          "children": "Kinderbereich",
+          "all": "Alle",
+          "up": "Hoch",
+          "down": "Runter",
+          "both": "Beides"
         }
       }
     }

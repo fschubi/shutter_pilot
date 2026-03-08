@@ -8,9 +8,9 @@
         "settings_schedule_living": { "title": "Zeitplan Wohnbereich", "data": { "living_type_up": "Typ Hoch", "living_type_down": "Typ Runter", "living_sunrise_offset": "Offset Sonnenaufgang (Min.)", "living_sunset_offset": "Offset Sonnenuntergang (Min.)", "living_w_up_min": "Woche: Hoch ab", "living_w_up_max": "Woche: Hoch bis", "living_w_down": "Woche: Runter", "living_we_up_min": "WE: Hoch ab", "living_we_up_max": "WE: Hoch bis", "living_we_down": "WE: Runter" } },
         "settings_schedule_sleep": { "title": "Zeitplan Schlafbereich", "data": { "sleep_type_up": "Typ Hoch", "sleep_type_down": "Typ Runter", "sleep_sunrise_offset": "Offset Sonnenaufgang (Min.)", "sleep_sunset_offset": "Offset Sonnenuntergang (Min.)", "sleep_w_up_min": "Woche: Hoch ab", "sleep_w_up_max": "Woche: Hoch bis", "sleep_w_down": "Woche: Runter", "sleep_we_up_min": "WE: Hoch ab", "sleep_we_up_max": "WE: Hoch bis", "sleep_we_down": "WE: Runter" } },
         "settings_schedule_children": { "title": "Zeitplan Kinderbereich", "data": { "children_type_up": "Typ Hoch", "children_type_down": "Typ Runter", "children_sunrise_offset": "Offset Sonnenaufgang (Min.)", "children_sunset_offset": "Offset Sonnenuntergang (Min.)", "children_w_up_min": "Woche: Hoch ab", "children_w_up_max": "Woche: Hoch bis", "children_w_down": "Woche: Runter", "children_we_up_min": "WE: Hoch ab", "children_we_up_max": "WE: Hoch bis", "children_we_down": "WE: Runter" } },
-        "add_shutter": { "title": "Rollladen hinzufügen", "description": "Cover, Fenster-Trigger und Gruppe konfigurieren.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen" } },
-        "edit_shutter": { "title": "Rollladen bearbeiten oder löschen", "data": { "shutter_index": "Rollladen", "action": "Aktion" } },
-        "edit_shutter_form": { "title": "Rollladen bearbeiten", "description": "Rollladen-Konfiguration ändern.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen" } }
+        "add_shutter": { "title": "Rollladen hinzufügen", "description": "Cover, Fenster-Trigger und Gruppe konfigurieren.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } },
+        "edit_shutter": { "title": "Rollladen bearbeiten oder löschen", "data": { "shutter_index": "Rollladen", "action": "Aktion", "edit": "Bearbeiten", "remove": "Entfernen" } },
+        "edit_shutter_form": { "title": "Rollladen bearbeiten", "description": "Rollladen-Konfiguration ändern.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } }
       }
     }
   },
@@ -150,7 +150,18 @@
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
           "brightness_trigger": "Helligkeits-Reaktion",
-          "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)"
+          "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)",
+          "off": "Aus",
+          "only_up": "Nur hoch",
+          "only_down": "Nur runter",
+          "up_down": "Hoch und runter",
+          "living": "Wohnbereich",
+          "sleep": "Schlafbereich",
+          "children": "Kinderbereich",
+          "all": "Alle",
+          "up": "Hoch",
+          "down": "Runter",
+          "both": "Beides"
         }
       },
       "edit_shutter": {
@@ -158,7 +169,9 @@
         "description": "Rollladen und Aktion wählen.",
         "data": {
           "shutter_index": "Rollladen",
-          "action": "Aktion"
+          "action": "Aktion",
+          "edit": "Bearbeiten",
+          "remove": "Entfernen"
         }
       },
       "edit_shutter_form": {
@@ -181,7 +194,18 @@
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
           "brightness_trigger": "Helligkeits-Reaktion",
-          "drive_after_close": "Fahren nach Schließen"
+          "drive_after_close": "Fahren nach Schließen",
+          "off": "Aus",
+          "only_up": "Nur hoch",
+          "only_down": "Nur runter",
+          "up_down": "Hoch und runter",
+          "living": "Wohnbereich",
+          "sleep": "Schlafbereich",
+          "children": "Kinderbereich",
+          "all": "Alle",
+          "up": "Hoch",
+          "down": "Runter",
+          "both": "Beides"
         }
       }
     }

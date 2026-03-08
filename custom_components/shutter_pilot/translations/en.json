@@ -261,7 +261,9 @@
         "description": "Select a shutter and the action.",
         "data": {
           "shutter_index": "Shutter",
-          "action": "Action"
+          "action": "Action",
+          "edit": "Edit",
+          "remove": "Remove"
         }
       },
       "edit_shutter_form": {
