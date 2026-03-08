@@ -685,6 +685,22 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(_shutter_schema()),
         )
 
+    def _build_edit_shutter_form_schema(self, shutters: list, idx: int) -> dict:
+        """Build the vol.Schema dict for the edit-shutter form (step edit_shutter_form)."""
+        base = _shutter_schema()
+        s = shutters[idx] if idx < len(shutters) else {}
+        edit_schema = {}
+        for k, v in base.items():
+            def_val = s.get(k)
+            if k in (CONF_COVER_ENTITY_ID, CONF_NAME):
+                edit_schema[k] = vol.Required(k, default=def_val or "")
+            else:
+                edit_schema[k] = vol.Optional(
+                    k,
+                    default=def_val if def_val is not None else (v.default if hasattr(v, "default") else None),
+                )
+        return edit_schema
+
     async def async_step_edit_shutter(
         self, user_input: dict | None = None
     ) -> FlowResult:
@@ -704,7 +720,13 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=new_opts)
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
-                return await self.async_step_edit_shutter_form()
+                # Return the edit form directly so the framework does not re-validate
+                # user_input (shutter_index, action) against the edit form schema.
+                edit_schema = self._build_edit_shutter_form_schema(shutters, int(idx))
+                return self.async_show_form(
+                    step_id="edit_shutter_form",
+                    data_schema=vol.Schema(edit_schema),
+                )
 
         options = {i: f"{s.get(CONF_NAME, 'Shutter')} ({s.get(CONF_COVER_ENTITY_ID, '')})" for i, s in enumerate(shutters)}
         schema = vol.Schema(
@@ -721,14 +743,14 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     async def async_step_edit_shutter_form(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Edit a shutter (form pre-filled)."""
+        """Edit a shutter (form pre-filled). Called when user submits the edit form."""
         _raw = self._opts().get(CONF_SHUTTERS, [])
         shutters = list(_raw) if isinstance(_raw, list) else []
         idx = getattr(self, "_edit_index", 0)
         if idx >= len(shutters):
             return self.async_abort(reason="not_found")
 
-        if user_input is not None:
+        if user_input is not None and "shutter_index" not in user_input and "action" not in user_input:
             raw_cover = user_input.get(CONF_COVER_ENTITY_ID)
             cover_id = raw_cover[0] if isinstance(raw_cover, list) else (raw_cover or "")
             shutter_cfg = {
@@ -758,15 +780,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
             return self.async_create_entry(title="", data=new_opts)
 
-        s = shutters[idx]
-        base = _shutter_schema()
-        edit_schema = {}
-        for k, v in base.items():
-            def_val = s.get(k)
-            if k in (CONF_COVER_ENTITY_ID, CONF_NAME):
-                edit_schema[k] = vol.Required(k, default=def_val or "")
-            else:
-                edit_schema[k] = vol.Optional(k, default=def_val if def_val is not None else (v.default if hasattr(v, "default") else None))
+        edit_schema = self._build_edit_shutter_form_schema(shutters, idx)
         return self.async_show_form(
             step_id="edit_shutter_form",
             data_schema=vol.Schema(edit_schema),
