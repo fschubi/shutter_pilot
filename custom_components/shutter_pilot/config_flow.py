@@ -731,13 +731,24 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=new_opts)
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
-                # Same schema as add (string keys + EntitySelector) so voluptuous_serialize works.
                 defaults = self._edit_shutter_defaults(shutters, int(idx))
-                result = self.async_show_form(
-                    step_id="edit_shutter_form",
-                    data_schema=vol.Schema(_shutter_schema()),
-                )
-                # Set defaults on the result dict so the frontend pre-fills the form
+                schema = vol.Schema(_shutter_schema())
+                try:
+                    if hasattr(self, "add_suggested_values_to_schema"):
+                        schema = self.add_suggested_values_to_schema(schema, defaults)
+                except Exception:
+                    pass
+                try:
+                    result = self.async_show_form(
+                        step_id="edit_shutter_form",
+                        data_schema=schema,
+                        data_schema_defaults=defaults,
+                    )
+                except TypeError:
+                    result = self.async_show_form(
+                        step_id="edit_shutter_form",
+                        data_schema=schema,
+                    )
                 if isinstance(result, dict):
                     result["data_schema_defaults"] = defaults
                 return result
@@ -795,10 +806,23 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=new_opts)
 
         defaults = self._edit_shutter_defaults(shutters, idx)
-        result = self.async_show_form(
-            step_id="edit_shutter_form",
-            data_schema=vol.Schema(_shutter_schema()),
-        )
+        schema = vol.Schema(_shutter_schema())
+        try:
+            if hasattr(self, "add_suggested_values_to_schema"):
+                schema = self.add_suggested_values_to_schema(schema, defaults)
+        except Exception:
+            pass
+        try:
+            result = self.async_show_form(
+                step_id="edit_shutter_form",
+                data_schema=schema,
+                data_schema_defaults=defaults,
+            )
+        except TypeError:
+            result = self.async_show_form(
+                step_id="edit_shutter_form",
+                data_schema=schema,
+            )
         if isinstance(result, dict):
             result["data_schema_defaults"] = defaults
         return result
