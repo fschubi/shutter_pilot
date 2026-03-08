@@ -24,6 +24,8 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_DRIVE_DELAY,
     CONF_DRIVE_AFTER_CLOSE,
+    CONF_BRIGHTNESS_ENTITY_ID,
+    CONF_BRIGHTNESS_UP_THRESHOLD,
     CONF_AUTO_LIVING,
     CONF_AUTO_SLEEP,
     CONF_AUTO_CHILDREN,
@@ -86,6 +88,37 @@ def _parse_time(tstr: str) -> time:
     except (ValueError, IndexError):
         pass
     return time(6, 0)
+
+
+def _brightness_blocks_scheduler_up(hass: HomeAssistant, opts: dict, now: datetime) -> bool:
+    """True if a brightness sensor is configured and current lux is still <= up_threshold.
+    In that case the scheduler must NOT drive shutters up; the brightness listener will do it
+    when lux rises above the threshold.
+    """
+    raw_entity = opts.get(CONF_BRIGHTNESS_ENTITY_ID, "")
+    if isinstance(raw_entity, list):
+        brightness_entity = (raw_entity[0] if raw_entity else "") or ""
+    else:
+        brightness_entity = str(raw_entity or "").strip()
+    if not brightness_entity:
+        return False
+
+    state = hass.states.get(brightness_entity)
+    if not state or state.state in (None, "unknown", "unavailable"):
+        return True  # sensor unavailable -> block to be safe
+    try:
+        lux = float(state.state)
+    except (TypeError, ValueError):
+        return True
+
+    try:
+        up_threshold = int(opts.get(CONF_BRIGHTNESS_UP_THRESHOLD, 500))
+    except (TypeError, ValueError):
+        up_threshold = 500
+
+    if lux > up_threshold:
+        return False
+    return True
 
 
 def _is_weekend(d: datetime) -> bool:
@@ -280,6 +313,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             t = now.time()
 
             if sched["type_up"] == TIME_TYPE_FIXED and up_min <= t <= up_max:
+                if _brightness_blocks_scheduler_up(hass, opts, now):
+                    continue
                 key_up = f"up_{group_name}"
                 if fired_today.get(key_up) != today:
                     fired_today[key_up] = today
@@ -300,6 +335,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _make_sunrise_cb(g):
         @callback
         def _cb(event_time):
+            if _brightness_blocks_scheduler_up(hass, opts, datetime.now()):
+                return
             if _is_auto_enabled(hass, opts, g):
                 _run_up(g)
         return _cb
