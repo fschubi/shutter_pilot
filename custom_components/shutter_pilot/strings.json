@@ -149,7 +149,25 @@
       "edit_shutter_form": {
         "title": "Edit shutter",
         "description": "Change shutter configuration.",
-        "data": {}
+        "data": {
+          "cover_entity_id": "Shutter / Cover",
+          "name": "Name",
+          "window_entity_id": "Window/door sensor (optional)",
+          "window_open_state": "Window state 'open'",
+          "window_tilted_state": "Window state 'tilted'",
+          "position_when_window_open": "Position when window open (%)",
+          "position_when_window_tilted": "Position when window tilted (%)",
+          "lock_protection": "Lock protection",
+          "min_position_when_open": "Minimum position when door open (%)",
+          "trigger_mode": "Trigger mode",
+          "group_up": "Group (Up)",
+          "group_down": "Group (Down)",
+          "position_open": "Position open (%)",
+          "position_closed": "Position closed (%)",
+          "position_sun_protect": "Sun protection position (%)",
+          "brightness_trigger": "Brightness reaction",
+          "drive_after_close": "Drive after close"
+        }
       }
     }
   },
