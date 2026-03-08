@@ -686,20 +686,30 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         )
 
     def _edit_shutter_defaults(self, shutters: list, idx: int) -> dict:
-        """Current values for the shutter at idx, for use as data_schema_defaults."""
+        """Current values for the shutter at idx, for data_schema_defaults (pre-fill edit form).
+        Keys must be strings (e.g. 'cover_entity_id') to match the serialized schema.
+        """
         s = shutters[idx] if idx < len(shutters) else {}
         base = _shutter_schema()
         out = {}
         for k in base:
-            val = s.get(k)
+            key_name = getattr(k, "schema", k)
+            if hasattr(key_name, "schema"):
+                key_name = getattr(key_name, "schema", key_name)
+            if not isinstance(key_name, str):
+                key_name = str(key_name)
+            val = s.get(key_name)
             if val is not None:
-                out[k] = val
-            elif k in (CONF_COVER_ENTITY_ID, CONF_NAME):
-                out[k] = ""
+                out[key_name] = val
             else:
                 v = base[k]
-                if hasattr(v, "default"):
-                    out[k] = v.default
+                out[key_name] = getattr(v, "default", None)
+            if out[key_name] is None and key_name in (
+                CONF_COVER_ENTITY_ID,
+                CONF_NAME,
+                CONF_WINDOW_ENTITY_ID,
+            ):
+                out[key_name] = ""
         return out
 
     async def async_step_edit_shutter(
@@ -722,19 +732,15 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
                 # Same schema as add (string keys + EntitySelector) so voluptuous_serialize works.
-                # Pre-fill via data_schema_defaults when supported by HA.
                 defaults = self._edit_shutter_defaults(shutters, int(idx))
-                try:
-                    return self.async_show_form(
-                        step_id="edit_shutter_form",
-                        data_schema=vol.Schema(_shutter_schema()),
-                        data_schema_defaults=defaults,
-                    )
-                except TypeError:
-                    return self.async_show_form(
-                        step_id="edit_shutter_form",
-                        data_schema=vol.Schema(_shutter_schema()),
-                    )
+                result = self.async_show_form(
+                    step_id="edit_shutter_form",
+                    data_schema=vol.Schema(_shutter_schema()),
+                )
+                # Set defaults on the result dict so the frontend pre-fills the form
+                if isinstance(result, dict):
+                    result["data_schema_defaults"] = defaults
+                return result
 
         options = {i: f"{s.get(CONF_NAME, 'Shutter')} ({s.get(CONF_COVER_ENTITY_ID, '')})" for i, s in enumerate(shutters)}
         schema = vol.Schema(
@@ -789,14 +795,10 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=new_opts)
 
         defaults = self._edit_shutter_defaults(shutters, idx)
-        try:
-            return self.async_show_form(
-                step_id="edit_shutter_form",
-                data_schema=vol.Schema(_shutter_schema()),
-                data_schema_defaults=defaults,
-            )
-        except TypeError:
-            return self.async_show_form(
-                step_id="edit_shutter_form",
-                data_schema=vol.Schema(_shutter_schema()),
-            )
+        result = self.async_show_form(
+            step_id="edit_shutter_form",
+            data_schema=vol.Schema(_shutter_schema()),
+        )
+        if isinstance(result, dict):
+            result["data_schema_defaults"] = defaults
+        return result
