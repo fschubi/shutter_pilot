@@ -685,21 +685,22 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(_shutter_schema()),
         )
 
-    def _build_edit_shutter_form_schema(self, shutters: list, idx: int) -> dict:
-        """Build the vol.Schema dict for the edit-shutter form (step edit_shutter_form)."""
-        base = _shutter_schema()
+    def _edit_shutter_defaults(self, shutters: list, idx: int) -> dict:
+        """Current values for the shutter at idx, for use as data_schema_defaults."""
         s = shutters[idx] if idx < len(shutters) else {}
-        edit_schema = {}
-        for k, v in base.items():
-            def_val = s.get(k)
-            if k in (CONF_COVER_ENTITY_ID, CONF_NAME):
-                edit_schema[k] = vol.Required(k, default=def_val or "")
+        base = _shutter_schema()
+        out = {}
+        for k in base:
+            val = s.get(k)
+            if val is not None:
+                out[k] = val
+            elif k in (CONF_COVER_ENTITY_ID, CONF_NAME):
+                out[k] = ""
             else:
-                edit_schema[k] = vol.Optional(
-                    k,
-                    default=def_val if def_val is not None else (v.default if hasattr(v, "default") else None),
-                )
-        return edit_schema
+                v = base[k]
+                if hasattr(v, "default"):
+                    out[k] = v.default
+        return out
 
     async def async_step_edit_shutter(
         self, user_input: dict | None = None
@@ -720,13 +721,20 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=new_opts)
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
-                # Return the edit form directly so the framework does not re-validate
-                # user_input (shutter_index, action) against the edit form schema.
-                edit_schema = self._build_edit_shutter_form_schema(shutters, int(idx))
-                return self.async_show_form(
-                    step_id="edit_shutter_form",
-                    data_schema=vol.Schema(edit_schema),
-                )
+                # Same schema as add (string keys + EntitySelector) so voluptuous_serialize works.
+                # Pre-fill via data_schema_defaults when supported by HA.
+                defaults = self._edit_shutter_defaults(shutters, int(idx))
+                try:
+                    return self.async_show_form(
+                        step_id="edit_shutter_form",
+                        data_schema=vol.Schema(_shutter_schema()),
+                        data_schema_defaults=defaults,
+                    )
+                except TypeError:
+                    return self.async_show_form(
+                        step_id="edit_shutter_form",
+                        data_schema=vol.Schema(_shutter_schema()),
+                    )
 
         options = {i: f"{s.get(CONF_NAME, 'Shutter')} ({s.get(CONF_COVER_ENTITY_ID, '')})" for i, s in enumerate(shutters)}
         schema = vol.Schema(
@@ -780,8 +788,15 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
             return self.async_create_entry(title="", data=new_opts)
 
-        edit_schema = self._build_edit_shutter_form_schema(shutters, idx)
-        return self.async_show_form(
-            step_id="edit_shutter_form",
-            data_schema=vol.Schema(edit_schema),
-        )
+        defaults = self._edit_shutter_defaults(shutters, idx)
+        try:
+            return self.async_show_form(
+                step_id="edit_shutter_form",
+                data_schema=vol.Schema(_shutter_schema()),
+                data_schema_defaults=defaults,
+            )
+        except TypeError:
+            return self.async_show_form(
+                step_id="edit_shutter_form",
+                data_schema=vol.Schema(_shutter_schema()),
+            )
