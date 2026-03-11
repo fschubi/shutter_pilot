@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, time
 from typing import Any
@@ -29,6 +30,8 @@ from .const import (
     CONF_AUTO_LIVING,
     CONF_AUTO_SLEEP,
     CONF_AUTO_CHILDREN,
+    CONF_DRIVE_DELAY,
+    DEFAULT_DRIVE_DELAY,
     BRIGHTNESS_OFF,
     BRIGHTNESS_UP,
     BRIGHTNESS_DOWN,
@@ -93,6 +96,17 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     if not data:
         return
 
+    # Gemeinsame Verzögerung zwischen Rollläden (Sekunden),
+    # konsistent mit Scheduler/Services.
+    raw_delay = entry.options.get(
+        CONF_DRIVE_DELAY,
+        data.get("drive_delay", DEFAULT_DRIVE_DELAY),
+    )
+    try:
+        drive_delay = max(0, int(raw_delay))
+    except (TypeError, ValueError):
+        drive_delay = DEFAULT_DRIVE_DELAY
+
     # Clean up previous listeners
     for unsub in data.get("_brightness_unsubs", []):
         unsub()
@@ -142,6 +156,18 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     shutters_down = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_DOWN, BRIGHTNESS_BOTH)]
     shutters_up = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_UP, BRIGHTNESS_BOTH)]
 
+    async def _set_cover_position_with_delay(
+        hass: HomeAssistant,
+        entity_id: str,
+        position: float,
+        reason: str,
+        delay: int,
+        index: int,
+    ) -> None:
+        if delay > 0 and index > 0:
+            await asyncio.sleep(delay * index)
+        await _set_cover_position(hass, entity_id, position, reason)
+
     @callback
     def _on_brightness_change(entity_id: str, old_state: Any, new_state: Any) -> None:
         if new_state is None or new_state.state in (None, "unknown", "unavailable"):
@@ -164,6 +190,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         # Down logic: time >= down_time AND lux <= down_threshold
         if is_down_window and lux <= down_threshold and shutters_down:
             data["brightness_down"] = True
+            idx = 0
             for shutter in shutters_down:
                 grp = shutter.get(CONF_GROUP_DOWN, GROUP_LIVING)
                 if not _is_auto_enabled(hass, opts, grp):
@@ -184,8 +211,16 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     continue
                 pos = get_effective_close_position(hass, shutter, pos)
                 hass.async_create_task(
-                    _set_cover_position(hass, cover_entity, pos, "Brightness down")
+                    _set_cover_position_with_delay(
+                        hass,
+                        cover_entity,
+                        pos,
+                        "Brightness down",
+                        drive_delay,
+                        idx,
+                    )
                 )
+                idx += 1
                 covers_driven_down.add(cover_entity)
                 covers_driven_up.discard(cover_entity)
                 if grp not in handled_groups_down:
@@ -197,6 +232,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         # Up logic: between up_time and down_time AND lux > up_threshold
         elif is_up_window and lux > up_threshold and shutters_up:
             data["brightness_down"] = False
+            idx = 0
             for shutter in shutters_up:
                 grp = shutter.get(CONF_GROUP_UP, GROUP_LIVING)
                 if not _is_auto_enabled(hass, opts, grp):
@@ -207,8 +243,16 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     continue
                 pos = shutter.get(CONF_POSITION_OPEN, 100)
                 hass.async_create_task(
-                    _set_cover_position(hass, cover_entity, pos, "Brightness up")
+                    _set_cover_position_with_delay(
+                        hass,
+                        cover_entity,
+                        pos,
+                        "Brightness up",
+                        drive_delay,
+                        idx,
+                    )
                 )
+                idx += 1
                 covers_driven_up.add(cover_entity)
                 covers_driven_down.discard(cover_entity)
                 if grp not in handled_groups_up:
