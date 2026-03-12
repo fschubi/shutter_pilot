@@ -42,6 +42,7 @@ from .const import (
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
+from .scheduler import is_within_group_up_schedule_window
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,8 +188,17 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         handled_groups_down: set[str] = set()
         handled_groups_up: set[str] = set()
 
-        # Down logic: time >= down_time AND lux <= down_threshold
-        if is_down_window and lux <= down_threshold and shutters_down:
+        # Down-Logik: lux <= down_threshold (z. B. „abends zu“).
+        # Wichtig: Bei überlappenden Schwellen (Hoch 10 / Runter 25) würde sonst
+        # morgens bei 12–25 Lux ständig „Runter“ gewinnen und Oszillation erzeugen.
+        # Daher: Wenn „Zeitfenster ignorieren“ aktiv ist, nur nach der globalen
+        # Runter-Zeit (Abends) schließen – morgens nie per Lux „runter“ fahren.
+        now_t = now.time()
+        evening_only_down = ignore_time and now_t < down_time
+        if evening_only_down:
+            # Vor Runter-Zeit: keine Abwärts-Fahrt per Helligkeit (nur Hoch möglich).
+            pass
+        elif is_down_window and lux <= down_threshold and shutters_down:
             data["brightness_down"] = True
             idx = 0
             for shutter in shutters_down:
@@ -229,13 +239,18 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         run_group_light_action(hass, entry, grp, "down")
                     )
 
-        # Up logic: between up_time and down_time AND lux > up_threshold
+        # Hoch-Logik: lux > up_threshold. Pro Rollladen zusätzlich prüfen, ob der
+        # zugeordnete Bereich (group_up) laut Zeitplan gerade im Hoch-Fenster ist.
         elif is_up_window and lux > up_threshold and shutters_up:
             data["brightness_down"] = False
             idx = 0
             for shutter in shutters_up:
                 grp = shutter.get(CONF_GROUP_UP, GROUP_LIVING)
                 if not _is_auto_enabled(hass, opts, grp):
+                    continue
+                # Zeitplan pro Bereich: z. B. Schlafzimmer erst ab 07:00 hoch –
+                # vorher kein Hochfahren per Helligkeit, sonst nur Scheduler/ manuell.
+                if not is_within_group_up_schedule_window(opts, grp, now):
                     continue
                 cover_entity = shutter[CONF_COVER_ENTITY_ID]
                 if cover_entity in covers_driven_up:

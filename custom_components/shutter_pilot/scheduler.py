@@ -197,6 +197,25 @@ def _filter_by_group(shutters_list: list, group: str, use_group_up: bool) -> lis
     return [s for s in shutters_list if s.get(key) == group]
 
 
+def is_within_group_up_schedule_window(opts: dict, group: str, now: datetime) -> bool:
+    """True if now lies within the group's fixed 'Hoch ab'..'Hoch bis' window.
+
+    Used by brightness listener so Rollläden pro Gruppe erst hochfahren, wenn der
+    Zeitplan das Hoch-Fenster erlaubt (z. B. Schlafzimmer erst ab 07:00).
+    Sunrise/Sunset-Typ: kein fixes Fenster → True (andere Mechanik).
+    """
+    sched = _get_group_schedule(opts, group)
+    if not sched:
+        return True
+    if sched.get("type_up") != TIME_TYPE_FIXED:
+        return True
+    is_we = _is_weekend(now)
+    up_min = sched["we_up_min"] if is_we else sched["w_up_min"]
+    up_max = sched["we_up_max"] if is_we else sched["w_up_max"]
+    t = now.time()
+    return up_min <= t <= up_max
+
+
 async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up time-based and sun-based schedulers."""
     data = hass.data[DOMAIN].get(entry.entry_id)
