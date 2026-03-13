@@ -240,8 +240,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         run_group_light_action(hass, entry, grp, "down")
                     )
 
-        # Hoch-Logik: lux > up_threshold. Pro Rollladen zusätzlich prüfen, ob der
-        # zugeordnete Bereich (group_up) laut Zeitplan gerade im Hoch-Fenster ist.
+        # Hoch-Logik: lux > up_threshold. Ab Runter-Zeit (z. B. 16:00) nie „Hoch“ per Helligkeit,
+        # sonst kann bei überlappenden Schwellen (10–25 Lux) ein Rollladen fälschlich öffnen.
+        evening_skip_up = ignore_time and now_t >= down_time
+        if evening_skip_up:
+            pass
         elif is_up_window and lux > up_threshold and shutters_up:
             data["brightness_down"] = False
             idx = 0
