@@ -115,6 +115,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     # Gemeinsame Sperren mit Scheduler/Elevation: Rollladen in dieser Phase schon automatisch bewegt.
     covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
     covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
+    pending_up = data.setdefault("_pending_up", {})
 
     raw_brightness_entity = entry.options.get(CONF_BRIGHTNESS_ENTITY_ID, "")
     brightness_entity = str(raw_brightness_entity or "").strip()
@@ -250,7 +251,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     continue
                 # Zeitplan pro Bereich: z. B. Schlafzimmer erst ab 07:00 hoch –
                 # vorher kein Hochfahren per Helligkeit, sonst nur Scheduler/ manuell.
-                if not is_within_group_up_schedule_window(opts, grp, now):
+                today = now.date()
+                is_pending = pending_up.get(grp) == today
+                if not is_pending and not is_within_group_up_schedule_window(opts, grp, now):
                     continue
                 cover_entity = shutter[CONF_COVER_ENTITY_ID]
                 if cover_entity in covers_driven_up:
@@ -275,6 +278,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     hass.async_create_task(
                         run_group_light_action(hass, entry, grp, "up")
                     )
+                    # Pending erfüllt – nach erstem erfolgreichen Hochfahren für Gruppe löschen.
+                    if is_pending:
+                        pending_up.pop(grp, None)
 
     unsub = async_track_state_change(
         hass, brightness_entity, _on_brightness_change

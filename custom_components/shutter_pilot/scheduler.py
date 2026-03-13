@@ -226,6 +226,10 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         unsub()
     data["_scheduler_unsubs"] = []
     data.setdefault("drive_after_close_pending", {})
+    # Pending-Fahrten: Wenn Scheduler im Hoch-Fenster wegen Dunkelheit blockiert,
+    # soll die Helligkeitslogik später „nachholen“ dürfen (z. B. Living 05:00–06:00,
+    # Lux steigt aber erst 06:33 über Schwelle).
+    pending_up: dict[str, object] = data.setdefault("_pending_up", {})
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
@@ -294,6 +298,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
             return
+        # Falls es als „pending“ markiert war, jetzt erledigt.
+        pending_up.pop(group_name, None)
         hass.async_create_task(
             drive_shutters(filtered, 100, f"Schedule up ({group_name})", apply_lock_protection=False, group=group_name)
         )
@@ -333,6 +339,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
             if sched["type_up"] == TIME_TYPE_FIXED and up_min <= t <= up_max:
                 if _brightness_blocks_scheduler_up(hass, opts, now):
+                    # Merken: innerhalb des Hoch-Fensters, aber noch zu dunkel.
+                    # Helligkeitslistener darf später (auch nach up_max) einmalig hochfahren.
+                    pending_up[group_name] = today
                     continue
                 key_up = f"up_{group_name}"
                 if fired_today.get(key_up) != today:
