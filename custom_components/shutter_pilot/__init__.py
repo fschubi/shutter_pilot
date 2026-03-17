@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from .const import (
     DOMAIN,
     CONF_SHUTTERS,
-    CONF_DRIVE_DELAY,
 )
 from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
@@ -43,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             type(shutters),
         )
         shutters = []
-    drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
     last_positions: dict[str, float] = {}
     trigger_heights: dict[str, float] = {}
     trigger_actions: dict[str, str] = {}
@@ -51,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {
         "shutters": shutters,
-        "drive_delay": drive_delay,
         "last_positions": last_positions,
         "trigger_heights": trigger_heights,
         "trigger_actions": trigger_actions,
@@ -97,7 +94,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
             )
             shutters = []
         data["shutters"] = shutters
-        data["drive_delay"] = entry.options.get(CONF_DRIVE_DELAY, 10)
     # Re-setup listeners with new config
     await setup_window_triggers(hass, entry)
     await setup_brightness_listener(hass, entry)

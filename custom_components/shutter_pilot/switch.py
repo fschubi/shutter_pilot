@@ -1,9 +1,4 @@
-"""Auto-Mode switches for Shutter Pilot.
-
-These simple switch entities allow enabling/disabling the automation per group
-directly from the UI (Dashboard). They default to ON and remember their last
-state across restarts.
-"""
+"""Auto-Mode switches for Shutter Pilot (per area)."""
 
 from __future__ import annotations
 
@@ -17,19 +12,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
-    CONF_AUTO_LIVING,
-    CONF_AUTO_SLEEP,
-    CONF_AUTO_CHILDREN,
-)
-
-
-AUTO_GROUPS = (
-    (GROUP_LIVING, "Auto mode Living", CONF_AUTO_LIVING),
-    (GROUP_SLEEP, "Auto mode Sleep", CONF_AUTO_SLEEP),
-    (GROUP_CHILDREN, "Auto mode Children", CONF_AUTO_CHILDREN),
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_NAME,
+    CONF_AREA_AUTO_ENTITY_ID,
 )
 
 
@@ -39,15 +25,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Shutter Pilot auto-mode switches for a config entry."""
+    areas = entry.options.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
+        areas = []
     entities: list[ShutterPilotAutoModeSwitch] = []
-    for group, name, conf_key in AUTO_GROUPS:
+    for area in areas:
+        if not isinstance(area, dict):
+            continue
+        area_id = str(area.get(CONF_AREA_ID) or "").strip()
+        if not area_id:
+            continue
+        name = str(area.get(CONF_AREA_NAME) or area_id).strip()
         entities.append(
             ShutterPilotAutoModeSwitch(
                 hass=hass,
                 entry=entry,
-                group=group,
-                name=name,
-                conf_key=conf_key,
+                area_id=area_id,
+                name=f"Auto {name}",
             )
         )
     if entities:
@@ -55,7 +49,7 @@ async def async_setup_entry(
 
 
 class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
-    """Switch to enable/disable automation for a group."""
+    """Switch to enable/disable automation for an area."""
 
     _attr_has_entity_name = False
 
@@ -63,18 +57,16 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
-        group: str,
+        area_id: str,
         name: str,
-        conf_key: str,
     ) -> None:
         self._hass = hass
         self._entry = entry
-        self._group = group
-        self._conf_key = conf_key
+        self._area_id = area_id
 
         # Entity name and unique_id – user can rename in UI
         self._attr_name = f"Shutter Pilot {name}"
-        self._attr_unique_id = f"{entry.entry_id}_auto_{group}"
+        self._attr_unique_id = f"{entry.entry_id}_auto_area_{area_id}"
 
         # Default state before RestoreEntity kicks in
         self._attr_is_on = True
@@ -95,24 +87,24 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
             self._entry.entry_id, {}
         )
         auto_state = data.setdefault("auto_modes", {})
-        auto_state[self._group] = self._attr_is_on
+        auto_state[self._area_id] = self._attr_is_on
 
-        # If no explicit entity has been configured yet for this group,
-        # pre-fill our own entity_id into the options so the existing
-        # _is_auto_enabled() helpers keep working without changes.
-        key_map = {
-            GROUP_LIVING: CONF_AUTO_LIVING,
-            GROUP_SLEEP: CONF_AUTO_SLEEP,
-            GROUP_CHILDREN: CONF_AUTO_CHILDREN,
-        }
-        key = key_map.get(self._group, self._conf_key)
-        opts = dict(self._entry.options)
-        if not opts.get(key):
-            opts[key] = self.entity_id
-            self._hass.config_entries.async_update_entry(
-                self._entry,
-                options=opts,
-            )
+        # Mirror our entity_id into the corresponding area config for UI/runtime lookups
+        opts = dict(self._entry.options or {})
+        areas = opts.get(CONF_AREAS, [])
+        if isinstance(areas, list):
+            changed = False
+            for a in areas:
+                if not isinstance(a, dict):
+                    continue
+                if str(a.get(CONF_AREA_ID) or "").strip() != self._area_id:
+                    continue
+                if not str(a.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip():
+                    a[CONF_AREA_AUTO_ENTITY_ID] = self.entity_id
+                    changed = True
+            if changed:
+                opts[CONF_AREAS] = areas
+                self._hass.config_entries.async_update_entry(self._entry, options=opts)
 
         # Ensure state is written once after restore
         self.async_write_ha_state()
@@ -136,7 +128,7 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
             {},
         )
         auto_state = data.setdefault("auto_modes", {})
-        auto_state[self._group] = self._attr_is_on
+        auto_state[self._area_id] = self._attr_is_on
 
         self.async_write_ha_state()
 

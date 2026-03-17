@@ -25,9 +25,9 @@
     "step": {
       "init": {
         "title": "Shutter Pilot options",
-        "description": "Choose an action. Currently {shutter_count} shutter(s) configured.",
+        "description": "Choose an action. Currently {area_count} area(s) and {shutter_count} shutter(s) configured.",
         "menu_options": {
-          "settings_menu": "Settings",
+          "manage_areas": "Manage areas",
           "add_shutter": "Add shutter",
           "edit_shutter": "Edit shutter",
           "done": "Done"
@@ -115,9 +115,37 @@
           "children_we_down": "Weekend: Down"
         }
       },
+      "manage_areas": {
+        "title": "Manage areas",
+        "description": "Add, edit or remove areas.",
+        "menu_options": {
+          "add_area": "Add area",
+          "edit_area": "Edit/remove area",
+          "init": "Back"
+        }
+      },
+      "add_area": {
+        "title": "Add area",
+        "data": {
+          "name": "Area name",
+          "mode": "Control mode"
+        }
+      },
+      "add_area_details": {
+        "title": "Area settings"
+      },
+      "edit_area": {
+        "title": "Edit/remove area"
+      },
+      "edit_area_form": {
+        "title": "Edit area"
+      },
+      "edit_area_details": {
+        "title": "Area settings"
+      },
       "add_shutter": {
         "title": "Add shutter",
-        "description": "Configure cover, window trigger and group.",
+        "description": "Configure cover, window trigger and areas.",
         "data": {
           "cover_entity_id": "Shutter / Cover",
           "name": "Name",
@@ -128,13 +156,11 @@
           "position_when_window_tilted": "Position when window tilted (%)",
           "lock_protection": "Lock protection (min. position when door open)",
           "min_position_when_open": "Minimum position when door open (%)",
-          "trigger_mode": "Trigger mode",
-          "group_up": "Group (Up)",
-          "group_down": "Group (Down)",
+          "area_up_id": "Area (Up)",
+          "area_down_id": "Area (Down)",
           "position_open": "Position open (%)",
           "position_closed": "Position closed (%)",
           "position_sun_protect": "Sun protection position (%)",
-          "brightness_trigger": "Brightness reaction",
           "drive_after_close": "Drive after close (when window still open at close time)"
         }
       },
@@ -159,13 +185,11 @@
           "position_when_window_tilted": "Position when window tilted (%)",
           "lock_protection": "Lock protection",
           "min_position_when_open": "Minimum position when door open (%)",
-          "trigger_mode": "Trigger mode",
-          "group_up": "Group (Up)",
-          "group_down": "Group (Down)",
+          "area_up_id": "Area (Up)",
+          "area_down_id": "Area (Down)",
           "position_open": "Position open (%)",
           "position_closed": "Position closed (%)",
           "position_sun_protect": "Sun protection position (%)",
-          "brightness_trigger": "Brightness reaction",
           "drive_after_close": "Drive after close"
         }
       }
@@ -173,32 +197,32 @@
   },
   "services": {
     "open_group": {
-      "name": "Open group",
-      "description": "Opens all shutters of the selected group.",
+      "name": "Open area",
+      "description": "Opens all shutters of the selected area.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     },
     "close_group": {
-      "name": "Close group",
-      "description": "Closes all shutters of the selected group.",
+      "name": "Close area",
+      "description": "Closes all shutters of the selected area.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     },
     "sun_protect_group": {
-      "name": "Sun protection group",
-      "description": "Drives all shutters of the group to sun protection position.",
+      "name": "Sun protection area",
+      "description": "Drives all shutters of the area to sun protection position.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     }

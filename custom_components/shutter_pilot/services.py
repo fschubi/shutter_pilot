@@ -1,4 +1,4 @@
-"""Shutter Pilot services - open_group, close_group, sun_protect_group."""
+"""Shutter Pilot services - open_group, close_group, sun_protect_group (area-based)."""
 
 from __future__ import annotations
 
@@ -13,16 +13,15 @@ from .const import (
     DOMAIN,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_GROUP_UP,
-    CONF_GROUP_DOWN,
+    CONF_AREA_UP_ID,
+    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
     CONF_POSITION_SUN_PROTECT,
-    CONF_DRIVE_DELAY,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
-    GROUP_ALL,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_DRIVE_DELAY,
+    DEFAULT_AREA_DRIVE_DELAY,
 )
 from .window_helper import get_effective_close_position
 
@@ -33,15 +32,13 @@ SERVICE_CLOSE_GROUP = "close_group"
 SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 
 SERVICE_SCHEMA = vol.Schema(
-    {vol.Required("group"): vol.In([GROUP_LIVING, GROUP_SLEEP, GROUP_CHILDREN, GROUP_ALL])}
+    {vol.Required("area_id"): str}
 )
 
 
-def _filter_shutters(shutters: list, group: str, use_up: bool) -> list:
-    key = CONF_GROUP_UP if use_up else CONF_GROUP_DOWN
-    if group == GROUP_ALL:
-        return shutters
-    return [s for s in shutters if s.get(key) == group]
+def _filter_shutters(shutters: list, area_id: str, use_up: bool) -> list:
+    key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
+    return [s for s in shutters if str(s.get(key) or "").strip() == area_id]
 
 
 async def _drive_group(
@@ -77,10 +74,26 @@ async def _drive_group(
 
 async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Register Shutter Pilot services."""
-    drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
+    areas = entry.options.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
+        areas = []
+
+    def _delay_for_area(area_id: str) -> int:
+        for a in areas:
+            if not isinstance(a, dict):
+                continue
+            if str(a.get(CONF_AREA_ID) or "").strip() != area_id:
+                continue
+            try:
+                return max(0, int(a.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+            except (TypeError, ValueError):
+                return DEFAULT_AREA_DRIVE_DELAY
+        return DEFAULT_AREA_DRIVE_DELAY
 
     async def open_group(call) -> None:
-        group = call.data["group"]
+        area_id = str(call.data.get("area_id") or "").strip()
+        if not area_id:
+            return
         shutters = entry.options.get(CONF_SHUTTERS, [])
         if not isinstance(shutters, list):
             _LOGGER.warning(
@@ -88,13 +101,15 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, group, use_up=True)
+        shutters = _filter_shutters(shutters, area_id, use_up=True)
         await _drive_group(
-            hass, shutters, 100, "open_group", drive_delay
+            hass, shutters, 100, f"open_group({area_id})", _delay_for_area(area_id)
         )
 
     async def close_group(call) -> None:
-        group = call.data["group"]
+        area_id = str(call.data.get("area_id") or "").strip()
+        if not area_id:
+            return
         shutters = entry.options.get(CONF_SHUTTERS, [])
         if not isinstance(shutters, list):
             _LOGGER.warning(
@@ -102,14 +117,16 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, group, use_up=False)
+        shutters = _filter_shutters(shutters, area_id, use_up=False)
         await _drive_group(
-            hass, shutters, 0, "close_group", drive_delay,
+            hass, shutters, 0, f"close_group({area_id})", _delay_for_area(area_id),
             apply_lock_protection=True,
         )
 
     async def sun_protect_group(call) -> None:
-        group = call.data["group"]
+        area_id = str(call.data.get("area_id") or "").strip()
+        if not area_id:
+            return
         shutters = entry.options.get(CONF_SHUTTERS, [])
         if not isinstance(shutters, list):
             _LOGGER.warning(
@@ -117,13 +134,13 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, group, use_up=False)
+        shutters = _filter_shutters(shutters, area_id, use_up=False)
         # Use first shutter's sun protect position or default 50
         pos = 50
         if shutters:
             pos = shutters[0].get(CONF_POSITION_SUN_PROTECT, 50)
         await _drive_group(
-            hass, shutters, pos, "sun_protect_group", drive_delay,
+            hass, shutters, pos, f"sun_protect_group({area_id})", _delay_for_area(area_id),
             apply_lock_protection=True,
         )
 

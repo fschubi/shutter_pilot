@@ -1,4 +1,4 @@
-"""Brightness sensor logic - React to lux levels for shutters."""
+"""Brightness sensor logic - per area (brightness mode)."""
 
 from __future__ import annotations
 
@@ -13,76 +13,51 @@ from homeassistant.helpers.event import async_track_state_change
 
 from .const import (
     DOMAIN,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_MODE,
+    AREA_MODE_BRIGHTNESS,
+    CONF_AREA_BRIGHTNESS_SENSOR,
+    CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+    CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+    CONF_AREA_W_UP_FROM,
+    CONF_AREA_W_UP_TO,
+    CONF_AREA_W_DOWN_FROM,
+    CONF_AREA_W_DOWN_TO,
+    CONF_AREA_WE_UP_FROM,
+    CONF_AREA_WE_UP_TO,
+    CONF_AREA_WE_DOWN_FROM,
+    CONF_AREA_WE_DOWN_TO,
+    CONF_AREA_DRIVE_DELAY,
+    DEFAULT_AREA_DRIVE_DELAY,
+    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_GROUP_UP,
-    CONF_GROUP_DOWN,
+    CONF_AREA_UP_ID,
+    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
-    CONF_BRIGHTNESS_TRIGGER,
-    CONF_BRIGHTNESS_ENTITY_ID,
-    CONF_BRIGHTNESS_DOWN_THRESHOLD,
-    CONF_BRIGHTNESS_UP_THRESHOLD,
-    CONF_BRIGHTNESS_DOWN_TIME,
-    CONF_BRIGHTNESS_UP_TIME,
-    CONF_BRIGHTNESS_IGNORE_TIME,
     CONF_DRIVE_AFTER_CLOSE,
-    CONF_AUTO_LIVING,
-    CONF_AUTO_SLEEP,
-    CONF_AUTO_CHILDREN,
-    CONF_DRIVE_DELAY,
-    DEFAULT_DRIVE_DELAY,
-    BRIGHTNESS_OFF,
-    BRIGHTNESS_UP,
-    BRIGHTNESS_DOWN,
-    BRIGHTNESS_BOTH,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
-from .scheduler import is_within_group_up_schedule_window
+from .scheduler import _parse_time  # reuse robust parser
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_time(tstr: str | None) -> time:
-    """Parse HH:MM string to time, robust gegen ungültige Werte."""
-    try:
-        parts = str(tstr or "16:00").strip().split(":")
-        if len(parts) >= 2:
-            return time(int(parts[0]), int(parts[1]))
-    except (ValueError, IndexError, TypeError):
-        pass
-    return time(16, 0)  # default 16:00
+def _is_weekend(d: datetime) -> bool:
+    return d.weekday() in (5, 6)
 
 
-def _current_time_in_range(
-    now: datetime,
-    up_time: time,
-    down_time: time,
-) -> tuple[bool, bool]:
-    """Return (is_up_window, is_down_window).
-    is_up_window: true if we're in the "up" time window (morning to afternoon)
-    is_down_window: true if we're in the "down" time window (afternoon onwards)
-    """
-    now_t = now.time()
-    if up_time <= down_time:
-        is_up = up_time <= now_t < down_time
-        is_down = now_t >= down_time or now_t < up_time
-    else:
-        is_up = now_t >= up_time or now_t < down_time
-        is_down = down_time <= now_t < up_time
-    return is_up, is_down
+def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
+    if isinstance(auto_modes, dict) and area_id in auto_modes:
+        return bool(auto_modes.get(area_id))
 
-
-def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
-    """True if automation is enabled for this group."""
-    key = {GROUP_LIVING: CONF_AUTO_LIVING, GROUP_SLEEP: CONF_AUTO_SLEEP, GROUP_CHILDREN: CONF_AUTO_CHILDREN}.get(group)
-    if not key:
-        return True
-    entity_id = str(opts.get(key) or "").strip()
+    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
     if not entity_id:
         return True
     state = hass.states.get(entity_id)
@@ -91,22 +66,29 @@ def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
     return str(state.state).lower() in ("on", "true", "1")
 
 
+def _area_window(area: dict, now: datetime, direction: str) -> bool:
+    """direction: 'up' or 'down'."""
+    is_we = _is_weekend(now)
+    if direction == "up":
+        f_key = CONF_AREA_WE_UP_FROM if is_we else CONF_AREA_W_UP_FROM
+        t_key = CONF_AREA_WE_UP_TO if is_we else CONF_AREA_W_UP_TO
+    else:
+        f_key = CONF_AREA_WE_DOWN_FROM if is_we else CONF_AREA_W_DOWN_FROM
+        t_key = CONF_AREA_WE_DOWN_TO if is_we else CONF_AREA_W_DOWN_TO
+    start = _parse_time(area.get(f_key, "00:00"))
+    end = _parse_time(area.get(t_key, "23:59"))
+    t = now.time()
+    if start <= end:
+        return start <= t <= end
+    # overnight window (e.g. 22:00 -> 06:00)
+    return t >= start or t <= end
+
+
 async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up brightness sensor listener."""
     data = hass.data[DOMAIN].get(entry.entry_id)
     if not data:
         return
-
-    # Gemeinsame Verzögerung zwischen Rollläden (Sekunden),
-    # konsistent mit Scheduler/Services.
-    raw_delay = entry.options.get(
-        CONF_DRIVE_DELAY,
-        data.get("drive_delay", DEFAULT_DRIVE_DELAY),
-    )
-    try:
-        drive_delay = max(0, int(raw_delay))
-    except (TypeError, ValueError):
-        drive_delay = DEFAULT_DRIVE_DELAY
 
     # Clean up previous listeners
     for unsub in data.get("_brightness_unsubs", []):
@@ -117,10 +99,21 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
     pending_up = data.setdefault("_pending_up", {})
 
-    raw_brightness_entity = entry.options.get(CONF_BRIGHTNESS_ENTITY_ID, "")
-    brightness_entity = str(raw_brightness_entity or "").strip()
-    if not brightness_entity:
-        _LOGGER.debug("No brightness entity configured, skipping")
+    areas = entry.options.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
+        areas = []
+    # Only areas in brightness mode with a sensor configured are tracked
+    brightness_areas: list[dict] = []
+    for a in areas:
+        if not isinstance(a, dict):
+            continue
+        if str(a.get(CONF_AREA_MODE) or "") != AREA_MODE_BRIGHTNESS:
+            continue
+        sensor = str(a.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+        if sensor:
+            brightness_areas.append(a)
+    if not brightness_areas:
+        _LOGGER.debug("No brightness areas configured, skipping")
         return
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
@@ -131,32 +124,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         )
         shutters = []
     opts = entry.options
-
-    raw_down = entry.options.get(CONF_BRIGHTNESS_DOWN_THRESHOLD, 400)
-    raw_up = entry.options.get(CONF_BRIGHTNESS_UP_THRESHOLD, 500)
-    try:
-        down_threshold = int(raw_down)
-    except (TypeError, ValueError):
-        _LOGGER.warning(
-            "Invalid brightness down threshold %r, falling back to 400", raw_down
-        )
-        down_threshold = 400
-    try:
-        up_threshold = int(raw_up)
-    except (TypeError, ValueError):
-        _LOGGER.warning(
-            "Invalid brightness up threshold %r, falling back to 500", raw_up
-        )
-        up_threshold = 500
-
-    down_time_str = entry.options.get(CONF_BRIGHTNESS_DOWN_TIME, "16:00") or "16:00"
-    up_time_str = entry.options.get(CONF_BRIGHTNESS_UP_TIME, "05:00") or "05:00"
-    down_time = _parse_time(down_time_str)
-    up_time = _parse_time(up_time_str)
-    ignore_time = bool(entry.options.get(CONF_BRIGHTNESS_IGNORE_TIME, True))
-
-    shutters_down = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_DOWN, BRIGHTNESS_BOTH)]
-    shutters_up = [s for s in shutters if s.get(CONF_BRIGHTNESS_TRIGGER) in (BRIGHTNESS_UP, BRIGHTNESS_BOTH)]
 
     async def _set_cover_position_with_delay(
         hass: HomeAssistant,
@@ -181,119 +148,116 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             return
 
         now = datetime.now()
-        if ignore_time:
-            is_up_window, is_down_window = True, True
-        else:
-            is_up_window, is_down_window = _current_time_in_range(now, up_time, down_time)
+        today = now.date()
 
-        handled_groups_down: set[str] = set()
-        handled_groups_up: set[str] = set()
+        for area in brightness_areas:
+            area_id = str(area.get(CONF_AREA_ID) or "").strip()
+            if not area_id:
+                continue
+            if not _is_auto_enabled(hass, entry, area):
+                continue
 
-        # Down-Logik: lux <= down_threshold (z. B. „abends zu“).
-        # Wichtig: Bei überlappenden Schwellen (Hoch 10 / Runter 25) würde sonst
-        # morgens bei 12–25 Lux ständig „Runter“ gewinnen und Oszillation erzeugen.
-        # Daher: Wenn „Zeitfenster ignorieren“ aktiv ist, nur nach der globalen
-        # Runter-Zeit (Abends) schließen – morgens nie per Lux „runter“ fahren.
-        now_t = now.time()
-        evening_only_down = ignore_time and now_t < down_time
-        if evening_only_down:
-            # Vor Runter-Zeit: keine Abwärts-Fahrt per Helligkeit (nur Hoch möglich).
-            pass
-        elif is_down_window and lux <= down_threshold and shutters_down:
-            data["brightness_down"] = True
-            idx = 0
-            for shutter in shutters_down:
-                grp = shutter.get(CONF_GROUP_DOWN, GROUP_LIVING)
-                if not _is_auto_enabled(hass, opts, grp):
-                    continue
-                cover_entity = shutter[CONF_COVER_ENTITY_ID]
-                if cover_entity in covers_driven_down:
-                    # In dieser Dunkel-Phase schon automatisch runter gefahren (oder Scheduler/Elevation).
-                    continue
-                pos = shutter.get(CONF_POSITION_CLOSED, 0)
-                drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
-                if drive_after and is_window_open_or_tilted(hass, shutter):
-                    data.setdefault("drive_after_close_pending", {})[cover_entity] = {
-                        "position": pos,
-                        "reason": "Brightness down",
-                        "shutter": shutter,
-                    }
-                    _LOGGER.info("Brightness down: %s Fenster offen – drive_after_close", cover_entity)
-                    continue
-                pos = get_effective_close_position(hass, shutter, pos)
-                hass.async_create_task(
-                    _set_cover_position_with_delay(
-                        hass,
-                        cover_entity,
-                        pos,
-                        "Brightness down",
-                        drive_delay,
-                        idx,
-                    )
-                )
-                idx += 1
-                covers_driven_down.add(cover_entity)
-                covers_driven_up.discard(cover_entity)
-                if grp not in handled_groups_down:
-                    handled_groups_down.add(grp)
+            sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+            if entity_id != sensor_id:
+                continue
+
+            try:
+                down_threshold = int(area.get(CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD))
+            except (TypeError, ValueError):
+                down_threshold = DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD
+            try:
+                up_threshold = int(area.get(CONF_AREA_BRIGHTNESS_UP_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD))
+            except (TypeError, ValueError):
+                up_threshold = DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD
+
+            try:
+                drive_delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+            except (TypeError, ValueError):
+                drive_delay = DEFAULT_AREA_DRIVE_DELAY
+
+            handled_down = False
+            handled_up = False
+
+            # Down: within down window and lux <= threshold
+            if _area_window(area, now, "down") and lux <= down_threshold:
+                idx = 0
+                for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
+                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+                    if not cover_entity:
+                        continue
+                    if cover_entity in covers_driven_down:
+                        continue
+                    pos = shutter.get(CONF_POSITION_CLOSED, 0)
+                    drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
+                    if drive_after and is_window_open_or_tilted(hass, shutter):
+                        data.setdefault("drive_after_close_pending", {})[cover_entity] = {
+                            "position": pos,
+                            "reason": "Brightness down",
+                            "shutter": shutter,
+                        }
+                        continue
+                    pos = get_effective_close_position(hass, shutter, pos)
                     hass.async_create_task(
-                        run_group_light_action(hass, entry, grp, "down")
+                        _set_cover_position_with_delay(
+                            hass,
+                            cover_entity,
+                            pos,
+                            "Brightness down",
+                            drive_delay,
+                            idx,
+                        )
                     )
+                    idx += 1
+                    covers_driven_down.add(cover_entity)
+                    covers_driven_up.discard(cover_entity)
+                    handled_down = True
 
-        # Hoch-Logik: lux > up_threshold. Ab Runter-Zeit (z. B. 16:00) nie „Hoch“ per Helligkeit,
-        # sonst kann bei überlappenden Schwellen (10–25 Lux) ein Rollladen fälschlich öffnen.
-        evening_skip_up = ignore_time and now_t >= down_time
-        if evening_skip_up:
-            pass
-        elif is_up_window and lux > up_threshold and shutters_up:
-            data["brightness_down"] = False
-            idx = 0
-            for shutter in shutters_up:
-                grp = shutter.get(CONF_GROUP_UP, GROUP_LIVING)
-                if not _is_auto_enabled(hass, opts, grp):
-                    continue
-                # Zeitplan pro Bereich: z. B. Schlafzimmer erst ab 07:00 hoch –
-                # vorher kein Hochfahren per Helligkeit, sonst nur Scheduler/ manuell.
-                today = now.date()
-                is_pending = pending_up.get(grp) == today
-                if not is_pending and not is_within_group_up_schedule_window(opts, grp, now):
-                    continue
-                cover_entity = shutter[CONF_COVER_ENTITY_ID]
-                if cover_entity in covers_driven_up:
-                    # In dieser Hell-Phase schon automatisch hoch gefahren (z. B. Scheduler oder Helligkeit).
-                    continue
-                pos = shutter.get(CONF_POSITION_OPEN, 100)
-                hass.async_create_task(
-                    _set_cover_position_with_delay(
-                        hass,
-                        cover_entity,
-                        pos,
-                        "Brightness up",
-                        drive_delay,
-                        idx,
-                    )
-                )
-                idx += 1
-                covers_driven_up.add(cover_entity)
-                covers_driven_down.discard(cover_entity)
-                if grp not in handled_groups_up:
-                    handled_groups_up.add(grp)
+                if handled_down:
+                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
+
+            # Up: within up window AND lux > threshold OR pending-up for today
+            is_pending = pending_up.get(area_id) == today
+            within_up = _area_window(area, now, "up")
+            if within_up and lux <= up_threshold:
+                # mark pending if within window but still too dark
+                pending_up[area_id] = today
+            elif (within_up or is_pending) and lux > up_threshold:
+                idx = 0
+                for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
+                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+                    if not cover_entity:
+                        continue
+                    if cover_entity in covers_driven_up:
+                        continue
+                    pos = shutter.get(CONF_POSITION_OPEN, 100)
                     hass.async_create_task(
-                        run_group_light_action(hass, entry, grp, "up")
+                        _set_cover_position_with_delay(
+                            hass,
+                            cover_entity,
+                            pos,
+                            "Brightness up",
+                            drive_delay,
+                            idx,
+                        )
                     )
-                    # Pending erfüllt – nach erstem erfolgreichen Hochfahren für Gruppe löschen.
+                    idx += 1
+                    covers_driven_up.add(cover_entity)
+                    covers_driven_down.discard(cover_entity)
+                    handled_up = True
+
+                if handled_up:
+                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
                     if is_pending:
-                        pending_up.pop(grp, None)
+                        pending_up.pop(area_id, None)
 
-    unsub = async_track_state_change(
-        hass, brightness_entity, _on_brightness_change
-    )
-    if unsub:
-        data["_brightness_unsubs"].append(unsub)
-    _LOGGER.info(
-        "Brightness listener: %s (down<=%d, up>%d)",
-        brightness_entity, down_threshold, up_threshold,
-    )
+    for area in brightness_areas:
+        sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+        if not sensor_id:
+            continue
+        unsub = async_track_state_change(hass, sensor_id, _on_brightness_change)
+        if unsub:
+            data["_brightness_unsubs"].append(unsub)
+        _LOGGER.info("Brightness listener: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
 
 
 async def _set_cover_position(

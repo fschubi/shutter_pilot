@@ -19,13 +19,8 @@ from .const import (
     CONF_WINDOW_TILTED_STATE,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
-    CONF_TRIGGER_MODE,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
-    TRIGGER_MODE_OFF,
-    TRIGGER_MODE_ONLY_UP,
-    TRIGGER_MODE_ONLY_DOWN,
-    TRIGGER_MODE_UP_DOWN,
 )
 from .window_helper import get_window_state
 
@@ -97,7 +92,6 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 continue
 
             cover_entity = shutter[CONF_COVER_ENTITY_ID]
-            trigger_mode = shutter.get(CONF_TRIGGER_MODE, TRIGGER_MODE_UP_DOWN)
             pos_closed = shutter.get(CONF_POSITION_CLOSED, 0)
 
             # Use window_helper for consistent binary_sensor + sensor support
@@ -107,46 +101,44 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
 
             if window_state in ("open", "tilted") and target_pos is not None:
                 # Window open or tilted -> drive to target (100 or 50)
-                if trigger_mode in (TRIGGER_MODE_ONLY_UP, TRIGGER_MODE_UP_DOWN):
-                    try:
-                        cover_state = hass.states.get(cover_entity)
-                        attrs = (cover_state.attributes or {}) if cover_state else {}
-                        saved = float(attrs.get("current_position", pos_closed))
-                    except (TypeError, ValueError):
-                        saved = pos_closed
-                    trigger_heights[cover_entity] = saved
-                    trigger_actions[cover_entity] = "triggered"
-                    reason = "Window tilted" if window_state == "tilted" else "Window opened"
-                    hass.async_create_task(
-                        _set_cover_position(hass, cover_entity, target_pos, reason)
-                    )
+                try:
+                    cover_state = hass.states.get(cover_entity)
+                    attrs = (cover_state.attributes or {}) if cover_state else {}
+                    saved = float(attrs.get("current_position", pos_closed))
+                except (TypeError, ValueError):
+                    saved = pos_closed
+                trigger_heights[cover_entity] = saved
+                trigger_actions[cover_entity] = "triggered"
+                reason = "Window tilted" if window_state == "tilted" else "Window opened"
+                hass.async_create_task(
+                    _set_cover_position(hass, cover_entity, target_pos, reason)
+                )
             elif window_state == "closed":
                 # Window closed -> restore saved position OR execute drive_after_close
-                if trigger_mode in (TRIGGER_MODE_ONLY_DOWN, TRIGGER_MODE_UP_DOWN):
-                    # Prüfe drive_after_close: war Schließen geplant?
-                    pending = data.get("drive_after_close_pending", {})
-                    pending_entry = pending.pop(cover_entity, None)
-                    if pending_entry is not None:
-                        target_pos = pending_entry.get("position", pos_closed)
-                        reason = pending_entry.get("reason", "Drive after close")
-                        hass.async_create_task(
-                            _set_cover_position(
-                                hass, cover_entity, target_pos, reason
-                            )
+                # Prüfe drive_after_close: war Schließen geplant?
+                pending = data.get("drive_after_close_pending", {})
+                pending_entry = pending.pop(cover_entity, None)
+                if pending_entry is not None:
+                    target_pos = pending_entry.get("position", pos_closed)
+                    reason = pending_entry.get("reason", "Drive after close")
+                    hass.async_create_task(
+                        _set_cover_position(
+                            hass, cover_entity, target_pos, reason
                         )
-                        _LOGGER.info(
-                            "Fenster geschlossen – Drive-after-close: %s -> %d%%",
-                            cover_entity, int(target_pos),
+                    )
+                    _LOGGER.info(
+                        "Fenster geschlossen – Drive-after-close: %s -> %d%%",
+                        cover_entity, int(target_pos),
+                    )
+                else:
+                    restore_pos = trigger_heights.get(cover_entity)
+                    if restore_pos is None:
+                        restore_pos = last_positions.get(cover_entity, pos_closed)
+                    hass.async_create_task(
+                        _set_cover_position(
+                            hass, cover_entity, restore_pos, "Window closed – restore"
                         )
-                    else:
-                        restore_pos = trigger_heights.get(cover_entity)
-                        if restore_pos is None:
-                            restore_pos = last_positions.get(cover_entity, pos_closed)
-                        hass.async_create_task(
-                            _set_cover_position(
-                                hass, cover_entity, restore_pos, "Window closed – restore"
-                            )
-                        )
+                    )
 
     for window_id in window_to_shutters:
         unsub = async_track_state_change(

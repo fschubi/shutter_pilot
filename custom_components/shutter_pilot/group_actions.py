@@ -1,4 +1,4 @@
-"""Helper functions for group-based follow-up actions (e.g. lights)."""
+"""Helper functions for area-based follow-up actions (e.g. lights)."""
 
 from __future__ import annotations
 
@@ -8,15 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_LIVING_DOWN_LIGHT_ENTITY,
-    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS,
-    CONF_SLEEP_DOWN_LIGHT_ENTITY,
-    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS,
-    CONF_CHILDREN_DOWN_LIGHT_ENTITY,
-    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_DOWN_LIGHT_ENTITY,
+    CONF_AREA_DOWN_LIGHT_BRIGHTNESS,
 )
 
 
@@ -26,24 +21,27 @@ async def run_group_light_action(
     group: str,
     direction: str,
 ) -> None:
-    """Execute configured light/switch action for a group and direction.
+    """Execute configured light/switch action for an area and direction.
 
     direction: \"down\" = shutters close -> light on (optional brightness)
                \"up\"   = shutters open  -> light off
     """
     opts: dict[str, Any] = entry.options or {}
-
-    if group == GROUP_LIVING:
-        entity_id = str(opts.get(CONF_LIVING_DOWN_LIGHT_ENTITY) or "").strip()
-        brightness_pct = opts.get(CONF_LIVING_DOWN_LIGHT_BRIGHTNESS)
-    elif group == GROUP_SLEEP:
-        entity_id = str(opts.get(CONF_SLEEP_DOWN_LIGHT_ENTITY) or "").strip()
-        brightness_pct = opts.get(CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS)
-    elif group == GROUP_CHILDREN:
-        entity_id = str(opts.get(CONF_CHILDREN_DOWN_LIGHT_ENTITY) or "").strip()
-        brightness_pct = opts.get(CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS)
-    else:
+    areas = opts.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
         return
+    area_cfg = None
+    for a in areas:
+        if not isinstance(a, dict):
+            continue
+        if str(a.get(CONF_AREA_ID) or "").strip() == str(group or "").strip():
+            area_cfg = a
+            break
+    if not area_cfg:
+        return
+
+    entity_id = str(area_cfg.get(CONF_AREA_DOWN_LIGHT_ENTITY) or "").strip()
+    brightness_pct = area_cfg.get(CONF_AREA_DOWN_LIGHT_BRIGHTNESS)
 
     if not entity_id:
         return

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from copy import deepcopy
 
 import voluptuous as vol
@@ -15,6 +16,59 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     DOMAIN,
+    # areas
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_NAME,
+    CONF_AREA_MODE,
+    AREA_MODE_TIME,
+    AREA_MODE_BRIGHTNESS,
+    AREA_MODE_SUN,
+    AREA_MODES,
+    CONF_AREA_DRIVE_DELAY,
+    DEFAULT_AREA_DRIVE_DELAY,
+    CONF_AREA_AUTO_ENTITY_ID,
+    # area time
+    CONF_AREA_TIME_UP,
+    CONF_AREA_TIME_DOWN,
+    DEFAULT_AREA_TIME_UP,
+    DEFAULT_AREA_TIME_DOWN,
+    # area sun
+    CONF_AREA_SUNRISE_OFFSET,
+    CONF_AREA_SUNSET_OFFSET,
+    DEFAULT_AREA_SUNRISE_OFFSET,
+    DEFAULT_AREA_SUNSET_OFFSET,
+    # area brightness
+    CONF_AREA_BRIGHTNESS_SENSOR,
+    CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+    CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+    DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+    DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD,
+    CONF_AREA_W_UP_FROM,
+    CONF_AREA_W_UP_TO,
+    CONF_AREA_W_DOWN_FROM,
+    CONF_AREA_W_DOWN_TO,
+    CONF_AREA_WE_UP_FROM,
+    CONF_AREA_WE_UP_TO,
+    CONF_AREA_WE_DOWN_FROM,
+    CONF_AREA_WE_DOWN_TO,
+    DEFAULT_AREA_W_UP_FROM,
+    DEFAULT_AREA_W_UP_TO,
+    DEFAULT_AREA_W_DOWN_FROM,
+    DEFAULT_AREA_W_DOWN_TO,
+    DEFAULT_AREA_WE_UP_FROM,
+    DEFAULT_AREA_WE_UP_TO,
+    DEFAULT_AREA_WE_DOWN_FROM,
+    DEFAULT_AREA_WE_DOWN_TO,
+    # sun protect
+    CONF_AREA_SUN_PROTECT_ENABLED,
+    CONF_AREA_ELEVATION_THRESHOLD,
+    DEFAULT_AREA_ELEVATION_THRESHOLD,
+    # light action
+    CONF_AREA_DOWN_LIGHT_ENTITY,
+    CONF_AREA_DOWN_LIGHT_BRIGHTNESS,
+    DEFAULT_AREA_DOWN_LIGHT_BRIGHTNESS,
+    # shutters
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_NAME,
@@ -25,31 +79,12 @@ from .const import (
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_LOCK_PROTECTION,
     CONF_MIN_POSITION_WHEN_OPEN,
-    CONF_TRIGGER_MODE,
-    CONF_GROUP_UP,
-    CONF_GROUP_DOWN,
+    CONF_AREA_UP_ID,
+    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
     CONF_POSITION_SUN_PROTECT,
-    CONF_BRIGHTNESS_TRIGGER,
-    TRIGGER_MODE_OFF,
-    TRIGGER_MODE_ONLY_UP,
-    TRIGGER_MODE_ONLY_DOWN,
-    TRIGGER_MODE_UP_DOWN,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
-    BRIGHTNESS_OFF,
-    BRIGHTNESS_UP,
-    BRIGHTNESS_DOWN,
-    BRIGHTNESS_BOTH,
-    CONF_BRIGHTNESS_ENTITY_ID,
-    CONF_BRIGHTNESS_DOWN_THRESHOLD,
-    CONF_BRIGHTNESS_UP_THRESHOLD,
-    CONF_BRIGHTNESS_DOWN_TIME,
-    CONF_BRIGHTNESS_UP_TIME,
-    CONF_BRIGHTNESS_IGNORE_TIME,
-    CONF_DRIVE_DELAY,
+    CONF_DRIVE_AFTER_CLOSE,
     DEFAULT_POSITION_OPEN,
     DEFAULT_POSITION_CLOSED,
     DEFAULT_POSITION_SUN_PROTECT,
@@ -58,131 +93,83 @@ from .const import (
     DEFAULT_WINDOW_OPEN_STATE,
     DEFAULT_WINDOW_TILTED_STATE,
     DEFAULT_MIN_POSITION_WHEN_OPEN,
-    DEFAULT_BRIGHTNESS_DOWN_THRESHOLD,
-    DEFAULT_BRIGHTNESS_UP_THRESHOLD,
-    DEFAULT_BRIGHTNESS_DOWN_TIME,
-    DEFAULT_BRIGHTNESS_UP_TIME,
-    CONF_USE_ELEVATION,
-    CONF_ELEVATION_THRESHOLD,
-    CONF_W_SHUTTER_UP_MIN,
-    CONF_W_SHUTTER_UP_MAX,
-    CONF_W_SHUTTER_DOWN,
-    CONF_WE_SHUTTER_UP_MIN,
-    CONF_WE_SHUTTER_UP_MAX,
-    CONF_WE_SHUTTER_DOWN,
-    DEFAULT_DRIVE_DELAY,
-    DEFAULT_ELEVATION_THRESHOLD,
-    GROUPS,
-    TIME_TYPE_FIXED,
-    TIME_TYPE_SUNRISE,
-    TIME_TYPE_SUNSET,
-    CONF_LIVING_TYPE_UP,
-    CONF_LIVING_TYPE_DOWN,
-    CONF_LIVING_W_UP_MIN,
-    CONF_LIVING_W_UP_MAX,
-    CONF_LIVING_W_DOWN,
-    CONF_LIVING_WE_UP_MIN,
-    CONF_LIVING_WE_UP_MAX,
-    CONF_LIVING_WE_DOWN,
-    CONF_SLEEP_TYPE_UP,
-    CONF_SLEEP_TYPE_DOWN,
-    CONF_SLEEP_W_UP_MIN,
-    CONF_SLEEP_W_UP_MAX,
-    CONF_SLEEP_W_DOWN,
-    CONF_SLEEP_WE_UP_MIN,
-    CONF_SLEEP_WE_UP_MAX,
-    CONF_SLEEP_WE_DOWN,
-    CONF_CHILDREN_TYPE_UP,
-    CONF_CHILDREN_TYPE_DOWN,
-    CONF_CHILDREN_W_UP_MIN,
-    CONF_CHILDREN_W_UP_MAX,
-    CONF_CHILDREN_W_DOWN,
-    CONF_CHILDREN_WE_UP_MIN,
-    CONF_CHILDREN_WE_UP_MAX,
-    CONF_CHILDREN_WE_DOWN,
-    CONF_AUTO_LIVING,
-    CONF_AUTO_SLEEP,
-    CONF_AUTO_CHILDREN,
-    CONF_DRIVE_AFTER_CLOSE,
-    CONF_LIVING_SUNRISE_OFFSET,
-    CONF_LIVING_SUNSET_OFFSET,
-    CONF_SLEEP_SUNRISE_OFFSET,
-    CONF_SLEEP_SUNSET_OFFSET,
-    CONF_CHILDREN_SUNRISE_OFFSET,
-    CONF_CHILDREN_SUNSET_OFFSET,
-    CONF_LIVING_DOWN_LIGHT_ENTITY,
-    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS,
-    CONF_SLEEP_DOWN_LIGHT_ENTITY,
-    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS,
-    CONF_CHILDREN_DOWN_LIGHT_ENTITY,
-    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS,
-    DEFAULT_GROUP_LIGHT_BRIGHTNESS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-# Vollständige Standard-Optionen für Migration und sichere Optionen-Zugriffe
+def _slugify(name: str) -> str:
+    s = re.sub(r"[^a-zA-Z0-9]+", "_", str(name or "").strip().lower()).strip("_")
+    return s or "bereich"
+
+
+def _default_area(area_id: str, name: str, mode: str) -> dict:
+    base = {
+        CONF_AREA_ID: area_id,
+        CONF_AREA_NAME: name,
+        CONF_AREA_MODE: mode,
+        CONF_AREA_DRIVE_DELAY: DEFAULT_AREA_DRIVE_DELAY,
+        CONF_AREA_AUTO_ENTITY_ID: "",
+        CONF_AREA_SUN_PROTECT_ENABLED: False,
+        CONF_AREA_ELEVATION_THRESHOLD: DEFAULT_AREA_ELEVATION_THRESHOLD,
+        CONF_AREA_DOWN_LIGHT_ENTITY: "",
+        CONF_AREA_DOWN_LIGHT_BRIGHTNESS: DEFAULT_AREA_DOWN_LIGHT_BRIGHTNESS,
+    }
+    if mode == AREA_MODE_TIME:
+        base.update(
+            {
+                CONF_AREA_TIME_UP: DEFAULT_AREA_TIME_UP,
+                CONF_AREA_TIME_DOWN: DEFAULT_AREA_TIME_DOWN,
+            }
+        )
+    elif mode == AREA_MODE_SUN:
+        base.update(
+            {
+                CONF_AREA_SUNRISE_OFFSET: DEFAULT_AREA_SUNRISE_OFFSET,
+                CONF_AREA_SUNSET_OFFSET: DEFAULT_AREA_SUNSET_OFFSET,
+            }
+        )
+    else:
+        base.update(
+            {
+                CONF_AREA_BRIGHTNESS_SENSOR: "",
+                CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD: DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+                CONF_AREA_BRIGHTNESS_UP_THRESHOLD: DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD,
+                CONF_AREA_W_UP_FROM: DEFAULT_AREA_W_UP_FROM,
+                CONF_AREA_W_UP_TO: DEFAULT_AREA_W_UP_TO,
+                CONF_AREA_W_DOWN_FROM: DEFAULT_AREA_W_DOWN_FROM,
+                CONF_AREA_W_DOWN_TO: DEFAULT_AREA_W_DOWN_TO,
+                CONF_AREA_WE_UP_FROM: DEFAULT_AREA_WE_UP_FROM,
+                CONF_AREA_WE_UP_TO: DEFAULT_AREA_WE_UP_TO,
+                CONF_AREA_WE_DOWN_FROM: DEFAULT_AREA_WE_DOWN_FROM,
+                CONF_AREA_WE_DOWN_TO: DEFAULT_AREA_WE_DOWN_TO,
+            }
+        )
+    return base
+
+
 DEFAULT_OPTIONS = {
+    CONF_AREAS: [
+        _default_area("living", "Wohnbereich", AREA_MODE_TIME),
+        _default_area("sleep", "Schlafbereich", AREA_MODE_TIME),
+        _default_area("children", "Kinderbereich", AREA_MODE_TIME),
+    ],
     CONF_SHUTTERS: [],
-    CONF_DRIVE_DELAY: DEFAULT_DRIVE_DELAY,
-    CONF_BRIGHTNESS_ENTITY_ID: "",
-    CONF_BRIGHTNESS_DOWN_THRESHOLD: DEFAULT_BRIGHTNESS_DOWN_THRESHOLD,
-    CONF_BRIGHTNESS_UP_THRESHOLD: DEFAULT_BRIGHTNESS_UP_THRESHOLD,
-    CONF_BRIGHTNESS_DOWN_TIME: DEFAULT_BRIGHTNESS_DOWN_TIME,
-    CONF_BRIGHTNESS_UP_TIME: DEFAULT_BRIGHTNESS_UP_TIME,
-    CONF_BRIGHTNESS_IGNORE_TIME: True,
-    CONF_USE_ELEVATION: False,
-    CONF_ELEVATION_THRESHOLD: DEFAULT_ELEVATION_THRESHOLD,
-    CONF_W_SHUTTER_UP_MIN: "05:00",
-    CONF_W_SHUTTER_UP_MAX: "06:00",
-    CONF_W_SHUTTER_DOWN: "22:00",
-    CONF_WE_SHUTTER_UP_MIN: "05:00",
-    CONF_WE_SHUTTER_UP_MAX: "06:00",
-    CONF_WE_SHUTTER_DOWN: "22:00",
-    CONF_AUTO_LIVING: "",
-    CONF_AUTO_SLEEP: "",
-    CONF_AUTO_CHILDREN: "",
-    CONF_LIVING_TYPE_UP: TIME_TYPE_FIXED,
-    CONF_LIVING_TYPE_DOWN: TIME_TYPE_FIXED,
-    CONF_LIVING_W_UP_MIN: "05:00",
-    CONF_LIVING_W_UP_MAX: "06:00",
-    CONF_LIVING_W_DOWN: "22:00",
-    CONF_LIVING_WE_UP_MIN: "05:00",
-    CONF_LIVING_WE_UP_MAX: "06:00",
-    CONF_LIVING_WE_DOWN: "22:00",
-    CONF_SLEEP_TYPE_UP: TIME_TYPE_FIXED,
-    CONF_SLEEP_TYPE_DOWN: TIME_TYPE_FIXED,
-    CONF_SLEEP_W_UP_MIN: "05:00",
-    CONF_SLEEP_W_UP_MAX: "06:00",
-    CONF_SLEEP_W_DOWN: "22:00",
-    CONF_SLEEP_WE_UP_MIN: "05:00",
-    CONF_SLEEP_WE_UP_MAX: "06:00",
-    CONF_SLEEP_WE_DOWN: "22:00",
-    CONF_CHILDREN_TYPE_UP: TIME_TYPE_FIXED,
-    CONF_CHILDREN_TYPE_DOWN: TIME_TYPE_FIXED,
-    CONF_CHILDREN_W_UP_MIN: "05:00",
-    CONF_CHILDREN_W_UP_MAX: "06:00",
-    CONF_CHILDREN_W_DOWN: "22:00",
-    CONF_CHILDREN_WE_UP_MIN: "05:00",
-    CONF_CHILDREN_WE_UP_MAX: "06:00",
-    CONF_CHILDREN_WE_DOWN: "22:00",
-    CONF_LIVING_SUNRISE_OFFSET: 0,
-    CONF_LIVING_SUNSET_OFFSET: 0,
-    CONF_SLEEP_SUNRISE_OFFSET: 0,
-    CONF_SLEEP_SUNSET_OFFSET: 0,
-    CONF_CHILDREN_SUNRISE_OFFSET: 0,
-    CONF_CHILDREN_SUNSET_OFFSET: 0,
-    CONF_LIVING_DOWN_LIGHT_ENTITY: "",
-    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
-    CONF_SLEEP_DOWN_LIGHT_ENTITY: "",
-    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
-    CONF_CHILDREN_DOWN_LIGHT_ENTITY: "",
-    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS: DEFAULT_GROUP_LIGHT_BRIGHTNESS,
 }
 
 
-def _shutter_schema() -> dict:
+def _area_id_options(areas: list[dict]) -> list[str]:
+    out: list[str] = []
+    for a in areas or []:
+        aid = str(a.get(CONF_AREA_ID) or "").strip()
+        if aid:
+            out.append(aid)
+    return out
+
+
+def _shutter_schema(areas: list[dict]) -> dict:
     """Return schema for a single shutter."""
+    area_ids = _area_id_options(areas)
+    default_area = area_ids[0] if area_ids else ""
     return {
         vol.Required(CONF_COVER_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="cover"),
@@ -203,11 +190,8 @@ def _shutter_schema() -> dict:
         vol.Optional(
             CONF_MIN_POSITION_WHEN_OPEN, default=DEFAULT_MIN_POSITION_WHEN_OPEN
         ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-        vol.Optional(CONF_TRIGGER_MODE, default=TRIGGER_MODE_UP_DOWN): vol.In(
-            [TRIGGER_MODE_OFF, TRIGGER_MODE_ONLY_UP, TRIGGER_MODE_ONLY_DOWN, TRIGGER_MODE_UP_DOWN]
-        ),
-        vol.Optional(CONF_GROUP_UP, default=GROUP_LIVING): vol.In(GROUPS),
-        vol.Optional(CONF_GROUP_DOWN, default=GROUP_LIVING): vol.In(GROUPS),
+        vol.Optional(CONF_AREA_UP_ID, default=default_area): vol.In(area_ids or [""]),
+        vol.Optional(CONF_AREA_DOWN_ID, default=default_area): vol.In(area_ids or [""]),
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100)
         ),
@@ -217,9 +201,6 @@ def _shutter_schema() -> dict:
         vol.Optional(
             CONF_POSITION_SUN_PROTECT, default=DEFAULT_POSITION_SUN_PROTECT
         ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-        vol.Optional(CONF_BRIGHTNESS_TRIGGER, default=BRIGHTNESS_OFF): vol.In(
-            [BRIGHTNESS_OFF, BRIGHTNESS_UP, BRIGHTNESS_DOWN, BRIGHTNESS_BOTH]
-        ),
         vol.Optional(CONF_DRIVE_AFTER_CLOSE, default=False): bool,
     }
 
@@ -251,17 +232,7 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_migrate_entry(
         self, hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
-        """Migrate alte Konfigurationseinträge auf vollständige Optionen."""
-        opts = dict(entry.options or {})
-        defaults = DEFAULT_OPTIONS
-        needs_update = False
-        for key, default in defaults.items():
-            if key not in opts:
-                opts[key] = default
-                needs_update = True
-        if needs_update:
-            _LOGGER.info("Shutter Pilot: Migriere Konfigurationseintrag")
-            hass.config_entries.async_update_entry(entry, options=opts)
+        """No public migration guarantees - keep entry as-is."""
         return True
 
     @staticmethod
@@ -283,58 +254,55 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
     def _opts(self) -> dict:
-        """Safe access to options - merge mit Defaults für alte/inkonsistente Einträge."""
-        raw = self.config_entry.options
-        if raw is None:
-            return dict(DEFAULT_OPTIONS)
+        raw = self.config_entry.options or {}
         opts = dict(raw)
-        for key, default in DEFAULT_OPTIONS.items():
-            if key not in opts:
-                opts[key] = default
+        if CONF_AREAS not in opts or not isinstance(opts.get(CONF_AREAS), list):
+            opts[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
+        if CONF_SHUTTERS not in opts or not isinstance(opts.get(CONF_SHUTTERS), list):
+            opts[CONF_SHUTTERS] = []
         return opts
 
     async def async_step_init(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show options menu."""
-        _LOGGER.info("Shutter Pilot: async_step_init aufgerufen")
-        try:
-            opts = self._opts()
-            shutters = opts.get(CONF_SHUTTERS, [])
-            if not isinstance(shutters, list):
-                shutters = []
-            # Dict-Format für menu_options (kein Translation-Lookup nötig)
-            menu_opts = {
-                "settings_menu": "Einstellungen",
-                "add_shutter": "Rollladen hinzufügen",
-            }
-            if shutters:
-                menu_opts["edit_shutter"] = "Rollladen bearbeiten"
-            menu_opts["done"] = "Fertig"
-            return self.async_show_menu(
-                step_id="init",
-                menu_options=menu_opts,
-                description_placeholders={
-                    "shutter_count": str(len(shutters)),
-                },
-            )
-        except Exception as err:
-            _LOGGER.exception("Shutter Pilot Options-Flow Fehler: %s", err)
-            raise
+        opts = self._opts()
+        shutters = opts.get(CONF_SHUTTERS, [])
+        areas = opts.get(CONF_AREAS, [])
+        menu_opts = {
+            "manage_areas": "Bereiche verwalten",
+            "add_shutter": "Rollladen hinzufügen",
+        }
+        if isinstance(shutters, list) and shutters:
+            menu_opts["edit_shutter"] = "Rollladen bearbeiten"
+        menu_opts["done"] = "Fertig"
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=menu_opts,
+            description_placeholders={
+                "shutter_count": str(len(shutters) if isinstance(shutters, list) else 0),
+                "area_count": str(len(areas) if isinstance(areas, list) else 0),
+            },
+        )
+
+    async def async_step_manage_areas(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Manage areas (add/edit/delete)."""
+        return self.async_show_menu(
+            step_id="manage_areas",
+            menu_options={
+                "add_area": "Bereich hinzufügen",
+                "edit_area": "Bereich bearbeiten/löschen",
+                "init": "Zurück",
+            },
+        )
 
     async def async_step_settings_menu(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Submenu for settings."""
-        return self.async_show_menu(
-            step_id="settings_menu",
-            menu_options={
-                "settings_general": "Allgemeine Einstellungen (Helligkeit, Auto, Sonnenschutz)",
-                "settings_schedule_living": "Zeitplan Wohnbereich",
-                "settings_schedule_sleep": "Zeitplan Schlafbereich",
-                "settings_schedule_children": "Zeitplan Kinderbereich",
-            },
-        )
+        """Legacy step kept for compatibility; redirect to new UI."""
+        return await self.async_step_init()
 
     async def async_step_done(
         self, user_input: dict | None = None
@@ -351,295 +319,304 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         """Merge new options with existing and return to init menu."""
         merged = {**self._opts(), **new_opts}
         self.hass.config_entries.async_update_entry(self.config_entry, options=merged)
-        shutters = merged.get(CONF_SHUTTERS, [])
-        if not isinstance(shutters, list):
-            shutters = []
-        menu_opts = {
-            "settings_menu": "Einstellungen",
-            "add_shutter": "Rollladen hinzufügen",
-        }
-        if shutters:
-            menu_opts["edit_shutter"] = "Rollladen bearbeiten"
-        menu_opts["done"] = "Fertig"
         return self.async_show_menu(
             step_id="init",
-            menu_options=menu_opts,
-            description_placeholders={"shutter_count": str(len(shutters))},
+            menu_options={
+                "manage_areas": "Bereiche verwalten",
+                "add_shutter": "Rollladen hinzufügen",
+                "edit_shutter": "Rollladen bearbeiten",
+                "done": "Fertig",
+            },
+            description_placeholders={
+                "shutter_count": str(len(merged.get(CONF_SHUTTERS, []) or [])),
+                "area_count": str(len(merged.get(CONF_AREAS, []) or [])),
+            },
+        )
+
+    def _areas(self) -> list[dict]:
+        areas = self._opts().get(CONF_AREAS, [])
+        return areas if isinstance(areas, list) else []
+
+    def _shutters(self) -> list[dict]:
+        shutters = self._opts().get(CONF_SHUTTERS, [])
+        return shutters if isinstance(shutters, list) else []
+
+    def _unique_area_id(self, name: str) -> str:
+        base = _slugify(name)
+        existing = {str(a.get(CONF_AREA_ID) or "") for a in self._areas()}
+        if base not in existing:
+            return base
+        i = 2
+        while f"{base}_{i}" in existing:
+            i += 1
+        return f"{base}_{i}"
+
+    def _area_details_schema(self, area: dict) -> vol.Schema:
+        mode = str(area.get(CONF_AREA_MODE) or AREA_MODE_TIME)
+        base: dict = {
+            vol.Optional(
+                CONF_AREA_DRIVE_DELAY,
+                default=area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY),
+            ): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
+            vol.Optional(
+                CONF_AREA_SUN_PROTECT_ENABLED,
+                default=bool(area.get(CONF_AREA_SUN_PROTECT_ENABLED, False)),
+            ): bool,
+            vol.Optional(
+                CONF_AREA_ELEVATION_THRESHOLD,
+                default=area.get(CONF_AREA_ELEVATION_THRESHOLD, DEFAULT_AREA_ELEVATION_THRESHOLD),
+            ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
+            vol.Optional(
+                CONF_AREA_DOWN_LIGHT_ENTITY,
+                default=[area.get(CONF_AREA_DOWN_LIGHT_ENTITY, "")] if area.get(CONF_AREA_DOWN_LIGHT_ENTITY) else [],
+            ): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=["light", "switch"], multiple=True),
+            ),
+            vol.Optional(
+                CONF_AREA_DOWN_LIGHT_BRIGHTNESS,
+                default=area.get(CONF_AREA_DOWN_LIGHT_BRIGHTNESS, DEFAULT_AREA_DOWN_LIGHT_BRIGHTNESS),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+        }
+
+        if mode == AREA_MODE_TIME:
+            base.update(
+                {
+                    vol.Optional(
+                        CONF_AREA_TIME_UP,
+                        default=area.get(CONF_AREA_TIME_UP, DEFAULT_AREA_TIME_UP),
+                    ): str,
+                    vol.Optional(
+                        CONF_AREA_TIME_DOWN,
+                        default=area.get(CONF_AREA_TIME_DOWN, DEFAULT_AREA_TIME_DOWN),
+                    ): str,
+                }
+            )
+        elif mode == AREA_MODE_SUN:
+            base.update(
+                {
+                    vol.Optional(
+                        CONF_AREA_SUNRISE_OFFSET,
+                        default=area.get(CONF_AREA_SUNRISE_OFFSET, DEFAULT_AREA_SUNRISE_OFFSET),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
+                    vol.Optional(
+                        CONF_AREA_SUNSET_OFFSET,
+                        default=area.get(CONF_AREA_SUNSET_OFFSET, DEFAULT_AREA_SUNSET_OFFSET),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=-180, max=180)),
+                }
+            )
+        else:
+            base.update(
+                {
+                    vol.Optional(
+                        CONF_AREA_BRIGHTNESS_SENSOR,
+                        default=[area.get(CONF_AREA_BRIGHTNESS_SENSOR, "")] if area.get(CONF_AREA_BRIGHTNESS_SENSOR) else [],
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="sensor", multiple=True),
+                    ),
+                    vol.Optional(
+                        CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+                        default=area.get(
+                            CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+                            DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
+                    vol.Optional(
+                        CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+                        default=area.get(
+                            CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+                            DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD,
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
+                    vol.Optional(CONF_AREA_W_UP_FROM, default=area.get(CONF_AREA_W_UP_FROM, DEFAULT_AREA_W_UP_FROM)): str,
+                    vol.Optional(CONF_AREA_W_UP_TO, default=area.get(CONF_AREA_W_UP_TO, DEFAULT_AREA_W_UP_TO)): str,
+                    vol.Optional(CONF_AREA_W_DOWN_FROM, default=area.get(CONF_AREA_W_DOWN_FROM, DEFAULT_AREA_W_DOWN_FROM)): str,
+                    vol.Optional(CONF_AREA_W_DOWN_TO, default=area.get(CONF_AREA_W_DOWN_TO, DEFAULT_AREA_W_DOWN_TO)): str,
+                    vol.Optional(CONF_AREA_WE_UP_FROM, default=area.get(CONF_AREA_WE_UP_FROM, DEFAULT_AREA_WE_UP_FROM)): str,
+                    vol.Optional(CONF_AREA_WE_UP_TO, default=area.get(CONF_AREA_WE_UP_TO, DEFAULT_AREA_WE_UP_TO)): str,
+                    vol.Optional(CONF_AREA_WE_DOWN_FROM, default=area.get(CONF_AREA_WE_DOWN_FROM, DEFAULT_AREA_WE_DOWN_FROM)): str,
+                    vol.Optional(CONF_AREA_WE_DOWN_TO, default=area.get(CONF_AREA_WE_DOWN_TO, DEFAULT_AREA_WE_DOWN_TO)): str,
+                }
+            )
+        return vol.Schema(base)
+
+    async def async_step_add_area(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        if user_input is not None:
+            name = str(user_input.get(CONF_AREA_NAME) or "").strip() or "Bereich"
+            mode = user_input.get(CONF_AREA_MODE, AREA_MODE_TIME)
+            if mode not in AREA_MODES:
+                mode = AREA_MODE_TIME
+            area_id = self._unique_area_id(name)
+            self._pending_area = _default_area(area_id, name, mode)
+            return await self.async_step_add_area_details()
+
+        return self.async_show_form(
+            step_id="add_area",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_AREA_NAME): str,
+                    vol.Required(CONF_AREA_MODE, default=AREA_MODE_TIME): vol.In(AREA_MODES),
+                }
+            ),
+        )
+
+    async def async_step_add_area_details(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        area = getattr(self, "_pending_area", None)
+        if not isinstance(area, dict):
+            return await self.async_step_manage_areas()
+
+        if user_input is not None:
+            area[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY))
+            area[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(user_input.get(CONF_AREA_BRIGHTNESS_SENSOR))
+            area.update(user_input)
+            areas = self._areas()
+            areas.append(area)
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={**self._opts(), CONF_AREAS: areas},
+            )
+            self._pending_area = None
+            return await self.async_step_manage_areas()
+
+        return self.async_show_form(
+            step_id="add_area_details",
+            data_schema=self._area_details_schema(area),
+        )
+
+    async def async_step_edit_area(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        areas = self._areas()
+        if not areas:
+            return await self.async_step_manage_areas()
+
+        if user_input is not None:
+            idx = int(user_input.get("area_index"))
+            action = user_input.get("action")
+            if action == "remove":
+                removed = areas.pop(idx)
+                removed_id = str(removed.get(CONF_AREA_ID) or "")
+                shutters = self._shutters()
+                fallback_id = str(areas[0].get(CONF_AREA_ID)) if areas else ""
+                for s in shutters:
+                    if s.get(CONF_AREA_UP_ID) == removed_id:
+                        s[CONF_AREA_UP_ID] = fallback_id
+                    if s.get(CONF_AREA_DOWN_ID) == removed_id:
+                        s[CONF_AREA_DOWN_ID] = fallback_id
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    options={**self._opts(), CONF_AREAS: areas, CONF_SHUTTERS: shutters},
+                )
+                return await self.async_step_manage_areas()
+            self._edit_area_index = idx
+            return await self.async_step_edit_area_form()
+
+        options = {
+            i: f"{a.get(CONF_AREA_NAME,'Bereich')} ({a.get(CONF_AREA_ID,'')})"
+            for i, a in enumerate(areas)
+        }
+        schema = vol.Schema(
+            {
+                vol.Required("area_index"): vol.In(options),
+                vol.Required("action"): vol.In(["edit", "remove"]),
+            }
+        )
+        return self.async_show_form(step_id="edit_area", data_schema=schema)
+
+    async def async_step_edit_area_form(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        areas = self._areas()
+        idx = int(getattr(self, "_edit_area_index", 0))
+        if idx >= len(areas):
+            return await self.async_step_manage_areas()
+        area = dict(areas[idx])
+
+        if user_input is not None:
+            name = str(user_input.get(CONF_AREA_NAME) or "").strip() or area.get(CONF_AREA_NAME, "Bereich")
+            mode = user_input.get(CONF_AREA_MODE, area.get(CONF_AREA_MODE, AREA_MODE_TIME))
+            if mode not in AREA_MODES:
+                mode = AREA_MODE_TIME
+            area[CONF_AREA_NAME] = name
+            area[CONF_AREA_MODE] = mode
+            self._pending_area = area
+            self._pending_area_edit_index = idx
+            return await self.async_step_edit_area_details()
+
+        return self.async_show_form(
+            step_id="edit_area_form",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_AREA_NAME, default=area.get(CONF_AREA_NAME, "")): str,
+                    vol.Required(CONF_AREA_MODE, default=area.get(CONF_AREA_MODE, AREA_MODE_TIME)): vol.In(AREA_MODES),
+                }
+            ),
+        )
+
+    async def async_step_edit_area_details(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        area = getattr(self, "_pending_area", None)
+        idx = int(getattr(self, "_pending_area_edit_index", -1))
+        areas = self._areas()
+        if not isinstance(area, dict) or idx < 0 or idx >= len(areas):
+            return await self.async_step_manage_areas()
+
+        if user_input is not None:
+            area[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY))
+            area[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(user_input.get(CONF_AREA_BRIGHTNESS_SENSOR))
+            area.update(user_input)
+            areas[idx] = area
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                options={**self._opts(), CONF_AREAS: areas},
+            )
+            self._pending_area = None
+            self._pending_area_edit_index = None
+            return await self.async_step_manage_areas()
+
+        return self.async_show_form(
+            step_id="edit_area_details",
+            data_schema=self._area_details_schema(area),
         )
 
     async def async_step_settings_general(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """General settings: brightness, elevation, auto, drive_delay."""
-        if user_input is not None:
-            brightness = user_input.get(CONF_BRIGHTNESS_ENTITY_ID)
-            brightness = self._eid(brightness) if brightness else ""
-            return self._merge_and_back({
-                CONF_DRIVE_DELAY: user_input.get(CONF_DRIVE_DELAY, DEFAULT_DRIVE_DELAY),
-                CONF_BRIGHTNESS_ENTITY_ID: brightness,
-                CONF_BRIGHTNESS_DOWN_THRESHOLD: user_input.get(
-                    CONF_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_BRIGHTNESS_DOWN_THRESHOLD
-                ),
-                CONF_BRIGHTNESS_UP_THRESHOLD: user_input.get(
-                    CONF_BRIGHTNESS_UP_THRESHOLD, DEFAULT_BRIGHTNESS_UP_THRESHOLD
-                ),
-                CONF_BRIGHTNESS_DOWN_TIME: user_input.get(
-                    CONF_BRIGHTNESS_DOWN_TIME, DEFAULT_BRIGHTNESS_DOWN_TIME
-                ),
-                CONF_BRIGHTNESS_UP_TIME: user_input.get(
-                    CONF_BRIGHTNESS_UP_TIME, DEFAULT_BRIGHTNESS_UP_TIME
-                ),
-                CONF_BRIGHTNESS_IGNORE_TIME: user_input.get(CONF_BRIGHTNESS_IGNORE_TIME, True),
-                CONF_USE_ELEVATION: user_input.get(CONF_USE_ELEVATION, False),
-                CONF_ELEVATION_THRESHOLD: user_input.get(
-                    CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD
-                ),
-                CONF_AUTO_LIVING: self._eid(user_input.get(CONF_AUTO_LIVING)),
-                CONF_AUTO_SLEEP: self._eid(user_input.get(CONF_AUTO_SLEEP)),
-                CONF_AUTO_CHILDREN: self._eid(user_input.get(CONF_AUTO_CHILDREN)),
-                CONF_LIVING_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_LIVING_DOWN_LIGHT_ENTITY)),
-                CONF_LIVING_DOWN_LIGHT_BRIGHTNESS: user_input.get(
-                    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
-                ),
-                CONF_SLEEP_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_SLEEP_DOWN_LIGHT_ENTITY)),
-                CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS: user_input.get(
-                    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
-                ),
-                CONF_CHILDREN_DOWN_LIGHT_ENTITY: self._eid(user_input.get(CONF_CHILDREN_DOWN_LIGHT_ENTITY)),
-                CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS: user_input.get(
-                    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS
-                ),
-            })
-
-        o = self._opts().get
-
-        def _entity_list(key: str):
-            val = o(key)
-            if isinstance(val, list):
-                return val
-            return [val] if val else []
-
-        return self.async_show_form(
-            step_id="settings_general",
-            data_schema=vol.Schema({
-                vol.Optional(
-                    CONF_BRIGHTNESS_ENTITY_ID,
-                    default=_entity_list(CONF_BRIGHTNESS_ENTITY_ID),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor", multiple=True),
-                ),
-                vol.Optional(
-                    CONF_BRIGHTNESS_DOWN_THRESHOLD,
-                    default=o(CONF_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_BRIGHTNESS_DOWN_THRESHOLD),
-                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
-                vol.Optional(
-                    CONF_BRIGHTNESS_UP_THRESHOLD,
-                    default=o(CONF_BRIGHTNESS_UP_THRESHOLD, DEFAULT_BRIGHTNESS_UP_THRESHOLD),
-                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100000)),
-                vol.Optional(
-                    CONF_BRIGHTNESS_DOWN_TIME,
-                    default=o(CONF_BRIGHTNESS_DOWN_TIME, DEFAULT_BRIGHTNESS_DOWN_TIME),
-                ): str,
-                vol.Optional(
-                    CONF_BRIGHTNESS_UP_TIME,
-                    default=o(CONF_BRIGHTNESS_UP_TIME, DEFAULT_BRIGHTNESS_UP_TIME),
-                ): str,
-                vol.Optional(CONF_BRIGHTNESS_IGNORE_TIME, default=o(CONF_BRIGHTNESS_IGNORE_TIME, True)): bool,
-                vol.Optional(
-                    CONF_DRIVE_DELAY,
-                    default=o(CONF_DRIVE_DELAY, DEFAULT_DRIVE_DELAY),
-                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=60)),
-                vol.Optional(CONF_USE_ELEVATION, default=o(CONF_USE_ELEVATION, False)): bool,
-                vol.Optional(
-                    CONF_ELEVATION_THRESHOLD,
-                    default=o(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD),
-                ): vol.All(vol.Coerce(float), vol.Range(min=0, max=90)),
-                vol.Optional(
-                    CONF_AUTO_LIVING,
-                    default=_entity_list(CONF_AUTO_LIVING),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["input_boolean", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_AUTO_SLEEP,
-                    default=_entity_list(CONF_AUTO_SLEEP),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["input_boolean", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_AUTO_CHILDREN,
-                    default=_entity_list(CONF_AUTO_CHILDREN),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["input_boolean", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_LIVING_DOWN_LIGHT_ENTITY,
-                    default=_entity_list(CONF_LIVING_DOWN_LIGHT_ENTITY),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["light", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_LIVING_DOWN_LIGHT_BRIGHTNESS,
-                    default=o(CONF_LIVING_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                vol.Optional(
-                    CONF_SLEEP_DOWN_LIGHT_ENTITY,
-                    default=_entity_list(CONF_SLEEP_DOWN_LIGHT_ENTITY),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["light", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS,
-                    default=o(CONF_SLEEP_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-                vol.Optional(
-                    CONF_CHILDREN_DOWN_LIGHT_ENTITY,
-                    default=_entity_list(CONF_CHILDREN_DOWN_LIGHT_ENTITY),
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=["light", "switch"],
-                        multiple=True,
-                    ),
-                ),
-                vol.Optional(
-                    CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS,
-                    default=o(CONF_CHILDREN_DOWN_LIGHT_BRIGHTNESS, DEFAULT_GROUP_LIGHT_BRIGHTNESS),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
-            }),
-        )
+        """Legacy step kept for compatibility; redirect to new UI."""
+        return await self.async_step_init()
 
     async def async_step_settings_schedule_living(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Schedule for Living group."""
-        if user_input is not None:
-            return self._merge_and_back({
-                CONF_LIVING_TYPE_UP: user_input.get(CONF_LIVING_TYPE_UP, TIME_TYPE_FIXED),
-                CONF_LIVING_TYPE_DOWN: user_input.get(CONF_LIVING_TYPE_DOWN, TIME_TYPE_FIXED),
-                CONF_LIVING_SUNRISE_OFFSET: user_input.get(CONF_LIVING_SUNRISE_OFFSET, 0),
-                CONF_LIVING_SUNSET_OFFSET: user_input.get(CONF_LIVING_SUNSET_OFFSET, 0),
-                CONF_LIVING_W_UP_MIN: user_input.get(CONF_LIVING_W_UP_MIN, "05:00"),
-                CONF_LIVING_W_UP_MAX: user_input.get(CONF_LIVING_W_UP_MAX, "06:00"),
-                CONF_LIVING_W_DOWN: user_input.get(CONF_LIVING_W_DOWN, "22:00"),
-                CONF_LIVING_WE_UP_MIN: user_input.get(CONF_LIVING_WE_UP_MIN, "05:00"),
-                CONF_LIVING_WE_UP_MAX: user_input.get(CONF_LIVING_WE_UP_MAX, "06:00"),
-                CONF_LIVING_WE_DOWN: user_input.get(CONF_LIVING_WE_DOWN, "22:00"),
-                CONF_W_SHUTTER_UP_MIN: user_input.get(CONF_LIVING_W_UP_MIN, "05:00"),
-                CONF_W_SHUTTER_UP_MAX: user_input.get(CONF_LIVING_W_UP_MAX, "06:00"),
-                CONF_W_SHUTTER_DOWN: user_input.get(CONF_LIVING_W_DOWN, "22:00"),
-                CONF_WE_SHUTTER_UP_MIN: user_input.get(CONF_LIVING_WE_UP_MIN, "05:00"),
-                CONF_WE_SHUTTER_UP_MAX: user_input.get(CONF_LIVING_WE_UP_MAX, "06:00"),
-                CONF_WE_SHUTTER_DOWN: user_input.get(CONF_LIVING_WE_DOWN, "22:00"),
-            })
-        o = self._opts().get
-        return self.async_show_form(
-            step_id="settings_schedule_living",
-            data_schema=vol.Schema({
-                vol.Optional(CONF_LIVING_TYPE_UP, default=o(CONF_LIVING_TYPE_UP, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNRISE]),
-                vol.Optional(CONF_LIVING_TYPE_DOWN, default=o(CONF_LIVING_TYPE_DOWN, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNSET]),
-                vol.Optional(CONF_LIVING_SUNRISE_OFFSET, default=o(CONF_LIVING_SUNRISE_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_LIVING_SUNSET_OFFSET, default=o(CONF_LIVING_SUNSET_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_LIVING_W_UP_MIN, default=o(CONF_LIVING_W_UP_MIN) or o(CONF_W_SHUTTER_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_LIVING_W_UP_MAX, default=o(CONF_LIVING_W_UP_MAX) or o(CONF_W_SHUTTER_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_LIVING_W_DOWN, default=o(CONF_LIVING_W_DOWN) or o(CONF_W_SHUTTER_DOWN, "22:00")): str,
-                vol.Optional(CONF_LIVING_WE_UP_MIN, default=o(CONF_LIVING_WE_UP_MIN) or o(CONF_WE_SHUTTER_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_LIVING_WE_UP_MAX, default=o(CONF_LIVING_WE_UP_MAX) or o(CONF_WE_SHUTTER_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_LIVING_WE_DOWN, default=o(CONF_LIVING_WE_DOWN) or o(CONF_WE_SHUTTER_DOWN, "22:00")): str,
-            }),
-        )
+        """Legacy step kept for compatibility; redirect to new UI."""
+        return await self.async_step_manage_areas()
 
     async def async_step_settings_schedule_sleep(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Schedule for Sleep group."""
-        if user_input is not None:
-            return self._merge_and_back({
-                CONF_SLEEP_TYPE_UP: user_input.get(CONF_SLEEP_TYPE_UP, TIME_TYPE_FIXED),
-                CONF_SLEEP_TYPE_DOWN: user_input.get(CONF_SLEEP_TYPE_DOWN, TIME_TYPE_FIXED),
-                CONF_SLEEP_SUNRISE_OFFSET: user_input.get(CONF_SLEEP_SUNRISE_OFFSET, 0),
-                CONF_SLEEP_SUNSET_OFFSET: user_input.get(CONF_SLEEP_SUNSET_OFFSET, 0),
-                CONF_SLEEP_W_UP_MIN: user_input.get(CONF_SLEEP_W_UP_MIN, "05:00"),
-                CONF_SLEEP_W_UP_MAX: user_input.get(CONF_SLEEP_W_UP_MAX, "06:00"),
-                CONF_SLEEP_W_DOWN: user_input.get(CONF_SLEEP_W_DOWN, "22:00"),
-                CONF_SLEEP_WE_UP_MIN: user_input.get(CONF_SLEEP_WE_UP_MIN, "05:00"),
-                CONF_SLEEP_WE_UP_MAX: user_input.get(CONF_SLEEP_WE_UP_MAX, "06:00"),
-                CONF_SLEEP_WE_DOWN: user_input.get(CONF_SLEEP_WE_DOWN, "22:00"),
-            })
-        o = self._opts().get
-        return self.async_show_form(
-            step_id="settings_schedule_sleep",
-            data_schema=vol.Schema({
-                vol.Optional(CONF_SLEEP_TYPE_UP, default=o(CONF_SLEEP_TYPE_UP, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNRISE]),
-                vol.Optional(CONF_SLEEP_TYPE_DOWN, default=o(CONF_SLEEP_TYPE_DOWN, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNSET]),
-                vol.Optional(CONF_SLEEP_SUNRISE_OFFSET, default=o(CONF_SLEEP_SUNRISE_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_SLEEP_SUNSET_OFFSET, default=o(CONF_SLEEP_SUNSET_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_SLEEP_W_UP_MIN, default=o(CONF_SLEEP_W_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_SLEEP_W_UP_MAX, default=o(CONF_SLEEP_W_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_SLEEP_W_DOWN, default=o(CONF_SLEEP_W_DOWN, "22:00")): str,
-                vol.Optional(CONF_SLEEP_WE_UP_MIN, default=o(CONF_SLEEP_WE_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_SLEEP_WE_UP_MAX, default=o(CONF_SLEEP_WE_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_SLEEP_WE_DOWN, default=o(CONF_SLEEP_WE_DOWN, "22:00")): str,
-            }),
-        )
+        """Legacy step kept for compatibility; redirect to new UI."""
+        return await self.async_step_manage_areas()
 
     async def async_step_settings_schedule_children(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Schedule for Children group."""
-        if user_input is not None:
-            return self._merge_and_back({
-                CONF_CHILDREN_TYPE_UP: user_input.get(CONF_CHILDREN_TYPE_UP, TIME_TYPE_FIXED),
-                CONF_CHILDREN_TYPE_DOWN: user_input.get(CONF_CHILDREN_TYPE_DOWN, TIME_TYPE_FIXED),
-                CONF_CHILDREN_SUNRISE_OFFSET: user_input.get(CONF_CHILDREN_SUNRISE_OFFSET, 0),
-                CONF_CHILDREN_SUNSET_OFFSET: user_input.get(CONF_CHILDREN_SUNSET_OFFSET, 0),
-                CONF_CHILDREN_W_UP_MIN: user_input.get(CONF_CHILDREN_W_UP_MIN, "05:00"),
-                CONF_CHILDREN_W_UP_MAX: user_input.get(CONF_CHILDREN_W_UP_MAX, "06:00"),
-                CONF_CHILDREN_W_DOWN: user_input.get(CONF_CHILDREN_W_DOWN, "22:00"),
-                CONF_CHILDREN_WE_UP_MIN: user_input.get(CONF_CHILDREN_WE_UP_MIN, "05:00"),
-                CONF_CHILDREN_WE_UP_MAX: user_input.get(CONF_CHILDREN_WE_UP_MAX, "06:00"),
-                CONF_CHILDREN_WE_DOWN: user_input.get(CONF_CHILDREN_WE_DOWN, "22:00"),
-            })
-        o = self._opts().get
-        return self.async_show_form(
-            step_id="settings_schedule_children",
-            data_schema=vol.Schema({
-                vol.Optional(CONF_CHILDREN_TYPE_UP, default=o(CONF_CHILDREN_TYPE_UP, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNRISE]),
-                vol.Optional(CONF_CHILDREN_TYPE_DOWN, default=o(CONF_CHILDREN_TYPE_DOWN, TIME_TYPE_FIXED)): vol.In([TIME_TYPE_FIXED, TIME_TYPE_SUNSET]),
-                vol.Optional(CONF_CHILDREN_SUNRISE_OFFSET, default=o(CONF_CHILDREN_SUNRISE_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_CHILDREN_SUNSET_OFFSET, default=o(CONF_CHILDREN_SUNSET_OFFSET, 0)): vol.All(vol.Coerce(int), vol.Range(min=-120, max=120)),
-                vol.Optional(CONF_CHILDREN_W_UP_MIN, default=o(CONF_CHILDREN_W_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_CHILDREN_W_UP_MAX, default=o(CONF_CHILDREN_W_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_CHILDREN_W_DOWN, default=o(CONF_CHILDREN_W_DOWN, "22:00")): str,
-                vol.Optional(CONF_CHILDREN_WE_UP_MIN, default=o(CONF_CHILDREN_WE_UP_MIN, "05:00")): str,
-                vol.Optional(CONF_CHILDREN_WE_UP_MAX, default=o(CONF_CHILDREN_WE_UP_MAX, "06:00")): str,
-                vol.Optional(CONF_CHILDREN_WE_DOWN, default=o(CONF_CHILDREN_WE_DOWN, "22:00")): str,
-            }),
-        )
+        """Legacy step kept for compatibility; redirect to new UI."""
+        return await self.async_step_manage_areas()
 
     async def async_step_add_shutter(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Add a shutter configuration."""
         if user_input is not None:
-            _raw = self._opts().get(CONF_SHUTTERS, [])
-            shutters = list(_raw) if isinstance(_raw, list) else []
+            shutters = self._shutters()
             raw_cover = user_input.get(CONF_COVER_ENTITY_ID)
             cover_id = raw_cover[0] if isinstance(raw_cover, list) else (raw_cover or "")
+            areas = self._areas()
+            default_area_id = str(areas[0].get(CONF_AREA_ID)) if areas else ""
             shutter_cfg = {
                 CONF_COVER_ENTITY_ID: cover_id,
                 CONF_NAME: user_input.get(CONF_NAME, "Shutter"),
@@ -650,13 +627,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_POSITION_WHEN_WINDOW_TILTED: user_input.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50),
                 CONF_LOCK_PROTECTION: user_input.get(CONF_LOCK_PROTECTION, False),
                 CONF_MIN_POSITION_WHEN_OPEN: user_input.get(CONF_MIN_POSITION_WHEN_OPEN, DEFAULT_MIN_POSITION_WHEN_OPEN),
-                CONF_TRIGGER_MODE: user_input.get(CONF_TRIGGER_MODE, TRIGGER_MODE_UP_DOWN),
-                CONF_GROUP_UP: user_input.get(CONF_GROUP_UP, GROUP_LIVING),
-                CONF_GROUP_DOWN: user_input.get(CONF_GROUP_DOWN, GROUP_LIVING),
+                CONF_AREA_UP_ID: user_input.get(CONF_AREA_UP_ID, default_area_id),
+                CONF_AREA_DOWN_ID: user_input.get(CONF_AREA_DOWN_ID, default_area_id),
                 CONF_POSITION_OPEN: user_input.get(CONF_POSITION_OPEN, DEFAULT_POSITION_OPEN),
                 CONF_POSITION_CLOSED: user_input.get(CONF_POSITION_CLOSED, DEFAULT_POSITION_CLOSED),
                 CONF_POSITION_SUN_PROTECT: user_input.get(CONF_POSITION_SUN_PROTECT, DEFAULT_POSITION_SUN_PROTECT),
-                CONF_BRIGHTNESS_TRIGGER: user_input.get(CONF_BRIGHTNESS_TRIGGER, BRIGHTNESS_OFF),
                 CONF_DRIVE_AFTER_CLOSE: user_input.get(CONF_DRIVE_AFTER_CLOSE, False),
             }
             win_entity = user_input.get(CONF_WINDOW_ENTITY_ID)
@@ -667,22 +642,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=new_options
             )
-            _opts = {
-                "settings_menu": "Einstellungen",
-                "add_shutter": "Rollladen hinzufügen",
-                "done": "Fertig",
-            }
-            if shutters:
-                _opts["edit_shutter"] = "Rollladen bearbeiten"
-            return self.async_show_menu(
-                step_id="init",
-                menu_options=_opts,
-                description_placeholders={"shutter_count": str(len(shutters))},
-            )
+            return await self.async_step_init()
 
         return self.async_show_form(
             step_id="add_shutter",
-            data_schema=vol.Schema(_shutter_schema()),
+            data_schema=vol.Schema(_shutter_schema(self._areas())),
         )
 
     def _edit_shutter_defaults(self, shutters: list, idx: int) -> dict:
@@ -690,7 +654,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         Keys must be strings (e.g. 'cover_entity_id') to match the serialized schema.
         """
         s = shutters[idx] if idx < len(shutters) else {}
-        base = _shutter_schema()
+        base = _shutter_schema(self._areas())
         out = {}
         for k in base:
             key_name = getattr(k, "schema", k)
@@ -716,8 +680,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Select shutter to edit or remove."""
-        _raw = self._opts().get(CONF_SHUTTERS, [])
-        shutters = list(_raw) if isinstance(_raw, list) else []
+        shutters = self._shutters()
 
         if user_input is not None:
             idx = user_input.get("shutter_index")
@@ -732,7 +695,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
                 defaults = self._edit_shutter_defaults(shutters, int(idx))
-                schema = vol.Schema(_shutter_schema())
+                schema = vol.Schema(_shutter_schema(self._areas()))
                 try:
                     if hasattr(self, "add_suggested_values_to_schema"):
                         schema = self.add_suggested_values_to_schema(schema, defaults)
@@ -769,8 +732,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Edit a shutter (form pre-filled). Called when user submits the edit form."""
-        _raw = self._opts().get(CONF_SHUTTERS, [])
-        shutters = list(_raw) if isinstance(_raw, list) else []
+        shutters = self._shutters()
         idx = getattr(self, "_edit_index", 0)
         if idx >= len(shutters):
             return self.async_abort(reason="not_found")
@@ -778,6 +740,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None and "shutter_index" not in user_input and "action" not in user_input:
             raw_cover = user_input.get(CONF_COVER_ENTITY_ID)
             cover_id = raw_cover[0] if isinstance(raw_cover, list) else (raw_cover or "")
+            areas = self._areas()
+            default_area_id = str(areas[0].get(CONF_AREA_ID)) if areas else ""
             shutter_cfg = {
                 CONF_COVER_ENTITY_ID: cover_id,
                 CONF_NAME: user_input.get(CONF_NAME, "Shutter"),
@@ -788,13 +752,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 CONF_POSITION_WHEN_WINDOW_TILTED: user_input.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50),
                 CONF_LOCK_PROTECTION: user_input.get(CONF_LOCK_PROTECTION, False),
                 CONF_MIN_POSITION_WHEN_OPEN: user_input.get(CONF_MIN_POSITION_WHEN_OPEN, DEFAULT_MIN_POSITION_WHEN_OPEN),
-                CONF_TRIGGER_MODE: user_input.get(CONF_TRIGGER_MODE, TRIGGER_MODE_UP_DOWN),
-                CONF_GROUP_UP: user_input.get(CONF_GROUP_UP, GROUP_LIVING),
-                CONF_GROUP_DOWN: user_input.get(CONF_GROUP_DOWN, GROUP_LIVING),
+                CONF_AREA_UP_ID: user_input.get(CONF_AREA_UP_ID, default_area_id),
+                CONF_AREA_DOWN_ID: user_input.get(CONF_AREA_DOWN_ID, default_area_id),
                 CONF_POSITION_OPEN: user_input.get(CONF_POSITION_OPEN, DEFAULT_POSITION_OPEN),
                 CONF_POSITION_CLOSED: user_input.get(CONF_POSITION_CLOSED, DEFAULT_POSITION_CLOSED),
                 CONF_POSITION_SUN_PROTECT: user_input.get(CONF_POSITION_SUN_PROTECT, DEFAULT_POSITION_SUN_PROTECT),
-                CONF_BRIGHTNESS_TRIGGER: user_input.get(CONF_BRIGHTNESS_TRIGGER, BRIGHTNESS_OFF),
                 CONF_DRIVE_AFTER_CLOSE: user_input.get(CONF_DRIVE_AFTER_CLOSE, False),
             }
             win_entity = user_input.get(CONF_WINDOW_ENTITY_ID)
@@ -806,7 +768,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=new_opts)
 
         defaults = self._edit_shutter_defaults(shutters, idx)
-        schema = vol.Schema(_shutter_schema())
+        schema = vol.Schema(_shutter_schema(self._areas()))
         try:
             if hasattr(self, "add_suggested_values_to_schema"):
                 schema = self.add_suggested_values_to_schema(schema, defaults)

@@ -1,4 +1,4 @@
-"""Time-based scheduler for shutter up/down (Sunrise/Sunset and fixed times)."""
+"""Time-based scheduler for shutter up/down (per area, time/sun modes)."""
 
 from __future__ import annotations
 
@@ -16,62 +16,25 @@ from homeassistant.helpers.event import (
 
 from .const import (
     DOMAIN,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_MODE,
+    AREA_MODE_TIME,
+    AREA_MODE_SUN,
+    CONF_AREA_TIME_UP,
+    CONF_AREA_TIME_DOWN,
+    CONF_AREA_SUNRISE_OFFSET,
+    CONF_AREA_SUNSET_OFFSET,
+    CONF_AREA_DRIVE_DELAY,
+    DEFAULT_AREA_DRIVE_DELAY,
+    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_GROUP_UP,
-    CONF_GROUP_DOWN,
+    CONF_AREA_UP_ID,
+    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
-    CONF_DRIVE_DELAY,
     CONF_DRIVE_AFTER_CLOSE,
-    CONF_BRIGHTNESS_ENTITY_ID,
-    CONF_BRIGHTNESS_UP_THRESHOLD,
-    CONF_AUTO_LIVING,
-    CONF_AUTO_SLEEP,
-    CONF_AUTO_CHILDREN,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
-    GROUP_ALL,
-    TIME_TYPE_FIXED,
-    TIME_TYPE_SUNRISE,
-    TIME_TYPE_SUNSET,
-    CONF_LIVING_TYPE_UP,
-    CONF_LIVING_TYPE_DOWN,
-    CONF_LIVING_W_UP_MIN,
-    CONF_LIVING_W_UP_MAX,
-    CONF_LIVING_W_DOWN,
-    CONF_LIVING_WE_UP_MIN,
-    CONF_LIVING_WE_UP_MAX,
-    CONF_LIVING_WE_DOWN,
-    CONF_LIVING_SUNRISE_OFFSET,
-    CONF_LIVING_SUNSET_OFFSET,
-    CONF_SLEEP_TYPE_UP,
-    CONF_SLEEP_TYPE_DOWN,
-    CONF_SLEEP_W_UP_MIN,
-    CONF_SLEEP_W_UP_MAX,
-    CONF_SLEEP_W_DOWN,
-    CONF_SLEEP_WE_UP_MIN,
-    CONF_SLEEP_WE_UP_MAX,
-    CONF_SLEEP_WE_DOWN,
-    CONF_SLEEP_SUNRISE_OFFSET,
-    CONF_SLEEP_SUNSET_OFFSET,
-    CONF_CHILDREN_TYPE_UP,
-    CONF_CHILDREN_TYPE_DOWN,
-    CONF_CHILDREN_W_UP_MIN,
-    CONF_CHILDREN_W_UP_MAX,
-    CONF_CHILDREN_W_DOWN,
-    CONF_CHILDREN_WE_UP_MIN,
-    CONF_CHILDREN_WE_UP_MAX,
-    CONF_CHILDREN_WE_DOWN,
-    CONF_CHILDREN_SUNRISE_OFFSET,
-    CONF_CHILDREN_SUNSET_OFFSET,
-    CONF_W_SHUTTER_UP_MIN,
-    CONF_W_SHUTTER_UP_MAX,
-    CONF_W_SHUTTER_DOWN,
-    CONF_WE_SHUTTER_UP_MIN,
-    CONF_WE_SHUTTER_UP_MAX,
-    CONF_WE_SHUTTER_DOWN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
@@ -90,98 +53,15 @@ def _parse_time(tstr: str) -> time:
     return time(6, 0)
 
 
-def _brightness_blocks_scheduler_up(hass: HomeAssistant, opts: dict, now: datetime) -> bool:
-    """True if a brightness sensor is configured and current lux is still <= up_threshold.
-    In that case the scheduler must NOT drive shutters up; the brightness listener will do it
-    when lux rises above the threshold.
-    """
-    raw_entity = opts.get(CONF_BRIGHTNESS_ENTITY_ID, "")
-    if isinstance(raw_entity, list):
-        brightness_entity = (raw_entity[0] if raw_entity else "") or ""
-    else:
-        brightness_entity = str(raw_entity or "").strip()
-    if not brightness_entity:
-        return False
+def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
+    """True if automation is enabled for this area. No entity = enabled."""
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
+    if isinstance(auto_modes, dict) and area_id in auto_modes:
+        return bool(auto_modes.get(area_id))
 
-    state = hass.states.get(brightness_entity)
-    if not state or state.state in (None, "unknown", "unavailable"):
-        return True  # sensor unavailable -> block to be safe
-    try:
-        lux = float(state.state)
-    except (TypeError, ValueError):
-        return True
-
-    try:
-        up_threshold = int(opts.get(CONF_BRIGHTNESS_UP_THRESHOLD, 500))
-    except (TypeError, ValueError):
-        up_threshold = 500
-
-    if lux > up_threshold:
-        return False
-    return True
-
-
-def _is_weekend(d: datetime) -> bool:
-    """True if Saturday (5) or Sunday (6)."""
-    return d.weekday() in (5, 6)
-
-
-def _get_group_schedule(opts: dict, group: str) -> dict:
-    """Return schedule config for group. Falls back to legacy keys for Living."""
-    def _offset_min(val) -> int:
-        try:
-            return int(val) if val is not None else 0
-        except (TypeError, ValueError):
-            return 0
-
-    if group == GROUP_LIVING:
-        return {
-            "type_up": opts.get(CONF_LIVING_TYPE_UP, TIME_TYPE_FIXED),
-            "type_down": opts.get(CONF_LIVING_TYPE_DOWN, TIME_TYPE_FIXED),
-            "sunrise_offset": _offset_min(opts.get(CONF_LIVING_SUNRISE_OFFSET, 0)),
-            "sunset_offset": _offset_min(opts.get(CONF_LIVING_SUNSET_OFFSET, 0)),
-            "w_up_min": _parse_time(opts.get(CONF_LIVING_W_UP_MIN) or opts.get(CONF_W_SHUTTER_UP_MIN, "05:00")),
-            "w_up_max": _parse_time(opts.get(CONF_LIVING_W_UP_MAX) or opts.get(CONF_W_SHUTTER_UP_MAX, "06:00")),
-            "w_down": _parse_time(opts.get(CONF_LIVING_W_DOWN) or opts.get(CONF_W_SHUTTER_DOWN, "22:00")),
-            "we_up_min": _parse_time(opts.get(CONF_LIVING_WE_UP_MIN) or opts.get(CONF_WE_SHUTTER_UP_MIN, "05:00")),
-            "we_up_max": _parse_time(opts.get(CONF_LIVING_WE_UP_MAX) or opts.get(CONF_WE_SHUTTER_UP_MAX, "06:00")),
-            "we_down": _parse_time(opts.get(CONF_LIVING_WE_DOWN) or opts.get(CONF_WE_SHUTTER_DOWN, "22:00")),
-        }
-    if group == GROUP_SLEEP:
-        return {
-            "type_up": opts.get(CONF_SLEEP_TYPE_UP, TIME_TYPE_FIXED),
-            "type_down": opts.get(CONF_SLEEP_TYPE_DOWN, TIME_TYPE_FIXED),
-            "sunrise_offset": _offset_min(opts.get(CONF_SLEEP_SUNRISE_OFFSET, 0)),
-            "sunset_offset": _offset_min(opts.get(CONF_SLEEP_SUNSET_OFFSET, 0)),
-            "w_up_min": _parse_time(opts.get(CONF_SLEEP_W_UP_MIN, "05:00")),
-            "w_up_max": _parse_time(opts.get(CONF_SLEEP_W_UP_MAX, "06:00")),
-            "w_down": _parse_time(opts.get(CONF_SLEEP_W_DOWN, "22:00")),
-            "we_up_min": _parse_time(opts.get(CONF_SLEEP_WE_UP_MIN, "05:00")),
-            "we_up_max": _parse_time(opts.get(CONF_SLEEP_WE_UP_MAX, "06:00")),
-            "we_down": _parse_time(opts.get(CONF_SLEEP_WE_DOWN, "22:00")),
-        }
-    if group == GROUP_CHILDREN:
-        return {
-            "type_up": opts.get(CONF_CHILDREN_TYPE_UP, TIME_TYPE_FIXED),
-            "type_down": opts.get(CONF_CHILDREN_TYPE_DOWN, TIME_TYPE_FIXED),
-            "sunrise_offset": _offset_min(opts.get(CONF_CHILDREN_SUNRISE_OFFSET, 0)),
-            "sunset_offset": _offset_min(opts.get(CONF_CHILDREN_SUNSET_OFFSET, 0)),
-            "w_up_min": _parse_time(opts.get(CONF_CHILDREN_W_UP_MIN, "05:00")),
-            "w_up_max": _parse_time(opts.get(CONF_CHILDREN_W_UP_MAX, "06:00")),
-            "w_down": _parse_time(opts.get(CONF_CHILDREN_W_DOWN, "22:00")),
-            "we_up_min": _parse_time(opts.get(CONF_CHILDREN_WE_UP_MIN, "05:00")),
-            "we_up_max": _parse_time(opts.get(CONF_CHILDREN_WE_UP_MAX, "06:00")),
-            "we_down": _parse_time(opts.get(CONF_CHILDREN_WE_DOWN, "22:00")),
-        }
-    return {}
-
-
-def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
-    """True if automation is enabled for this group. No entity = enabled."""
-    key = {GROUP_LIVING: CONF_AUTO_LIVING, GROUP_SLEEP: CONF_AUTO_SLEEP, GROUP_CHILDREN: CONF_AUTO_CHILDREN}.get(group)
-    if not key:
-        return True
-    entity_id = str(opts.get(key) or "").strip()
+    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
     if not entity_id:
         return True
     state = hass.states.get(entity_id)
@@ -190,30 +70,9 @@ def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
     return str(state.state).lower() in ("on", "true", "1")
 
 
-def _filter_by_group(shutters_list: list, group: str, use_group_up: bool) -> list:
-    key = CONF_GROUP_UP if use_group_up else CONF_GROUP_DOWN
-    if group == GROUP_ALL:
-        return shutters_list
-    return [s for s in shutters_list if s.get(key) == group]
-
-
-def is_within_group_up_schedule_window(opts: dict, group: str, now: datetime) -> bool:
-    """True if now lies within the group's fixed 'Hoch ab'..'Hoch bis' window.
-
-    Used by brightness listener so Rollläden pro Gruppe erst hochfahren, wenn der
-    Zeitplan das Hoch-Fenster erlaubt (z. B. Schlafzimmer erst ab 07:00).
-    Sunrise/Sunset-Typ: kein fixes Fenster → True (andere Mechanik).
-    """
-    sched = _get_group_schedule(opts, group)
-    if not sched:
-        return True
-    if sched.get("type_up") != TIME_TYPE_FIXED:
-        return True
-    is_we = _is_weekend(now)
-    up_min = sched["we_up_min"] if is_we else sched["w_up_min"]
-    up_max = sched["we_up_max"] if is_we else sched["w_up_max"]
-    t = now.time()
-    return up_min <= t <= up_max
+def _filter_by_area(shutters_list: list, area_id: str, use_up: bool) -> list:
+    key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
+    return [s for s in shutters_list if str(s.get(key) or "").strip() == area_id]
 
 
 async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -238,8 +97,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             type(shutters),
         )
         shutters = []
-    drive_delay = entry.options.get(CONF_DRIVE_DELAY, 10)
-    opts = entry.options
+    areas = entry.options.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
+        areas = []
 
     covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
     covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
@@ -248,8 +108,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         shutter_list: list[dict],
         position: float,
         direction: str,
+        delay: int,
         apply_lock_protection: bool = False,
-        group: str = GROUP_LIVING,
+        area_id: str = "",
     ) -> None:
         for shutter in shutter_list:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
@@ -288,38 +149,52 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     _LOGGER.info("%s: %s -> %d%%", direction, cover, int(eff_pos))
             except Exception as e:
                 _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
-            await asyncio.sleep(drive_delay)
+            await asyncio.sleep(delay)
 
-    def _run_up(group_name: str) -> None:
-        if not _is_auto_enabled(hass, opts, group_name):
+    def _run_up(area: dict) -> None:
+        area_id = str(area.get(CONF_AREA_ID) or "")
+        if not area_id:
             return
-        filtered = _filter_by_group(shutters, group_name, use_group_up=True)
+        if not _is_auto_enabled(hass, entry, area):
+            return
+        filtered = _filter_by_area(shutters, area_id, use_up=True)
         # Rollläden weglassen, die in dieser Phase schon automatisch hochgefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
             return
         # Falls es als „pending“ markiert war, jetzt erledigt.
-        pending_up.pop(group_name, None)
+        pending_up.pop(area_id, None)
+        try:
+            delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+        except (TypeError, ValueError):
+            delay = DEFAULT_AREA_DRIVE_DELAY
         hass.async_create_task(
-            drive_shutters(filtered, 100, f"Schedule up ({group_name})", apply_lock_protection=False, group=group_name)
+            drive_shutters(filtered, 100, f"Schedule up ({area_id})", delay, apply_lock_protection=False, area_id=area_id)
         )
-        hass.async_create_task(run_group_light_action(hass, entry, group_name, "up"))
+        hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
 
-    def _run_down(group_name: str) -> None:
-        if not _is_auto_enabled(hass, opts, group_name):
+    def _run_down(area: dict) -> None:
+        area_id = str(area.get(CONF_AREA_ID) or "")
+        if not area_id:
             return
-        filtered = _filter_by_group(shutters, group_name, use_group_up=False)
+        if not _is_auto_enabled(hass, entry, area):
+            return
+        filtered = _filter_by_area(shutters, area_id, use_up=False)
         # Rollläden weglassen, die in dieser Phase schon automatisch runtergefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:
             return
+        try:
+            delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+        except (TypeError, ValueError):
+            delay = DEFAULT_AREA_DRIVE_DELAY
         hass.async_create_task(
             drive_shutters(
-                filtered, 0, f"Schedule down ({group_name})",
-                apply_lock_protection=True, group=group_name
+                filtered, 0, f"Schedule down ({area_id})",
+                delay, apply_lock_protection=True, area_id=area_id
             )
         )
-        hass.async_create_task(run_group_light_action(hass, entry, group_name, "down"))
+        hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
 
     # Fixed-time schedule: run every minute, fire only once per event per day
     fired_today = data.setdefault("_scheduler_fired", {})
@@ -327,31 +202,27 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     @callback
     def _scheduler_tick(now: datetime) -> None:
         today = now.date()
-        is_we = _is_weekend(now)
-        for group_name in [GROUP_LIVING, GROUP_SLEEP, GROUP_CHILDREN]:
-            sched = _get_group_schedule(opts, group_name)
-            if not sched:
+        t = now.time()
+        for area in areas:
+            if not isinstance(area, dict):
                 continue
-            up_min = sched["we_up_min"] if is_we else sched["w_up_min"]
-            up_max = sched["we_up_max"] if is_we else sched["w_up_max"]
-            down_t = sched["we_down"] if is_we else sched["w_down"]
-            t = now.time()
-
-            if sched["type_up"] == TIME_TYPE_FIXED and up_min <= t <= up_max:
-                if _brightness_blocks_scheduler_up(hass, opts, now):
-                    # Merken: innerhalb des Hoch-Fensters, aber noch zu dunkel.
-                    # Helligkeitslistener darf später (auch nach up_max) einmalig hochfahren.
-                    pending_up[group_name] = today
-                    continue
-                key_up = f"up_{group_name}"
+            if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_TIME:
+                continue
+            area_id = str(area.get(CONF_AREA_ID) or "")
+            if not area_id:
+                continue
+            up_t = _parse_time(area.get(CONF_AREA_TIME_UP, "07:00"))
+            down_t = _parse_time(area.get(CONF_AREA_TIME_DOWN, "19:00"))
+            if t >= up_t:
+                key_up = f"up_{area_id}"
                 if fired_today.get(key_up) != today:
                     fired_today[key_up] = today
-                    _run_up(group_name)
-            if sched["type_down"] == TIME_TYPE_FIXED and t >= down_t:
-                key_down = f"down_{group_name}"
+                    _run_up(area)
+            if t >= down_t:
+                key_down = f"down_{area_id}"
                 if fired_today.get(key_down) != today:
                     fired_today[key_down] = today
-                    _run_down(group_name)
+                    _run_down(area)
 
     u1 = async_track_time_change(
         hass, _scheduler_tick, hour="*", minute="*", second=0
@@ -360,37 +231,35 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         data["_scheduler_unsubs"].append(u1)
 
     # Sunrise/Sunset: use HA's built-in trackers
-    def _make_sunrise_cb(g):
+    def _make_sunrise_cb(area: dict):
         @callback
         def _cb(event_time):
-            if _brightness_blocks_scheduler_up(hass, opts, datetime.now()):
-                return
-            if _is_auto_enabled(hass, opts, g):
-                _run_up(g)
+            _run_up(area)
         return _cb
 
-    def _make_sunset_cb(g):
+    def _make_sunset_cb(area: dict):
         @callback
         def _cb(event_time):
-            if _is_auto_enabled(hass, opts, g):
-                _run_down(g)
+            _run_down(area)
         return _cb
 
-    for group_name in [GROUP_LIVING, GROUP_SLEEP, GROUP_CHILDREN]:
-        sched = _get_group_schedule(opts, group_name)
-        if not sched:
+    for area in areas:
+        if not isinstance(area, dict):
             continue
-        off_up = sched.get("sunrise_offset", 0) or 0
-        off_down = sched.get("sunset_offset", 0) or 0
+        if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
+            continue
+        area_id = str(area.get(CONF_AREA_ID) or "")
+        if not area_id:
+            continue
+        off_up = area.get(CONF_AREA_SUNRISE_OFFSET, 0) or 0
+        off_down = area.get(CONF_AREA_SUNSET_OFFSET, 0) or 0
         offset_up = timedelta(minutes=int(off_up))
         offset_down = timedelta(minutes=int(off_down))
-        if sched["type_up"] == TIME_TYPE_SUNRISE:
-            unsub_up = async_track_sunrise(hass, _make_sunrise_cb(group_name), offset=offset_up)
-            if unsub_up:
-                data["_scheduler_unsubs"].append(unsub_up)
-        if sched["type_down"] == TIME_TYPE_SUNSET:
-            unsub_down = async_track_sunset(hass, _make_sunset_cb(group_name), offset=offset_down)
-            if unsub_down:
-                data["_scheduler_unsubs"].append(unsub_down)
+        unsub_up = async_track_sunrise(hass, _make_sunrise_cb(area), offset=offset_up)
+        if unsub_up:
+            data["_scheduler_unsubs"].append(unsub_up)
+        unsub_down = async_track_sunset(hass, _make_sunset_cb(area), offset=offset_down)
+        if unsub_down:
+            data["_scheduler_unsubs"].append(unsub_down)
 
-    _LOGGER.info("Scheduler: %d Rollläden, Verzögerung=%ds", len(shutters), drive_delay)
+    _LOGGER.info("Scheduler: %d Rollläden, Bereiche=%d", len(shutters), len(areas))

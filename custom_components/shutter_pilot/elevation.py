@@ -1,4 +1,4 @@
-"""Elevation-based sun protection - Lower shutters when sun elevation is below threshold."""
+"""Elevation-based sun protection - per area."""
 
 from __future__ import annotations
 
@@ -11,20 +11,17 @@ from homeassistant.helpers.event import async_track_state_change
 
 from .const import (
     DOMAIN,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_SUN_PROTECT_ENABLED,
+    CONF_AREA_ELEVATION_THRESHOLD,
+    DEFAULT_AREA_ELEVATION_THRESHOLD,
+    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_GROUP_DOWN,
+    CONF_AREA_DOWN_ID,
     CONF_POSITION_SUN_PROTECT,
     CONF_DRIVE_AFTER_CLOSE,
-    CONF_USE_ELEVATION,
-    CONF_ELEVATION_THRESHOLD,
-    CONF_AUTO_LIVING,
-    CONF_AUTO_SLEEP,
-    CONF_AUTO_CHILDREN,
-    DEFAULT_ELEVATION_THRESHOLD,
-    GROUP_LIVING,
-    GROUP_SLEEP,
-    GROUP_CHILDREN,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
@@ -32,12 +29,14 @@ from .group_actions import run_group_light_action
 _LOGGER = logging.getLogger(__name__)
 
 
-def _is_auto_enabled(hass: HomeAssistant, opts: dict, group: str) -> bool:
-    """True if automation is enabled for this group."""
-    key = {GROUP_LIVING: CONF_AUTO_LIVING, GROUP_SLEEP: CONF_AUTO_SLEEP, GROUP_CHILDREN: CONF_AUTO_CHILDREN}.get(group)
-    if not key:
-        return True
-    entity_id = str(opts.get(key) or "").strip()
+def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
+    if isinstance(auto_modes, dict) and area_id in auto_modes:
+        return bool(auto_modes.get(area_id))
+
+    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
     if not entity_id:
         return True
     state = hass.states.get(entity_id)
@@ -56,12 +55,6 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
         unsub()
     data["_elevation_unsubs"] = []
 
-    use_elevation = entry.options.get(CONF_USE_ELEVATION, False)
-    if use_elevation is None:
-        use_elevation = False
-    if not use_elevation:
-        return
-
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
         _LOGGER.warning(
@@ -69,17 +62,19 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             type(shutters),
         )
         shutters = []
-    opts = entry.options
-    raw_threshold = entry.options.get(CONF_ELEVATION_THRESHOLD, DEFAULT_ELEVATION_THRESHOLD)
-    try:
-        threshold = float(raw_threshold)
-    except (TypeError, ValueError):
-        _LOGGER.warning(
-            "Invalid elevation_threshold %r, falling back to default %s",
-            raw_threshold,
-            DEFAULT_ELEVATION_THRESHOLD,
-        )
-        threshold = float(DEFAULT_ELEVATION_THRESHOLD)
+    areas = entry.options.get(CONF_AREAS, [])
+    if not isinstance(areas, list):
+        areas = []
+    # Only areas with sun protection enabled are considered
+    protect_areas: list[dict] = []
+    for a in areas:
+        if not isinstance(a, dict):
+            continue
+        if not bool(a.get(CONF_AREA_SUN_PROTECT_ENABLED, False)):
+            continue
+        protect_areas.append(a)
+    if not protect_areas:
+        return
 
     # sun.sun has elevation in attributes (HA 2024+)
     sun_entity = "sun.sun"
@@ -99,52 +94,73 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             return
 
         today = date.today()
-        if elev < threshold:
-            if elevation_fired.get("date") == today:
-                return
-            elevation_fired["date"] = today
-            handled_groups: set[str] = set()
-            covers_driven_down = data.setdefault("covers_driven_down", set())
-            covers_driven_up = data.setdefault("covers_driven_up", set())
-            for shutter in shutters:
-                grp = shutter.get(CONF_GROUP_DOWN, GROUP_LIVING)
-                if not _is_auto_enabled(hass, opts, grp):
+        handled_areas: set[str] = set()
+        covers_driven_down = data.setdefault("covers_driven_down", set())
+        covers_driven_up = data.setdefault("covers_driven_up", set())
+
+        for area in protect_areas:
+            area_id = str(area.get(CONF_AREA_ID) or "").strip()
+            if not area_id:
+                continue
+            if not _is_auto_enabled(hass, entry, area):
+                continue
+
+            raw_threshold = area.get(
+                CONF_AREA_ELEVATION_THRESHOLD, DEFAULT_AREA_ELEVATION_THRESHOLD
+            )
+            try:
+                threshold = float(raw_threshold)
+            except (TypeError, ValueError):
+                threshold = float(DEFAULT_AREA_ELEVATION_THRESHOLD)
+
+            if elev < threshold:
+                if elevation_fired.get(area_id) == today:
                     continue
-                cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
-                if not cover_entity:
-                    continue
-                if cover_entity in covers_driven_down:
-                    continue
-                pos = shutter.get(CONF_POSITION_SUN_PROTECT, 50)
-                drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
-                if drive_after and is_window_open_or_tilted(hass, shutter):
-                    data.setdefault("drive_after_close_pending", {})[cover_entity] = {
-                        "position": pos,
-                        "reason": "Elevation down",
-                        "shutter": shutter,
-                    }
-                    _LOGGER.debug("Elevation: %s Fenster offen – drive_after_close", cover_entity)
-                    continue
-                pos = get_effective_close_position(hass, shutter, pos)
-                hass.async_create_task(
-                    _set_cover_position(hass, cover_entity, pos, "Elevation down")
-                )
-                covers_driven_down.add(cover_entity)
-                covers_driven_up.discard(cover_entity)
-                if grp not in handled_groups:
-                    handled_groups.add(grp)
+                elevation_fired[area_id] = today
+
+                for shutter in [
+                    s
+                    for s in shutters
+                    if str(s.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
+                ]:
+                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+                    if not cover_entity:
+                        continue
+                    if cover_entity in covers_driven_down:
+                        continue
+                    pos = shutter.get(CONF_POSITION_SUN_PROTECT, 50)
+                    drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
+                    if drive_after and is_window_open_or_tilted(hass, shutter):
+                        data.setdefault("drive_after_close_pending", {})[
+                            cover_entity
+                        ] = {
+                            "position": pos,
+                            "reason": "Elevation down",
+                            "shutter": shutter,
+                        }
+                        continue
+                    pos = get_effective_close_position(hass, shutter, pos)
                     hass.async_create_task(
-                        run_group_light_action(hass, entry, grp, "down")
+                        _set_cover_position(
+                            hass, cover_entity, pos, "Elevation down"
+                        )
                     )
-        else:
-            # Sun above threshold – reset for next day
-            if elevation_fired.get("date") == today:
-                elevation_fired.pop("date", None)
+                    covers_driven_down.add(cover_entity)
+                    covers_driven_up.discard(cover_entity)
+                    if area_id not in handled_areas:
+                        handled_areas.add(area_id)
+                        hass.async_create_task(
+                            run_group_light_action(hass, entry, area_id, "down")
+                        )
+            else:
+                # Sun above threshold – reset for next trigger
+                if elevation_fired.get(area_id) == today:
+                    elevation_fired.pop(area_id, None)
 
     unsub = async_track_state_change(hass, sun_entity, _on_sun_change)
     if unsub:
         data["_elevation_unsubs"].append(unsub)
-    _LOGGER.debug("Elevation listener: sun < %s° -> sun protect", threshold)
+    _LOGGER.debug("Elevation listener: per-area sun protection enabled")
 
 
 async def _set_cover_position(

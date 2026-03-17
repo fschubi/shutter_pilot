@@ -2,15 +2,16 @@
   "config_flow": {
     "options": {
       "step": {
-        "init": { "title": "Shutter Pilot Optionen", "description": "Wähle eine Aktion. Aktuell {shutter_count} Rollladen konfiguriert.", "menu_options": { "settings_menu": "Einstellungen", "add_shutter": "Rollladen hinzufügen", "edit_shutter": "Rollladen bearbeiten", "done": "Fertig" } },
-        "settings_menu": { "title": "Einstellungen", "description": "Wähle den Bereich zum Konfigurieren.", "menu_options": { "settings_general": "Allgemeine Einstellungen (Helligkeit, Auto, Sonnenschutz)", "settings_schedule_living": "Zeitplan Wohnbereich", "settings_schedule_sleep": "Zeitplan Schlafbereich", "settings_schedule_children": "Zeitplan Kinderbereich" } },
-        "settings_general": { "title": "Allgemeine Einstellungen", "description": "Helligkeitssensor, Verzögerung, Auto-Modi, Sonnenschutz.", "data": { "brightness_entity_id": "Helligkeitssensor", "brightness_down_threshold": "Lux-Schwellwert Runter", "brightness_up_threshold": "Lux-Schwellwert Hoch", "brightness_down_time": "Zeit Runter-Logik (HH:MM)", "brightness_up_time": "Zeit Hoch-Logik (HH:MM)", "brightness_ignore_time": "Nur Helligkeit (Zeitfenster ignorieren)", "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)", "use_elevation": "Sonnenschutz per Elevation", "elevation_threshold": "Elevation-Schwellwert (°)", "auto_living": "Auto-Modus Wohnbereich", "auto_sleep": "Auto-Modus Schlafbereich", "auto_children": "Auto-Modus Kinderbereich" } },
-        "settings_schedule_living": { "title": "Zeitplan Wohnbereich", "data": { "living_type_up": "Typ Hoch", "living_type_down": "Typ Runter", "living_sunrise_offset": "Offset Sonnenaufgang (Min.)", "living_sunset_offset": "Offset Sonnenuntergang (Min.)", "living_w_up_min": "Woche: Hoch ab", "living_w_up_max": "Woche: Hoch bis", "living_w_down": "Woche: Runter", "living_we_up_min": "WE: Hoch ab", "living_we_up_max": "WE: Hoch bis", "living_we_down": "WE: Runter" } },
-        "settings_schedule_sleep": { "title": "Zeitplan Schlafbereich", "data": { "sleep_type_up": "Typ Hoch", "sleep_type_down": "Typ Runter", "sleep_sunrise_offset": "Offset Sonnenaufgang (Min.)", "sleep_sunset_offset": "Offset Sonnenuntergang (Min.)", "sleep_w_up_min": "Woche: Hoch ab", "sleep_w_up_max": "Woche: Hoch bis", "sleep_w_down": "Woche: Runter", "sleep_we_up_min": "WE: Hoch ab", "sleep_we_up_max": "WE: Hoch bis", "sleep_we_down": "WE: Runter" } },
-        "settings_schedule_children": { "title": "Zeitplan Kinderbereich", "data": { "children_type_up": "Typ Hoch", "children_type_down": "Typ Runter", "children_sunrise_offset": "Offset Sonnenaufgang (Min.)", "children_sunset_offset": "Offset Sonnenuntergang (Min.)", "children_w_up_min": "Woche: Hoch ab", "children_w_up_max": "Woche: Hoch bis", "children_w_down": "Woche: Runter", "children_we_up_min": "WE: Hoch ab", "children_we_up_max": "WE: Hoch bis", "children_we_down": "WE: Runter" } },
-        "add_shutter": { "title": "Rollladen hinzufügen", "description": "Cover, Fenster-Trigger und Gruppe konfigurieren.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } },
+        "init": { "title": "Shutter Pilot Optionen", "description": "Wähle eine Aktion. Aktuell {area_count} Bereiche und {shutter_count} Rollläden konfiguriert.", "menu_options": { "manage_areas": "Bereiche verwalten", "add_shutter": "Rollladen hinzufügen", "edit_shutter": "Rollladen bearbeiten", "done": "Fertig" } },
+        "manage_areas": { "title": "Bereiche verwalten", "description": "Bereiche hinzufügen, bearbeiten oder löschen.", "menu_options": { "add_area": "Bereich hinzufügen", "edit_area": "Bereich bearbeiten/löschen", "init": "Zurück" } },
+        "add_area": { "title": "Bereich hinzufügen", "data": { "name": "Name", "mode": "Steuerungsmodus" } },
+        "add_area_details": { "title": "Bereich Einstellungen", "data": { "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)", "sun_protect_enabled": "Sonnenschutz aktivieren", "elevation_threshold": "Elevation-Schwellwert (°)", "down_light_entity": "Lampe/Steckdose bei Runter (optional)", "down_light_brightness": "Helligkeit bei Runter (%)", "time_up": "Zeit Hoch (HH:MM)", "time_down": "Zeit Runter (HH:MM)", "sunrise_offset": "Offset Sonnenaufgang (Min.)", "sunset_offset": "Offset Sonnenuntergang (Min.)", "brightness_sensor": "Helligkeitssensor (Lux)", "lux_down": "Lux-Schwellwert Runter", "lux_up": "Lux-Schwellwert Hoch", "w_up_from": "Woche: Hoch erlaubt ab", "w_up_to": "Woche: Hoch erlaubt bis", "w_down_from": "Woche: Runter erlaubt ab", "w_down_to": "Woche: Runter erlaubt bis", "we_up_from": "Wochenende: Hoch erlaubt ab", "we_up_to": "Wochenende: Hoch erlaubt bis", "we_down_from": "Wochenende: Runter erlaubt ab", "we_down_to": "Wochenende: Runter erlaubt bis" } },
+        "edit_area": { "title": "Bereich bearbeiten/löschen", "data": { "area_index": "Bereich", "action": "Aktion", "edit": "Bearbeiten", "remove": "Entfernen" } },
+        "edit_area_form": { "title": "Bereich bearbeiten", "data": { "name": "Name", "mode": "Steuerungsmodus" } },
+        "edit_area_details": { "title": "Bereich Einstellungen" },
+        "add_shutter": { "title": "Rollladen hinzufügen", "description": "Cover, Fenster-Trigger und Bereiche konfigurieren.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "area_up_id": "Bereich (Hoch)", "area_down_id": "Bereich (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } },
         "edit_shutter": { "title": "Rollladen bearbeiten oder löschen", "data": { "shutter_index": "Rollladen", "action": "Aktion", "edit": "Bearbeiten", "remove": "Entfernen" } },
-        "edit_shutter_form": { "title": "Rollladen bearbeiten", "description": "Rollladen-Konfiguration ändern.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "trigger_mode": "Trigger-Modus", "group_up": "Gruppe (Hoch)", "group_down": "Gruppe (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "brightness_trigger": "Helligkeits-Reaktion", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } }
+        "edit_shutter_form": { "title": "Rollladen bearbeiten", "description": "Rollladen-Konfiguration ändern.", "data": { "cover_entity_id": "Rollladen / Cover", "name": "Name", "window_entity_id": "Fenster-/Türsensor (optional)", "window_open_state": "Fenster-Status 'offen'", "window_tilted_state": "Fenster-Status 'gekippt'", "position_when_window_open": "Position bei geöffnetem Fenster (%)", "position_when_window_tilted": "Position bei gekipptem Fenster (%)", "lock_protection": "Aussperrschutz", "min_position_when_open": "Mindest-Position wenn Tür offen (%)", "area_up_id": "Bereich (Hoch)", "area_down_id": "Bereich (Runter)", "position_open": "Position Offen (%)", "position_closed": "Position Geschlossen (%)", "position_sun_protect": "Sonnenschutz-Position (%)", "drive_after_close": "Fahren nach Schließen", "off": "Aus", "only_up": "Nur hoch", "only_down": "Nur runter", "up_down": "Hoch und runter", "living": "Wohnbereich", "sleep": "Schlafbereich", "children": "Kinderbereich", "all": "Alle", "up": "Hoch", "down": "Runter", "both": "Beides" } }
       }
     }
   },
@@ -40,99 +41,18 @@
     "step": {
       "init": {
         "title": "Shutter Pilot Optionen",
-        "description": "Wähle eine Aktion. Aktuell {shutter_count} Rollladen konfiguriert.",
+        "description": "Wähle eine Aktion. Aktuell {area_count} Bereiche und {shutter_count} Rollläden konfiguriert.",
         "menu_options": {
-          "settings_menu": "Einstellungen",
+          "manage_areas": "Bereiche verwalten",
           "add_shutter": "Rollladen hinzufügen",
           "edit_shutter": "Rollladen bearbeiten",
           "done": "Fertig"
         }
       },
-      "settings_menu": {
-        "title": "Einstellungen",
-        "description": "Wähle den Bereich zum Konfigurieren.",
-        "menu_options": {
-          "settings_general": "Allgemeine Einstellungen (Helligkeit, Auto, Sonnenschutz)",
-          "settings_schedule_living": "Zeitplan Wohnbereich",
-          "settings_schedule_sleep": "Zeitplan Schlafbereich",
-          "settings_schedule_children": "Zeitplan Kinderbereich"
-        }
-      },
-      "settings_general": {
-        "title": "Allgemeine Einstellungen",
-        "description": "Helligkeitssensor, Verzögerung, Auto-Modi, Sonnenschutz.",
-        "data": {
-          "brightness_entity_id": "Helligkeitssensor",
-          "brightness_down_threshold": "Lux-Schwellwert Runter",
-          "brightness_up_threshold": "Lux-Schwellwert Hoch",
-          "brightness_down_time": "Zeit Runter-Logik (HH:MM)",
-          "brightness_up_time": "Zeit Hoch-Logik (HH:MM)",
-          "brightness_ignore_time": "Nur Helligkeit (Zeitfenster ignorieren)",
-          "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)",
-          "use_elevation": "Sonnenschutz per Elevation",
-          "elevation_threshold": "Elevation-Schwellwert (°)",
-          "auto_living": "Auto-Modus Wohnbereich",
-          "auto_sleep": "Auto-Modus Schlafbereich",
-          "auto_children": "Auto-Modus Kinderbereich",
-          "living_down_light_entity": "Wohnbereich: Lampe/Steckdose bei Runter",
-          "living_down_light_brightness": "Wohnbereich: Helligkeit bei Runter (%)",
-          "sleep_down_light_entity": "Schlafbereich: Lampe/Steckdose bei Runter",
-          "sleep_down_light_brightness": "Schlafbereich: Helligkeit bei Runter (%)",
-          "children_down_light_entity": "Kinderbereich: Lampe/Steckdose bei Runter",
-          "children_down_light_brightness": "Kinderbereich: Helligkeit bei Runter (%)"
-        }
-      },
-      "settings_schedule_living": {
-        "title": "Zeitplan Wohnbereich",
-        "description": "Typ (Fix/Sonnenaufgang/Sonnenuntergang), Zeiten, Offset in Minuten.",
-        "data": {
-          "living_type_up": "Typ Hoch",
-          "living_type_down": "Typ Runter",
-          "living_sunrise_offset": "Offset Sonnenaufgang (Min., negativ=vorher)",
-          "living_sunset_offset": "Offset Sonnenuntergang (Min.)",
-          "living_w_up_min": "Woche: Hoch ab (HH:MM)",
-          "living_w_up_max": "Woche: Hoch bis (HH:MM)",
-          "living_w_down": "Woche: Runter (HH:MM)",
-          "living_we_up_min": "Wochenende: Hoch ab",
-          "living_we_up_max": "Wochenende: Hoch bis",
-          "living_we_down": "Wochenende: Runter"
-        }
-      },
-      "settings_schedule_sleep": {
-        "title": "Zeitplan Schlafbereich",
-        "description": "Zeitplan für Schlafbereich.",
-        "data": {
-          "sleep_type_up": "Typ Hoch",
-          "sleep_type_down": "Typ Runter",
-          "sleep_sunrise_offset": "Offset Sonnenaufgang (Min.)",
-          "sleep_sunset_offset": "Offset Sonnenuntergang (Min.)",
-          "sleep_w_up_min": "Woche: Hoch ab",
-          "sleep_w_up_max": "Woche: Hoch bis",
-          "sleep_w_down": "Woche: Runter",
-          "sleep_we_up_min": "WE: Hoch ab",
-          "sleep_we_up_max": "WE: Hoch bis",
-          "sleep_we_down": "WE: Runter"
-        }
-      },
-      "settings_schedule_children": {
-        "title": "Zeitplan Kinderbereich",
-        "description": "Zeitplan für Kinderbereich.",
-        "data": {
-          "children_type_up": "Typ Hoch",
-          "children_type_down": "Typ Runter",
-          "children_sunrise_offset": "Offset Sonnenaufgang (Min.)",
-          "children_sunset_offset": "Offset Sonnenuntergang (Min.)",
-          "children_w_up_min": "Woche: Hoch ab",
-          "children_w_up_max": "Woche: Hoch bis",
-          "children_w_down": "Woche: Runter",
-          "children_we_up_min": "WE: Hoch ab",
-          "children_we_up_max": "WE: Hoch bis",
-          "children_we_down": "WE: Runter"
-        }
-      },
+      
       "add_shutter": {
         "title": "Rollladen hinzufügen",
-        "description": "Cover, Fenster-Trigger und Gruppe konfigurieren.",
+        "description": "Cover, Fenster-Trigger und Bereiche konfigurieren.",
         "data": {
           "cover_entity_id": "Rollladen / Cover",
           "name": "Name",
@@ -143,13 +63,11 @@
           "position_when_window_tilted": "Position bei gekipptem Fenster (%)",
           "lock_protection": "Aussperrschutz (mind. Position bei offener Tür)",
           "min_position_when_open": "Mindest-Position wenn Tür offen (%)",
-          "trigger_mode": "Trigger-Modus",
-          "group_up": "Gruppe (Hoch)",
-          "group_down": "Gruppe (Runter)",
+          "area_up_id": "Bereich (Hoch)",
+          "area_down_id": "Bereich (Runter)",
           "position_open": "Position Offen (%)",
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
-          "brightness_trigger": "Helligkeits-Reaktion",
           "drive_after_close": "Fahren nach Schließen (wenn Fenster bei Schließzeit noch offen)",
           "off": "Aus",
           "only_up": "Nur hoch",
@@ -187,13 +105,11 @@
           "position_when_window_tilted": "Position bei gekipptem Fenster (%)",
           "lock_protection": "Aussperrschutz",
           "min_position_when_open": "Mindest-Position wenn Tür offen (%)",
-          "trigger_mode": "Trigger-Modus",
-          "group_up": "Gruppe (Hoch)",
-          "group_down": "Gruppe (Runter)",
+          "area_up_id": "Bereich (Hoch)",
+          "area_down_id": "Bereich (Runter)",
           "position_open": "Position Offen (%)",
           "position_closed": "Position Geschlossen (%)",
           "position_sun_protect": "Sonnenschutz-Position (%)",
-          "brightness_trigger": "Helligkeits-Reaktion",
           "drive_after_close": "Fahren nach Schließen",
           "off": "Aus",
           "only_up": "Nur hoch",
@@ -212,32 +128,32 @@
   },
   "services": {
     "open_group": {
-      "name": "Gruppe öffnen",
-      "description": "Öffnet alle Rollläden der angegebenen Gruppe.",
+      "name": "Bereich öffnen",
+      "description": "Öffnet alle Rollläden des angegebenen Bereichs.",
       "fields": {
-        "group": {
-          "name": "Gruppe",
-          "description": "living, sleep, children oder all"
+        "area_id": {
+          "name": "Bereich-ID",
+          "description": "ID des Bereichs (z. B. living, schlafzimmer, kueche)"
         }
       }
     },
     "close_group": {
-      "name": "Gruppe schließen",
-      "description": "Schließt alle Rollläden der angegebenen Gruppe.",
+      "name": "Bereich schließen",
+      "description": "Schließt alle Rollläden des angegebenen Bereichs.",
       "fields": {
-        "group": {
-          "name": "Gruppe",
-          "description": "living, sleep, children oder all"
+        "area_id": {
+          "name": "Bereich-ID",
+          "description": "ID des Bereichs (z. B. living, schlafzimmer, kueche)"
         }
       }
     },
     "sun_protect_group": {
-      "name": "Sonnenschutz Gruppe",
-      "description": "Fährt alle Rollläden der Gruppe in Sonnenschutz-Position.",
+      "name": "Sonnenschutz Bereich",
+      "description": "Fährt alle Rollläden des Bereichs in Sonnenschutz-Position.",
       "fields": {
-        "group": {
-          "name": "Gruppe",
-          "description": "living, sleep, children oder all"
+        "area_id": {
+          "name": "Bereich-ID",
+          "description": "ID des Bereichs (z. B. living, schlafzimmer, kueche)"
         }
       }
     }
