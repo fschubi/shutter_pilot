@@ -49,6 +49,66 @@
           "done": "Fertig"
         }
       },
+      "manage_areas": {
+        "title": "Bereiche verwalten",
+        "description": "Bereiche hinzufügen, bearbeiten oder löschen.",
+        "menu_options": {
+          "add_area": "Bereich hinzufügen",
+          "edit_area": "Bereich bearbeiten/löschen",
+          "init": "Zurück"
+        }
+      },
+      "add_area": {
+        "title": "Bereich hinzufügen",
+        "data": {
+          "name": "Name",
+          "mode": "Steuerungsmodus"
+        }
+      },
+      "add_area_details": {
+        "title": "Bereich Einstellungen",
+        "data": {
+          "drive_delay": "Verzögerung zwischen Rollläden (Sekunden)",
+          "sun_protect_enabled": "Sonnenschutz aktivieren",
+          "elevation_threshold": "Elevation-Schwellwert (°)",
+          "down_light_entity": "Lampe/Steckdose bei Runter (optional)",
+          "down_light_brightness": "Helligkeit bei Runter (%)",
+          "time_up": "Zeit Hoch (HH:MM)",
+          "time_down": "Zeit Runter (HH:MM)",
+          "sunrise_offset": "Offset Sonnenaufgang (Min.)",
+          "sunset_offset": "Offset Sonnenuntergang (Min.)",
+          "brightness_sensor": "Helligkeitssensor (Lux)",
+          "lux_down": "Lux-Schwellwert Runter",
+          "lux_up": "Lux-Schwellwert Hoch",
+          "w_up_from": "Woche: Hoch erlaubt ab",
+          "w_up_to": "Woche: Hoch erlaubt bis",
+          "w_down_from": "Woche: Runter erlaubt ab",
+          "w_down_to": "Woche: Runter erlaubt bis",
+          "we_up_from": "Wochenende: Hoch erlaubt ab",
+          "we_up_to": "Wochenende: Hoch erlaubt bis",
+          "we_down_from": "Wochenende: Runter erlaubt ab",
+          "we_down_to": "Wochenende: Runter erlaubt bis"
+        }
+      },
+      "edit_area": {
+        "title": "Bereich bearbeiten/löschen",
+        "data": {
+          "area_index": "Bereich",
+          "action": "Aktion",
+          "edit": "Bearbeiten",
+          "remove": "Entfernen"
+        }
+      },
+      "edit_area_form": {
+        "title": "Bereich bearbeiten",
+        "data": {
+          "name": "Name",
+          "mode": "Steuerungsmodus"
+        }
+      },
+      "edit_area_details": {
+        "title": "Bereich Einstellungen"
+      },
       
       "add_shutter": {
         "title": "Rollladen hinzufügen",

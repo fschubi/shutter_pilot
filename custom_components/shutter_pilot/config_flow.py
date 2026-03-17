@@ -469,9 +469,14 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_manage_areas()
 
         if user_input is not None:
-            area[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY))
-            area[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(user_input.get(CONF_AREA_BRIGHTNESS_SENSOR))
-            area.update(user_input)
+            cleaned = dict(user_input)
+            cleaned[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(
+                user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY)
+            )
+            cleaned[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(
+                user_input.get(CONF_AREA_BRIGHTNESS_SENSOR)
+            )
+            area.update(cleaned)
             areas = self._areas()
             areas.append(area)
             self.hass.config_entries.async_update_entry(
@@ -566,9 +571,14 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_manage_areas()
 
         if user_input is not None:
-            area[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY))
-            area[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(user_input.get(CONF_AREA_BRIGHTNESS_SENSOR))
-            area.update(user_input)
+            cleaned = dict(user_input)
+            cleaned[CONF_AREA_DOWN_LIGHT_ENTITY] = self._eid(
+                user_input.get(CONF_AREA_DOWN_LIGHT_ENTITY)
+            )
+            cleaned[CONF_AREA_BRIGHTNESS_SENSOR] = self._eid(
+                user_input.get(CONF_AREA_BRIGHTNESS_SENSOR)
+            )
+            area.update(cleaned)
             areas[idx] = area
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
