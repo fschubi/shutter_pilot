@@ -254,7 +254,17 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
     def _opts(self) -> dict:
-        raw = self.config_entry.options or {}
+        # Use the latest entry object.
+        #
+        # During an OptionsFlow Home Assistant may replace the internal ConfigEntry
+        # instance after async_update_entry calls. If we keep reading from
+        # self.config_entry, the final "done" step can overwrite options with a stale
+        # snapshot, which would drop newly added areas after restart.
+        live_entry = (
+            self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
+            or self.config_entry
+        )
+        raw = live_entry.options or {}
         opts = dict(raw)
         if CONF_AREAS not in opts or not isinstance(opts.get(CONF_AREAS), list):
             opts[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
