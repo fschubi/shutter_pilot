@@ -324,6 +324,22 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Finish options flow."""
+        opts = self._opts()
+        areas = opts.get(CONF_AREAS, [])
+        area_ids: list[str] = []
+        if isinstance(areas, list):
+            for a in areas:
+                if isinstance(a, dict):
+                    aid = str(a.get(CONF_AREA_ID) or "").strip()
+                    if aid:
+                        area_ids.append(aid)
+        shutters = opts.get(CONF_SHUTTERS, [])
+        shutter_count = len(shutters) if isinstance(shutters, list) else 0
+        _LOGGER.warning(
+            "Shutter Pilot OptionsFlow DONE persisting: areas=%s shutters=%d",
+            area_ids,
+            shutter_count,
+        )
         return self.async_create_entry(title="", data=self._opts())
 
     def _eid(self, val):
@@ -497,6 +513,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas.append(area)
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
+            _LOGGER.warning(
+                "Shutter Pilot OptionsFlow add_area updated: areas=%d last_id=%s",
+                len(areas),
+                str(area.get(CONF_AREA_ID) or ""),
+            )
             self._pending_area = None
             return await self.async_step_manage_areas()
 
@@ -527,6 +548,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                         s[CONF_AREA_DOWN_ID] = fallback_id
                 new_opts = {**self._opts(), CONF_AREAS: areas, CONF_SHUTTERS: shutters}
                 self._set_opts(new_opts)
+                _LOGGER.warning(
+                    "Shutter Pilot OptionsFlow remove area updated: areas=%d shutters=%d",
+                    len(areas),
+                    len(shutters),
+                )
                 return await self.async_step_manage_areas()
             self._edit_area_index = idx
             return await self.async_step_edit_area_form()
@@ -594,6 +620,11 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas[idx] = area
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
+            _LOGGER.warning(
+                "Shutter Pilot OptionsFlow edit_area updated: areas=%d id=%s",
+                len(areas),
+                str(area.get(CONF_AREA_ID) or ""),
+            )
             self._pending_area = None
             self._pending_area_edit_index = None
             return await self.async_step_manage_areas()
@@ -660,6 +691,10 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters.append(shutter_cfg)
             new_options = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_options)
+            _LOGGER.warning(
+                "Shutter Pilot OptionsFlow add_shutter updated: shutters=%d",
+                len(shutters),
+            )
             return await self.async_step_init()
 
         return self.async_show_form(
@@ -781,6 +816,10 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters[idx] = shutter_cfg
             new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_opts)
+            _LOGGER.warning(
+                "Shutter Pilot OptionsFlow edit_shutter_form updated: shutters=%d",
+                len(shutters),
+            )
             return self.async_create_entry(title="", data=new_opts)
 
         defaults = self._edit_shutter_defaults(shutters, idx)

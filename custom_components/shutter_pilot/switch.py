@@ -29,12 +29,14 @@ async def async_setup_entry(
     if not isinstance(areas, list):
         areas = []
     entities: list[ShutterPilotAutoModeSwitch] = []
+    area_ids: list[str] = []
     for area in areas:
         if not isinstance(area, dict):
             continue
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
             continue
+        area_ids.append(area_id)
         name = str(area.get(CONF_AREA_NAME) or area_id).strip()
         entities.append(
             ShutterPilotAutoModeSwitch(
@@ -43,6 +45,16 @@ async def async_setup_entry(
                 area_id=area_id,
                 name=f"Auto {name}",
             )
+        )
+    if area_ids:
+        # Ensure we can see whether new areas survived restart
+        # (switch entities are derived from entry.options["areas"]).
+        from homeassistant.components.switch import SwitchEntityDescription  # noqa: F401
+        import logging as _logging
+        _logging.getLogger(__name__).warning(
+            "Shutter Pilot switch setup: area_ids=%s entities=%d",
+            area_ids,
+            len(entities),
         )
     if entities:
         async_add_entities(entities)
