@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -113,10 +114,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    # Reload the whole entry so platforms (switch entities) are recreated/updated.
-    # This is required so new areas automatically get their "Auto <area>" switch.
-    _LOGGER.info("Options updated - reloading config entry %s", entry.entry_id)
-    await hass.config_entries.async_reload(entry.entry_id)
+    # IMPORTANT:
+    # Home Assistant persists OptionsFlow results to storage when the flow finishes.
+    # If we reload the entry immediately here, we can race with that write and
+    # end up reloading the OLD options from storage, effectively "undoing" the
+    # user's changes so they disappear after restart.
+    #
+    # We therefore schedule a delayed reload (fire-and-forget) so persistence can
+    # complete first. This reload is still needed so new areas get their Auto-switch.
+    _LOGGER.warning("Options updated - scheduling reload for entry %s", entry.entry_id)
+
+    async def _delayed_reload() -> None:
+        await asyncio.sleep(1.0)
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    hass.async_create_task(_delayed_reload())
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
