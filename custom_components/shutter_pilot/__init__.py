@@ -12,6 +12,9 @@ from homeassistant.core import HomeAssistant
 from .const import (
     DOMAIN,
     CONF_SHUTTERS,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_NAME,
 )
 from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
@@ -42,6 +45,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             type(shutters),
         )
         shutters = []
+
+    # Helpful visibility for debugging persisting "areas" across restarts.
+    # If your newly created "laydown" area is missing here, the options update
+    # is still not persisting correctly.
+    areas = entry.options.get(CONF_AREAS, [])
+    area_ids: list[str] = []
+    if isinstance(areas, list):
+        for a in areas:
+            if not isinstance(a, dict):
+                continue
+            aid = str(a.get(CONF_AREA_ID) or "").strip()
+            if aid:
+                area_ids.append(aid)
+    else:
+        _LOGGER.warning(
+            "Invalid areas options type in entry: %r – treating as empty list",
+            type(areas),
+        )
+        area_ids = []
+
     last_positions: dict[str, float] = {}
     trigger_heights: dict[str, float] = {}
     trigger_actions: dict[str, str] = {}
@@ -77,7 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await async_setup_services(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    _LOGGER.info("Shutter Pilot initialized with %d shutters", len(shutters))
+    _LOGGER.info(
+        "Shutter Pilot initialized with %d shutters; areas=%s",
+        len(shutters),
+        area_ids,
+    )
     return True
 
 
