@@ -247,16 +247,13 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         an den Konstruktor übergeben.
         """
         _LOGGER.info("Shutter Pilot: Options-Flow wird erstellt")
-        # Important: Pass config_entry explicitly for HA compatibility.
-        return ShutterPilotOptionsFlow(config_entry)
+        # Keep default OptionsFlow initialization (HA expects to create the flow
+        # and provides config_entry via self.config_entry).
+        return ShutterPilotOptionsFlow()
 
 
 class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        super().__init__(config_entry)
-        self._working_opts: dict | None = None
 
     def _opts(self) -> dict:
         """Return the in-flow working options.
