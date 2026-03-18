@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Prove which code copy is running (helps detect duplicate installs).
-    _LOGGER.warning("Shutter Pilot loaded from %s", __file__)
+    _LOGGER.warning("Shutter Pilot DEV BUILD 2026-03-18 loaded from %s", __file__)
 
     shutters = entry.options.get(CONF_SHUTTERS, entry.data.get(CONF_SHUTTERS, []))
     if not isinstance(shutters, list):
