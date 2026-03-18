@@ -247,11 +247,16 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         an den Konstruktor übergeben.
         """
         _LOGGER.info("Shutter Pilot: Options-Flow wird erstellt")
-        return ShutterPilotOptionsFlow()
+        # Important: Pass config_entry explicitly for HA compatibility.
+        return ShutterPilotOptionsFlow(config_entry)
 
 
 class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        super().__init__(config_entry)
+        self._working_opts: dict | None = None
 
     def _opts(self) -> dict:
         """Return the in-flow working options.
@@ -261,7 +266,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         Updating the entry directly can appear to work until restart, but the
         changes may not be written to storage reliably.
         """
-        if not hasattr(self, "_working_opts") or not isinstance(getattr(self, "_working_opts"), dict):
+        if not isinstance(getattr(self, "_working_opts", None), dict):
             raw = dict(self.config_entry.options or {})
             if CONF_AREAS not in raw or not isinstance(raw.get(CONF_AREAS), list):
                 raw[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])

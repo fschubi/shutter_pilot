@@ -49,7 +49,6 @@ async def async_setup_entry(
     if area_ids:
         # Ensure we can see whether new areas survived restart
         # (switch entities are derived from entry.options["areas"]).
-        from homeassistant.components.switch import SwitchEntityDescription  # noqa: F401
         import logging as _logging
         _logging.getLogger(__name__).warning(
             "Shutter Pilot switch setup: area_ids=%s entities=%d",
