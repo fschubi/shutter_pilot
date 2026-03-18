@@ -342,7 +342,25 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             area_ids,
             shutter_count,
         )
-        return self.async_create_entry(title="", data=self._opts())
+        # Force-update the entry explicitly. On HA 2026.3.x we've seen cases
+        # where the returned async_create_entry data is shown in-flow but the
+        # options are not persisted correctly.
+        self.hass.config_entries.async_update_entry(self.config_entry, options=opts)
+        live = self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
+        live_areas = []
+        if live and isinstance(live.options, dict):
+            a = live.options.get(CONF_AREAS, [])
+            if isinstance(a, list):
+                for x in a:
+                    if isinstance(x, dict):
+                        aid = str(x.get(CONF_AREA_ID) or "").strip()
+                        if aid:
+                            live_areas.append(aid)
+        _LOGGER.warning(
+            "Shutter Pilot OptionsFlow after update_entry: areas=%s",
+            live_areas,
+        )
+        return self.async_create_entry(title="", data=opts)
 
     def _eid(self, val):
         if isinstance(val, list):
