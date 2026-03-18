@@ -4,9 +4,9 @@
       "step": {
         "init": {
           "title": "Shutter Pilot options",
-          "description": "Choose an action. Currently {shutter_count} shutter(s) configured.",
+          "description": "Choose an action. Currently {area_count} area(s) and {shutter_count} shutter(s) configured.",
           "menu_options": {
-            "settings_menu": "Settings",
+            "manage_areas": "Manage areas",
             "add_shutter": "Add shutter",
             "edit_shutter": "Edit shutter",
             "done": "Done"
@@ -143,9 +143,9 @@
     "step": {
       "init": {
         "title": "Shutter Pilot options",
-        "description": "Choose an action. Currently {shutter_count} shutter(s) configured.",
+        "description": "Choose an action. Currently {area_count} area(s) and {shutter_count} shutter(s) configured.",
         "menu_options": {
-          "settings_menu": "Settings",
+          "manage_areas": "Manage areas",
           "add_shutter": "Add shutter",
           "edit_shutter": "Edit shutter",
           "done": "Done"
