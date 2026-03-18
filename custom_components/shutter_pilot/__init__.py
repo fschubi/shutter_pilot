@@ -38,6 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shutter Pilot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Prove which code copy is running (helps detect duplicate installs).
+    _LOGGER.warning("Shutter Pilot loaded from %s", __file__)
+
     shutters = entry.options.get(CONF_SHUTTERS, entry.data.get(CONF_SHUTTERS, []))
     if not isinstance(shutters, list):
         _LOGGER.warning(
@@ -110,22 +113,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    # Update cached data
-    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-        data = hass.data[DOMAIN][entry.entry_id]
-        shutters = entry.options.get(CONF_SHUTTERS, [])
-        if not isinstance(shutters, list):
-            _LOGGER.warning(
-                "Invalid shutters options type in update listener: %r – resetting to empty list",
-                type(shutters),
-            )
-            shutters = []
-        data["shutters"] = shutters
-    # Re-setup listeners with new config
-    await setup_window_triggers(hass, entry)
-    await setup_brightness_listener(hass, entry)
-    await setup_schedulers(hass, entry)
-    await setup_elevation_listener(hass, entry)
+    # Reload the whole entry so platforms (switch entities) are recreated/updated.
+    # This is required so new areas automatically get their "Auto <area>" switch.
+    _LOGGER.info("Options updated - reloading config entry %s", entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
