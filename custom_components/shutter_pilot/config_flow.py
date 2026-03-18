@@ -255,6 +255,17 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
+    def _persist_now(self) -> None:
+        """Persist the current working options immediately.
+
+        This ensures changes made in intermediate dialogs (the HA "OK" button)
+        are durable and survive a full Home Assistant restart.
+        """
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            options=self._opts(),
+        )
+
     def _opts(self) -> dict:
         """Return the in-flow working options.
 
@@ -533,6 +544,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas.append(area)
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
+            self._persist_now()
             _LOGGER.warning(
                 "Shutter Pilot OptionsFlow add_area updated: areas=%d last_id=%s",
                 len(areas),
@@ -568,6 +580,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                         s[CONF_AREA_DOWN_ID] = fallback_id
                 new_opts = {**self._opts(), CONF_AREAS: areas, CONF_SHUTTERS: shutters}
                 self._set_opts(new_opts)
+                self._persist_now()
                 _LOGGER.warning(
                     "Shutter Pilot OptionsFlow remove area updated: areas=%d shutters=%d",
                     len(areas),
@@ -640,6 +653,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas[idx] = area
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
+            self._persist_now()
             _LOGGER.warning(
                 "Shutter Pilot OptionsFlow edit_area updated: areas=%d id=%s",
                 len(areas),
@@ -711,6 +725,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters.append(shutter_cfg)
             new_options = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_options)
+            self._persist_now()
             _LOGGER.warning(
                 "Shutter Pilot OptionsFlow add_shutter updated: shutters=%d",
                 len(shutters),
@@ -762,6 +777,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 shutters = [s for i, s in enumerate(shutters) if i != idx]
                 new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
                 self._set_opts(new_opts)
+                self._persist_now()
                 return self.async_create_entry(title="", data=new_opts)
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
@@ -836,6 +852,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters[idx] = shutter_cfg
             new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_opts)
+            self._persist_now()
             _LOGGER.warning(
                 "Shutter Pilot OptionsFlow edit_shutter_form updated: shutters=%d",
                 len(shutters),
