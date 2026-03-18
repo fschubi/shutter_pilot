@@ -254,33 +254,35 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
     def _opts(self) -> dict:
-        # Use the latest entry object.
-        #
-        # During an OptionsFlow Home Assistant may replace the internal ConfigEntry
-        # instance after async_update_entry calls. If we keep reading from
-        # self.config_entry, the final "done" step can overwrite options with a stale
-        # snapshot, which would drop newly added areas after restart.
-        live_entry = (
-            self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
-            or self.config_entry
-        )
-        raw = live_entry.options or {}
-        opts = dict(raw)
-        if CONF_AREAS not in opts or not isinstance(opts.get(CONF_AREAS), list):
-            opts[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
-        if CONF_SHUTTERS not in opts or not isinstance(opts.get(CONF_SHUTTERS), list):
-            opts[CONF_SHUTTERS] = []
-        return opts
+        """Return the in-flow working options.
+
+        Important: Do NOT call async_update_entry during the flow. Home Assistant
+        persists options when the flow finishes via async_create_entry(data=...).
+        Updating the entry directly can appear to work until restart, but the
+        changes may not be written to storage reliably.
+        """
+        if not hasattr(self, "_working_opts") or not isinstance(getattr(self, "_working_opts"), dict):
+            raw = dict(self.config_entry.options or {})
+            if CONF_AREAS not in raw or not isinstance(raw.get(CONF_AREAS), list):
+                raw[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
+            if CONF_SHUTTERS not in raw or not isinstance(raw.get(CONF_SHUTTERS), list):
+                raw[CONF_SHUTTERS] = []
+            self._working_opts = raw
+        return self._working_opts
+
+    def _set_opts(self, new_opts: dict) -> None:
+        self._working_opts = dict(new_opts or {})
+        # Ensure required keys/types
+        if CONF_AREAS not in self._working_opts or not isinstance(self._working_opts.get(CONF_AREAS), list):
+            self._working_opts[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
+        if CONF_SHUTTERS not in self._working_opts or not isinstance(self._working_opts.get(CONF_SHUTTERS), list):
+            self._working_opts[CONF_SHUTTERS] = []
 
     async def async_step_init(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Show options menu."""
         opts = self._opts()
-        # Cache the latest computed options for the "Fertig" step.
-        # Home Assistant may update the underlying ConfigEntry instance during the
-        # flow; using a cached snapshot prevents accidental overwrites.
-        self._flow_opts_cache = deepcopy(opts)
         shutters = opts.get(CONF_SHUTTERS, [])
         areas = opts.get(CONF_AREAS, [])
         menu_opts = {
@@ -322,8 +324,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Finish options flow."""
-        final_opts = getattr(self, "_flow_opts_cache", None) or self._opts()
-        return self.async_create_entry(title="", data=final_opts)
+        return self.async_create_entry(title="", data=self._opts())
 
     def _eid(self, val):
         if isinstance(val, list):
@@ -332,9 +333,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
 
     def _merge_and_back(self, new_opts: dict) -> FlowResult:
         """Merge new options with existing and return to init menu."""
-        merged = {**self._opts(), **new_opts}
-        self.hass.config_entries.async_update_entry(self.config_entry, options=merged)
-        self._flow_opts_cache = deepcopy(merged)
+        merged = {**self._opts(), **(new_opts or {})}
+        self._set_opts(merged)
         return self.async_show_menu(
             step_id="init",
             menu_options={
@@ -496,8 +496,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas = self._areas()
             areas.append(area)
             new_opts = {**self._opts(), CONF_AREAS: areas}
-            self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
-            self._flow_opts_cache = deepcopy(new_opts)
+            self._set_opts(new_opts)
             self._pending_area = None
             return await self.async_step_manage_areas()
 
@@ -527,8 +526,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                     if s.get(CONF_AREA_DOWN_ID) == removed_id:
                         s[CONF_AREA_DOWN_ID] = fallback_id
                 new_opts = {**self._opts(), CONF_AREAS: areas, CONF_SHUTTERS: shutters}
-                self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
-                self._flow_opts_cache = deepcopy(new_opts)
+                self._set_opts(new_opts)
                 return await self.async_step_manage_areas()
             self._edit_area_index = idx
             return await self.async_step_edit_area_form()
@@ -595,8 +593,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             area.update(cleaned)
             areas[idx] = area
             new_opts = {**self._opts(), CONF_AREAS: areas}
-            self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
-            self._flow_opts_cache = deepcopy(new_opts)
+            self._set_opts(new_opts)
             self._pending_area = None
             self._pending_area_edit_index = None
             return await self.async_step_manage_areas()
@@ -662,10 +659,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 shutter_cfg[CONF_WINDOW_ENTITY_ID] = win_entity if isinstance(win_entity, str) else (win_entity[0] if win_entity else "")
             shutters.append(shutter_cfg)
             new_options = {**self._opts(), CONF_SHUTTERS: shutters}
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=new_options
-            )
-            self._flow_opts_cache = deepcopy(new_options)
+            self._set_opts(new_options)
             return await self.async_step_init()
 
         return self.async_show_form(
@@ -712,10 +706,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             if idx is not None and action == "remove":
                 shutters = [s for i, s in enumerate(shutters) if i != idx]
                 new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, options=new_opts
-                )
-                self._flow_opts_cache = deepcopy(new_opts)
+                self._set_opts(new_opts)
                 return self.async_create_entry(title="", data=new_opts)
             if idx is not None and action == "edit":
                 self._edit_index = int(idx)
@@ -789,8 +780,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                 shutter_cfg[CONF_WINDOW_ENTITY_ID] = win_entity if isinstance(win_entity, str) else (win_entity[0] if win_entity else "")
             shutters[idx] = shutter_cfg
             new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
-            self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
-            self._flow_opts_cache = deepcopy(new_opts)
+            self._set_opts(new_opts)
             return self.async_create_entry(title="", data=new_opts)
 
         defaults = self._edit_shutter_defaults(shutters, idx)
