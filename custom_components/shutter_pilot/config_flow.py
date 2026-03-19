@@ -255,16 +255,27 @@ class ShutterPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
     """Handle Shutter Pilot options."""
 
+    def _entry(self) -> config_entries.ConfigEntry | None:
+        """Return the live config entry for this flow."""
+        entry_id = getattr(self, "_config_entry_id", None)
+        if not entry_id and getattr(self, "config_entry", None):
+            entry_id = getattr(self.config_entry, "entry_id", None)
+        if not entry_id:
+            return getattr(self, "config_entry", None)
+        live = self.hass.config_entries.async_get_entry(entry_id)
+        return live or getattr(self, "config_entry", None)
+
     def _persist_now(self) -> None:
         """Persist the current working options immediately.
 
         This ensures changes made in intermediate dialogs (the HA "OK" button)
         are durable and survive a full Home Assistant restart.
         """
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            options=self._opts(),
-        )
+        entry = self._entry()
+        if entry is None:
+            _LOGGER.warning("Shutter Pilot OptionsFlow persist_now: no config entry")
+            return
+        self.hass.config_entries.async_update_entry(entry, options=self._opts())
 
     def _opts(self) -> dict:
         """Return the in-flow working options.
@@ -275,7 +286,8 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         changes may not be written to storage reliably.
         """
         if not isinstance(getattr(self, "_working_opts", None), dict):
-            raw = dict(self.config_entry.options or {})
+            entry = self._entry()
+            raw = dict((entry.options if entry else {}) or {})
             if CONF_AREAS not in raw or not isinstance(raw.get(CONF_AREAS), list):
                 raw[CONF_AREAS] = deepcopy(DEFAULT_OPTIONS[CONF_AREAS])
             if CONF_SHUTTERS not in raw or not isinstance(raw.get(CONF_SHUTTERS), list):
@@ -356,8 +368,16 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
         # Force-update the entry explicitly. On HA 2026.3.x we've seen cases
         # where the returned async_create_entry data is shown in-flow but the
         # options are not persisted correctly.
-        self.hass.config_entries.async_update_entry(self.config_entry, options=opts)
-        live = self.hass.config_entries.async_get_entry(self.config_entry.entry_id)
+        entry = self._entry()
+        if entry is not None:
+            self.hass.config_entries.async_update_entry(entry, options=opts)
+            _LOGGER.warning(
+                "Shutter Pilot OptionsFlow update target entry_id=%s",
+                entry.entry_id,
+            )
+        else:
+            _LOGGER.warning("Shutter Pilot OptionsFlow update target entry missing")
+        live = self.hass.config_entries.async_get_entry(entry.entry_id) if entry else None
         live_areas = []
         if live and isinstance(live.options, dict):
             a = live.options.get(CONF_AREAS, [])
