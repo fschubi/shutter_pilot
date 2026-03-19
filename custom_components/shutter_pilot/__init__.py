@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import asyncio
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -114,21 +113,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    # IMPORTANT:
-    # Home Assistant persists OptionsFlow results to storage when the flow finishes.
-    # If we reload the entry immediately here, we can race with that write and
-    # end up reloading the OLD options from storage, effectively "undoing" the
-    # user's changes so they disappear after restart.
-    #
-    # We therefore schedule a delayed reload (fire-and-forget) so persistence can
-    # complete first. This reload is still needed so new areas get their Auto-switch.
-    _LOGGER.warning("Options updated - scheduling reload for entry %s", entry.entry_id)
+    # Update cached data only; do not reload entry here.
+    # Reloading from inside update listener can race with options persistence and
+    # roll back fresh changes.
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        data = hass.data[DOMAIN][entry.entry_id]
+        shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in update listener: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
+        data["shutters"] = shutters
 
-    async def _delayed_reload() -> None:
-        await asyncio.sleep(1.0)
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    hass.async_create_task(_delayed_reload())
+    await setup_window_triggers(hass, entry)
+    await setup_brightness_listener(hass, entry)
+    await setup_schedulers(hass, entry)
+    await setup_elevation_listener(hass, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
