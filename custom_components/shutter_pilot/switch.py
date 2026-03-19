@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -100,8 +101,10 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
         auto_state = data.setdefault("auto_modes", {})
         auto_state[self._area_id] = self._attr_is_on
 
-        # Mirror our entity_id into the corresponding area config for UI/runtime lookups
-        opts = dict(self._entry.options or {})
+        # Mirror our entity_id into the corresponding area config for UI/runtime lookups.
+        # deepcopy ensures the new opts dict is independent from entry.options so that
+        # HA's change detection works and the update is persisted to storage.
+        opts = deepcopy(dict(self._entry.options or {}))
         areas = opts.get(CONF_AREAS, [])
         if isinstance(areas, list):
             changed = False
