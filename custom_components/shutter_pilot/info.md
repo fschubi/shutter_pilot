@@ -1,23 +1,21 @@
 # Shutter Pilot
 
-Rollladensteuerung für Home Assistant mit Fenster-Trigger, Sunrise/Sunset, Auto-Modi und Drive-After-Close.
-
-## Installation
-
-1. HACS → Integrationen → Repository hinzufügen: `https://github.com/fschubi/shutter_pilot`
-2. Integration installieren
-3. Home Assistant neu starten
-4. Einstellungen → Geräte & Dienste → + Integration hinzufügen → „Shutter Pilot“
-
-## Konfiguration (Rollläden hinzufügen)
-
-**Tab „Integrationen“** (nicht Geräte!) → Shutter Pilot → Menü (⋮) → Konfigurieren
+Automatic shutter, blind, and roller shutter control for Home Assistant.
 
 ## Features
 
-- Fenster-Trigger (binary_sensor + sensor)
-- Zeiten pro Gruppe (Living, Sleep, Children)
-- Sunrise/Sunset mit Offset
-- Auto-Modus pro Gruppe
-- Drive-After-Close
-- Helligkeitssensor, Elevation-Sonnenschutz
+- **Three control modes**: Time-based, brightness sensor (lux), or sun position (sunrise/sunset)
+- **Sidebar panel** with Dashboard, Areas, and Shutters management
+- **Window/door sensors** with automatic shutter response
+- **Lock protection** – prevents full closing when a door is open
+- **Sun protection** – configurable elevation-based position
+- **11 languages**: DE, EN, FR, ES, IT, NL, DA, SV, PL, PT, NB
+
+## Quick Start
+
+1. Install via HACS or manually
+2. Add the integration: **Settings → Devices & Services → Add Integration → Shutter Pilot**
+3. Open **Shutter Pilot** in the sidebar
+4. Create areas and assign shutters
+
+For full documentation see the [README on GitHub](https://github.com/fschubi/shutter_pilot).
