@@ -120,6 +120,16 @@ The Shutter Pilot panel automatically adapts to your Home Assistant language set
 
 If your language is not listed, the panel falls back to English. Want to contribute a translation? PRs are welcome!
 
+## Planned: Awning / Marquise Support
+
+> **We're considering adding awning/marquise control** with wind, rain, and temperature sensors as a dedicated tab. Awnings have different requirements than shutters – they need to retract during bad weather to prevent damage.
+>
+> Planned features: wind speed sensor, rain sensor, temperature threshold, weather warning integration (DWD, OpenWeatherMap), and automatic retraction on dangerous conditions.
+
+**Would you use this feature? [Vote here!](https://github.com/fschubi/shutter_pilot/discussions/1)**
+
+[![Feature Poll](https://img.shields.io/badge/Vote-Awning%20Support%20Poll-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+
 ## Minimum Requirements
 
 - Home Assistant **2024.6.0** or newer
