@@ -132,6 +132,10 @@ class ShutterPilotPanel extends LitElement {
   _renderAreaForm(d){
     const a=this._editArea;const m=a.mode||"time";
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""}  @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
+    const ep=(k,lbl,domains)=>html`<div class="field"><label>${lbl}</label>
+      <ha-entity-picker .hass=${this.hass} .value=${a[k]||""} .includeDomains=${domains}
+        .label=${lbl} allow-custom-entity
+        @value-changed=${e=>{a[k]=e.detail.value||"";this.requestUpdate();}}></ha-entity-picker></div>`;
     return html`<div class="form"><h3>${a._isNew?"Bereich hinzufügen":"Bereich bearbeiten"}</h3>
       ${a._isNew?f("id","ID (eindeutig, z.B. wohnzimmer)"):html`<div class="field"><label>ID</label><input disabled .value=${a.id}></div>`}
       ${f("name","Name")}
@@ -143,11 +147,11 @@ class ShutterPilotPanel extends LitElement {
       ${f("drive_delay","Verzögerung zwischen Rollläden (Sek.)","number")}
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> Sonnenschutz aktivieren</label></div>
       ${a.sun_protect_enabled?f("elevation_threshold","Elevation-Schwellwert (°)","number"):""}
-      ${f("down_light_entity","Lampe bei Runter (Entity-ID, optional)")}
+      ${ep("down_light_entity","Lampe/Schalter bei Runter (optional)",["light","switch"])}
       ${f("down_light_brightness","Lampe Helligkeit (%)","number")}
       ${m==="time"?html`${f("time_up","Zeit Hoch (HH:MM)")}${f("time_down","Zeit Runter (HH:MM)")}`:
         m==="sun"?html`${f("sunrise_offset","Offset Sonnenaufgang (Min.)","number")}${f("sunset_offset","Offset Sonnenuntergang (Min.)","number")}`:
-        html`${f("brightness_sensor","Helligkeitssensor (Entity-ID)")}${f("lux_up","Lux Hoch-Schwelle","number")}${f("lux_down","Lux Runter-Schwelle","number")}
+        html`${ep("brightness_sensor","Helligkeitssensor",["sensor"])}${f("lux_up","Lux Hoch-Schwelle","number")}${f("lux_down","Lux Runter-Schwelle","number")}
           ${f("w_up_from","Woche Hoch ab")}${f("w_up_to","Woche Hoch bis")}${f("w_down_from","Woche Runter ab")}${f("w_down_to","Woche Runter bis")}
           ${f("we_up_from","WE Hoch ab")}${f("we_up_to","WE Hoch bis")}${f("we_down_from","WE Runter ab")}${f("we_down_to","WE Runter bis")}`}
       <div class="form-actions">
@@ -178,12 +182,16 @@ class ShutterPilotPanel extends LitElement {
   _renderShutterForm(d){
     const s=this._editShutter;const areas=d.areas||[];
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""}  @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
+    const ep=(k,lbl,domains)=>html`<div class="field"><label>${lbl}</label>
+      <ha-entity-picker .hass=${this.hass} .value=${s[k]||""} .includeDomains=${domains}
+        .label=${lbl} allow-custom-entity
+        @value-changed=${e=>{s[k]=e.detail.value||"";this.requestUpdate();}}></ha-entity-picker></div>`;
     const sel=(k,lbl)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
       ${areas.map(a=>html`<option value="${a.id}" ?selected=${s[k]===a.id}>${a.name||a.id}</option>`)}</select></div>`;
     return html`<div class="form"><h3>${s._isNew?"Rollladen hinzufügen":"Rollladen bearbeiten"}</h3>
-      ${f("cover_entity_id","Cover Entity-ID (z.B. cover.wohnzimmer)")}
+      ${ep("cover_entity_id","Rollladen / Cover",["cover"])}
       ${f("name","Name")}
-      ${f("window_entity_id","Fenstersensor Entity-ID (optional)")}
+      ${ep("window_entity_id","Fenster-/Türsensor (optional)",["binary_sensor","sensor"])}
       ${f("window_open_state","Fenster-Status 'offen' (z.B. on)")}
       ${f("window_tilted_state","Fenster-Status 'gekippt' (none=deaktiviert)")}
       ${f("position_when_window_open","Position bei Fenster offen (%)","number")}
