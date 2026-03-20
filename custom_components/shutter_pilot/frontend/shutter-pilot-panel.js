@@ -58,6 +58,9 @@ class ShutterPilotPanel extends LitElement {
     .field select{appearance:auto}
     .field input:focus,.field select:focus{outline:none;border-color:var(--sp)}
     .field .hint{font-size:11px;color:var(--txt2);margin-top:2px}
+    .slider-row{display:flex;align-items:center;gap:12px}
+    .slider-row input[type=range]{flex:1;accent-color:var(--sp);height:6px;cursor:pointer}
+    .slider-row .slider-val{min-width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--sp)}
     .form-actions{display:flex;gap:8px;margin-top:16px}
     .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
     .chip.time{background:#1565c0;color:#fff} .chip.brightness{background:#f57f17;color:#fff} .chip.sun{background:#e65100;color:#fff}
@@ -112,10 +115,10 @@ class ShutterPilotPanel extends LitElement {
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           return html`<div class="srow"><span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
       <div class="actions">
-        <button class="btn open" @click=${()=>this._svc("open_group",id)}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>Hoch</button>
-        <button class="btn stop" @click=${()=>this._stopArea(sh)}><ha-icon icon="mdi:stop"></ha-icon>Stop</button>
-        <button class="btn close" @click=${()=>this._svc("close_group",id)}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>Runter</button>
-        <button class="btn sun" @click=${()=>this._svc("sun_protect_group",id)}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>Sonnenschutz</button>
+        <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>Hoch</button>
+        <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>Stop</button>
+        <button class="btn close" @click=${()=>this._coverAction(sh,"close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>Runter</button>
+        <button class="btn sun" @click=${()=>this._coverAction(sh,"sun")}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>Sonnenschutz</button>
       </div></div>`;
   }
 
@@ -190,6 +193,9 @@ class ShutterPilotPanel extends LitElement {
   _renderShutterForm(d){
     const s=this._editShutter;const areas=d.areas||[];
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""}  @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
+    const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${s[k]??0}%</span></div></div>`;
     const ep=(k,lbl,domains)=>{const lid=`dl_s_${k}`;const ents=this._entities(domains);return html`<div class="field"><label>${lbl}</label>
       <input list="${lid}" .value=${s[k]||""} @input=${e=>{s[k]=e.target.value;this.requestUpdate();}} placeholder="Entität auswählen…">
       <datalist id="${lid}">${ents.map(e=>html`<option value="${e}">${this.hass.states[e]?.attributes?.friendly_name||e}</option>`)}</datalist></div>`;};
@@ -203,15 +209,15 @@ class ShutterPilotPanel extends LitElement {
       ${sel("window_open_state","Fenster-Status 'offen'",WIN_OPEN_OPTS)}
       ${sel("window_tilted_state","Fenster-Status 'gekippt'",
         [{v:"none",l:"Deaktiviert (kein Kipp-Status)"},...WIN_TILT_OPTS.filter(x=>x!=="none").map(x=>({v:x,l:x}))])}
-      ${f("position_when_window_open","Position bei Fenster offen (%)","number")}
-      ${f("position_when_window_tilted","Position bei Fenster gekippt (%)","number")}
+      ${pct("position_when_window_open","Position bei Fenster offen")}
+      ${pct("position_when_window_tilted","Position bei Fenster gekippt")}
       <div class="field"><label><input type="checkbox" .checked=${!!s.lock_protection} @change=${e=>{s.lock_protection=e.target.checked;this.requestUpdate();}}> Aussperrschutz (verhindert vollständiges Schließen bei offener Tür)</label></div>
-      ${s.lock_protection?f("min_position_when_open","Mindest-Position wenn Tür offen (%)","number"):""}
+      ${s.lock_protection?pct("min_position_when_open","Mindest-Position wenn Tür offen"):""}
       ${areaSel("area_up_id","Bereich (Hoch)")}
       ${areaSel("area_down_id","Bereich (Runter)")}
-      ${f("position_open","Position Offen (%)","number")}
-      ${f("position_closed","Position Geschlossen (%)","number")}
-      ${f("position_sun_protect","Sonnenschutz-Position (%)","number")}
+      ${pct("position_open","Position Offen")}
+      ${pct("position_closed","Position Geschlossen")}
+      ${pct("position_sun_protect","Sonnenschutz-Position")}
       <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> Nachholen wenn Fenster offen</label>
         <div class="hint">Wenn die Schließzeit erreicht wird aber das Fenster noch offen ist, wird die Fahrt nachgeholt sobald das Fenster geschlossen wird.</div></div>
       <div class="form-actions">
@@ -221,11 +227,20 @@ class ShutterPilotPanel extends LitElement {
 
   /* ─── Actions ─── */
   async _toggleAuto(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
-  _svc(svc,id){this.hass.callService("shutter_pilot",svc,{area_id:id});}
-  _stopArea(shutters){
-    for(const s of shutters){
-      const eid=s.cover_entity_id;
-      if(eid)this.hass.callService("cover","stop_cover",{entity_id:eid});
+  _coverAction(shutters,action){
+    const eids=shutters.map(s=>s.cover_entity_id).filter(Boolean);
+    if(!eids.length)return;
+    if(action==="open"){
+      this.hass.callService("cover","open_cover",{entity_id:eids});
+    }else if(action==="close"){
+      this.hass.callService("cover","close_cover",{entity_id:eids});
+    }else if(action==="stop"){
+      this.hass.callService("cover","stop_cover",{entity_id:eids});
+    }else if(action==="sun"){
+      for(const s of shutters){
+        const eid=s.cover_entity_id;const pos=s.position_sun_protect??50;
+        if(eid)this.hass.callService("cover","set_cover_position",{entity_id:eid,position:pos});
+      }
     }
   }
 

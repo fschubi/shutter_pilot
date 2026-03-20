@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import Any
@@ -14,6 +15,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
 from copy import deepcopy
 
@@ -232,6 +234,12 @@ def _update_entry_options(hass: HomeAssistant, entry: ConfigEntry, new_opts: dic
     hass.config_entries.async_update_entry(entry, options=deepcopy(new_opts))
 
 
+async def _reload_entry_delayed(hass: HomeAssistant, entry_id: str) -> None:
+    """Reload the config entry after a short delay to let persistence settle."""
+    await asyncio.sleep(0.5)
+    await hass.config_entries.async_reload(entry_id)
+
+
 # -- get_status ---------------------------------------------------------------
 
 @websocket_api.websocket_command({vol.Required("type"): "shutter_pilot/get_status"})
@@ -322,6 +330,7 @@ async def _ws_save_area(hass: HomeAssistant, connection: websocket_api.ActiveCon
     else:
         areas.append(area_data)
     _update_entry_options(hass, entry, opts)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 
 
@@ -343,6 +352,12 @@ async def _ws_delete_area(hass: HomeAssistant, connection: websocket_api.ActiveC
     areas = opts.setdefault(CONF_AREAS, [])
     opts[CONF_AREAS] = [a for a in areas if not (isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id)]
     _update_entry_options(hass, entry, opts)
+    registry = er.async_get(hass)
+    uid = f"{entry.entry_id}_auto_area_{area_id}"
+    entity_id = registry.async_get_entity_id("switch", DOMAIN, uid)
+    if entity_id:
+        registry.async_remove(entity_id)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 
 
@@ -369,6 +384,7 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
     else:
         shutters.append(shutter_data)
     _update_entry_options(hass, entry, opts)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 
 
@@ -391,4 +407,5 @@ async def _ws_delete_shutter(hass: HomeAssistant, connection: websocket_api.Acti
     if 0 <= idx < len(shutters):
         shutters.pop(idx)
     _update_entry_options(hass, entry, opts)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
