@@ -446,6 +446,8 @@ class ShutterPilotPanel extends LitElement {
     .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
     .chip.time{background:#1565c0;color:#fff} .chip.brightness{background:#f57f17;color:#fff} .chip.sun{background:#e65100;color:#fff}
     .sun-info{margin:12px 0 4px;padding:10px 12px;background:rgba(255,152,0,.08);border-radius:8px;border-left:3px solid #ff9800}
+    .time-info{margin:12px 0 4px;padding:10px 12px;background:rgba(33,150,243,.08);border-radius:8px;border-left:3px solid #2196f3}
+    .time-info.weekend{border-left-color:#8bc34a;background:rgba(139,195,74,.08)}
     .sun-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--txt);flex-wrap:wrap}
     .sun-row ha-icon{--mdc-icon-size:18px;color:#ff9800;flex-shrink:0}
     .sun-off{font-size:12px;color:var(--txt2)}
@@ -493,6 +495,7 @@ class ShutterPilotPanel extends LitElement {
       <div class="auto-row"><span class="lbl">${this.t("auto")}</span>
         <ha-switch .checked=${autoOn} @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
       ${mode==="sun"?this._renderSunInfo(area,d):""}
+      ${mode==="time"?this._renderTimeInfo(area):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           return html`<div class="srow"><span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
@@ -527,6 +530,26 @@ class ShutterPilotPanel extends LitElement {
           html`<span class="sun-off">(${this.t("sun_trigger_down")} <b>${fmtRaw(sun.next_setting)}</b>)</span>`}</div>
       <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
         <span>${this.t("sun_elevation")}: <b>${elev}</b></span></div>
+    </div>`;
+  }
+  _renderTimeInfo(area){
+    const isWeekend=(()=>{const day=(new Date()).getDay();return day===0||day===6;})();
+    const wUp=area.time_up||"07:00";
+    const wDown=area.time_down||"19:00";
+    const weUp=area.time_we_up||wUp;
+    const weDown=area.time_we_down||wDown;
+    const isGerman=this._lang==="de";
+    const activePrefix=isGerman?"Heute aktiv":"Active today";
+    const activeProfile=isWeekend
+      ? (isGerman?"Wochenendprofil":"Weekend profile")
+      : (isGerman?"Wochenprofil":"Weekday profile");
+    return html`<div class="time-info ${isWeekend?"weekend":""}">
+      <div class="sun-row"><ha-icon icon="mdi:calendar-today"></ha-icon>
+        <span>${activePrefix}: <b>${activeProfile}</b></span></div>
+      <div class="sun-row"><ha-icon icon="mdi:calendar-week"></ha-icon>
+        <span>${this.t("f_time_up")}: <b>${wUp}</b> · ${this.t("f_time_down")}: <b>${wDown}</b></span></div>
+      <div class="sun-row"><ha-icon icon="mdi:calendar-weekend"></ha-icon>
+        <span>${this.t("f_time_we_up")}: <b>${weUp}</b> · ${this.t("f_time_we_down")}: <b>${weDown}</b></span></div>
     </div>`;
   }
 
