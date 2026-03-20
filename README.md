@@ -1,119 +1,129 @@
 # Shutter Pilot
 
-Rollladensteuerung für Home Assistant – inspiriert vom ioBroker Shuttercontrol-Adapter.
+> **Automatic shutter/blind control for Home Assistant**
 
-[![GitHub](https://img.shields.io/badge/GitHub-fschubi%2Fshutter__pilot-blue?logo=github)](https://github.com/fschubi/shutter_pilot)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/v/release/fschubi/shutter_pilot)](https://github.com/fschubi/shutter_pilot/releases)
 
----
-
-## Funktionen
-
-| Funktion | Beschreibung |
-|----------|--------------|
-| **Fenster-Trigger** | Rollladen fährt hoch wenn Fenster geöffnet, wiederherstellen wenn geschlossen |
-| **Fenster-Sensoren** | `binary_sensor` und `sensor` (Zustände: open/tilted/closed) |
-| **Kippfunktion** | Bei gekipptem Fenster eigene Position (z.B. 50%) |
-| **Aussperrschutz** | Bei offener Tür wird Rollladen nicht komplett geschlossen |
-| **Drive-After-Close** | Bei Schließzeit noch offenes Fenster → Fahrt beim Schließen |
-| **Zeiten pro Gruppe** | Living, Sleep, Children jeweils eigene Zeiten |
-| **Sunrise/Sunset** | Fix, Sonnenaufgang oder Sonnenuntergang – mit Offset (Minuten) |
-| **Auto-Modus** | Pro Gruppe optional `input_boolean`/`switch` |
-| **Helligkeitssensor** | Lux-basierte Steuerung |
-| **Sonnenschutz** | Elevation-basiert (einmal pro Tag) |
-| **Gruppensteuerung** | Dienste: open_group, close_group, sun_protect_group |
+[Deutsche Version / German version](README.de.md)
 
 ---
+
+Shutter Pilot is a Home Assistant custom integration that automates your shutters, blinds, and roller shutters based on **time schedules**, **brightness sensors**, or **sun position**. It adds a dedicated **sidebar panel** for easy management directly within Home Assistant.
+
+## Features
+
+- **Three control modes** per area: Time-based, brightness-based (lux sensor), or sun position (sunrise/sunset)
+- **Sidebar panel** with Dashboard, Areas, and Shutters tabs for full management
+- **Window/door sensors** – automatically opens shutters when windows are opened
+- **Lock protection** – prevents full closing when a door is open
+- **Sun protection** – drives shutters to a configurable position when sun elevation drops
+- **Drive-after-close** – catches up scheduled movements when a window was still open
+- **Per-shutter positions** – configurable open, closed, and sun-protection positions
+- **Light actions** – turn on a light/switch when shutters close
+- **Auto-mode switches** – enable/disable automation per area via HA switches
+- **Multi-language panel** – automatically adapts to your HA language (DE, EN, FR, ES, IT)
+- **Weekday/weekend schedules** – separate time windows for weekdays and weekends (brightness mode)
+
+## Screenshots
+
+| Dashboard | Areas | Shutters |
+|-----------|-------|----------|
+| Area cards with live status, auto-toggle, and quick actions (Up/Stop/Down/Sun) | Area list with mode badges, add/edit/delete | Shutter list with area assignments, add/edit/delete |
 
 ## Installation
 
-### Über HACS (empfohlen)
+### HACS (Recommended)
 
-1. HACS → Integrationen → „+ Repository hinzufügen“
-2. URL: `https://github.com/fschubi/shutter_pilot`
-3. Kategorie: Integration
-4. Installation bestätigen
-5. Home Assistant neu starten
+1. Open HACS in Home Assistant
+2. Click the three dots menu (top right) → **Custom repositories**
+3. Add `https://github.com/fschubi/shutter_pilot` as **Integration**
+4. Search for "Shutter Pilot" and install
+5. Restart Home Assistant
 
-### Manuell
+### Manual
 
-1. [Release](https://github.com/fschubi/shutter_pilot/releases) herunterladen
-2. Ordner `shutter_pilot` nach `config/custom_components/` entpacken
-3. Home Assistant neu starten
-4. **Einstellungen** → **Geräte & Dienste** → **+ Integration hinzufügen** → „Shutter Pilot“
+1. Download the latest release from [GitHub Releases](https://github.com/fschubi/shutter_pilot/releases)
+2. Copy the `custom_components/shutter_pilot` folder to your HA `config/custom_components/` directory
+3. Restart Home Assistant
 
----
+## Setup
 
-## Konfiguration
+1. Go to **Settings → Devices & Services → Add Integration**
+2. Search for **Shutter Pilot** and click to add
+3. After setup, "Shutter Pilot" appears in the sidebar
 
-### Wo finde ich die Konfiguration?
+## Configuration
 
-**Wichtig:** Nach der Installation über HACS findest du die Konfiguration **nicht** über die HACS-Karte (die zeigt nur Update-Status). Stattdessen:
+All configuration is done through the **Shutter Pilot sidebar panel**:
 
-1. **Einstellungen** (Zahnrad) → **Geräte & Dienste**
-2. Tab **„Integrationen“** wählen (nicht „Geräte“)
-3. In der Liste nach **„Shutter Pilot“** suchen oder scrollen
-4. Auf **„Shutter Pilot“** klicken
-5. Oben rechts: **Menü (⋮)** → **„Konfigurieren“** wählen
+### Areas (Tab "Areas")
 
-Dort erscheint das Menü: Rollladen hinzufügen, Einstellungen, Zeitpläne.
+Click **"Add area"** to create a new area. Choose a control mode:
 
-### Einrichtung
+| Mode | Description |
+|------|-------------|
+| **Time** | Shutters go up/down at fixed times (e.g. 07:00 up, 19:00 down) |
+| **Brightness** | Driven by a lux sensor with configurable thresholds and allowed time windows |
+| **Sun position** | Uses Home Assistant's sunrise/sunset tracking with configurable offsets |
 
-1. Integration hinzufügen (über „+ Integration hinzufügen“)
-2. **Shutter Pilot** unter Integrationen finden → Menü (⋮) → **Konfigurieren**
-3. Im Untermenü wählen:
-   - **Allgemeine Einstellungen**: Helligkeitssensor, Lux-Schwellwerte, Verzögerung, Auto-Modi, Sonnenschutz
-   - **Zeitplan Wohnbereich / Schlafbereich / Kinderbereich**: jeweils Fix- oder Sonnenzeiten, Offset
-4. **Rollladen hinzufügen**: Cover, Fenster-Sensor, Aussperrschutz, Drive-After-Close, Gruppe
+Each area can also have:
+- **Sun protection** – drives shutters to a mid-position when sun elevation drops below threshold
+- **Light action** – turns on a light/switch entity when shutters close
+- **Drive delay** – seconds between individual shutters (prevents circuit overload)
 
-### Sunrise/Sunset Offset
+### Shutters (Tab "Shutters")
 
-- **Offset in Minuten**: negativ = vor dem Ereignis, positiv = danach
-- Beispiel: `-30` bei Sonnenaufgang → 30 Minuten vor Sonnenaufgang
-- Beispiel: `15` bei Sonnenuntergang → 15 Minuten nach Sonnenuntergang
+Click **"Add shutter"** to assign a cover entity to an area:
 
-### Shutter Pilot Control Card (Dashboard)
+- **Cover entity** – your `cover.*` entity
+- **Window sensor** – optional `binary_sensor.*` for window open/tilt detection
+- **Area Up / Area Down** – which area controls this shutter for up/down movements
+- **Position sliders** – open, closed, and sun protection positions (0-100%)
+- **Lock protection** – minimum position when a door is open (prevents lockout)
+- **Drive after close** – catches up a missed close command when the window was still open
 
-Zum **Bedienen** der Rollläden steht eine fertige Lovelace-Karte bereit:
+### Dashboard
 
-1. **Dashboard** öffnen → **Bearbeiten** (oben rechts) → **Karte hinzufügen**
-2. **Manuelle Konfiguration** wählen
-3. Inhalt aus `lovelace_card_only.yaml` einfügen
-4. Unter „Einzelne Rollläden“ die Entity-IDs durch deine Cover-Entities ersetzen (z.B. `cover.wohnzimmer`)
+The Dashboard tab shows all areas as cards with:
+- Current shutter positions (live)
+- Auto-mode toggle per area
+- Quick action buttons: **Up**, **Stop**, **Down**, **Sun protection**
 
-Die Karte enthält:
-- **Gruppen**: Wohnbereich, Schlaf, Kinder, Alle – jeweils Hoch / Runter / Sonnenschutz
-- **Einzelne Rollläden**: Direktsteuerung mit Positionsanzeige
+## Services
 
-Alternativ: Vollständige Ansicht aus `lovelace_shutter_pilot_control.yaml` als neue Dashboard-View einfügen.
+| Service | Description |
+|---------|-------------|
+| `shutter_pilot.open_group` | Open all shutters in an area |
+| `shutter_pilot.close_group` | Close all shutters in an area |
+| `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 
-### Dienste
+All services accept an `area_id` parameter (e.g. `living`, `bedroom`).
 
-```yaml
-service: shutter_pilot.open_group
-data:
-  group: living   # living | sleep | children | all
+## Supported Languages
 
-service: shutter_pilot.close_group
-data:
-  group: all
+The Shutter Pilot panel automatically adapts to your Home Assistant language setting:
 
-service: shutter_pilot.sun_protect_group
-data:
-  group: living
-```
+| Language | Code | |
+|----------|:----:|---|
+| Deutsch (German) | `de` | :de: |
+| English | `en` | :gb: |
+| Français (French) | `fr` | :fr: |
+| Español (Spanish) | `es` | :es: |
+| Italiano (Italian) | `it` | :it: |
+| Nederlands (Dutch) | `nl` | :netherlands: |
+| Dansk (Danish) | `da` | :denmark: |
+| Svenska (Swedish) | `sv` | :sweden: |
+| Polski (Polish) | `pl` | :poland: |
+| Português (Portuguese) | `pt` | :portugal: |
+| Norsk Bokmål (Norwegian) | `nb` | :norway: |
 
----
----
+If your language is not listed, the panel falls back to English. Want to contribute a translation? PRs are welcome!
 
-## Version
+## Minimum Requirements
 
-1.4.04
+- Home Assistant **2024.6.0** or newer
 
-## Kompatibilität
+## License
 
-Home Assistant 2024.x und neuer.
-
-## Lizenz
-
-MIT
+This project is open source. See the [LICENSE](LICENSE) file for details.
