@@ -15,6 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 
+from copy import deepcopy
+
 from .const import (
     DOMAIN,
     CONF_SHUTTERS,
@@ -205,8 +207,12 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
         return
     hass.data[f"{DOMAIN}_ws_registered"] = True
 
-    websocket_api.async_register_command(hass, _ws_get_status)
-    websocket_api.async_register_command(hass, _ws_set_auto_mode)
+    for cmd in (
+        _ws_get_status, _ws_set_auto_mode,
+        _ws_save_area, _ws_delete_area,
+        _ws_save_shutter, _ws_delete_shutter,
+    ):
+        websocket_api.async_register_command(hass, cmd)
     _LOGGER.debug("Shutter Pilot WebSocket commands registered")
 
 
@@ -221,10 +227,17 @@ def _find_entry_data(hass: HomeAssistant) -> tuple:
     return None, None
 
 
+def _update_entry_options(hass: HomeAssistant, entry: ConfigEntry, new_opts: dict) -> None:
+    """Persist new options (deep-copied) to the config entry."""
+    hass.config_entries.async_update_entry(entry, options=deepcopy(new_opts))
+
+
+# -- get_status ---------------------------------------------------------------
+
 @websocket_api.websocket_command({vol.Required("type"): "shutter_pilot/get_status"})
 @callback
 def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Return current areas, shutters, and auto-mode states."""
+    """Return full areas, shutters, and auto-mode states for the panel."""
     entry, data = _find_entry_data(hass)
     if not entry or not data:
         connection.send_result(msg["id"], {"areas": [], "shutters": [], "auto_modes": {}})
@@ -234,35 +247,25 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     areas_out = []
     if isinstance(raw_areas, list):
         for a in raw_areas:
-            if not isinstance(a, dict):
-                continue
-            areas_out.append({
-                "id": str(a.get(CONF_AREA_ID) or ""),
-                "name": str(a.get(CONF_AREA_NAME) or ""),
-                "mode": str(a.get(CONF_AREA_MODE) or "time"),
-            })
+            if isinstance(a, dict):
+                areas_out.append(dict(a))
 
     raw_shutters = entry.options.get(CONF_SHUTTERS, [])
     shutters_out = []
     if isinstance(raw_shutters, list):
         for s in raw_shutters:
-            if not isinstance(s, dict):
-                continue
-            shutters_out.append({
-                "cover_entity_id": str(s.get(CONF_COVER_ENTITY_ID) or ""),
-                "name": str(s.get(CONF_NAME) or ""),
-                "area_up_id": str(s.get(CONF_AREA_UP_ID) or ""),
-                "area_down_id": str(s.get(CONF_AREA_DOWN_ID) or ""),
-            })
+            if isinstance(s, dict):
+                shutters_out.append(dict(s))
 
     auto_modes = data.get("auto_modes", {})
-
     connection.send_result(msg["id"], {
         "areas": areas_out,
         "shutters": shutters_out,
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
     })
 
+
+# -- set_auto_mode ------------------------------------------------------------
 
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/set_auto_mode",
@@ -271,31 +274,121 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 })
 @callback
 def _ws_set_auto_mode(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
-    """Toggle auto-mode for an area via its switch entity."""
-    area_id = msg["area_id"]
-    enabled = msg["enabled"]
-
+    """Toggle auto-mode for an area."""
+    area_id, enabled = msg["area_id"], msg["enabled"]
     entry, data = _find_entry_data(hass)
     if not data:
-        connection.send_error(msg["id"], "not_found", "No Shutter Pilot entry found")
+        connection.send_error(msg["id"], "not_found", "No entry found")
         return
-
-    auto_modes = data.setdefault("auto_modes", {})
-    auto_modes[area_id] = enabled
-
-    # Also toggle the actual switch entity if it exists
+    data.setdefault("auto_modes", {})[area_id] = enabled
     raw_areas = entry.options.get(CONF_AREAS, []) if entry else []
     for a in raw_areas:
         if not isinstance(a, dict):
             continue
         if str(a.get(CONF_AREA_ID) or "") != area_id:
             continue
-        entity_id = str(a.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
-        if entity_id:
-            service = "turn_on" if enabled else "turn_off"
+        eid = str(a.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
+        if eid:
             hass.async_create_task(
-                hass.services.async_call("switch", service, {"entity_id": entity_id})
+                hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})
             )
         break
+    connection.send_result(msg["id"], {"ok": True})
 
+
+# -- save_area (create / update) ----------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/save_area",
+    vol.Required("area"): dict,
+})
+@websocket_api.async_response
+async def _ws_save_area(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Create or update an area. The 'area' dict must contain at least 'id'."""
+    entry, data = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    area_data = msg["area"]
+    area_id = str(area_data.get("id") or "").strip()
+    if not area_id:
+        connection.send_error(msg["id"], "invalid", "area.id is required")
+        return
+    opts = deepcopy(dict(entry.options or {}))
+    areas = opts.setdefault(CONF_AREAS, [])
+    idx = next((i for i, a in enumerate(areas) if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id), None)
+    if idx is not None:
+        areas[idx].update(area_data)
+    else:
+        areas.append(area_data)
+    _update_entry_options(hass, entry, opts)
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- delete_area --------------------------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/delete_area",
+    vol.Required("area_id"): str,
+})
+@websocket_api.async_response
+async def _ws_delete_area(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Delete an area by id."""
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    area_id = msg["area_id"]
+    opts = deepcopy(dict(entry.options or {}))
+    areas = opts.setdefault(CONF_AREAS, [])
+    opts[CONF_AREAS] = [a for a in areas if not (isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id)]
+    _update_entry_options(hass, entry, opts)
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- save_shutter (create / update) -------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/save_shutter",
+    vol.Required("shutter"): dict,
+    vol.Optional("index"): vol.Any(int, None),
+})
+@websocket_api.async_response
+async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Create or update a shutter. Pass index to update, omit to create."""
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    shutter_data = msg["shutter"]
+    idx = msg.get("index")
+    opts = deepcopy(dict(entry.options or {}))
+    shutters = opts.setdefault(CONF_SHUTTERS, [])
+    if idx is not None and 0 <= idx < len(shutters):
+        shutters[idx] = shutter_data
+    else:
+        shutters.append(shutter_data)
+    _update_entry_options(hass, entry, opts)
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- delete_shutter -----------------------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/delete_shutter",
+    vol.Required("index"): int,
+})
+@websocket_api.async_response
+async def _ws_delete_shutter(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Delete a shutter by index."""
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    idx = msg["index"]
+    opts = deepcopy(dict(entry.options or {}))
+    shutters = opts.setdefault(CONF_SHUTTERS, [])
+    if 0 <= idx < len(shutters):
+        shutters.pop(idx)
+    _update_entry_options(hass, entry, opts)
     connection.send_result(msg["id"], {"ok": True})
