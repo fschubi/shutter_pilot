@@ -12,9 +12,23 @@ const css  = LitElement?.prototype?.css  ?? ((s)=>s);
 const MODES = {time:"Zeit",brightness:"Helligkeit",sun:"Sonnenstand"};
 const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset"};
 
+/* Ensure HA frontend components (ha-entity-picker etc.) are loaded */
+let _haComponentsLoaded = false;
+async function _ensureHaComponents() {
+  if (_haComponentsLoaded) return;
+  _haComponentsLoaded = true;
+  if (customElements.get("ha-entity-picker")) return;
+  try {
+    const helpers = await (window.loadCardHelpers?.());
+    if (helpers) {
+      await helpers.createCardElement({type:"entities",entities:[]});
+    }
+  } catch(_) { /* ignore – entity-picker may already be available */ }
+}
+
 /* ────────────────────────────────────────────────────── main panel ── */
 class ShutterPilotPanel extends LitElement {
-  static get properties(){return{hass:{type:Object},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
+  static get properties(){return{hass:{type:Object},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_ready:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333)}
     .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
@@ -60,8 +74,8 @@ class ShutterPilotPanel extends LitElement {
     .chip.time{background:#1565c0;color:#fff} .chip.brightness{background:#f57f17;color:#fff} .chip.sun{background:#e65100;color:#fff}
   `;}
 
-  constructor(){super();this._tab="dashboard";this._data=null;this._editArea=null;this._editShutter=null;}
-  connectedCallback(){super.connectedCallback?.();this._load();}
+  constructor(){super();this._tab="dashboard";this._data=null;this._editArea=null;this._editShutter=null;this._ready=false;}
+  async connectedCallback(){super.connectedCallback?.();await _ensureHaComponents();this._ready=true;this.requestUpdate();this._load();}
   updated(c){if(c.has("hass")&&this.hass&&!this._data)this._load();}
 
   async _load(){
@@ -70,6 +84,7 @@ class ShutterPilotPanel extends LitElement {
   }
 
   render(){
+    if(!this._ready)return html`<div class="empty">Laden…</div>`;
     const d=this._data;
     return html`
       <div class="topbar"><div><h1>Shutter Pilot</h1>
