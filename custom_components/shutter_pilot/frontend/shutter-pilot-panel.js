@@ -448,6 +448,7 @@ class ShutterPilotPanel extends LitElement {
     .sun-info{margin:12px 0 4px;padding:10px 12px;background:rgba(255,152,0,.08);border-radius:8px;border-left:3px solid #ff9800}
     .time-info{margin:12px 0 4px;padding:10px 12px;background:rgba(33,150,243,.08);border-radius:8px;border-left:3px solid #2196f3}
     .time-info.weekend{border-left-color:#8bc34a;background:rgba(139,195,74,.08)}
+    .brightness-info{margin:12px 0 4px;padding:10px 12px;background:rgba(255,193,7,.08);border-radius:8px;border-left:3px solid #ffc107}
     .sun-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--txt);flex-wrap:wrap}
     .sun-row ha-icon{--mdc-icon-size:18px;color:#ff9800;flex-shrink:0}
     .sun-off{font-size:12px;color:var(--txt2)}
@@ -496,6 +497,7 @@ class ShutterPilotPanel extends LitElement {
         <ha-switch .checked=${autoOn} @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
       ${mode==="sun"?this._renderSunInfo(area,d):""}
       ${mode==="time"?this._renderTimeInfo(area):""}
+      ${mode==="brightness"?this._renderBrightnessInfo(area):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           return html`<div class="srow"><span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
@@ -552,6 +554,26 @@ class ShutterPilotPanel extends LitElement {
         <span>${this.t("f_time_we_up")}: <b>${weUp}</b> · ${this.t("f_time_we_down")}: <b>${weDown}</b></span></div>
     </div>`;
   }
+  _renderBrightnessInfo(area){
+    const luxDown=Number.isFinite(Number(area.lux_down))?Number(area.lux_down):400;
+    const luxUp=Number.isFinite(Number(area.lux_up))?Number(area.lux_up):500;
+    const wUpFrom=area.w_up_from||"05:00";
+    const wUpTo=area.w_up_to||"09:00";
+    const wDownFrom=area.w_down_from||"16:00";
+    const wDownTo=area.w_down_to||"23:59";
+    const weUpFrom=area.we_up_from||"07:00";
+    const weUpTo=area.we_up_to||"10:00";
+    const weDownFrom=area.we_down_from||"16:00";
+    const weDownTo=area.we_down_to||"23:59";
+    return html`<div class="brightness-info">
+      <div class="sun-row"><ha-icon icon="mdi:weather-sunny-alert"></ha-icon>
+        <span>${this.t("f_lux_down")}: <b>${luxDown} lx</b> · ${this.t("f_lux_up")}: <b>${luxUp} lx</b></span></div>
+      <div class="sun-row"><ha-icon icon="mdi:calendar-week"></ha-icon>
+        <span>${this.t("f_w_up_from")}: <b>${wUpFrom}</b> – <b>${wUpTo}</b> · ${this.t("f_w_down_from")}: <b>${wDownFrom}</b> – <b>${wDownTo}</b></span></div>
+      <div class="sun-row"><ha-icon icon="mdi:calendar-weekend"></ha-icon>
+        <span>${this.t("f_we_up_from")}: <b>${weUpFrom}</b> – <b>${weUpTo}</b> · ${this.t("f_we_down_from")}: <b>${weDownFrom}</b> – <b>${weDownTo}</b></span></div>
+    </div>`;
+  }
 
   /* ─── Areas Tab ─── */
   _renderAreas(d){
@@ -575,6 +597,9 @@ class ShutterPilotPanel extends LitElement {
     const a=this._editArea;const m=a.mode||"time";const T=k=>this.t(k);
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""}  @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
     const tm=(k,lbl)=>html`<div class="field"><label>${lbl}</label><input type="time" .value=${a[k]||"07:00"} @input=${e=>{a[k]=e.target.value;this.requestUpdate();}}></div>`;
+    const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
     const ep=(k,lbl,domains)=>{const lid=`dl_${k}`;const ents=this._entities(domains);return html`<div class="field"><label>${lbl}</label>
       <input list="${lid}" .value=${a[k]||""} @input=${e=>{a[k]=e.target.value;this.requestUpdate();}} placeholder="${T("pick_entity")}">
       <datalist id="${lid}">${ents.map(e=>html`<option value="${e}">${this.hass.states[e]?.attributes?.friendly_name||e}</option>`)}</datalist></div>`;};
@@ -586,14 +611,14 @@ class ShutterPilotPanel extends LitElement {
           <option value="time" ?selected=${m==="time"}>${T("mode_time")}</option>
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
-      ${f("drive_delay",T("f_drive_delay"),"number")}
+      ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
       ${a.sun_protect_enabled?f("elevation_threshold",T("f_elev_thresh"),"number"):""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
-      ${f("down_light_brightness",T("f_light_brightness"),"number")}
+      ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
-        m==="sun"?html`${f("sunrise_offset",T("f_sunrise_off"),"number")}${f("sunset_offset",T("f_sunset_off"),"number")}`:
-        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"])}${f("lux_up",T("f_lux_up"),"number")}${f("lux_down",T("f_lux_down"),"number")}
+        m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}`:
+        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"])}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
       <div class="form-actions">

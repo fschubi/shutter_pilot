@@ -180,8 +180,32 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
         hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
 
-    # Fixed-time schedule: run every minute, fire only once per event per day
+    # Fixed-time schedule: run every minute, fire only once per event per day.
+    # On setup/reload we pre-mark already-passed times for today to avoid
+    # immediate catch-up movement after restart.
     fired_today = data.setdefault("_scheduler_fired", {})
+    setup_now = datetime.now()
+    setup_today = setup_now.date()
+    setup_time = setup_now.time()
+    setup_is_weekend = setup_now.weekday() >= 5
+    for area in areas:
+        if not isinstance(area, dict):
+            continue
+        if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_TIME:
+            continue
+        area_id = str(area.get(CONF_AREA_ID) or "")
+        if not area_id:
+            continue
+        if setup_is_weekend:
+            up_t = _parse_time(area.get(CONF_AREA_TIME_WE_UP) or area.get(CONF_AREA_TIME_UP, "07:00"))
+            down_t = _parse_time(area.get(CONF_AREA_TIME_WE_DOWN) or area.get(CONF_AREA_TIME_DOWN, "19:00"))
+        else:
+            up_t = _parse_time(area.get(CONF_AREA_TIME_UP, "07:00"))
+            down_t = _parse_time(area.get(CONF_AREA_TIME_DOWN, "19:00"))
+        if setup_time >= up_t:
+            fired_today[f"up_{area_id}"] = setup_today
+        if setup_time >= down_t:
+            fired_today[f"down_{area_id}"] = setup_today
 
     @callback
     def _scheduler_tick(now: datetime) -> None:
@@ -257,35 +281,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if unsub_down:
             data["_scheduler_unsubs"].append(unsub_down)
 
-    # Initial check for sun-mode areas: if HA restarts after sunrise, the
-    # async_track_sunrise callback won't fire until the NEXT morning.
-    # Evaluate current sun position and fire up/down as needed.
-    sun_state = hass.states.get("sun.sun")
-    if sun_state:
-        try:
-            current_elev = float(sun_state.attributes.get("elevation", 0))
-        except (TypeError, ValueError, AttributeError):
-            current_elev = None
-        if current_elev is not None:
-            for area in areas:
-                if not isinstance(area, dict):
-                    continue
-                if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
-                    continue
-                area_id = str(area.get(CONF_AREA_ID) or "")
-                if not area_id:
-                    continue
-                if current_elev > 0:
-                    _LOGGER.info(
-                        "[sun-initial] area=%s elev=%.1f > 0 → run_up",
-                        area_id, current_elev,
-                    )
-                    _run_up(area, trigger="sun-initial")
-                else:
-                    _LOGGER.info(
-                        "[sun-initial] area=%s elev=%.1f <= 0 → run_down",
-                        area_id, current_elev,
-                    )
-                    _run_down(area, trigger="sun-initial")
+    # No startup movement for sun mode. We only react to actual sunrise/sunset
+    # callbacks after setup.
 
     _LOGGER.info("Scheduler: %d Rollläden, Bereiche=%d", len(shutters), len(areas))

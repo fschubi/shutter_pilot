@@ -270,16 +270,4 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             data["_brightness_unsubs"].append(unsub)
         _LOGGER.info("Brightness listener registered: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
 
-    # Initial check: evaluate current sensor values so shutters react even
-    # if the sensor was already above/below threshold when HA started.
-    for area in brightness_areas:
-        sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
-        if not sensor_id:
-            continue
-        current_state = hass.states.get(sensor_id)
-        if current_state is not None:
-            _LOGGER.info(
-                "Brightness initial check: sensor=%s current=%s",
-                sensor_id, current_state.state,
-            )
-            _process_brightness(sensor_id, current_state)
+    # No startup movement: evaluate only on real sensor state changes after setup.
