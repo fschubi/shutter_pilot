@@ -27,9 +27,25 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 
 ## Screenshots
 
-| Dashboard | Bereiche | Rollläden |
-|-----------|----------|-----------|
-| Bereichskarten mit Live-Status, Auto-Toggle und Schnellaktionen (Hoch/Stop/Runter/Sonnenschutz) | Bereichsliste mit Modus-Badges, Hinzufügen/Bearbeiten/Löschen | Rollladenliste mit Bereichs-Zuordnung, Hinzufügen/Bearbeiten/Löschen |
+Klicke auf ein Bild, um es auf GitHub in **voller Auflösung** zu öffnen (hier werden nur verkleinerte Vorschaubilder angezeigt).
+
+<p align="center">
+  <a href="docs/screenshots/dashboard.png" title="Dashboard – Vollbild">
+    <img src="docs/screenshots/dashboard.png" alt="Shutter Pilot – Dashboard" width="280" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="docs/screenshots/areas.png" title="Bereiche – Vollbild">
+    <img src="docs/screenshots/areas.png" alt="Shutter Pilot – Bereiche" width="280" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="docs/screenshots/shutters.png" title="Rollläden – Vollbild">
+    <img src="docs/screenshots/shutters.png" alt="Shutter Pilot – Rollläden" width="280" />
+  </a>
+</p>
+
+<p align="center">
+  <b>Dashboard</b> · <b>Bereiche</b> · <b>Rollläden</b>
+</p>
 
 ## Installation
 

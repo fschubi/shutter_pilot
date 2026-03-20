@@ -27,9 +27,25 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 
 ## Screenshots
 
-| Dashboard | Areas | Shutters |
-|-----------|-------|----------|
-| Area cards with live status, auto-toggle, and quick actions (Up/Stop/Down/Sun) | Area list with mode badges, add/edit/delete | Shutter list with area assignments, add/edit/delete |
+Click an image to open it **full size** on GitHub (thumbnails are scaled down in this page).
+
+<p align="center">
+  <a href="docs/screenshots/dashboard.png" title="Dashboard – full size">
+    <img src="docs/screenshots/dashboard.png" alt="Shutter Pilot – Dashboard tab" width="280" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="docs/screenshots/areas.png" title="Areas – full size">
+    <img src="docs/screenshots/areas.png" alt="Shutter Pilot – Areas tab" width="280" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="docs/screenshots/shutters.png" title="Shutters – full size">
+    <img src="docs/screenshots/shutters.png" alt="Shutter Pilot – Shutters tab" width="280" />
+  </a>
+</p>
+
+<p align="center">
+  <b>Dashboard</b> · <b>Areas</b> · <b>Shutters</b>
+</p>
 
 ## Installation
 
