@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_register_built_in_panel
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -173,7 +174,9 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
     panel_dir = os.path.join(os.path.dirname(__file__), "frontend")
     panel_file = os.path.join(panel_dir, "shutter-pilot-panel.js")
 
-    hass.http.register_static_path(PANEL_URL, panel_file, cache_headers=False)
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(PANEL_URL, panel_file, cache_headers=False)]
+    )
 
     async_register_built_in_panel(
         hass,
