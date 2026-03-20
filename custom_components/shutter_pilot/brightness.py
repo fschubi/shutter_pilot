@@ -9,7 +9,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     DOMAIN,
@@ -20,6 +20,8 @@ from .const import (
     CONF_AREA_BRIGHTNESS_SENSOR,
     CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
     CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+    DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
+    DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD,
     CONF_AREA_W_UP_FROM,
     CONF_AREA_W_UP_TO,
     CONF_AREA_W_DOWN_FROM,
@@ -123,7 +125,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             type(shutters),
         )
         shutters = []
-    opts = entry.options
 
     async def _set_cover_position_with_delay(
         hass: HomeAssistant,
@@ -137,13 +138,15 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             await asyncio.sleep(delay * index)
         await _set_cover_position(hass, entity_id, position, reason)
 
-    @callback
-    def _on_brightness_change(entity_id: str, old_state: Any, new_state: Any) -> None:
-        if new_state is None or new_state.state in (None, "unknown", "unavailable"):
+    def _process_brightness(entity_id: str, new_state) -> None:
+        """Evaluate brightness for a sensor state (used by listener AND initial check)."""
+        if new_state is None:
             return
-
+        state_str = getattr(new_state, "state", None)
+        if state_str in (None, "unknown", "unavailable"):
+            return
         try:
-            lux = float(new_state.state)
+            lux = float(state_str)
         except (TypeError, ValueError):
             return
 
@@ -155,6 +158,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             if not area_id:
                 continue
             if not _is_auto_enabled(hass, entry, area):
+                _LOGGER.debug("Brightness: area %s auto disabled, skip", area_id)
                 continue
 
             sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
@@ -174,6 +178,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 drive_delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
             except (TypeError, ValueError):
                 drive_delay = DEFAULT_AREA_DRIVE_DELAY
+
+            _LOGGER.info(
+                "Brightness eval: area=%s sensor=%s lux=%.1f up_thresh=%d down_thresh=%d",
+                area_id, sensor_id, lux, up_threshold, down_threshold,
+            )
 
             handled_down = False
             handled_up = False
@@ -218,9 +227,15 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             # Up: within up window AND lux > threshold OR pending-up for today
             is_pending = pending_up.get(area_id) == today
             within_up = _area_window(area, now, "up")
+
+            _LOGGER.debug(
+                "Brightness UP check: area=%s within_up=%s is_pending=%s lux=%.1f > thresh=%d => %s",
+                area_id, within_up, is_pending, lux, up_threshold, lux > up_threshold,
+            )
+
             if within_up and lux <= up_threshold:
-                # mark pending if within window but still too dark
                 pending_up[area_id] = today
+                _LOGGER.info("Brightness: area %s marked pending (lux %.1f <= %d)", area_id, lux, up_threshold)
             elif (within_up or is_pending) and lux > up_threshold:
                 idx = 0
                 for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
@@ -228,8 +243,10 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     if not cover_entity:
                         continue
                     if cover_entity in covers_driven_up:
+                        _LOGGER.debug("Brightness up: %s already driven up, skip", cover_entity)
                         continue
                     pos = shutter.get(CONF_POSITION_OPEN, 100)
+                    _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
                     hass.async_create_task(
                         _set_cover_position_with_delay(
                             hass,
@@ -250,14 +267,38 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     if is_pending:
                         pending_up.pop(area_id, None)
 
+    @callback
+    def _on_brightness_change(event) -> None:
+        """Handle brightness sensor state change event."""
+        new_state = event.data.get("new_state")
+        entity_id = event.data.get("entity_id", "")
+        _process_brightness(entity_id, new_state)
+
+    # Register listeners for each brightness sensor
+    tracked_sensors: set[str] = set()
+    for area in brightness_areas:
+        sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+        if not sensor_id or sensor_id in tracked_sensors:
+            continue
+        tracked_sensors.add(sensor_id)
+        unsub = async_track_state_change_event(hass, sensor_id, _on_brightness_change)
+        if unsub:
+            data["_brightness_unsubs"].append(unsub)
+        _LOGGER.info("Brightness listener registered: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
+
+    # Initial check: evaluate current sensor values so shutters react even
+    # if the sensor was already above/below threshold when HA started.
     for area in brightness_areas:
         sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
         if not sensor_id:
             continue
-        unsub = async_track_state_change(hass, sensor_id, _on_brightness_change)
-        if unsub:
-            data["_brightness_unsubs"].append(unsub)
-        _LOGGER.info("Brightness listener: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
+        current_state = hass.states.get(sensor_id)
+        if current_state is not None:
+            _LOGGER.info(
+                "Brightness initial check: sensor=%s current=%s",
+                sensor_id, current_state.state,
+            )
+            _process_brightness(sensor_id, current_state)
 
 
 async def _set_cover_position(

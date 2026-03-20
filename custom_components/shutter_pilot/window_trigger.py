@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
@@ -78,9 +78,11 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         window_to_shutters[window_id].append(shutter)
 
     @callback
-    def _on_window_state_change(entity_id: str, old_state: Any, new_state: Any) -> None:
+    def _on_window_state_change(event) -> None:
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
+        entity_id = event.data.get("entity_id", "")
 
         try:
             new_val = new_state.state
@@ -141,7 +143,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     )
 
     for window_id in window_to_shutters:
-        unsub = async_track_state_change(
+        unsub = async_track_state_change_event(
             hass, window_id, _on_window_state_change
         )
         if unsub:

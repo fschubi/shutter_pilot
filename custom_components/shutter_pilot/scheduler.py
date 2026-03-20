@@ -106,7 +106,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     async def drive_shutters(
         shutter_list: list[dict],
-        position: float,
+        default_position: float,
         direction: str,
         delay: int,
         apply_lock_protection: bool = False,
@@ -116,6 +116,10 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover:
                 continue
+            if default_position >= 50:
+                position = shutter.get(CONF_POSITION_OPEN, default_position)
+            else:
+                position = shutter.get(CONF_POSITION_CLOSED, default_position)
             drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
             if apply_lock_protection and drive_after and is_window_open_or_tilted(hass, shutter):
                 data["drive_after_close_pending"][cover] = {
@@ -137,7 +141,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     {"entity_id": cover, "position": eff_pos},
                     blocking=True,
                 )
-                if position >= 50:
+                if default_position >= 50:
                     covers_driven_up.add(cover)
                     covers_driven_down.discard(cover)
                 else:
@@ -261,5 +265,36 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         unsub_down = async_track_sunset(hass, _make_sunset_cb(area), offset=offset_down)
         if unsub_down:
             data["_scheduler_unsubs"].append(unsub_down)
+
+    # Initial check for sun-mode areas: if HA restarts after sunrise, the
+    # async_track_sunrise callback won't fire until the NEXT morning.
+    # Evaluate current sun position and fire up/down as needed.
+    sun_state = hass.states.get("sun.sun")
+    if sun_state:
+        try:
+            current_elev = float(sun_state.attributes.get("elevation", 0))
+        except (TypeError, ValueError, AttributeError):
+            current_elev = None
+        if current_elev is not None:
+            for area in areas:
+                if not isinstance(area, dict):
+                    continue
+                if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
+                    continue
+                area_id = str(area.get(CONF_AREA_ID) or "")
+                if not area_id:
+                    continue
+                if current_elev > 0:
+                    _LOGGER.info(
+                        "Scheduler sun initial: area=%s elev=%.1f > 0 → run_up",
+                        area_id, current_elev,
+                    )
+                    _run_up(area)
+                else:
+                    _LOGGER.info(
+                        "Scheduler sun initial: area=%s elev=%.1f <= 0 → run_down",
+                        area_id, current_elev,
+                    )
+                    _run_down(area)
 
     _LOGGER.info("Scheduler: %d Rollläden, Bereiche=%d", len(shutters), len(areas))

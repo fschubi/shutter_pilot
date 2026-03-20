@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
     DOMAIN,
@@ -85,7 +85,8 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
     from datetime import date
 
     @callback
-    def _on_sun_change(entity_id: str, old_state: Any, new_state: Any) -> None:
+    def _on_sun_change(event) -> None:
+        new_state = event.data.get("new_state")
         if new_state is None:
             return
         try:
@@ -157,9 +158,35 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 if elevation_fired.get(area_id) == today:
                     elevation_fired.pop(area_id, None)
 
-    unsub = async_track_state_change(hass, sun_entity, _on_sun_change)
+    unsub = async_track_state_change_event(hass, sun_entity, _on_sun_change)
     if unsub:
         data["_elevation_unsubs"].append(unsub)
+
+    # Prevent spurious firing after restart when the sun is already below
+    # the threshold (e.g. at night).  Pre-mark those areas as "already fired
+    # today" so the listener only fires on actual downward crossings.
+    current_sun = hass.states.get(sun_entity)
+    if current_sun:
+        try:
+            current_elev = float(current_sun.attributes.get("elevation", 0))
+        except (TypeError, ValueError, AttributeError):
+            current_elev = 0
+        today = date.today()
+        for area in protect_areas:
+            area_id = str(area.get(CONF_AREA_ID) or "").strip()
+            if not area_id:
+                continue
+            try:
+                threshold = float(area.get(CONF_AREA_ELEVATION_THRESHOLD, DEFAULT_AREA_ELEVATION_THRESHOLD))
+            except (TypeError, ValueError):
+                threshold = float(DEFAULT_AREA_ELEVATION_THRESHOLD)
+            if current_elev < threshold:
+                elevation_fired[area_id] = today
+                _LOGGER.debug(
+                    "Elevation: area %s pre-marked as fired (elev=%.1f < thresh=%.1f at startup)",
+                    area_id, current_elev, threshold,
+                )
+
     _LOGGER.debug("Elevation listener: per-area sun protection enabled")
 
 
