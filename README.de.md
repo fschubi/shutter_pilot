@@ -23,7 +23,8 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 - **Licht-Aktionen** – schaltet ein Licht/Schalter ein wenn Rollläden schließen
 - **Auto-Modus-Schalter** – Automatik pro Bereich ein-/ausschalten über HA-Switches
 - **Mehrsprachiges Panel** – passt sich automatisch an die HA-Sprache an (DE, EN, FR, ES, IT)
-- **Wochentag-/Wochenend-Zeitpläne** – separate Zeitfenster für Wochentage und Wochenenden (Helligkeitsmodus)
+- **Wochentag-/Wochenend-Zeitpläne** – separate Zeitfenster für Wochentage und Wochenenden (Zeitmodus und Helligkeitsmodus)
+- **Sonnenstand-Info im Dashboard** – zeigt nächsten Sonnenaufgang/-untergang, Offset und berechnete Trigger-Zeit für Sonnenstand-Bereiche
 
 ## Screenshots
 
@@ -79,7 +80,7 @@ Klicke auf **"Bereich hinzufügen"** um einen neuen Bereich zu erstellen. Wähle
 
 | Modus | Beschreibung |
 |-------|-------------|
-| **Zeit** | Rollläden fahren zu festen Zeiten hoch/runter (z.B. 07:00 hoch, 19:00 runter) |
+| **Zeit** | Rollläden fahren zu festen Zeiten hoch/runter mit separaten Wochentag-/Wochenend-Zeiten |
 | **Helligkeit** | Gesteuert durch einen Lux-Sensor mit konfigurierbaren Schwellwerten und erlaubten Zeitfenstern |
 | **Sonnenstand** | Nutzt Home Assistants Sonnenauf-/untergang-Tracking mit konfigurierbarem Offset |
 
@@ -104,6 +105,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 Das Dashboard zeigt alle Bereiche als Karten mit:
 - Aktuelle Rollladen-Positionen (live)
 - Auto-Modus-Schalter pro Bereich
+- **Sonnenstand-Info** für Sonnenstand-Bereiche: nächster Sonnenaufgang/-untergang, Offset, berechnete Trigger-Zeit, aktuelle Elevation
 - Schnellaktions-Buttons: **Hoch**, **Stop**, **Runter**, **Sonnenschutz**
 
 ## Services

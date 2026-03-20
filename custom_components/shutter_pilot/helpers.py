@@ -21,10 +21,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
-    """True if automation is enabled for this area. No entity = enabled."""
+    """True if automation is enabled for this area.
+
+    Fail-safe: if runtime data is missing (e.g. during reload), return False
+    to prevent stale listeners from triggering unwanted movements.
+    """
     area_id = str(area.get(CONF_AREA_ID) or "")
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
+    domain_data = hass.data.get(DOMAIN)
+    if not isinstance(domain_data, dict) or entry.entry_id not in domain_data:
+        _LOGGER.debug("is_auto_enabled: no runtime data for %s – returning False (fail-safe)", area_id)
+        return False
+    data = domain_data.get(entry.entry_id, {})
+    if not isinstance(data, dict):
+        return False
+
+    auto_modes = data.get("auto_modes", {})
     if isinstance(auto_modes, dict) and area_id in auto_modes:
         return bool(auto_modes.get(area_id))
 
@@ -33,7 +44,8 @@ def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool
         return True
     state = hass.states.get(entity_id)
     if not state:
-        return True
+        _LOGGER.debug("is_auto_enabled: switch entity %s not found – returning False (fail-safe)", entity_id)
+        return False
     return str(state.state).lower() in ("on", "true", "1")
 
 

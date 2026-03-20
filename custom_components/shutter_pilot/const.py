@@ -42,9 +42,11 @@ CONF_POSITION_SUN_PROTECT = "position_sun_protect"
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
 
-# Per-area schedule: time mode
-CONF_AREA_TIME_UP = "time_up"  # HH:MM
-CONF_AREA_TIME_DOWN = "time_down"  # HH:MM
+# Per-area schedule: time mode (weekday = default, weekend = optional override)
+CONF_AREA_TIME_UP = "time_up"  # HH:MM weekday
+CONF_AREA_TIME_DOWN = "time_down"  # HH:MM weekday
+CONF_AREA_TIME_WE_UP = "time_we_up"  # HH:MM weekend (falls back to time_up)
+CONF_AREA_TIME_WE_DOWN = "time_we_down"  # HH:MM weekend (falls back to time_down)
 
 # Per-area schedule: sun mode
 CONF_AREA_SUNRISE_OFFSET = "sunrise_offset"  # minutes
@@ -90,6 +92,8 @@ DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD = 400
 DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD = 500
 DEFAULT_AREA_TIME_UP = "07:00"
 DEFAULT_AREA_TIME_DOWN = "19:00"
+DEFAULT_AREA_TIME_WE_UP = "08:00"
+DEFAULT_AREA_TIME_WE_DOWN = "20:00"
 DEFAULT_AREA_W_UP_FROM = "05:00"
 DEFAULT_AREA_W_UP_TO = "09:00"
 DEFAULT_AREA_W_DOWN_FROM = "16:00"

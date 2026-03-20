@@ -159,6 +159,23 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        data = hass.data[DOMAIN][entry.entry_id]
+        if isinstance(data, dict):
+            for key in (
+                "_scheduler_unsubs",
+                "_brightness_unsubs",
+                "_elevation_unsubs",
+                "_window_unsubs",
+            ):
+                for unsub in data.get(key, []):
+                    try:
+                        unsub()
+                    except Exception:
+                        pass
+                data[key] = []
+            _LOGGER.debug("Shutter Pilot: all listeners cancelled for unload")
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
         del hass.data[DOMAIN][entry.entry_id]
@@ -266,10 +283,22 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 shutters_out.append(dict(s))
 
     auto_modes = data.get("auto_modes", {})
+
+    sun_info = {}
+    sun_state = hass.states.get("sun.sun")
+    if sun_state:
+        sun_attrs = sun_state.attributes or {}
+        sun_info = {
+            "elevation": sun_attrs.get("elevation"),
+            "next_rising": sun_attrs.get("next_rising"),
+            "next_setting": sun_attrs.get("next_setting"),
+        }
+
     connection.send_result(msg["id"], {
         "areas": areas_out,
         "shutters": shutters_out,
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
+        "sun": sun_info,
     })
 
 

@@ -88,6 +88,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not area_id:
                 continue
             if not is_auto_enabled(hass, entry, area):
+                _LOGGER.info("[elevation] area=%s: auto disabled – skipping sun protection", area_id)
                 continue
 
             raw_threshold = area.get(
@@ -125,9 +126,11 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                         }
                         continue
                     pos = get_effective_close_position(hass, shutter, pos)
+                    _LOGGER.info("[elevation] area=%s: elev=%.1f < thresh=%.1f → %s -> %d%%",
+                                area_id, elev, threshold, cover_entity, int(pos))
                     hass.async_create_task(
                         set_cover_position(
-                            hass, cover_entity, pos, "Elevation down"
+                            hass, cover_entity, pos, f"Elevation down (area={area_id})"
                         )
                     )
                     covers_driven_down.add(cover_entity)

@@ -23,7 +23,8 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 - **Light actions** – turn on a light/switch when shutters close
 - **Auto-mode switches** – enable/disable automation per area via HA switches
 - **Multi-language panel** – automatically adapts to your HA language (DE, EN, FR, ES, IT)
-- **Weekday/weekend schedules** – separate time windows for weekdays and weekends (brightness mode)
+- **Weekday/weekend schedules** – separate time windows for weekdays and weekends (time mode and brightness mode)
+- **Sun info on dashboard** – shows next sunrise/sunset, configured offsets, and calculated trigger times for sun-mode areas
 
 ## Screenshots
 
@@ -79,7 +80,7 @@ Click **"Add area"** to create a new area. Choose a control mode:
 
 | Mode | Description |
 |------|-------------|
-| **Time** | Shutters go up/down at fixed times (e.g. 07:00 up, 19:00 down) |
+| **Time** | Shutters go up/down at fixed times with separate weekday/weekend schedules |
 | **Brightness** | Driven by a lux sensor with configurable thresholds and allowed time windows |
 | **Sun position** | Uses Home Assistant's sunrise/sunset tracking with configurable offsets |
 
@@ -104,6 +105,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 The Dashboard tab shows all areas as cards with:
 - Current shutter positions (live)
 - Auto-mode toggle per area
+- **Sun info panel** for sun-mode areas: next sunrise/sunset, offset, calculated trigger time, current elevation
 - Quick action buttons: **Up**, **Stop**, **Down**, **Sun protection**
 
 ## Services

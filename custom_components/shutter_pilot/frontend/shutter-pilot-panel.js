@@ -34,8 +34,12 @@ de:{
   f_drive_delay:"Verzögerung zwischen Rollläden (Sek.)",
   f_sun_protect:"Sonnenschutz aktivieren",f_elev_thresh:"Elevation-Schwellwert (°)",
   f_light_entity:"Lampe/Schalter bei Runter (optional)",f_light_brightness:"Lampe Helligkeit (%)",
-  f_time_up:"Zeit Hoch",f_time_down:"Zeit Runter",
+  f_time_up:"Woche Hoch",f_time_down:"Woche Runter",
+  f_time_we_up:"Wochenende Hoch",f_time_we_down:"Wochenende Runter",
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
+  sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
+  sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  sun_elevation:"Aktuelle Elevation",sun_offset:"Offset",
   f_brightness_sensor:"Helligkeitssensor",f_lux_up:"Lux Hoch-Schwelle",f_lux_down:"Lux Runter-Schwelle",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
@@ -72,8 +76,12 @@ en:{
   f_drive_delay:"Delay between shutters (sec.)",
   f_sun_protect:"Enable sun protection",f_elev_thresh:"Elevation threshold (°)",
   f_light_entity:"Light/switch on close (optional)",f_light_brightness:"Light brightness (%)",
-  f_time_up:"Time Up",f_time_down:"Time Down",
+  f_time_up:"Weekday Up",f_time_down:"Weekday Down",
+  f_time_we_up:"Weekend Up",f_time_we_down:"Weekend Down",
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
+  sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
+  sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  sun_elevation:"Current elevation",sun_offset:"Offset",
   f_brightness_sensor:"Brightness sensor",f_lux_up:"Lux up threshold",f_lux_down:"Lux down threshold",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
@@ -104,8 +112,12 @@ fr:{
   f_name:"Nom",f_mode:"Mode de contrôle",f_drive_delay:"Délai entre volets (sec.)",
   f_sun_protect:"Protection solaire",f_elev_thresh:"Seuil élévation (°)",
   f_light_entity:"Lampe/interrupteur descente",f_light_brightness:"Luminosité lampe (%)",
-  f_time_up:"Heure montée",f_time_down:"Heure descente",
+  f_time_up:"Semaine montée",f_time_down:"Semaine descente",
+  f_time_we_up:"Week-end montée",f_time_we_down:"Week-end descente",
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
+  sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
+  sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  sun_elevation:"Élévation actuelle",sun_offset:"Décalage",
   f_brightness_sensor:"Capteur luminosité",f_lux_up:"Seuil lux montée",f_lux_down:"Seuil lux descente",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
@@ -132,8 +144,12 @@ es:{
   f_name:"Nombre",f_mode:"Modo de control",f_drive_delay:"Retraso entre persianas (seg.)",
   f_sun_protect:"Protección solar",f_elev_thresh:"Umbral elevación (°)",
   f_light_entity:"Luz/interruptor al bajar",f_light_brightness:"Brillo luz (%)",
-  f_time_up:"Hora subida",f_time_down:"Hora bajada",
+  f_time_up:"L-V subida",f_time_down:"L-V bajada",
+  f_time_we_up:"Fin de semana subida",f_time_we_down:"Fin de semana bajada",
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
+  sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
+  sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  sun_elevation:"Elevación actual",sun_offset:"Desfase",
   f_brightness_sensor:"Sensor brillo",f_lux_up:"Umbral lux subida",f_lux_down:"Umbral lux bajada",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
@@ -160,8 +176,12 @@ it:{
   f_name:"Nome",f_mode:"Modalità",f_drive_delay:"Ritardo tra tapparelle (sec.)",
   f_sun_protect:"Protezione solare",f_elev_thresh:"Soglia elevazione (°)",
   f_light_entity:"Luce/interruttore alla chiusura",f_light_brightness:"Luminosità luce (%)",
-  f_time_up:"Orario apertura",f_time_down:"Orario chiusura",
+  f_time_up:"Feriale apertura",f_time_down:"Feriale chiusura",
+  f_time_we_up:"Weekend apertura",f_time_we_down:"Weekend chiusura",
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
+  sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
+  sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  sun_elevation:"Elevazione attuale",sun_offset:"Offset",
   f_brightness_sensor:"Sensore luminosità",f_lux_up:"Soglia lux apertura",f_lux_down:"Soglia lux chiusura",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
@@ -189,8 +209,12 @@ nl:{
   f_name:"Naam",f_mode:"Besturingsmodus",f_drive_delay:"Vertraging tussen rolluiken (sec.)",
   f_sun_protect:"Zonwering inschakelen",f_elev_thresh:"Elevatiedrempel (°)",
   f_light_entity:"Lamp/schakelaar bij sluiten (optioneel)",f_light_brightness:"Lamp helderheid (%)",
-  f_time_up:"Tijd Omhoog",f_time_down:"Tijd Omlaag",
+  f_time_up:"Doordeweeks omhoog",f_time_down:"Doordeweeks omlaag",
+  f_time_we_up:"Weekend omhoog",f_time_we_down:"Weekend omlaag",
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
+  sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
+  sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  sun_elevation:"Huidige elevatie",sun_offset:"Offset",
   f_brightness_sensor:"Helderheidssensor",f_lux_up:"Lux omhoog drempel",f_lux_down:"Lux omlaag drempel",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
@@ -218,8 +242,12 @@ da:{
   f_name:"Navn",f_mode:"Styringstilstand",f_drive_delay:"Forsinkelse mellem persienner (sek.)",
   f_sun_protect:"Aktivér solbeskyttelse",f_elev_thresh:"Elevationstærskel (°)",
   f_light_entity:"Lampe/kontakt ved lukning (valgfrit)",f_light_brightness:"Lampe lysstyrke (%)",
-  f_time_up:"Tid Op",f_time_down:"Tid Ned",
+  f_time_up:"Hverdag op",f_time_down:"Hverdag ned",
+  f_time_we_up:"Weekend op",f_time_we_down:"Weekend ned",
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
+  sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
+  sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  sun_elevation:"Aktuel elevation",sun_offset:"Offset",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux op-tærskel",f_lux_down:"Lux ned-tærskel",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
@@ -247,8 +275,12 @@ sv:{
   f_name:"Namn",f_mode:"Styrläge",f_drive_delay:"Fördröjning mellan persienner (sek.)",
   f_sun_protect:"Aktivera solskydd",f_elev_thresh:"Elevationströskel (°)",
   f_light_entity:"Lampa/kontakt vid stängning (valfritt)",f_light_brightness:"Lampa ljusstyrka (%)",
-  f_time_up:"Tid Upp",f_time_down:"Tid Ner",
+  f_time_up:"Vardag upp",f_time_down:"Vardag ner",
+  f_time_we_up:"Helg upp",f_time_we_down:"Helg ner",
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
+  sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
+  sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  sun_elevation:"Aktuell elevation",sun_offset:"Offset",
   f_brightness_sensor:"Ljussensor",f_lux_up:"Lux upp-tröskel",f_lux_down:"Lux ner-tröskel",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
@@ -276,8 +308,12 @@ pl:{
   f_name:"Nazwa",f_mode:"Tryb sterowania",f_drive_delay:"Opóźnienie między roletami (sek.)",
   f_sun_protect:"Włącz osłonę słoneczną",f_elev_thresh:"Próg elewacji (°)",
   f_light_entity:"Lampa/przełącznik przy zamykaniu (opcjonalnie)",f_light_brightness:"Jasność lampy (%)",
-  f_time_up:"Czas W górę",f_time_down:"Czas W dół",
+  f_time_up:"Dzień roboczy w górę",f_time_down:"Dzień roboczy w dół",
+  f_time_we_up:"Weekend w górę",f_time_we_down:"Weekend w dół",
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
+  sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
+  sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  sun_elevation:"Aktualna elewacja",sun_offset:"Offset",
   f_brightness_sensor:"Czujnik jasności",f_lux_up:"Próg lux w górę",f_lux_down:"Próg lux w dół",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
@@ -305,8 +341,12 @@ pt:{
   f_name:"Nome",f_mode:"Modo de controlo",f_drive_delay:"Atraso entre estores (seg.)",
   f_sun_protect:"Ativar proteção solar",f_elev_thresh:"Limiar de elevação (°)",
   f_light_entity:"Luz/interruptor ao fechar (opcional)",f_light_brightness:"Luminosidade da luz (%)",
-  f_time_up:"Hora Subir",f_time_down:"Hora Descer",
+  f_time_up:"Semana subir",f_time_down:"Semana descer",
+  f_time_we_up:"Fim-de-semana subir",f_time_we_down:"Fim-de-semana descer",
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
+  sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
+  sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  sun_elevation:"Elevação atual",sun_offset:"Offset",
   f_brightness_sensor:"Sensor de luminosidade",f_lux_up:"Limiar lux subir",f_lux_down:"Limiar lux descer",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
@@ -334,8 +374,12 @@ nb:{
   f_name:"Navn",f_mode:"Styringsmodus",f_drive_delay:"Forsinkelse mellom persienner (sek.)",
   f_sun_protect:"Aktiver solbeskyttelse",f_elev_thresh:"Elevasjonsterskel (°)",
   f_light_entity:"Lampe/bryter ved lukking (valgfritt)",f_light_brightness:"Lampe lysstyrke (%)",
-  f_time_up:"Tid Opp",f_time_down:"Tid Ned",
+  f_time_up:"Hverdag opp",f_time_down:"Hverdag ned",
+  f_time_we_up:"Helg opp",f_time_we_down:"Helg ned",
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
+  sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
+  sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  sun_elevation:"Gjeldende elevasjon",sun_offset:"Offset",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux opp-terskel",f_lux_down:"Lux ned-terskel",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
@@ -401,6 +445,10 @@ class ShutterPilotPanel extends LitElement {
     .form-actions{display:flex;gap:8px;margin-top:16px}
     .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
     .chip.time{background:#1565c0;color:#fff} .chip.brightness{background:#f57f17;color:#fff} .chip.sun{background:#e65100;color:#fff}
+    .sun-info{margin:12px 0 4px;padding:10px 12px;background:rgba(255,152,0,.08);border-radius:8px;border-left:3px solid #ff9800}
+    .sun-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--txt);flex-wrap:wrap}
+    .sun-row ha-icon{--mdc-icon-size:18px;color:#ff9800;flex-shrink:0}
+    .sun-off{font-size:12px;color:var(--txt2)}
   `;}
 
   constructor(){super();this._tab="dashboard";this._data=null;this._editArea=null;this._editShutter=null;}
@@ -444,6 +492,7 @@ class ShutterPilotPanel extends LitElement {
         <div class="info"><h2>${name}</h2><span>${this._modeName(mode)} · ${sh.length} ${this.t("shutter_s")}</span></div></div>
       <div class="auto-row"><span class="lbl">${this.t("auto")}</span>
         <ha-switch .checked=${autoOn} @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
+      ${mode==="sun"?this._renderSunInfo(area,d):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           return html`<div class="srow"><span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
@@ -454,12 +503,38 @@ class ShutterPilotPanel extends LitElement {
         <button class="btn sun" @click=${()=>this._coverAction(sh,"sun")}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${this.t("btn_sun")}</button>
       </div></div>`;
   }
+  _renderSunInfo(area,d){
+    const sun=d.sun||{};
+    const offUp=parseInt(area.sunrise_offset)||0;
+    const offDown=parseInt(area.sunset_offset)||0;
+    const fmtTime=(iso,offsetMin)=>{
+      if(!iso)return "–";
+      try{const dt=new Date(iso);dt.setMinutes(dt.getMinutes()+offsetMin);return dt.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(e){return "–";}
+    };
+    const fmtRaw=(iso)=>{
+      if(!iso)return "–";
+      try{return new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(e){return "–";}
+    };
+    const elev=sun.elevation!=null?sun.elevation.toFixed(1)+"°":"–";
+    return html`<div class="sun-info">
+      <div class="sun-row"><ha-icon icon="mdi:weather-sunset-up"></ha-icon>
+        <span>${this.t("sun_next_rise")}: <b>${fmtRaw(sun.next_rising)}</b></span>
+        ${offUp?html`<span class="sun-off">(${this.t("sun_offset")}: ${offUp>0?"+":""}${offUp} min → ${this.t("sun_trigger_up")} <b>${fmtTime(sun.next_rising,offUp)}</b>)</span>`:
+          html`<span class="sun-off">(${this.t("sun_trigger_up")} <b>${fmtRaw(sun.next_rising)}</b>)</span>`}</div>
+      <div class="sun-row"><ha-icon icon="mdi:weather-sunset-down"></ha-icon>
+        <span>${this.t("sun_next_set")}: <b>${fmtRaw(sun.next_setting)}</b></span>
+        ${offDown?html`<span class="sun-off">(${this.t("sun_offset")}: ${offDown>0?"+":""}${offDown} min → ${this.t("sun_trigger_down")} <b>${fmtTime(sun.next_setting,offDown)}</b>)</span>`:
+          html`<span class="sun-off">(${this.t("sun_trigger_down")} <b>${fmtRaw(sun.next_setting)}</b>)</span>`}</div>
+      <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
+        <span>${this.t("sun_elevation")}: <b>${elev}</b></span></div>
+    </div>`;
+  }
 
   /* ─── Areas Tab ─── */
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_threshold:4,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_threshold:4,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:html`
       <div class="card"><table>
         <tr><th>${this.t("col_name")}</th><th>${this.t("col_id")}</th><th>${this.t("col_mode")}</th><th>${this.t("col_shutters")}</th><th></th></tr>
@@ -493,7 +568,7 @@ class ShutterPilotPanel extends LitElement {
       ${a.sun_protect_enabled?f("elevation_threshold",T("f_elev_thresh"),"number"):""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${f("down_light_brightness",T("f_light_brightness"),"number")}
-      ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}`:
+      ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
         m==="sun"?html`${f("sunrise_offset",T("f_sunrise_off"),"number")}${f("sunset_offset",T("f_sunset_off"),"number")}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"])}${f("lux_up",T("f_lux_up"),"number")}${f("lux_down",T("f_lux_down"),"number")}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}

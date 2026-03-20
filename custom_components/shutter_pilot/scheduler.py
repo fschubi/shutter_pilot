@@ -23,6 +23,8 @@ from .const import (
     AREA_MODE_SUN,
     CONF_AREA_TIME_UP,
     CONF_AREA_TIME_DOWN,
+    CONF_AREA_TIME_WE_UP,
+    CONF_AREA_TIME_WE_DOWN,
     CONF_AREA_SUNRISE_OFFSET,
     CONF_AREA_SUNSET_OFFSET,
     CONF_AREA_DRIVE_DELAY,
@@ -131,11 +133,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
             await asyncio.sleep(delay)
 
-    def _run_up(area: dict) -> None:
+    def _run_up(area: dict, trigger: str = "scheduler") -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
         if not is_auto_enabled(hass, entry, area):
+            _LOGGER.info("[%s] area=%s: auto disabled – skipping UP", trigger, area_id)
             return
         filtered = filter_shutters_by_area(shutters, area_id, use_up=True)
         # Rollläden weglassen, die in dieser Phase schon automatisch hochgefahren wurden.
@@ -153,11 +156,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
         hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
 
-    def _run_down(area: dict) -> None:
+    def _run_down(area: dict, trigger: str = "scheduler") -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
         if not is_auto_enabled(hass, entry, area):
+            _LOGGER.info("[%s] area=%s: auto disabled – skipping DOWN", trigger, area_id)
             return
         filtered = filter_shutters_by_area(shutters, area_id, use_up=False)
         # Rollläden weglassen, die in dieser Phase schon automatisch runtergefahren wurden.
@@ -183,6 +187,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _scheduler_tick(now: datetime) -> None:
         today = now.date()
         t = now.time()
+        is_weekend = now.weekday() >= 5  # 5=Saturday, 6=Sunday
         for area in areas:
             if not isinstance(area, dict):
                 continue
@@ -191,18 +196,24 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             area_id = str(area.get(CONF_AREA_ID) or "")
             if not area_id:
                 continue
-            up_t = _parse_time(area.get(CONF_AREA_TIME_UP, "07:00"))
-            down_t = _parse_time(area.get(CONF_AREA_TIME_DOWN, "19:00"))
+            if is_weekend:
+                up_t = _parse_time(area.get(CONF_AREA_TIME_WE_UP) or area.get(CONF_AREA_TIME_UP, "07:00"))
+                down_t = _parse_time(area.get(CONF_AREA_TIME_WE_DOWN) or area.get(CONF_AREA_TIME_DOWN, "19:00"))
+            else:
+                up_t = _parse_time(area.get(CONF_AREA_TIME_UP, "07:00"))
+                down_t = _parse_time(area.get(CONF_AREA_TIME_DOWN, "19:00"))
             if t >= up_t:
                 key_up = f"up_{area_id}"
                 if fired_today.get(key_up) != today:
                     fired_today[key_up] = today
-                    _run_up(area)
+                    _LOGGER.info("[time-scheduler] area=%s: time_up=%s reached – triggering UP", area_id, up_t)
+                    _run_up(area, trigger="time-scheduler")
             if t >= down_t:
                 key_down = f"down_{area_id}"
                 if fired_today.get(key_down) != today:
                     fired_today[key_down] = today
-                    _run_down(area)
+                    _LOGGER.info("[time-scheduler] area=%s: time_down=%s reached – triggering DOWN", area_id, down_t)
+                    _run_down(area, trigger="time-scheduler")
 
     u1 = async_track_time_change(
         hass, _scheduler_tick, hour="*", minute="*", second=0
@@ -212,15 +223,19 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     # Sunrise/Sunset: use HA's built-in trackers
     def _make_sunrise_cb(area: dict):
+        a_id = str(area.get(CONF_AREA_ID) or "")
         @callback
         def _cb(event_time):
-            _run_up(area)
+            _LOGGER.info("[sun-scheduler] area=%s: sunrise event – triggering UP", a_id)
+            _run_up(area, trigger="sun-scheduler")
         return _cb
 
     def _make_sunset_cb(area: dict):
+        a_id = str(area.get(CONF_AREA_ID) or "")
         @callback
         def _cb(event_time):
-            _run_down(area)
+            _LOGGER.info("[sun-scheduler] area=%s: sunset event – triggering DOWN", a_id)
+            _run_down(area, trigger="sun-scheduler")
         return _cb
 
     for area in areas:
@@ -262,15 +277,15 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     continue
                 if current_elev > 0:
                     _LOGGER.info(
-                        "Scheduler sun initial: area=%s elev=%.1f > 0 → run_up",
+                        "[sun-initial] area=%s elev=%.1f > 0 → run_up",
                         area_id, current_elev,
                     )
-                    _run_up(area)
+                    _run_up(area, trigger="sun-initial")
                 else:
                     _LOGGER.info(
-                        "Scheduler sun initial: area=%s elev=%.1f <= 0 → run_down",
+                        "[sun-initial] area=%s elev=%.1f <= 0 → run_down",
                         area_id, current_elev,
                     )
-                    _run_down(area)
+                    _run_down(area, trigger="sun-initial")
 
     _LOGGER.info("Scheduler: %d Rollläden, Bereiche=%d", len(shutters), len(areas))
