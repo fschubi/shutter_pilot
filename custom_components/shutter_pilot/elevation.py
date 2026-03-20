@@ -16,33 +16,17 @@ from .const import (
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_AREA_ELEVATION_THRESHOLD,
     DEFAULT_AREA_ELEVATION_THRESHOLD,
-    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_AREA_DOWN_ID,
     CONF_POSITION_SUN_PROTECT,
     CONF_DRIVE_AFTER_CLOSE,
 )
+from .helpers import is_auto_enabled, set_cover_position
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
-    area_id = str(area.get(CONF_AREA_ID) or "")
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
-    if isinstance(auto_modes, dict) and area_id in auto_modes:
-        return bool(auto_modes.get(area_id))
-
-    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
-    if not entity_id:
-        return True
-    state = hass.states.get(entity_id)
-    if not state:
-        return True
-    return str(state.state).lower() in ("on", "true", "1")
 
 
 async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -103,7 +87,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             area_id = str(area.get(CONF_AREA_ID) or "").strip()
             if not area_id:
                 continue
-            if not _is_auto_enabled(hass, entry, area):
+            if not is_auto_enabled(hass, entry, area):
                 continue
 
             raw_threshold = area.get(
@@ -142,7 +126,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                         continue
                     pos = get_effective_close_position(hass, shutter, pos)
                     hass.async_create_task(
-                        _set_cover_position(
+                        set_cover_position(
                             hass, cover_entity, pos, "Elevation down"
                         )
                     )
@@ -188,17 +172,3 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 )
 
     _LOGGER.debug("Elevation listener: per-area sun protection enabled")
-
-
-async def _set_cover_position(
-    hass: HomeAssistant, entity_id: str, position: float, reason: str
-) -> None:
-    try:
-        await hass.services.async_call(
-            "cover", "set_cover_position",
-            {"entity_id": entity_id, "position": position},
-            blocking=True,
-        )
-        _LOGGER.debug("%s: %s -> %d%%", reason, entity_id, int(position))
-    except Exception as e:
-        _LOGGER.warning("Failed %s %s: %s", reason, entity_id, e)

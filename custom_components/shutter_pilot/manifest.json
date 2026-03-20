@@ -4,6 +4,7 @@
   "codeowners": ["@fschubi"],
   "config_flow": true,
   "documentation": "https://github.com/fschubi/shutter_pilot",
+  "homeassistant": "2024.1.0",
   "integration_type": "service",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/fschubi/shutter_pilot/issues",
@@ -11,5 +12,5 @@
   "loggers": [
     "custom_components.shutter_pilot"
   ],
-  "version": "1.5.20"
+  "version": "2.0.0"
 }

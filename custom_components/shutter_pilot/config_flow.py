@@ -348,7 +348,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                         area_ids.append(aid)
         shutters = opts.get(CONF_SHUTTERS, [])
         shutter_count = len(shutters) if isinstance(shutters, list) else 0
-        _LOGGER.warning(
+        _LOGGER.info(
             "Shutter Pilot OptionsFlow DONE persisting: areas=%s shutters=%d",
             area_ids,
             shutter_count,
@@ -526,7 +526,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas.append(area)
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Shutter Pilot OptionsFlow add_area updated: areas=%d last_id=%s",
                 len(areas),
                 str(area.get(CONF_AREA_ID) or ""),
@@ -561,7 +561,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
                         s[CONF_AREA_DOWN_ID] = fallback_id
                 new_opts = {**self._opts(), CONF_AREAS: areas, CONF_SHUTTERS: shutters}
                 self._set_opts(new_opts)
-                _LOGGER.warning(
+                _LOGGER.info(
                     "Shutter Pilot OptionsFlow remove area updated: areas=%d shutters=%d",
                     len(areas),
                     len(shutters),
@@ -633,7 +633,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             areas[idx] = area
             new_opts = {**self._opts(), CONF_AREAS: areas}
             self._set_opts(new_opts)
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Shutter Pilot OptionsFlow edit_area updated: areas=%d id=%s",
                 len(areas),
                 str(area.get(CONF_AREA_ID) or ""),
@@ -704,7 +704,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters.append(shutter_cfg)
             new_options = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_options)
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Shutter Pilot OptionsFlow add_shutter updated: shutters=%d",
                 len(shutters),
             )
@@ -829,7 +829,7 @@ class ShutterPilotOptionsFlow(config_entries.OptionsFlow):
             shutters[idx] = shutter_cfg
             new_opts = {**self._opts(), CONF_SHUTTERS: shutters}
             self._set_opts(new_opts)
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Shutter Pilot OptionsFlow edit_shutter_form updated: shutters=%d",
                 len(shutters),
             )

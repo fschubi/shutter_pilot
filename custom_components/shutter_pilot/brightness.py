@@ -32,7 +32,6 @@ from .const import (
     CONF_AREA_WE_DOWN_TO,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
-    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_AREA_UP_ID,
@@ -41,31 +40,16 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_DRIVE_AFTER_CLOSE,
 )
+from .helpers import is_auto_enabled, set_cover_position
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
-from .scheduler import _parse_time  # reuse robust parser
+from .scheduler import _parse_time
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def _is_weekend(d: datetime) -> bool:
     return d.weekday() in (5, 6)
-
-
-def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
-    area_id = str(area.get(CONF_AREA_ID) or "")
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
-    if isinstance(auto_modes, dict) and area_id in auto_modes:
-        return bool(auto_modes.get(area_id))
-
-    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
-    if not entity_id:
-        return True
-    state = hass.states.get(entity_id)
-    if not state:
-        return True
-    return str(state.state).lower() in ("on", "true", "1")
 
 
 def _area_window(area: dict, now: datetime, direction: str) -> bool:
@@ -136,7 +120,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     ) -> None:
         if delay > 0 and index > 0:
             await asyncio.sleep(delay * index)
-        await _set_cover_position(hass, entity_id, position, reason)
+        await set_cover_position(hass, entity_id, position, reason)
 
     def _process_brightness(entity_id: str, new_state) -> None:
         """Evaluate brightness for a sensor state (used by listener AND initial check)."""
@@ -157,7 +141,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             area_id = str(area.get(CONF_AREA_ID) or "").strip()
             if not area_id:
                 continue
-            if not _is_auto_enabled(hass, entry, area):
+            if not is_auto_enabled(hass, entry, area):
                 _LOGGER.debug("Brightness: area %s auto disabled, skip", area_id)
                 continue
 
@@ -299,17 +283,3 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 sensor_id, current_state.state,
             )
             _process_brightness(sensor_id, current_state)
-
-
-async def _set_cover_position(
-    hass: HomeAssistant, entity_id: str, position: float, reason: str
-) -> None:
-    try:
-        await hass.services.async_call(
-            "cover", "set_cover_position",
-            {"entity_id": entity_id, "position": position},
-            blocking=True,
-        )
-        _LOGGER.debug("%s: Set %s to %d%%", reason, entity_id, int(position))
-    except Exception as e:
-        _LOGGER.warning("Failed to set %s: %s", entity_id, e)

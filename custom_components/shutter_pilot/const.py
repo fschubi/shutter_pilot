@@ -4,8 +4,6 @@ DOMAIN = "shutter_pilot"
 
 # Config entry keys
 CONF_SHUTTERS = "shutters"
-CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
 
 # Areas (dynamic groups)
 CONF_AREAS = "areas"
@@ -21,7 +19,6 @@ AREA_MODES = [AREA_MODE_TIME, AREA_MODE_BRIGHTNESS, AREA_MODE_SUN]
 # Per-area common settings
 CONF_AREA_DRIVE_DELAY = "drive_delay"  # seconds between shutters in this area
 DEFAULT_AREA_DRIVE_DELAY = 10
-DEFAULT_AREA_DRIVE_DELAY = DEFAULT_AREA_DRIVE_DELAY  # backwards-compatible alias
 
 # Per-area automation enable (optional switch entity id created by integration)
 CONF_AREA_AUTO_ENTITY_ID = "auto_entity_id"

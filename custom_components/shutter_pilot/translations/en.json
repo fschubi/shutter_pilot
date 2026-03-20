@@ -293,32 +293,32 @@
   },
   "services": {
     "open_group": {
-      "name": "Open group",
-      "description": "Opens all shutters of the selected group.",
+      "name": "Open area",
+      "description": "Opens all shutters of the selected area.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     },
     "close_group": {
-      "name": "Close group",
-      "description": "Closes all shutters of the selected group.",
+      "name": "Close area",
+      "description": "Closes all shutters of the selected area.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     },
     "sun_protect_group": {
-      "name": "Sun protection group",
-      "description": "Drives all shutters of the group to sun protection position.",
+      "name": "Sun protection area",
+      "description": "Drives all shutters of the area to sun protection position.",
       "fields": {
-        "group": {
-          "name": "Group",
-          "description": "living, sleep, children or all"
+        "area_id": {
+          "name": "Area ID",
+          "description": "The area id (e.g. living, bedroom, kitchen)"
         }
       }
     }

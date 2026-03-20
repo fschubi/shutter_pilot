@@ -27,15 +27,13 @@ from .const import (
     CONF_AREA_SUNSET_OFFSET,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
-    CONF_AREA_AUTO_ENTITY_ID,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_AREA_UP_ID,
-    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
     CONF_DRIVE_AFTER_CLOSE,
 )
+from .helpers import is_auto_enabled, filter_shutters_by_area
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
 
@@ -51,28 +49,6 @@ def _parse_time(tstr: str) -> time:
     except (ValueError, IndexError):
         pass
     return time(6, 0)
-
-
-def _is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
-    """True if automation is enabled for this area. No entity = enabled."""
-    area_id = str(area.get(CONF_AREA_ID) or "")
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    auto_modes = data.get("auto_modes", {}) if isinstance(data, dict) else {}
-    if isinstance(auto_modes, dict) and area_id in auto_modes:
-        return bool(auto_modes.get(area_id))
-
-    entity_id = str(area.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
-    if not entity_id:
-        return True
-    state = hass.states.get(entity_id)
-    if not state:
-        return True
-    return str(state.state).lower() in ("on", "true", "1")
-
-
-def _filter_by_area(shutters_list: list, area_id: str, use_up: bool) -> list:
-    key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
-    return [s for s in shutters_list if str(s.get(key) or "").strip() == area_id]
 
 
 async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -159,9 +135,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
-        if not _is_auto_enabled(hass, entry, area):
+        if not is_auto_enabled(hass, entry, area):
             return
-        filtered = _filter_by_area(shutters, area_id, use_up=True)
+        filtered = filter_shutters_by_area(shutters, area_id, use_up=True)
         # Rollläden weglassen, die in dieser Phase schon automatisch hochgefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
@@ -181,9 +157,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
-        if not _is_auto_enabled(hass, entry, area):
+        if not is_auto_enabled(hass, entry, area):
             return
-        filtered = _filter_by_area(shutters, area_id, use_up=False)
+        filtered = filter_shutters_by_area(shutters, area_id, use_up=False)
         # Rollläden weglassen, die in dieser Phase schon automatisch runtergefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:

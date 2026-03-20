@@ -8,7 +8,6 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers import entity_registry as er
 
 from .const import (
     DOMAIN,
@@ -22,6 +21,7 @@ from .const import (
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
 )
+from .helpers import set_cover_position
 from .window_helper import get_window_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 trigger_actions[cover_entity] = "triggered"
                 reason = "Window tilted" if window_state == "tilted" else "Window opened"
                 hass.async_create_task(
-                    _set_cover_position(hass, cover_entity, target_pos, reason)
+                    set_cover_position(hass, cover_entity, target_pos, reason)
                 )
             elif window_state == "closed":
                 # Window closed -> restore saved position OR execute drive_after_close
@@ -124,7 +124,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     target_pos = pending_entry.get("position", pos_closed)
                     reason = pending_entry.get("reason", "Drive after close")
                     hass.async_create_task(
-                        _set_cover_position(
+                        set_cover_position(
                             hass, cover_entity, target_pos, reason
                         )
                     )
@@ -137,7 +137,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     if restore_pos is None:
                         restore_pos = last_positions.get(cover_entity, pos_closed)
                     hass.async_create_task(
-                        _set_cover_position(
+                        set_cover_position(
                             hass, cover_entity, restore_pos, "Window closed – restore"
                         )
                     )
@@ -149,19 +149,3 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         if unsub:
             data["_window_unsubs"].append(unsub)
         _LOGGER.debug("Tracking window %s for shutter trigger", window_id)
-
-
-async def _set_cover_position(
-    hass: HomeAssistant, entity_id: str, position: float, reason: str
-) -> None:
-    """Set cover position via service call."""
-    try:
-        await hass.services.async_call(
-            "cover",
-            "set_cover_position",
-            {"entity_id": entity_id, "position": position},
-            blocking=True,
-        )
-        _LOGGER.info("%s: Set %s to %d%%", reason, entity_id, int(position))
-    except Exception as e:
-        _LOGGER.warning("Failed to set %s: %s", entity_id, e)

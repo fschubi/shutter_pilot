@@ -13,8 +13,6 @@ from .const import (
     DOMAIN,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_AREA_UP_ID,
-    CONF_AREA_DOWN_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
     CONF_POSITION_SUN_PROTECT,
@@ -23,6 +21,7 @@ from .const import (
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
 )
+from .helpers import filter_shutters_by_area
 from .window_helper import get_effective_close_position
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,11 +33,6 @@ SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 SERVICE_SCHEMA = vol.Schema(
     {vol.Required("area_id"): str}
 )
-
-
-def _filter_shutters(shutters: list, area_id: str, use_up: bool) -> list:
-    key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
-    return [s for s in shutters if str(s.get(key) or "").strip() == area_id]
 
 
 async def _drive_group(
@@ -101,7 +95,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, area_id, use_up=True)
+        shutters = filter_shutters_by_area(shutters, area_id, use_up=True)
         await _drive_group(
             hass, shutters, 100, f"open_group({area_id})", _delay_for_area(area_id)
         )
@@ -117,7 +111,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, area_id, use_up=False)
+        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
         await _drive_group(
             hass, shutters, 0, f"close_group({area_id})", _delay_for_area(area_id),
             apply_lock_protection=True,
@@ -134,7 +128,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = _filter_shutters(shutters, area_id, use_up=False)
+        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
         # Use first shutter's sun protect position or default 50
         pos = 50
         if shutters:
