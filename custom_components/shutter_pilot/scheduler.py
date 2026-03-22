@@ -8,11 +8,7 @@ from datetime import datetime, time, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import (
-    async_track_sunrise,
-    async_track_sunset,
-    async_track_time_change,
-)
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -224,11 +220,80 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if setup_time >= down_t:
             fired_today[f"down_{area_id}"] = setup_today
 
+    fired_sun_up: dict[str, object] = data.setdefault("_sun_fired_up", {})
+    fired_sun_down: dict[str, object] = data.setdefault("_sun_fired_down", {})
+
+    def _sun_minute_tick(now: datetime) -> None:
+        """Sun mode: drive by computed trigger times every minute.
+
+        We do *not* rely on async_track_sunrise/sunset alone: after the astronomical
+        sunrise, HA's next_rising points at tomorrow, so offset triggers for *today*
+        are often never scheduled. A periodic check matches time/brightness reliability.
+        """
+        sun_state = hass.states.get("sun.sun")
+        if not sun_state:
+            _LOGGER.warning("Sun mode: sun.sun not available, skipping sun tick")
+            return
+        attrs = sun_state.attributes or {}
+        next_rising = dt_util.parse_datetime(attrs.get("next_rising"))
+        next_setting = dt_util.parse_datetime(attrs.get("next_setting"))
+        now_local = dt_util.as_local(now)
+        today = now_local.date()
+        today_sr = _infer_today_sun_time(next_rising, now_local)
+        today_ss = _infer_today_sun_time(next_setting, now_local)
+        if today_sr is None or today_ss is None:
+            return
+
+        for area in areas:
+            if not isinstance(area, dict):
+                continue
+            if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
+                continue
+            area_id = str(area.get(CONF_AREA_ID) or "")
+            if not area_id:
+                continue
+            try:
+                off_up = int(area.get(CONF_AREA_SUNRISE_OFFSET, 0) or 0)
+                off_down = int(area.get(CONF_AREA_SUNSET_OFFSET, 0) or 0)
+            except (TypeError, ValueError):
+                off_up, off_down = 0, 0
+            trigger_up = today_sr + timedelta(minutes=off_up)
+            trigger_down = today_ss + timedelta(minutes=off_down)
+
+            # UP once per day: after sunrise+offset, before sunset+offset (day window)
+            if fired_sun_up.get(area_id) != today:
+                if trigger_up <= now_local < trigger_down and is_auto_enabled(
+                    hass, entry, area
+                ):
+                    fired_sun_up[area_id] = today
+                    _LOGGER.info(
+                        "[sun-minute] area=%s: UP window (trigger=%s) – running UP",
+                        area_id,
+                        trigger_up.isoformat(),
+                    )
+                    _run_up(area, trigger="sun-minute")
+
+            # DOWN once per day: after sunset+offset on that calendar day
+            if fired_sun_down.get(area_id) != today:
+                if (
+                    trigger_down.date() == today
+                    and now_local >= trigger_down
+                    and is_auto_enabled(hass, entry, area)
+                ):
+                    fired_sun_down[area_id] = today
+                    _LOGGER.info(
+                        "[sun-minute] area=%s: DOWN (trigger=%s) – running DOWN",
+                        area_id,
+                        trigger_down.isoformat(),
+                    )
+                    _run_down(area, trigger="sun-minute")
+
     @callback
     def _scheduler_tick(now: datetime) -> None:
-        today = now.date()
-        t = now.time()
-        is_weekend = now.weekday() >= 5  # 5=Saturday, 6=Sunday
+        now_local = dt_util.as_local(now)
+        today = now_local.date()
+        t = now_local.time()
+        is_weekend = now_local.weekday() >= 5  # 5=Saturday, 6=Sunday
         for area in areas:
             if not isinstance(area, dict):
                 continue
@@ -256,135 +321,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     _LOGGER.info("[time-scheduler] area=%s: time_down=%s reached – triggering DOWN", area_id, down_t)
                     _run_down(area, trigger="time-scheduler")
 
+        _sun_minute_tick(now)
+
     u1 = async_track_time_change(
         hass, _scheduler_tick, hour="*", minute="*", second=0
     )
     if u1:
         data["_scheduler_unsubs"].append(u1)
-
-    # Sunrise/Sunset: use HA's built-in trackers
-    fired_sun_up: dict[str, object] = data.setdefault("_sun_fired_up", {})
-    fired_sun_down: dict[str, object] = data.setdefault("_sun_fired_down", {})
-
-    def _make_sunrise_cb(area: dict):
-        a_id = str(area.get(CONF_AREA_ID) or "")
-
-        @callback
-        def _cb(event_time):
-            today = dt_util.now().date()
-            if fired_sun_up.get(a_id) == today:
-                _LOGGER.debug(
-                    "[sun-scheduler] area=%s: UP already handled today, skip duplicate",
-                    a_id,
-                )
-                return
-            fired_sun_up[a_id] = today
-            _LOGGER.info("[sun-scheduler] area=%s: sunrise event – triggering UP", a_id)
-            _run_up(area, trigger="sun-scheduler")
-
-        return _cb
-
-    def _make_sunset_cb(area: dict):
-        a_id = str(area.get(CONF_AREA_ID) or "")
-
-        @callback
-        def _cb(event_time):
-            today = dt_util.now().date()
-            if fired_sun_down.get(a_id) == today:
-                _LOGGER.debug(
-                    "[sun-scheduler] area=%s: DOWN already handled today, skip duplicate",
-                    a_id,
-                )
-                return
-            fired_sun_down[a_id] = today
-            _LOGGER.info("[sun-scheduler] area=%s: sunset event – triggering DOWN", a_id)
-            _run_down(area, trigger="sun-scheduler")
-
-        return _cb
-
-    for area in areas:
-        if not isinstance(area, dict):
-            continue
-        if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
-            continue
-        area_id = str(area.get(CONF_AREA_ID) or "")
-        if not area_id:
-            continue
-        off_up = area.get(CONF_AREA_SUNRISE_OFFSET, 0) or 0
-        off_down = area.get(CONF_AREA_SUNSET_OFFSET, 0) or 0
-        offset_up = timedelta(minutes=int(off_up))
-        offset_down = timedelta(minutes=int(off_down))
-        unsub_up = async_track_sunrise(hass, _make_sunrise_cb(area), offset=offset_up)
-        if unsub_up:
-            data["_scheduler_unsubs"].append(unsub_up)
-        unsub_down = async_track_sunset(hass, _make_sunset_cb(area), offset=offset_down)
-        if unsub_down:
-            data["_scheduler_unsubs"].append(unsub_down)
-
-    @callback
-    def _sun_offset_catchup(_now: datetime | None = None) -> None:
-        """If HA reloaded after sunrise, async_track_sunrise only fires *next* sunrise.
-
-        That misses today's (sunrise + offset) trigger. Catch up once while it still
-        makes sense (day window), without moving covers at night restarts.
-        """
-        sun_state = hass.states.get("sun.sun")
-        if not sun_state:
-            return
-        attrs = sun_state.attributes or {}
-        next_rising = dt_util.parse_datetime(attrs.get("next_rising"))
-        next_setting = dt_util.parse_datetime(attrs.get("next_setting"))
-        now = dt_util.now()
-        today = now.date()
-        today_sr = _infer_today_sun_time(next_rising, now)
-        today_ss = _infer_today_sun_time(next_setting, now)
-        if today_sr is None or today_ss is None:
-            _LOGGER.debug("Sun catch-up: could not infer today's sunrise/sunset, skip")
-            return
-
-        for area in areas:
-            if not isinstance(area, dict):
-                continue
-            if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
-                continue
-            area_id = str(area.get(CONF_AREA_ID) or "")
-            if not area_id:
-                continue
-            try:
-                off_up = int(area.get(CONF_AREA_SUNRISE_OFFSET, 0) or 0)
-                off_down = int(area.get(CONF_AREA_SUNSET_OFFSET, 0) or 0)
-            except (TypeError, ValueError):
-                off_up, off_down = 0, 0
-            trigger_up = today_sr + timedelta(minutes=off_up)
-            trigger_down = today_ss + timedelta(minutes=off_down)
-
-            # UP: missed today's sunrise+offset while still before today's sunset+offset
-            if fired_sun_up.get(area_id) != today:
-                if trigger_up <= now < trigger_down and is_auto_enabled(hass, entry, area):
-                    _LOGGER.info(
-                        "[sun-catchup] area=%s: missed sunrise+offset (trigger=%s) – running UP",
-                        area_id,
-                        trigger_up.isoformat(),
-                    )
-                    fired_sun_up[area_id] = today
-                    _run_up(area, trigger="sun-catchup")
-
-            # DOWN: missed today's sunset+offset on the same calendar day
-            if fired_sun_down.get(area_id) != today:
-                if trigger_down.date() == today and now >= trigger_down and is_auto_enabled(
-                    hass, entry, area
-                ):
-                    _LOGGER.info(
-                        "[sun-catchup] area=%s: missed sunset+offset (trigger=%s) – running DOWN",
-                        area_id,
-                        trigger_down.isoformat(),
-                    )
-                    fired_sun_down[area_id] = today
-                    _run_down(area, trigger="sun-catchup")
-
-    # Defer one second so sun.sun attributes are stable after reload
-    cancel_catchup = hass.async_call_later(1, _sun_offset_catchup)
-    if cancel_catchup:
-        data["_scheduler_unsubs"].append(cancel_catchup)
 
     _LOGGER.info("Scheduler: %d Rollläden, Bereiche=%d", len(shutters), len(areas))
