@@ -40,6 +40,10 @@ de:{
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
   sun_elevation:"Aktuelle Elevation",sun_offset:"Offset",
+  dash_shutter_role_up:"Nur Hochfahren über diesen Bereich",
+  dash_shutter_role_down:"Nur Runterfahren über diesen Bereich",
+  dash_shutter_role_both:"Hoch- und Runterfahren über diesen Bereich",
+  dash_current_lux:"Aktuell",
   f_brightness_sensor:"Helligkeitssensor",f_lux_up:"Lux Hoch-Schwelle",f_lux_down:"Lux Runter-Schwelle",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
@@ -82,6 +86,10 @@ en:{
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
   sun_elevation:"Current elevation",sun_offset:"Offset",
+  dash_shutter_role_up:"Up drives only via this area",
+  dash_shutter_role_down:"Down drives only via this area",
+  dash_shutter_role_both:"Up and down drives via this area",
+  dash_current_lux:"Current",
   f_brightness_sensor:"Brightness sensor",f_lux_up:"Lux up threshold",f_lux_down:"Lux down threshold",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
@@ -118,6 +126,10 @@ fr:{
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
   sun_elevation:"Élévation actuelle",sun_offset:"Décalage",
+  dash_shutter_role_up:"Montée seulement via cette zone",
+  dash_shutter_role_down:"Descente seulement via cette zone",
+  dash_shutter_role_both:"Montée et descente via cette zone",
+  dash_current_lux:"Actuel",
   f_brightness_sensor:"Capteur luminosité",f_lux_up:"Seuil lux montée",f_lux_down:"Seuil lux descente",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
@@ -150,6 +162,10 @@ es:{
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
   sun_elevation:"Elevación actual",sun_offset:"Desfase",
+  dash_shutter_role_up:"Solo subida por esta zona",
+  dash_shutter_role_down:"Solo bajada por esta zona",
+  dash_shutter_role_both:"Subida y bajada por esta zona",
+  dash_current_lux:"Actual",
   f_brightness_sensor:"Sensor brillo",f_lux_up:"Umbral lux subida",f_lux_down:"Umbral lux bajada",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
@@ -182,6 +198,10 @@ it:{
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
   sun_elevation:"Elevazione attuale",sun_offset:"Offset",
+  dash_shutter_role_up:"Solo apertura da questa zona",
+  dash_shutter_role_down:"Solo chiusura da questa zona",
+  dash_shutter_role_both:"Apertura e chiusura da questa zona",
+  dash_current_lux:"Attuale",
   f_brightness_sensor:"Sensore luminosità",f_lux_up:"Soglia lux apertura",f_lux_down:"Soglia lux chiusura",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
@@ -215,6 +235,10 @@ nl:{
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
   sun_elevation:"Huidige elevatie",sun_offset:"Offset",
+  dash_shutter_role_up:"Alleen omhoog via deze zone",
+  dash_shutter_role_down:"Alleen omlaag via deze zone",
+  dash_shutter_role_both:"Omhoog en omlaag via deze zone",
+  dash_current_lux:"Huidig",
   f_brightness_sensor:"Helderheidssensor",f_lux_up:"Lux omhoog drempel",f_lux_down:"Lux omlaag drempel",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
@@ -248,6 +272,10 @@ da:{
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
   sun_elevation:"Aktuel elevation",sun_offset:"Offset",
+  dash_shutter_role_up:"Kun op via dette område",
+  dash_shutter_role_down:"Kun ned via dette område",
+  dash_shutter_role_both:"Op og ned via dette område",
+  dash_current_lux:"Aktuel",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux op-tærskel",f_lux_down:"Lux ned-tærskel",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
@@ -281,6 +309,10 @@ sv:{
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
   sun_elevation:"Aktuell elevation",sun_offset:"Offset",
+  dash_shutter_role_up:"Endast upp via detta område",
+  dash_shutter_role_down:"Endast ner via detta område",
+  dash_shutter_role_both:"Upp och ner via detta område",
+  dash_current_lux:"Aktuell",
   f_brightness_sensor:"Ljussensor",f_lux_up:"Lux upp-tröskel",f_lux_down:"Lux ner-tröskel",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
@@ -314,6 +346,10 @@ pl:{
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
   sun_elevation:"Aktualna elewacja",sun_offset:"Offset",
+  dash_shutter_role_up:"Tylko w górę przez tę strefę",
+  dash_shutter_role_down:"Tylko w dół przez tę strefę",
+  dash_shutter_role_both:"W górę i w dół przez tę strefę",
+  dash_current_lux:"Aktualnie",
   f_brightness_sensor:"Czujnik jasności",f_lux_up:"Próg lux w górę",f_lux_down:"Próg lux w dół",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
@@ -347,6 +383,10 @@ pt:{
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
   sun_elevation:"Elevação atual",sun_offset:"Offset",
+  dash_shutter_role_up:"Só subir por esta zona",
+  dash_shutter_role_down:"Só descer por esta zona",
+  dash_shutter_role_both:"Subir e descer por esta zona",
+  dash_current_lux:"Atual",
   f_brightness_sensor:"Sensor de luminosidade",f_lux_up:"Limiar lux subir",f_lux_down:"Limiar lux descer",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
@@ -380,6 +420,10 @@ nb:{
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
   sun_elevation:"Gjeldende elevasjon",sun_offset:"Offset",
+  dash_shutter_role_up:"Bare opp via dette området",
+  dash_shutter_role_down:"Bare ned via dette området",
+  dash_shutter_role_both:"Opp og ned via dette området",
+  dash_current_lux:"Nå",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux opp-terskel",f_lux_down:"Lux ned-terskel",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
@@ -415,7 +459,10 @@ class ShutterPilotPanel extends LitElement {
     .auto-row .lbl{font-size:14px;color:var(--txt)}
     .srow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider)}
     .srow:last-child{border-bottom:none}
-    .srow .nm{font-size:14px;color:var(--txt);flex:1}
+    .srow .nm-wrap{display:flex;align-items:center;min-width:0;flex:1;gap:0}
+    .srow .role-icons{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0}
+    .srow .role-icons ha-icon{--mdc-icon-size:18px;color:var(--sp)}
+    .srow .nm{font-size:14px;color:var(--txt);flex:1;min-width:0}
     .srow .pos{font-size:13px;color:var(--txt2);min-width:50px;text-align:right}
     .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
     .btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;transition:opacity .2s;display:inline-flex;align-items:center;gap:6px}
@@ -462,6 +509,29 @@ class ShutterPilotPanel extends LitElement {
   t(k){return(I18N[this._lang]||I18N.en)[k]||k;}
   _modeName(m){return this.t("mode_"+m)||m;}
 
+  /** Aktuellen Lux-Wert aus HA-Status lesen (State oder attributes.illuminance). */
+  _readLux(hass,entityId){
+    if(!entityId||!hass?.states?.[entityId])return null;
+    const st=hass.states[entityId];
+    const raw=String(st.state??"");
+    if(raw==="unavailable"||raw==="unknown")return null;
+    const n=parseFloat(raw.replace(",","."));
+    if(Number.isFinite(n))return n;
+    const ill=st.attributes?.illuminance;
+    if(ill!=null&&Number.isFinite(Number(ill)))return Number(ill);
+    return null;
+  }
+
+  /** Pfeil(e) je nach Zuordnung Hoch/Runter für diesen Bereich. */
+  _dashShutterRole(s,areaId){
+    const up=(s.area_up_id||"")===areaId;
+    const down=(s.area_down_id||"")===areaId;
+    if(up&&down)return html`<span class="role-icons" title="${this.t("dash_shutter_role_both")}"><ha-icon icon="mdi:arrow-up-down-bold"></ha-icon></span>`;
+    if(up)return html`<span class="role-icons" title="${this.t("dash_shutter_role_up")}"><ha-icon icon="mdi:arrow-up-bold"></ha-icon></span>`;
+    if(down)return html`<span class="role-icons" title="${this.t("dash_shutter_role_down")}"><ha-icon icon="mdi:arrow-down-bold"></ha-icon></span>`;
+    return html``;
+  }
+
   async _load(){if(!this.hass)return;try{this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});}catch(e){console.warn("SP load",e);}}
   _entities(domains){if(!this.hass?.states)return[];return Object.keys(this.hass.states).filter(e=>domains.some(d=>e.startsWith(d+"."))).sort();}
 
@@ -500,7 +570,7 @@ class ShutterPilotPanel extends LitElement {
       ${mode==="brightness"?this._renderBrightnessInfo(area):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
-          return html`<div class="srow"><span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
+          return html`<div class="srow"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span></span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
       <div class="actions">
         <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
@@ -557,6 +627,9 @@ class ShutterPilotPanel extends LitElement {
   _renderBrightnessInfo(area){
     const luxDown=Number.isFinite(Number(area.lux_down))?Number(area.lux_down):400;
     const luxUp=Number.isFinite(Number(area.lux_up))?Number(area.lux_up):500;
+    const sensorId=(area.brightness_sensor||"").trim();
+    const luxNow=this._readLux(this.hass,sensorId);
+    const sensorLabel=sensorId?(this.hass?.states?.[sensorId]?.attributes?.friendly_name||sensorId):"";
     const wUpFrom=area.w_up_from||"05:00";
     const wUpTo=area.w_up_to||"09:00";
     const wDownFrom=area.w_down_from||"16:00";
@@ -566,6 +639,8 @@ class ShutterPilotPanel extends LitElement {
     const weDownFrom=area.we_down_from||"16:00";
     const weDownTo=area.we_down_to||"23:59";
     return html`<div class="brightness-info">
+      <div class="sun-row"><ha-icon icon="mdi:brightness-6"></ha-icon>
+        <span>${this.t("dash_current_lux")}: <b>${luxNow!=null?`${luxNow.toFixed(1)} lx`:"–"}</b>${sensorId?html`<span class="sun-off"> · ${sensorLabel}</span>`:""}</span></div>
       <div class="sun-row"><ha-icon icon="mdi:weather-sunny-alert"></ha-icon>
         <span>${this.t("f_lux_down")}: <b>${luxDown} lx</b> · ${this.t("f_lux_up")}: <b>${luxUp} lx</b></span></div>
       <div class="sun-row"><ha-icon icon="mdi:calendar-week"></ha-icon>
