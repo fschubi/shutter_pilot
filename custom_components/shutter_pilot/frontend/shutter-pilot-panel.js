@@ -784,4 +784,6 @@ class ShutterPilotPanel extends LitElement {
     try{await this.hass.callWS({type:"shutter_pilot/delete_shutter",index:idx});await this._load();}catch(e){console.warn(e);}
   }
 }
-customElements.define("shutter-pilot-panel",ShutterPilotPanel);
+if(!customElements.get("shutter-pilot-panel")){
+  customElements.define("shutter-pilot-panel",ShutterPilotPanel);
+}

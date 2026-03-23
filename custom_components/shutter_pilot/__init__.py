@@ -41,6 +41,7 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 PANEL_URL = "/shutter_pilot_panel"
+PANEL_ASSET_VERSION = "2.0.21"
 PANEL_ICON = "mdi:window-shutter-settings"
 PANEL_TITLE = "Shutter Pilot"
 
@@ -210,7 +211,7 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
             "name": "shutter-pilot-panel",
             "embed_iframe": False,
             "trust_external": False,
-            "js_url": PANEL_URL,
+            "js_url": f"{PANEL_URL}?v={PANEL_ASSET_VERSION}",
         }},
     )
     _LOGGER.debug("Shutter Pilot sidebar panel registered")
