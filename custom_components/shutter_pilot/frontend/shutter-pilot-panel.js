@@ -439,7 +439,7 @@ nb:{
 };
 
 class ShutterPilotPanel extends LitElement {
-  static get properties(){return{hass:{type:Object},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
+  static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333)}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
@@ -559,17 +559,20 @@ class ShutterPilotPanel extends LitElement {
     if(!entityId||!hass?.states?.[entityId])return null;
     const st=hass.states[entityId];
     const raw=String(st.state??"").trim();
-    if(raw==="unavailable"||raw==="unknown")return null;
-    const n=this._numFromLuxString(raw);
-    if(Number.isFinite(n))return n;
+    const stateUnset=raw==="unavailable"||raw==="unknown"||raw==="none";
+    if(!stateUnset){
+      const n=this._numFromLuxString(raw);
+      if(Number.isFinite(n))return n;
+    }
     const a=st.attributes||{};
-    const direct=[a.illuminance,a.light_level,a.lux,a.brightness,a.value];
+    const direct=[a.illuminance,a.light_level,a.lux,a.brightness,a.value,a.current];
     for(const c of direct){
       if(c!=null&&Number.isFinite(Number(c)))return Number(c);
       if(c!=null){const x=this._numFromLuxString(String(c));if(Number.isFinite(x))return x;}
     }
     for(const k of Object.keys(a)){
-      if(!/illumin|lux|light|helligkeit|brightness/i.test(k))continue;
+      if(!/illumin|lux|light|helligkeit|brightness|lx\b/i.test(k))continue;
+      if(k==="unit_of_measurement"||k==="friendly_name"||k==="device_class")continue;
       const v=a[k];
       if(v!=null&&Number.isFinite(Number(v)))return Number(v);
       if(v!=null){const x=this._numFromLuxString(String(v));if(Number.isFinite(x))return x;}
@@ -702,9 +705,10 @@ class ShutterPilotPanel extends LitElement {
     const weUpTo=area.we_up_to||"10:00";
     const weDownFrom=area.we_down_from||"16:00";
     const weDownTo=area.we_down_to||"23:59";
+    const luxDisp=luxNow!=null&&!Number.isNaN(luxNow)?`${Number(luxNow).toFixed(1)} lx`:"–";
     return html`<div class="brightness-info">
       <div class="sun-row"><ha-icon icon="mdi:brightness-6"></ha-icon>
-        <span>${this.t("dash_current_lux")}: <b>${luxNow!=null?`${luxNow.toFixed(1)} lx`:"–"}</b>${rawRef?html`<span class="sun-off"> · ${sensorLabel}</span>`:""}</span></div>
+        <span>${this.t("dash_current_lux")}: <b>${luxDisp}</b>${rawRef?html`<span class="sun-off"> · ${sensorLabel}</span>`:""}</span></div>
       <div class="sun-row"><ha-icon icon="mdi:weather-sunny-alert"></ha-icon>
         <span>${this.t("f_lux_down")}: <b>${luxDown} lx</b> · ${this.t("f_lux_up")}: <b>${luxUp} lx</b></span></div>
       <div class="sun-row"><ha-icon icon="mdi:calendar-week"></ha-icon>
