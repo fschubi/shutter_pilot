@@ -221,12 +221,15 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
         sidebar_icon=PANEL_ICON,
         frontend_url_path="shutter-pilot",
         require_admin=False,
-        config={"_panel_custom": {
-            "name": "shutter-pilot-panel",
-            "embed_iframe": False,
-            "trust_external": False,
-            "js_url": f"{PANEL_URL}?v={PANEL_ASSET_VERSION}",
-        }},
+        config={
+            "shutter_pilot_version": PANEL_ASSET_VERSION,
+            "_panel_custom": {
+                "name": "shutter-pilot-panel",
+                "embed_iframe": False,
+                "trust_external": False,
+                "js_url": f"{PANEL_URL}?v={PANEL_ASSET_VERSION}",
+            },
+        },
     )
     _LOGGER.debug("Shutter Pilot sidebar panel registered")
 

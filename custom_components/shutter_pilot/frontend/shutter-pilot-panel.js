@@ -443,13 +443,10 @@ class ShutterPilotPanel extends LitElement {
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333)}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+    .title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;row-gap:4px}
     .topbar h1{margin:0;font-size:24px;font-weight:500;color:var(--txt)}
     .topbar .sub{font-size:14px;color:var(--txt2)}
-    .sp-portrait-easter{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:help;user-select:none;-webkit-user-select:none}
-    .sp-portrait-frame{width:52px;height:60px;border:3px solid #4caf50;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--card-bg);box-shadow:0 2px 10px rgba(76,175,80,.22)}
-    .sp-portrait-frame ha-icon{--mdc-icon-size:34px;color:#4caf50}
-    .sp-portrait-ver{font-size:12px;font-weight:600;letter-spacing:.02em;color:#4caf50;opacity:0;transform:translateY(-4px);max-height:0;overflow:hidden;transition:opacity .25s ease,max-height .25s ease,transform .25s ease}
-    .sp-portrait-easter:hover .sp-portrait-ver,.sp-portrait-easter:focus-within .sp-portrait-ver{opacity:1;transform:translateY(0);max-height:28px}
+    .sp-ver-badge{font-size:13px;font-weight:600;color:#4caf50;flex-shrink:0;padding:3px 10px;border-radius:10px;border:2px solid #4caf50;background:rgba(76,175,80,.12);line-height:1.2}
     .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s}
     .tab:hover{color:var(--txt)}
@@ -514,16 +511,69 @@ class ShutterPilotPanel extends LitElement {
   t(k){return(I18N[this._lang]||I18N.en)[k]||k;}
   _modeName(m){return this.t("mode_"+m)||m;}
 
-  /** Aktuellen Lux-Wert aus HA-Status lesen (State oder attributes.illuminance). */
+  /** Versionsnummer aus ?v= der geladenen Panel-URL (funktioniert auch wenn get_status noch keine version liefert). */
+  _panelAssetVersionFromScript(){
+    try{
+      for(const s of document.querySelectorAll("script[src]")){
+        const src=s.getAttribute("src")||"";
+        if(!src.includes("shutter_pilot"))continue;
+        const u=new URL(src,window.location.href);
+        const v=u.searchParams.get("v");
+        if(v)return String(v).trim();
+      }
+    }catch(e){/* ignore */}
+    return "";
+  }
+
+  _integrationVersion(){
+    const d=this._data;
+    if(d?.version!=null&&String(d.version).trim()!=="")return String(d.version).trim();
+    const pc=this.panel?.config?.shutter_pilot_version;
+    if(pc!=null&&String(pc).trim()!=="")return String(pc).trim();
+    return this._panelAssetVersionFromScript();
+  }
+
+  /** Sensorentität: zuerst entity_id, sonst Suche nach friendly_name (z. B. „Lichtstärke Garten“). */
+  _resolveBrightnessSensorEntity(hass,ref){
+    const r=String(ref||"").trim();
+    if(!r||!hass?.states)return"";
+    if(hass.states[r])return r;
+    const norm=(s)=>{try{return String(s).toLowerCase().normalize("NFKC");}catch(_){return String(s).toLowerCase();}};
+    const lower=norm(r);
+    for(const eid of Object.keys(hass.states)){
+      if(!eid.startsWith("sensor.")&&!eid.startsWith("number."))continue;
+      const fn=norm(hass.states[eid].attributes?.friendly_name||"");
+      if(fn&&fn===lower)return eid;
+    }
+    return r;
+  }
+
+  _numFromLuxString(s){
+    const m=String(s).replace(",",".").trim().match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/i);
+    if(!m)return NaN;
+    return parseFloat(m[0]);
+  }
+
+  /** Lux aus State (inkl. Einheiten im String) oder typischen Attributen. */
   _readLux(hass,entityId){
     if(!entityId||!hass?.states?.[entityId])return null;
     const st=hass.states[entityId];
-    const raw=String(st.state??"");
+    const raw=String(st.state??"").trim();
     if(raw==="unavailable"||raw==="unknown")return null;
-    const n=parseFloat(raw.replace(",","."));
+    const n=this._numFromLuxString(raw);
     if(Number.isFinite(n))return n;
-    const ill=st.attributes?.illuminance;
-    if(ill!=null&&Number.isFinite(Number(ill)))return Number(ill);
+    const a=st.attributes||{};
+    const direct=[a.illuminance,a.light_level,a.lux,a.brightness,a.value];
+    for(const c of direct){
+      if(c!=null&&Number.isFinite(Number(c)))return Number(c);
+      if(c!=null){const x=this._numFromLuxString(String(c));if(Number.isFinite(x))return x;}
+    }
+    for(const k of Object.keys(a)){
+      if(!/illumin|lux|light|helligkeit|brightness/i.test(k))continue;
+      const v=a[k];
+      if(v!=null&&Number.isFinite(Number(v)))return Number(v);
+      if(v!=null){const x=this._numFromLuxString(String(v));if(Number.isFinite(x))return x;}
+    }
     return null;
   }
 
@@ -542,16 +592,16 @@ class ShutterPilotPanel extends LitElement {
 
   render(){
     const d=this._data;const T=k=>this.t(k);
-    const ver=d?.version?String(d.version):"";
+    const verRaw=this._integrationVersion();
+    const ver=verRaw?verRaw:"";
     return html`
-      <div class="topbar"><div><h1>Shutter Pilot</h1>
-        ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}</div>
-        ${ver?html`
-          <div class="sp-portrait-easter" tabindex="0" title="Shutter Pilot v${ver}">
-            <div class="sp-portrait-frame" aria-hidden="true"><ha-icon icon="mdi:robot-happy"></ha-icon></div>
-            <span class="sp-portrait-ver" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>
-          </div>`:""}
-      </div>
+      <div class="topbar"><div>
+        <div class="title-row">
+          <h1>Shutter Pilot</h1>
+          ${ver?html`<span class="sp-ver-badge" title="Shutter Pilot v${ver}" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>`:""}
+        </div>
+        ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}
+      </div></div>
       <div class="tabs">
         ${["dashboard","areas","shutters"].map(t=>html`
           <div class="tab ${this._tab===t?"active":""}" @click=${()=>{this._tab=t;this._editArea=null;this._editShutter=null;this.requestUpdate();}}>
@@ -639,9 +689,11 @@ class ShutterPilotPanel extends LitElement {
   _renderBrightnessInfo(area){
     const luxDown=Number.isFinite(Number(area.lux_down))?Number(area.lux_down):400;
     const luxUp=Number.isFinite(Number(area.lux_up))?Number(area.lux_up):500;
-    const sensorId=(area.brightness_sensor||"").trim();
+    const rawRef=(area.brightness_sensor||"").trim();
+    const sensorId=this._resolveBrightnessSensorEntity(this.hass,rawRef);
     const luxNow=this._readLux(this.hass,sensorId);
-    const sensorLabel=sensorId?(this.hass?.states?.[sensorId]?.attributes?.friendly_name||sensorId):"";
+    const st=sensorId&&this.hass?.states?.[sensorId];
+    const sensorLabel=rawRef?(st?.attributes?.friendly_name||sensorId||rawRef):"";
     const wUpFrom=area.w_up_from||"05:00";
     const wUpTo=area.w_up_to||"09:00";
     const wDownFrom=area.w_down_from||"16:00";
@@ -652,7 +704,7 @@ class ShutterPilotPanel extends LitElement {
     const weDownTo=area.we_down_to||"23:59";
     return html`<div class="brightness-info">
       <div class="sun-row"><ha-icon icon="mdi:brightness-6"></ha-icon>
-        <span>${this.t("dash_current_lux")}: <b>${luxNow!=null?`${luxNow.toFixed(1)} lx`:"–"}</b>${sensorId?html`<span class="sun-off"> · ${sensorLabel}</span>`:""}</span></div>
+        <span>${this.t("dash_current_lux")}: <b>${luxNow!=null?`${luxNow.toFixed(1)} lx`:"–"}</b>${rawRef?html`<span class="sun-off"> · ${sensorLabel}</span>`:""}</span></div>
       <div class="sun-row"><ha-icon icon="mdi:weather-sunny-alert"></ha-icon>
         <span>${this.t("f_lux_down")}: <b>${luxDown} lx</b> · ${this.t("f_lux_up")}: <b>${luxUp} lx</b></span></div>
       <div class="sun-row"><ha-icon icon="mdi:calendar-week"></ha-icon>
