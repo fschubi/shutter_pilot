@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 from typing import Any
@@ -41,7 +42,20 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 PANEL_URL = "/shutter_pilot_panel"
-PANEL_ASSET_VERSION = "2.0.21"
+
+
+def _read_manifest_version() -> str:
+    """Integration version from manifest.json (single source of truth)."""
+    try:
+        manifest_path = os.path.join(os.path.dirname(__file__), "manifest.json")
+        with open(manifest_path, encoding="utf-8") as f:
+            v = json.load(f).get("version")
+            return str(v).strip() if v else "0.0.0"
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        return "0.0.0"
+
+
+PANEL_ASSET_VERSION = _read_manifest_version()
 PANEL_ICON = "mdi:window-shutter-settings"
 PANEL_TITLE = "Shutter Pilot"
 
@@ -266,7 +280,10 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     """Return full areas, shutters, and auto-mode states for the panel."""
     entry, data = _find_entry_data(hass)
     if not entry or not data:
-        connection.send_result(msg["id"], {"areas": [], "shutters": [], "auto_modes": {}})
+        connection.send_result(
+            msg["id"],
+            {"areas": [], "shutters": [], "auto_modes": {}, "version": PANEL_ASSET_VERSION},
+        )
         return
 
     raw_areas = entry.options.get(CONF_AREAS, [])
@@ -300,6 +317,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
         "shutters": shutters_out,
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
         "sun": sun_info,
+        "version": PANEL_ASSET_VERSION,
     })
 
 

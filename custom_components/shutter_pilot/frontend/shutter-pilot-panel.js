@@ -442,9 +442,14 @@ class ShutterPilotPanel extends LitElement {
   static get properties(){return{hass:{type:Object},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333)}
-    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+    .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     .topbar h1{margin:0;font-size:24px;font-weight:500;color:var(--txt)}
     .topbar .sub{font-size:14px;color:var(--txt2)}
+    .sp-portrait-easter{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:help;user-select:none;-webkit-user-select:none}
+    .sp-portrait-frame{width:52px;height:60px;border:3px solid #4caf50;border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--card-bg);box-shadow:0 2px 10px rgba(76,175,80,.22)}
+    .sp-portrait-frame ha-icon{--mdc-icon-size:34px;color:#4caf50}
+    .sp-portrait-ver{font-size:12px;font-weight:600;letter-spacing:.02em;color:#4caf50;opacity:0;transform:translateY(-4px);max-height:0;overflow:hidden;transition:opacity .25s ease,max-height .25s ease,transform .25s ease}
+    .sp-portrait-easter:hover .sp-portrait-ver,.sp-portrait-easter:focus-within .sp-portrait-ver{opacity:1;transform:translateY(0);max-height:28px}
     .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s}
     .tab:hover{color:var(--txt)}
@@ -537,9 +542,16 @@ class ShutterPilotPanel extends LitElement {
 
   render(){
     const d=this._data;const T=k=>this.t(k);
+    const ver=d?.version?String(d.version):"";
     return html`
       <div class="topbar"><div><h1>Shutter Pilot</h1>
-        ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}</div></div>
+        ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}</div>
+        ${ver?html`
+          <div class="sp-portrait-easter" tabindex="0" title="Shutter Pilot v${ver}">
+            <div class="sp-portrait-frame" aria-hidden="true"><ha-icon icon="mdi:robot-happy"></ha-icon></div>
+            <span class="sp-portrait-ver" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>
+          </div>`:""}
+      </div>
       <div class="tabs">
         ${["dashboard","areas","shutters"].map(t=>html`
           <div class="tab ${this._tab===t?"active":""}" @click=${()=>{this._tab=t;this._editArea=null;this._editShutter=null;this.requestUpdate();}}>
