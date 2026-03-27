@@ -26,6 +26,30 @@ from .window_helper import get_window_state
 
 _LOGGER = logging.getLogger(__name__)
 
+_CLOSED_TOLERANCE_PCT = 8.0
+
+
+def _get_cover_current_position(hass: HomeAssistant, cover_entity: str) -> float | None:
+    """Return current_position (0..100) if available, else None."""
+    try:
+        cover_state = hass.states.get(cover_entity)
+        attrs = (cover_state.attributes or {}) if cover_state else {}
+        cur = attrs.get("current_position")
+        if cur is None:
+            return None
+        return float(cur)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool:
+    """True if cover is close enough to its configured closed position."""
+    try:
+        pos_closed = float(shutter.get(CONF_POSITION_CLOSED, 0))
+    except (TypeError, ValueError):
+        pos_closed = 0.0
+    return current_position <= (pos_closed + _CLOSED_TOLERANCE_PCT)
+
 
 def _get_target_position_for_window_state(
     shutter: dict, state_str: str
@@ -102,13 +126,17 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             target_pos = _get_target_position_for_window_state(shutter, window_state)
 
             if window_state in ("open", "tilted") and target_pos is not None:
-                # Window open or tilted -> drive to target (100 or 50)
-                try:
-                    cover_state = hass.states.get(cover_entity)
-                    attrs = (cover_state.attributes or {}) if cover_state else {}
-                    saved = float(attrs.get("current_position", pos_closed))
-                except (TypeError, ValueError):
-                    saved = pos_closed
+                # Window open or tilted -> only drive to target if the cover is (nearly) closed.
+                # Rationale: During daytime (cover already opened by automation), opening a window/door
+                # must NOT force the cover into a "ventilation" position.
+                current_pos = _get_cover_current_position(hass, cover_entity)
+                if current_pos is None:
+                    # Fail-safe: if we can't read current position, do nothing.
+                    continue
+                if not _is_cover_effectively_closed(shutter, current_pos):
+                    continue
+
+                saved = current_pos
                 trigger_heights[cover_entity] = saved
                 trigger_actions[cover_entity] = "triggered"
                 reason = "Window tilted" if window_state == "tilted" else "Window opened"
