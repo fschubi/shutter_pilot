@@ -132,8 +132,14 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 current_pos = _get_cover_current_position(hass, cover_entity)
                 if current_pos is None:
                     # Fail-safe: if we can't read current position, do nothing.
+                    trigger_actions.pop(cover_entity, None)
+                    trigger_heights.pop(cover_entity, None)
                     continue
                 if not _is_cover_effectively_closed(shutter, current_pos):
+                    # Not in "closed" state -> no window-trigger cycle active.
+                    # Clear stale cycle markers so a later "closed" event cannot restore/close.
+                    trigger_actions.pop(cover_entity, None)
+                    trigger_heights.pop(cover_entity, None)
                     continue
 
                 saved = current_pos
@@ -161,14 +167,18 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                         cover_entity, int(target_pos),
                     )
                 else:
-                    restore_pos = trigger_heights.get(cover_entity)
-                    if restore_pos is None:
-                        restore_pos = last_positions.get(cover_entity, pos_closed)
-                    hass.async_create_task(
-                        set_cover_position(
-                            hass, cover_entity, restore_pos, "Window closed – restore"
+                    # Restore only if this window cycle actually triggered a movement.
+                    if trigger_actions.get(cover_entity) == "triggered":
+                        restore_pos = trigger_heights.get(cover_entity)
+                        if restore_pos is None:
+                            restore_pos = last_positions.get(cover_entity, pos_closed)
+                        hass.async_create_task(
+                            set_cover_position(
+                                hass, cover_entity, restore_pos, "Window closed – restore"
+                            )
                         )
-                    )
+                    trigger_actions.pop(cover_entity, None)
+                    trigger_heights.pop(cover_entity, None)
 
     for window_id in window_to_shutters:
         unsub = async_track_state_change_event(
