@@ -40,7 +40,11 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_DRIVE_AFTER_CLOSE,
 )
-from .helpers import is_auto_enabled, set_cover_position
+from .helpers import (
+    clear_stale_window_cycle_after_automated_up,
+    is_auto_enabled,
+    set_cover_position,
+)
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
 from .scheduler import _parse_time
@@ -244,6 +248,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     idx += 1
                     covers_driven_up.add(cover_entity)
                     covers_driven_down.discard(cover_entity)
+                    clear_stale_window_cycle_after_automated_up(data, cover_entity)
                     handled_up = True
 
                 if handled_up:

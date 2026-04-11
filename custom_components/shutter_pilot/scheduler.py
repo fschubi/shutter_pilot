@@ -32,7 +32,11 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_DRIVE_AFTER_CLOSE,
 )
-from .helpers import is_auto_enabled, filter_shutters_by_area
+from .helpers import (
+    clear_stale_window_cycle_after_automated_up,
+    filter_shutters_by_area,
+    is_auto_enabled,
+)
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
 
@@ -135,6 +139,7 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 if default_position >= 50:
                     covers_driven_up.add(cover)
                     covers_driven_down.discard(cover)
+                    clear_stale_window_cycle_after_automated_up(data, cover)
                 else:
                     covers_driven_down.add(cover)
                     covers_driven_up.discard(cover)

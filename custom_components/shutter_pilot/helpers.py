@@ -55,6 +55,27 @@ def filter_shutters_by_area(shutters: list, area_id: str, use_up: bool) -> list:
     return [s for s in shutters if str(s.get(key) or "").strip() == area_id]
 
 
+def clear_stale_window_cycle_after_automated_up(
+    data: dict[str, Any], cover_entity_id: str
+) -> None:
+    """Drop window open/tilt restore state after automation opened the cover (day phase).
+
+    Without this, closing the window later would restore trigger_heights from before
+    tilt (often closed) or run a stale drive_after_close_pending down movement.
+    """
+    if not cover_entity_id:
+        return
+    ta = data.get("trigger_actions")
+    if isinstance(ta, dict):
+        ta.pop(cover_entity_id, None)
+    th = data.get("trigger_heights")
+    if isinstance(th, dict):
+        th.pop(cover_entity_id, None)
+    pending = data.get("drive_after_close_pending")
+    if isinstance(pending, dict):
+        pending.pop(cover_entity_id, None)
+
+
 async def set_cover_position(
     hass: HomeAssistant, entity_id: str, position: float, reason: str
 ) -> None:
