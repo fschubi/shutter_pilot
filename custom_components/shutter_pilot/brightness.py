@@ -44,6 +44,8 @@ from .helpers import (
     clear_stale_window_cycle_after_automated_up,
     is_auto_enabled,
     set_cover_position,
+    should_skip_full_open_preserving_sun_protect,
+    sun_protect_area_ids_from_options,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
@@ -113,6 +115,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             type(shutters),
         )
         shutters = []
+
+    raw_areas_opts = entry.options.get(CONF_AREAS, [])
+    if not isinstance(raw_areas_opts, list):
+        raw_areas_opts = []
+    sun_protect_area_ids = sun_protect_area_ids_from_options(raw_areas_opts)
 
     async def _set_cover_position_with_delay(
         hass: HomeAssistant,
@@ -232,6 +239,18 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         continue
                     if cover_entity in covers_driven_up:
                         _LOGGER.debug("Brightness up: %s already driven up, skip", cover_entity)
+                        continue
+                    if should_skip_full_open_preserving_sun_protect(
+                        hass, shutter, sun_protect_area_ids
+                    ):
+                        _LOGGER.info(
+                            "Brightness up: %s bleibt auf Sonnenschutz-Zwischenposition (kein Nachholen-UP nach Start)",
+                            cover_entity,
+                        )
+                        covers_driven_up.add(cover_entity)
+                        covers_driven_down.discard(cover_entity)
+                        clear_stale_window_cycle_after_automated_up(data, cover_entity)
+                        handled_up = True
                         continue
                     pos = shutter.get(CONF_POSITION_OPEN, 100)
                     _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)

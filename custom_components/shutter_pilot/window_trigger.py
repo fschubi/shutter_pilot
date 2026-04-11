@@ -21,25 +21,12 @@ from .const import (
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
 )
-from .helpers import set_cover_position
+from .helpers import get_cover_current_position, set_cover_position
 from .window_helper import get_window_state
 
 _LOGGER = logging.getLogger(__name__)
 
 _CLOSED_TOLERANCE_PCT = 8.0
-
-
-def _get_cover_current_position(hass: HomeAssistant, cover_entity: str) -> float | None:
-    """Return current_position (0..100) if available, else None."""
-    try:
-        cover_state = hass.states.get(cover_entity)
-        attrs = (cover_state.attributes or {}) if cover_state else {}
-        cur = attrs.get("current_position")
-        if cur is None:
-            return None
-        return float(cur)
-    except (TypeError, ValueError):
-        return None
 
 
 def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool:
@@ -129,7 +116,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 # Window open or tilted -> only drive to target if the cover is (nearly) closed.
                 # Rationale: During daytime (cover already opened by automation), opening a window/door
                 # must NOT force the cover into a "ventilation" position.
-                current_pos = _get_cover_current_position(hass, cover_entity)
+                current_pos = get_cover_current_position(hass, cover_entity)
                 if current_pos is None:
                     # Fail-safe: if we can't read current position, do nothing.
                     trigger_actions.pop(cover_entity, None)

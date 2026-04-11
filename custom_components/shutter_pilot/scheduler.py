@@ -36,6 +36,8 @@ from .helpers import (
     clear_stale_window_cycle_after_automated_up,
     filter_shutters_by_area,
     is_auto_enabled,
+    should_skip_full_open_preserving_sun_protect,
+    sun_protect_area_ids_from_options,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
@@ -96,6 +98,8 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not isinstance(areas, list):
         areas = []
 
+    sun_protect_area_ids = sun_protect_area_ids_from_options(areas)
+
     covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
     covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
 
@@ -131,22 +135,34 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             if apply_lock_protection:
                 eff_pos = get_effective_close_position(hass, shutter, position)
             try:
-                await hass.services.async_call(
-                    "cover", "set_cover_position",
-                    {"entity_id": cover, "position": eff_pos},
-                    blocking=True,
-                )
-                if default_position >= 50:
+                if default_position >= 50 and should_skip_full_open_preserving_sun_protect(
+                    hass, shutter, sun_protect_area_ids
+                ):
+                    _LOGGER.info(
+                        "%s: %s bleibt auf Sonnenschutz-Zwischenposition (kein Nachholen-UP nach Start)",
+                        direction,
+                        cover,
+                    )
                     covers_driven_up.add(cover)
                     covers_driven_down.discard(cover)
                     clear_stale_window_cycle_after_automated_up(data, cover)
                 else:
-                    covers_driven_down.add(cover)
-                    covers_driven_up.discard(cover)
-                if eff_pos != position:
-                    _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
-                else:
-                    _LOGGER.info("%s: %s -> %d%%", direction, cover, int(eff_pos))
+                    await hass.services.async_call(
+                        "cover", "set_cover_position",
+                        {"entity_id": cover, "position": eff_pos},
+                        blocking=True,
+                    )
+                    if default_position >= 50:
+                        covers_driven_up.add(cover)
+                        covers_driven_down.discard(cover)
+                        clear_stale_window_cycle_after_automated_up(data, cover)
+                    else:
+                        covers_driven_down.add(cover)
+                        covers_driven_up.discard(cover)
+                    if eff_pos != position:
+                        _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
+                    else:
+                        _LOGGER.info("%s: %s -> %d%%", direction, cover, int(eff_pos))
             except Exception as e:
                 _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
             await asyncio.sleep(delay)
@@ -227,6 +243,45 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     fired_sun_up: dict[str, object] = data.setdefault("_sun_fired_up", {})
     fired_sun_down: dict[str, object] = data.setdefault("_sun_fired_down", {})
+
+    # Sun mode: wie Zeit-Modus – bei Start/Reload kein sofortiges Nachholen-UP im Tagesfenster
+    # (sonst z. B. Sonnenschutz-Teilposition wieder auf „offen“ gezogen).
+    sun_setup_state = hass.states.get("sun.sun")
+    if sun_setup_state:
+        sun_attrs = sun_setup_state.attributes or {}
+        sun_next_rising = dt_util.parse_datetime(sun_attrs.get("next_rising"))
+        sun_next_setting = dt_util.parse_datetime(sun_attrs.get("next_setting"))
+        setup_local = dt_util.as_local(setup_now)
+        sr_today = _infer_today_sun_time(sun_next_rising, setup_local)
+        ss_today = _infer_today_sun_time(sun_next_setting, setup_local)
+        if sr_today is not None and ss_today is not None:
+            for sun_area in areas:
+                if not isinstance(sun_area, dict):
+                    continue
+                if str(sun_area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
+                    continue
+                sun_area_id = str(sun_area.get(CONF_AREA_ID) or "")
+                if not sun_area_id:
+                    continue
+                try:
+                    sun_off_up = int(sun_area.get(CONF_AREA_SUNRISE_OFFSET, 0) or 0)
+                    sun_off_down = int(sun_area.get(CONF_AREA_SUNSET_OFFSET, 0) or 0)
+                except (TypeError, ValueError):
+                    sun_off_up, sun_off_down = 0, 0
+                trig_up = sr_today + timedelta(minutes=sun_off_up)
+                trig_down = ss_today + timedelta(minutes=sun_off_down)
+                if trig_up <= setup_local < trig_down:
+                    fired_sun_up[sun_area_id] = setup_today
+                    _LOGGER.debug(
+                        "[sun-scheduler] area=%s: Start im Tagesfenster – UP für heute als erledigt markiert",
+                        sun_area_id,
+                    )
+                if trig_down.date() == setup_today and setup_local >= trig_down:
+                    fired_sun_down[sun_area_id] = setup_today
+                    _LOGGER.debug(
+                        "[sun-scheduler] area=%s: Start nach Sonnenuntergang – DOWN für heute als erledigt markiert",
+                        sun_area_id,
+                    )
 
     def _sun_minute_tick(now: datetime) -> None:
         """Sun mode: drive by computed trigger times every minute.
