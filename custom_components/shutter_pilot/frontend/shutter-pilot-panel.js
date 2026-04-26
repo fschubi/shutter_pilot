@@ -441,18 +441,19 @@ nb:{
 class ShutterPilotPanel extends LitElement {
   static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
   static get styles(){return css`
-    :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333)}
+    :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     .title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;row-gap:4px}
     .topbar h1{margin:0;font-size:24px;font-weight:500;color:var(--txt)}
     .topbar .sub{font-size:14px;color:var(--txt2)}
     .sp-ver-badge{font-size:13px;font-weight:600;color:#4caf50;flex-shrink:0;padding:3px 10px;border-radius:10px;border:2px solid #4caf50;background:rgba(76,175,80,.12);line-height:1.2}
-    .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px}
-    .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s}
+    .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+    .tabs::-webkit-scrollbar{height:6px}
+    .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s;flex:0 0 auto;scroll-snap-align:start}
     .tab:hover{color:var(--txt)}
     .tab.active{color:var(--sp);border-bottom-color:var(--sp)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
-    .card{background:var(--card-bg);border-radius:12px;padding:20px;box-shadow:var(--ha-card-box-shadow,0 2px 6px rgba(0,0,0,.15))}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:16px}
+    .card{background:var(--card-bg);border-radius:12px;padding:20px;box-shadow:var(--ha-card-box-shadow,0 2px 6px rgba(0,0,0,.15));min-width:0}
     .card-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px}
     .card-hdr .ic{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--sp);color:#fff;--mdc-icon-size:22px}
     .card-hdr .info h2{margin:0;font-size:18px;font-weight:500;color:var(--txt)}
@@ -475,10 +476,15 @@ class ShutterPilotPanel extends LitElement {
     .btn.edit{background:#607d8b;color:#fff} .btn.del{background:#e53935;color:#fff}
     .btn.cancel{background:var(--divider);color:var(--txt)} .btn.save{background:#4caf50;color:#fff}
     .empty{text-align:center;padding:48px 16px;color:var(--txt2)}
+    .table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
     table{width:100%;border-collapse:collapse;font-size:14px}
     th{text-align:left;padding:10px 8px;color:var(--txt2);font-weight:500;border-bottom:2px solid var(--divider)}
     td{padding:10px 8px;border-bottom:1px solid var(--divider);color:var(--txt)}
     tr:hover td{background:rgba(255,255,255,.03)}
+    .kv{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:6px 10px;font-size:13px;color:var(--txt)}
+    .kv .k{color:var(--txt2)}
+    .kv .v{min-width:0;word-break:break-word}
+    .row-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
     .form{background:var(--card-bg);border-radius:12px;padding:24px;margin-bottom:20px;max-width:600px}
     .form h3{margin:0 0 16px;font-size:18px;color:var(--txt)}
     .field{margin-bottom:14px}
@@ -501,6 +507,13 @@ class ShutterPilotPanel extends LitElement {
     .sun-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--txt);flex-wrap:wrap}
     .sun-row ha-icon{--mdc-icon-size:18px;color:#ff9800;flex-shrink:0}
     .sun-off{font-size:12px;color:var(--txt2)}
+
+    @media (max-width:420px){
+      :host{padding:12px}
+      .grid{grid-template-columns:1fr}
+      .card{padding:16px}
+      .tab{padding:10px 14px}
+    }
   `;}
 
   constructor(){super();this._tab="dashboard";this._data=null;this._editArea=null;this._editShutter=null;}
