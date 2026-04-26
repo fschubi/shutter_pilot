@@ -439,7 +439,7 @@ nb:{
 };
 
 class ShutterPilotPanel extends LitElement {
-  static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false}};}
+  static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
@@ -516,9 +516,49 @@ class ShutterPilotPanel extends LitElement {
     }
   `;}
 
-  constructor(){super();this._tab="dashboard";this._data=null;this._editArea=null;this._editShutter=null;}
-  connectedCallback(){super.connectedCallback?.();this._load();}
-  updated(c){if(c.has("hass")&&this.hass&&!this._data)this._load();}
+  constructor(){
+    super();
+    this._tab="dashboard";
+    this._data=null;
+    this._editArea=null;
+    this._editShutter=null;
+    this._isMobile=false;
+    this._mql=null;
+    this._mqlHandler=null;
+  }
+  connectedCallback(){
+    super.connectedCallback?.();
+    this._load();
+    try{
+      this._mql=window.matchMedia("(max-width: 600px)");
+      this._mqlHandler=()=>this._syncMobile();
+      if(this._mql?.addEventListener)this._mql.addEventListener("change",this._mqlHandler);
+      else if(this._mql?.addListener)this._mql.addListener(this._mqlHandler);
+    }catch(_){/* ignore */}
+    this._syncMobile();
+  }
+  disconnectedCallback(){
+    try{
+      if(this._mql&&this._mqlHandler){
+        if(this._mql.removeEventListener)this._mql.removeEventListener("change",this._mqlHandler);
+        else if(this._mql.removeListener)this._mql.removeListener(this._mqlHandler);
+      }
+    }catch(_){/* ignore */}
+    this._mql=null;
+    this._mqlHandler=null;
+    super.disconnectedCallback?.();
+  }
+  updated(c){
+    if(c.has("hass")&&this.hass&&!this._data)this._load();
+    if(c.has("narrow"))this._syncMobile();
+  }
+
+  _syncMobile(){
+    const byNarrow=!!this.narrow;
+    const byWidth=!!(this._mql&&this._mql.matches);
+    const next=byNarrow||byWidth;
+    if(next!==this._isMobile){this._isMobile=next;this.requestUpdate();}
+  }
 
   get _lang(){const l=(this.hass?.language||"en").substring(0,2);return I18N[l]?l:"en";}
   t(k){return(I18N[this._lang]||I18N.en)[k]||k;}
@@ -737,7 +777,7 @@ class ShutterPilotPanel extends LitElement {
     return html`
       <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_threshold:4,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:html`
-      <div class="card"><table>
+      <div class="card"><div class="table-wrap"><table>
         <tr><th>${this.t("col_name")}</th><th>${this.t("col_id")}</th><th>${this.t("col_mode")}</th><th>${this.t("col_shutters")}</th><th></th></tr>
         ${d.areas.map(a=>{const id=a.id||"";const cnt=d.shutters.filter(s=>s.area_up_id===id||s.area_down_id===id).length;
           return html`<tr>
@@ -747,7 +787,7 @@ class ShutterPilotPanel extends LitElement {
             <td style="text-align:right">
               <button class="btn edit" @click=${()=>{this._editArea={...a,_isNew:false};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
               <button class="btn del" @click=${()=>this._deleteArea(id)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
-      </table></div>`}`;
+      </table></div></div>`}`;
   }
   _renderAreaForm(){
     const a=this._editArea;const m=a.mode||"time";const T=k=>this.t(k);
@@ -788,19 +828,41 @@ class ShutterPilotPanel extends LitElement {
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
       <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
-      ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:html`
-      <div class="card"><table>
-        <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_up")}</th><th>${T("col_area_down")}</th><th>${T("col_window")}</th><th></th></tr>
-        ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
-          return html`<tr>
-            <td><strong>${s.name||"–"}</strong></td>
-            <td style="color:var(--txt2)">${st?.attributes?.friendly_name||s.cover_entity_id}</td>
-            <td>${areaName(s.area_up_id)}</td><td>${areaName(s.area_down_id)}</td>
-            <td>${s.window_entity_id||"–"}</td>
-            <td style="text-align:right">
-              <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
-              <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
-      </table></div>`}`;
+      ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
+        this._isMobile?html`
+          <div class="grid">
+            ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
+              const coverLabel=st?.attributes?.friendly_name||s.cover_entity_id||"–";
+              return html`<div class="card">
+                <div class="card-hdr">
+                  <div class="ic"><ha-icon icon="mdi:window-shutter"></ha-icon></div>
+                  <div class="info"><h2 style="margin:0;font-size:16px">${s.name||coverLabel}</h2><span style="font-size:12px">${coverLabel}</span></div>
+                </div>
+                <div class="kv">
+                  <div class="k">${T("col_area_up")}</div><div class="v">${areaName(s.area_up_id)||"–"}</div>
+                  <div class="k">${T("col_area_down")}</div><div class="v">${areaName(s.area_down_id)||"–"}</div>
+                  <div class="k">${T("col_window")}</div><div class="v">${s.window_entity_id||"–"}</div>
+                </div>
+                <div class="row-actions">
+                  <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button>
+                </div>
+              </div>`;})}
+          </div>
+        `:html`
+          <div class="card"><div class="table-wrap"><table>
+            <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_up")}</th><th>${T("col_area_down")}</th><th>${T("col_window")}</th><th></th></tr>
+            ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
+              return html`<tr>
+                <td><strong>${s.name||"–"}</strong></td>
+                <td style="color:var(--txt2)">${st?.attributes?.friendly_name||s.cover_entity_id}</td>
+                <td>${areaName(s.area_up_id)}</td><td>${areaName(s.area_down_id)}</td>
+                <td>${s.window_entity_id||"–"}</td>
+                <td style="text-align:right">
+                  <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
+          </table></div></div>
+        `}`;
   }
   _renderShutterForm(d){
     const s=this._editShutter;const areas=d.areas||[];const T=k=>this.t(k);
