@@ -776,18 +776,39 @@ class ShutterPilotPanel extends LitElement {
     if(this._editArea)return this._renderAreaForm(d);
     return html`
       <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_threshold:4,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
-      ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:html`
-      <div class="card"><div class="table-wrap"><table>
-        <tr><th>${this.t("col_name")}</th><th>${this.t("col_id")}</th><th>${this.t("col_mode")}</th><th>${this.t("col_shutters")}</th><th></th></tr>
-        ${d.areas.map(a=>{const id=a.id||"";const cnt=d.shutters.filter(s=>s.area_up_id===id||s.area_down_id===id).length;
-          return html`<tr>
-            <td><strong>${a.name||id}</strong></td><td style="color:var(--txt2)">${id}</td>
-            <td><span class="chip ${a.mode||"time"}">${this._modeName(a.mode)}</span></td>
-            <td>${cnt}</td>
-            <td style="text-align:right">
-              <button class="btn edit" @click=${()=>{this._editArea={...a,_isNew:false};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
-              <button class="btn del" @click=${()=>this._deleteArea(id)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
-      </table></div></div>`}`;
+      ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
+        this._isMobile?html`
+          <div class="grid">
+            ${d.areas.map(a=>{const id=a.id||"";const cnt=d.shutters.filter(s=>s.area_up_id===id||s.area_down_id===id).length;
+              const name=a.name||id||"–";
+              const mode=a.mode||"time";
+              return html`<div class="card">
+                <div class="card-hdr">
+                  <div class="ic"><ha-icon icon="mdi:map-marker"></ha-icon></div>
+                  <div class="info">
+                    <h2 style="margin:0;font-size:16px">${name}</h2>
+                    <span style="font-size:12px">${this._modeName(mode)} · ${cnt} ${this.t("shutter_s")}${cnt===1?"":"n"}</span>
+                  </div>
+                </div>
+                <div class="row-actions">
+                  <button class="btn edit" @click=${()=>{this._editArea={...a,_isNew:false};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteArea(id)}><ha-icon icon="mdi:delete"></ha-icon></button>
+                </div>
+              </div>`;})}
+          </div>
+        `:html`
+          <div class="card"><div class="table-wrap"><table>
+            <tr><th>${this.t("col_name")}</th><th>${this.t("col_id")}</th><th>${this.t("col_mode")}</th><th>${this.t("col_shutters")}</th><th></th></tr>
+            ${d.areas.map(a=>{const id=a.id||"";const cnt=d.shutters.filter(s=>s.area_up_id===id||s.area_down_id===id).length;
+              return html`<tr>
+                <td><strong>${a.name||id}</strong></td><td style="color:var(--txt2)">${id}</td>
+                <td><span class="chip ${a.mode||"time"}">${this._modeName(a.mode)}</span></td>
+                <td>${cnt}</td>
+                <td style="text-align:right">
+                  <button class="btn edit" @click=${()=>{this._editArea={...a,_isNew:false};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteArea(id)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
+          </table></div></div>
+        `}`;
   }
   _renderAreaForm(){
     const a=this._editArea;const m=a.mode||"time";const T=k=>this.t(k);
@@ -832,11 +853,17 @@ class ShutterPilotPanel extends LitElement {
         this._isMobile?html`
           <div class="grid">
             ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
-              const coverLabel=st?.attributes?.friendly_name||s.cover_entity_id||"–";
+              const friendly=st?.attributes?.friendly_name||"";
+              const entityId=s.cover_entity_id||"";
+              const title=s.name||friendly||entityId||"–";
+              const coverLine=friendly||entityId||"–";
               return html`<div class="card">
                 <div class="card-hdr">
                   <div class="ic"><ha-icon icon="mdi:window-shutter"></ha-icon></div>
-                  <div class="info"><h2 style="margin:0;font-size:16px">${s.name||coverLabel}</h2><span style="font-size:12px">${coverLabel}</span></div>
+                  <div class="info">
+                    <h2 style="margin:0;font-size:16px">${title}</h2>
+                    <span style="font-size:12px">${coverLine}${entityId&&friendly?html`<span class="sun-off"> · ${entityId}</span>`:""}</span>
+                  </div>
                 </div>
                 <div class="kv">
                   <div class="k">${T("col_area_up")}</div><div class="v">${areaName(s.area_up_id)||"–"}</div>
