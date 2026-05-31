@@ -38,6 +38,12 @@ from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
 from .services import async_setup_services
+from .cover_tracker import (
+    async_restore_positions_on_startup,
+    setup_cover_position_tracker,
+)
+from .position_store import get_position_store
+from .helpers import apply_covers_driven_from_persisted
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,14 +123,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Verhindert, dass Helligkeit/Scheduler/Elevation manuelle Stellung sofort überschreiben.
         "covers_driven_up": set(),
         "covers_driven_down": set(),
+        "pending_automation_covers": set(),
+        "recent_automation_covers": {},
     }
+
+    get_position_store(hass, entry.entry_id)
 
     async def _on_ha_started(_: Any) -> None:
         """Start Shutter Pilot when HA is ready."""
+        store = get_position_store(hass, entry.entry_id)
+        await store.async_load()
+        apply_covers_driven_from_persisted(hass, entry, shutters, store)
+        await setup_cover_position_tracker(hass, entry)
         await setup_window_triggers(hass, entry)
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
+        hass.async_create_task(async_restore_positions_on_startup(hass, entry))
 
     if hass.is_running:
         await _on_ha_started(None)
@@ -166,6 +181,13 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
             shutters = []
         data["shutters"] = shutters
 
+    store = get_position_store(hass, entry.entry_id)
+    await store.async_load()
+    shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        shutters = []
+    apply_covers_driven_from_persisted(hass, entry, shutters, store)
+    await setup_cover_position_tracker(hass, entry)
     await setup_window_triggers(hass, entry)
     await setup_brightness_listener(hass, entry)
     await setup_schedulers(hass, entry)
@@ -182,6 +204,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "_brightness_unsubs",
                 "_elevation_unsubs",
                 "_window_unsubs",
+                "_cover_tracker_unsubs",
             ):
                 for unsub in data.get(key, []):
                     try:

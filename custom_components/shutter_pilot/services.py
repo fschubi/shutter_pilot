@@ -21,7 +21,7 @@ from .const import (
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
 )
-from .helpers import filter_shutters_by_area
+from .helpers import filter_shutters_by_area, set_cover_position
 from .window_helper import get_effective_close_position
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,12 +37,14 @@ SERVICE_SCHEMA = vol.Schema(
 
 async def _drive_group(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     shutters: list,
     position: float,
     direction: str,
     delay: int,
     apply_lock_protection: bool = False,
 ) -> None:
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
     for shutter in shutters:
         cover = shutter.get(CONF_COVER_ENTITY_ID)
         if not cover:
@@ -51,16 +53,21 @@ async def _drive_group(
         if apply_lock_protection:
             eff_pos = get_effective_close_position(hass, shutter, position)
         try:
-            await hass.services.async_call(
-                "cover",
-                "set_cover_position",
-                {"entity_id": cover, "position": eff_pos},
-                blocking=True,
-            )
+            await set_cover_position(hass, entry, cover, eff_pos, direction)
             if eff_pos != position:
-                _LOGGER.info("%s: %s -> %d%% (Aussperrschutz: Tür offen)", direction, cover, int(eff_pos))
-            else:
-                _LOGGER.info("%s: %s -> %d%%", direction, cover, int(eff_pos))
+                _LOGGER.info(
+                    "%s: %s -> %d%% (Aussperrschutz: Tür offen)",
+                    direction,
+                    cover,
+                    int(eff_pos),
+                )
+            if isinstance(data, dict):
+                if eff_pos >= 50:
+                    data.setdefault("covers_driven_up", set()).add(cover)
+                    data.setdefault("covers_driven_down", set()).discard(cover)
+                else:
+                    data.setdefault("covers_driven_down", set()).add(cover)
+                    data.setdefault("covers_driven_up", set()).discard(cover)
         except Exception as e:
             _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
         await asyncio.sleep(delay)
@@ -97,7 +104,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             shutters = []
         shutters = filter_shutters_by_area(shutters, area_id, use_up=True)
         await _drive_group(
-            hass, shutters, 100, f"open_group({area_id})", _delay_for_area(area_id)
+            hass,
+            entry,
+            shutters,
+            100,
+            f"open_group({area_id})",
+            _delay_for_area(area_id),
         )
 
     async def close_group(call) -> None:
@@ -113,7 +125,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             shutters = []
         shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
         await _drive_group(
-            hass, shutters, 0, f"close_group({area_id})", _delay_for_area(area_id),
+            hass,
+            entry,
+            shutters,
+            0,
+            f"close_group({area_id})",
+            _delay_for_area(area_id),
             apply_lock_protection=True,
         )
 
@@ -134,7 +151,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if shutters:
             pos = shutters[0].get(CONF_POSITION_SUN_PROTECT, 50)
         await _drive_group(
-            hass, shutters, pos, f"sun_protect_group({area_id})", _delay_for_area(area_id),
+            hass,
+            entry,
+            shutters,
+            pos,
+            f"sun_protect_group({area_id})",
+            _delay_for_area(area_id),
             apply_lock_protection=True,
         )
 

@@ -134,7 +134,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 trigger_actions[cover_entity] = "triggered"
                 reason = "Window tilted" if window_state == "tilted" else "Window opened"
                 hass.async_create_task(
-                    set_cover_position(hass, cover_entity, target_pos, reason)
+                    set_cover_position(hass, entry, cover_entity, target_pos, reason)
                 )
             elif window_state == "closed":
                 # Window closed -> restore saved position OR execute drive_after_close
@@ -146,7 +146,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     reason = pending_entry.get("reason", "Drive after close")
                     hass.async_create_task(
                         set_cover_position(
-                            hass, cover_entity, target_pos, reason
+                            hass, entry, cover_entity, target_pos, reason
                         )
                     )
                     _LOGGER.info(
@@ -161,7 +161,11 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                             restore_pos = last_positions.get(cover_entity, pos_closed)
                         hass.async_create_task(
                             set_cover_position(
-                                hass, cover_entity, restore_pos, "Window closed – restore"
+                                hass,
+                                entry,
+                                cover_entity,
+                                restore_pos,
+                                "Window closed – restore",
                             )
                         )
                     trigger_actions.pop(cover_entity, None)

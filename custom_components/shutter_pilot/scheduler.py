@@ -36,7 +36,8 @@ from .helpers import (
     clear_stale_window_cycle_after_automated_up,
     filter_shutters_by_area,
     is_auto_enabled,
-    should_skip_full_open_preserving_sun_protect,
+    set_cover_position,
+    should_skip_automated_up,
     sun_protect_area_ids_from_options,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
@@ -135,11 +136,11 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             if apply_lock_protection:
                 eff_pos = get_effective_close_position(hass, shutter, position)
             try:
-                if default_position >= 50 and should_skip_full_open_preserving_sun_protect(
-                    hass, shutter, sun_protect_area_ids
+                if default_position >= 50 and should_skip_automated_up(
+                    hass, entry, shutter, data, sun_protect_area_ids
                 ):
                     _LOGGER.info(
-                        "%s: %s bleibt auf Sonnenschutz-Zwischenposition (kein Nachholen-UP nach Start)",
+                        "%s: %s übersprungen (Sonnenschutz/manuelle Position)",
                         direction,
                         cover,
                     )
@@ -147,10 +148,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     covers_driven_down.discard(cover)
                     clear_stale_window_cycle_after_automated_up(data, cover)
                 else:
-                    await hass.services.async_call(
-                        "cover", "set_cover_position",
-                        {"entity_id": cover, "position": eff_pos},
-                        blocking=True,
+                    await set_cover_position(
+                        hass,
+                        entry,
+                        cover,
+                        eff_pos,
+                        direction,
                     )
                     if default_position >= 50:
                         covers_driven_up.add(cover)
@@ -161,8 +164,6 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                         covers_driven_up.discard(cover)
                     if eff_pos != position:
                         _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
-                    else:
-                        _LOGGER.info("%s: %s -> %d%%", direction, cover, int(eff_pos))
             except Exception as e:
                 _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
             await asyncio.sleep(delay)

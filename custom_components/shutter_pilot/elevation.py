@@ -130,7 +130,11 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                                 area_id, elev, threshold, cover_entity, int(pos))
                     hass.async_create_task(
                         set_cover_position(
-                            hass, cover_entity, pos, f"Elevation down (area={area_id})"
+                            hass,
+                            entry,
+                            cover_entity,
+                            pos,
+                            f"Elevation down (area={area_id})",
                         )
                     )
                     covers_driven_down.add(cover_entity)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,8 +21,17 @@ from .const import (
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
 )
+from .position_store import (
+    SOURCE_AUTOMATION,
+    SOURCE_MANUAL,
+    ShutterPositionStore,
+    get_position_store,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+POSITION_TOLERANCE_PCT = 8.0
+AUTOMATION_STATE_GRACE_SEC = 90.0
 
 
 def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
@@ -72,6 +82,44 @@ def get_cover_current_position(hass: HomeAssistant, entity_id: str) -> float | N
         return None
 
 
+def positions_differ_significantly(
+    a: float, b: float, tolerance: float = POSITION_TOLERANCE_PCT
+) -> bool:
+    """True if two positions differ by more than tolerance percent."""
+    return abs(a - b) > tolerance
+
+
+def _position_near(value: float, target: float, tolerance: float = POSITION_TOLERANCE_PCT) -> bool:
+    return abs(value - target) <= tolerance
+
+
+def mark_automation_pending(hass: HomeAssistant, entry: ConfigEntry, cover_entity_id: str) -> None:
+    """Mark cover so the next state change is recorded as automation, not manual."""
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not isinstance(data, dict):
+        return
+    pending = data.setdefault("pending_automation_covers", set())
+    pending.add(cover_entity_id)
+    recent = data.setdefault("recent_automation_covers", {})
+    recent[cover_entity_id] = time.monotonic()
+
+
+def is_recent_automation(data: dict[str, Any], cover_entity_id: str) -> bool:
+    """True if this cover was moved by automation within the grace window."""
+    if cover_entity_id in data.get("pending_automation_covers", set()):
+        return True
+    recent = data.get("recent_automation_covers", {})
+    if not isinstance(recent, dict):
+        return False
+    ts = recent.get(cover_entity_id)
+    if ts is None:
+        return False
+    try:
+        return (time.monotonic() - float(ts)) < AUTOMATION_STATE_GRACE_SEC
+    except (TypeError, ValueError):
+        return False
+
+
 def sun_protect_area_ids_from_options(areas: list[Any]) -> set[str]:
     """Area ids where elevation-based sun protection is enabled."""
     out: set[str] = set()
@@ -106,6 +154,8 @@ def should_skip_full_open_preserving_sun_protect(
         return False
     cur = get_cover_current_position(hass, cover)
     if cur is None:
+        cur = _persisted_position(hass, cover)
+    if cur is None:
         return False
     try:
         pos_open = float(shutter.get(CONF_POSITION_OPEN, 100))
@@ -117,6 +167,123 @@ def should_skip_full_open_preserving_sun_protect(
     if abs(cur - pos_sp) > 10.0:
         return False
     return True
+
+
+def _persisted_position(hass: HomeAssistant, cover_entity_id: str) -> float | None:
+    """Read last persisted position from any config entry store."""
+    domain_data = hass.data.get(DOMAIN, {})
+    if not isinstance(domain_data, dict):
+        return None
+    for entry_id, data in domain_data.items():
+        if not isinstance(data, dict):
+            continue
+        store = data.get("position_store")
+        if isinstance(store, ShutterPositionStore):
+            pos = store.get_position_sync(cover_entity_id)
+            if pos is not None:
+                return pos
+    return None
+
+
+def should_skip_automated_up(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+    sun_protect_area_ids: set[str],
+) -> bool:
+    """True if an automated UP should not run for this shutter."""
+    if should_skip_full_open_preserving_sun_protect(hass, shutter, sun_protect_area_ids):
+        return True
+
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover:
+        return False
+
+    store = get_position_store(hass, entry.entry_id)
+    source = store.get_source_sync(cover)
+    if source != SOURCE_MANUAL:
+        return False
+
+    try:
+        pos_open = float(shutter.get(CONF_POSITION_OPEN, 100))
+    except (TypeError, ValueError):
+        return False
+
+    cur = get_cover_current_position(hass, cover)
+    persisted = store.get_position_sync(cover)
+    # Prefer persisted position: cover integrations may report wrong state after restart.
+    check_pos = persisted if persisted is not None else cur
+    if check_pos is None:
+        return False
+
+    if check_pos < pos_open - POSITION_TOLERANCE_PCT:
+        _LOGGER.debug(
+            "Skip automated UP for %s: manual position %.0f%% (HA reports %.0f%%)",
+            cover,
+            check_pos,
+            cur if cur is not None else -1,
+        )
+        return True
+
+    return False
+
+
+def apply_covers_driven_from_persisted(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    shutters: list,
+    store: ShutterPositionStore,
+) -> None:
+    """Restore covers_driven_up/down from persisted positions after restart."""
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not isinstance(data, dict):
+        return
+
+    covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
+    covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
+    last_positions: dict[str, float] = data.setdefault("last_positions", {})
+
+    for shutter in shutters:
+        if not isinstance(shutter, dict):
+            continue
+        cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+        if not cover:
+            continue
+
+        rec = store.get_record(cover)
+        if not rec:
+            continue
+
+        try:
+            pos = float(rec["position"])
+        except (TypeError, ValueError, KeyError):
+            continue
+
+        last_positions[cover] = pos
+
+        try:
+            pos_open = float(shutter.get(CONF_POSITION_OPEN, 100))
+            pos_closed = float(shutter.get(CONF_POSITION_CLOSED, 0))
+            pos_sp = float(shutter.get(CONF_POSITION_SUN_PROTECT, 50))
+        except (TypeError, ValueError):
+            continue
+
+        if _position_near(pos, pos_open):
+            covers_driven_up.add(cover)
+            covers_driven_down.discard(cover)
+        elif _position_near(pos, pos_closed) or pos < pos_open - POSITION_TOLERANCE_PCT:
+            covers_driven_down.add(cover)
+            covers_driven_up.discard(cover)
+        elif _position_near(pos, pos_sp):
+            covers_driven_down.add(cover)
+            covers_driven_up.discard(cover)
+
+    _LOGGER.debug(
+        "Restored driven state from store: up=%d down=%d",
+        len(covers_driven_up),
+        len(covers_driven_down),
+    )
 
 
 def clear_stale_window_cycle_after_automated_up(
@@ -141,9 +308,16 @@ def clear_stale_window_cycle_after_automated_up(
 
 
 async def set_cover_position(
-    hass: HomeAssistant, entity_id: str, position: float, reason: str
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    entity_id: str,
+    position: float,
+    reason: str,
+    *,
+    source: str | None = None,
 ) -> None:
-    """Set cover position via service call."""
+    """Set cover position via service call and persist."""
+    mark_automation_pending(hass, entry, entity_id)
     try:
         await hass.services.async_call(
             "cover",
@@ -152,5 +326,21 @@ async def set_cover_position(
             blocking=True,
         )
         _LOGGER.info("%s: %s -> %d%%", reason, entity_id, int(position))
+
+        data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+        if isinstance(data, dict):
+            data.setdefault("last_positions", {})[entity_id] = float(position)
+
+        store = get_position_store(hass, entry.entry_id)
+        await store.async_set_position(
+            entity_id,
+            position,
+            source or SOURCE_AUTOMATION,
+        )
     except Exception as e:
         _LOGGER.warning("Failed to set %s: %s", entity_id, e)
+        data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+        if isinstance(data, dict):
+            data.setdefault("pending_automation_covers", set()).discard(entity_id)
+            recent = data.setdefault("recent_automation_covers", {})
+            recent.pop(entity_id, None)

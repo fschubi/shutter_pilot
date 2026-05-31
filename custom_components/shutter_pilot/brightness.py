@@ -44,7 +44,7 @@ from .helpers import (
     clear_stale_window_cycle_after_automated_up,
     is_auto_enabled,
     set_cover_position,
-    should_skip_full_open_preserving_sun_protect,
+    should_skip_automated_up,
     sun_protect_area_ids_from_options,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
@@ -131,7 +131,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     ) -> None:
         if delay > 0 and index > 0:
             await asyncio.sleep(delay * index)
-        await set_cover_position(hass, entity_id, position, reason)
+        await set_cover_position(hass, entry, entity_id, position, reason)
 
     def _process_brightness(entity_id: str, new_state) -> None:
         """Evaluate brightness for a sensor state (used by listener AND initial check)."""
@@ -240,11 +240,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     if cover_entity in covers_driven_up:
                         _LOGGER.debug("Brightness up: %s already driven up, skip", cover_entity)
                         continue
-                    if should_skip_full_open_preserving_sun_protect(
-                        hass, shutter, sun_protect_area_ids
+                    if should_skip_automated_up(
+                        hass, entry, shutter, data, sun_protect_area_ids
                     ):
                         _LOGGER.info(
-                            "Brightness up: %s bleibt auf Sonnenschutz-Zwischenposition (kein Nachholen-UP nach Start)",
+                            "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
                             cover_entity,
                         )
                         covers_driven_up.add(cover_entity)
