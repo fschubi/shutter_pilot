@@ -14,12 +14,18 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_AREA_DOWN_ID,
+    CONF_AREA_ELEVATION_MAX,
+    CONF_AREA_ELEVATION_MIN,
+    CONF_AREA_ELEVATION_THRESHOLD,
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_AREA_UP_ID,
     CONF_COVER_ENTITY_ID,
-    CONF_POSITION_CLOSED,
+    CONF_MASTER_ENTITY_ID,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
+    DEFAULT_AREA_ELEVATION_MAX,
+    DEFAULT_AREA_ELEVATION_MIN,
+    DEFAULT_AREA_ELEVATION_THRESHOLD,
 )
 from .position_store import (
     SOURCE_AUTOMATION,
@@ -34,12 +40,31 @@ POSITION_TOLERANCE_PCT = 8.0
 AUTOMATION_STATE_GRACE_SEC = 90.0
 
 
-def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
-    """True if automation is enabled for this area.
+def is_system_enabled(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """True if the global Shutter Pilot master switch is on."""
+    domain_data = hass.data.get(DOMAIN)
+    if not isinstance(domain_data, dict) or entry.entry_id not in domain_data:
+        return True
+    data = domain_data.get(entry.entry_id, {})
+    if not isinstance(data, dict):
+        return True
+    if "master_enabled" in data:
+        return bool(data.get("master_enabled"))
 
-    Fail-safe: if runtime data is missing (e.g. during reload), return False
-    to prevent stale listeners from triggering unwanted movements.
-    """
+    entity_id = str(entry.options.get(CONF_MASTER_ENTITY_ID) or "").strip()
+    if not entity_id:
+        return True
+    state = hass.states.get(entity_id)
+    if not state:
+        return True
+    return str(state.state).lower() in ("on", "true", "1")
+
+
+def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool:
+    """True if automation is enabled for this area."""
+    if not is_system_enabled(hass, entry):
+        return False
+
     area_id = str(area.get(CONF_AREA_ID) or "")
     domain_data = hass.data.get(DOMAIN)
     if not isinstance(domain_data, dict) or entry.entry_id not in domain_data:
@@ -61,6 +86,51 @@ def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool
         _LOGGER.debug("is_auto_enabled: switch entity %s not found – returning False (fail-safe)", entity_id)
         return False
     return str(state.state).lower() in ("on", "true", "1")
+
+
+def get_elevation_bounds(area: dict) -> tuple[float, float]:
+    """Return (min, max) elevation for sun protection range."""
+    elev_max = area.get(CONF_AREA_ELEVATION_MAX)
+    elev_min = area.get(CONF_AREA_ELEVATION_MIN)
+    if elev_max is None:
+        elev_max = area.get(CONF_AREA_ELEVATION_THRESHOLD, DEFAULT_AREA_ELEVATION_THRESHOLD)
+    if elev_min is None:
+        try:
+            elev_min = max(DEFAULT_AREA_ELEVATION_MIN, float(elev_max) - 3.0)
+        except (TypeError, ValueError):
+            elev_min = DEFAULT_AREA_ELEVATION_MIN
+    try:
+        e_min = float(elev_min)
+        e_max = float(elev_max)
+    except (TypeError, ValueError):
+        e_min = DEFAULT_AREA_ELEVATION_MIN
+        e_max = float(DEFAULT_AREA_ELEVATION_THRESHOLD)
+    if e_min > e_max:
+        e_min, e_max = e_max, e_min
+    return e_min, e_max
+
+
+def elevation_in_sun_protect_range(elevation: float, area: dict) -> bool:
+    """True when sun elevation is within the configured protection window."""
+    e_min, e_max = get_elevation_bounds(area)
+    return e_min <= elevation <= e_max
+
+
+def is_sun_protect_active(data: dict[str, Any], area_id: str) -> bool:
+    """Runtime flag: sun protection currently active for an area."""
+    active = data.get("sun_protect_active", {})
+    if not isinstance(active, dict):
+        return False
+    return bool(active.get(area_id))
+
+
+def set_sun_protect_active(data: dict[str, Any], area_id: str, active: bool) -> None:
+    """Update runtime sun protection state for dashboard and skip logic."""
+    state = data.setdefault("sun_protect_active", {})
+    if active:
+        state[area_id] = True
+    else:
+        state.pop(area_id, None)
 
 
 def filter_shutters_by_area(shutters: list, area_id: str, use_up: bool) -> list:
@@ -136,18 +206,43 @@ def sun_protect_area_ids_from_options(areas: list[Any]) -> set[str]:
     return out
 
 
+def clear_covers_driven_for_direction(data: dict[str, Any], direction: str) -> None:
+    """Clear phase locks when a new up/down cycle begins."""
+    if direction == "up":
+        data["covers_driven_up"] = set()
+    elif direction == "down":
+        data["covers_driven_down"] = set()
+
+
+async def clear_manual_override_for_covers(
+    hass: HomeAssistant, entry: ConfigEntry, cover_entity_ids: list[str]
+) -> None:
+    """Allow scheduled automation to drive covers after a manual override."""
+    store = get_position_store(hass, entry.entry_id)
+    for cover in cover_entity_ids:
+        if not cover:
+            continue
+        rec = store.get_record(cover)
+        if not rec or rec.get("source") != SOURCE_MANUAL:
+            continue
+        try:
+            pos = float(rec["position"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        await store.async_set_position(cover, pos, SOURCE_AUTOMATION)
+
+
 def should_skip_full_open_preserving_sun_protect(
     hass: HomeAssistant,
     shutter: dict[str, Any],
+    data: dict[str, Any],
     sun_protect_area_ids: set[str],
 ) -> bool:
-    """True if automated full-open should not run (cover already at sun-protect height).
-
-    Used after HA restart when in-memory automation state is lost but the physical
-    cover is still at the elevation-driven sun protection position.
-    """
+    """True if automated full-open should not run (active sun protection at cover)."""
     down_id = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip()
     if not down_id or down_id not in sun_protect_area_ids:
+        return False
+    if not is_sun_protect_active(data, down_id):
         return False
     cover = shutter.get(CONF_COVER_ENTITY_ID)
     if not cover:
@@ -191,10 +286,17 @@ def should_skip_automated_up(
     shutter: dict[str, Any],
     data: dict[str, Any],
     sun_protect_area_ids: set[str],
+    *,
+    within_up_window: bool = True,
 ) -> bool:
     """True if an automated UP should not run for this shutter."""
-    if should_skip_full_open_preserving_sun_protect(hass, shutter, sun_protect_area_ids):
+    if should_skip_full_open_preserving_sun_protect(
+        hass, shutter, data, sun_protect_area_ids
+    ):
         return True
+
+    if not within_up_window:
+        return False
 
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
     if not cover:
@@ -212,7 +314,6 @@ def should_skip_automated_up(
 
     cur = get_cover_current_position(hass, cover)
     persisted = store.get_position_sync(cover)
-    # Prefer persisted position: cover integrations may report wrong state after restart.
     check_pos = persisted if persisted is not None else cur
     if check_pos is None:
         return False
@@ -235,13 +336,11 @@ def apply_covers_driven_from_persisted(
     shutters: list,
     store: ShutterPositionStore,
 ) -> None:
-    """Restore covers_driven_up/down from persisted positions after restart."""
+    """Load last_positions from store after restart (no phase locks)."""
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not isinstance(data, dict):
         return
 
-    covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
-    covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
     last_positions: dict[str, float] = data.setdefault("last_positions", {})
 
     for shutter in shutters:
@@ -262,38 +361,13 @@ def apply_covers_driven_from_persisted(
 
         last_positions[cover] = pos
 
-        try:
-            pos_open = float(shutter.get(CONF_POSITION_OPEN, 100))
-            pos_closed = float(shutter.get(CONF_POSITION_CLOSED, 0))
-            pos_sp = float(shutter.get(CONF_POSITION_SUN_PROTECT, 50))
-        except (TypeError, ValueError):
-            continue
-
-        if _position_near(pos, pos_open):
-            covers_driven_up.add(cover)
-            covers_driven_down.discard(cover)
-        elif _position_near(pos, pos_closed) or pos < pos_open - POSITION_TOLERANCE_PCT:
-            covers_driven_down.add(cover)
-            covers_driven_up.discard(cover)
-        elif _position_near(pos, pos_sp):
-            covers_driven_down.add(cover)
-            covers_driven_up.discard(cover)
-
-    _LOGGER.debug(
-        "Restored driven state from store: up=%d down=%d",
-        len(covers_driven_up),
-        len(covers_driven_down),
-    )
+    _LOGGER.debug("Loaded %d persisted positions into last_positions", len(last_positions))
 
 
 def clear_stale_window_cycle_after_automated_up(
     data: dict[str, Any], cover_entity_id: str
 ) -> None:
-    """Drop window open/tilt restore state after automation opened the cover (day phase).
-
-    Without this, closing the window later would restore trigger_heights from before
-    tilt (often closed) or run a stale drive_after_close_pending down movement.
-    """
+    """Drop window open/tilt restore state after automation opened the cover (day phase)."""
     if not cover_entity_id:
         return
     ta = data.get("trigger_actions")
@@ -305,6 +379,47 @@ def clear_stale_window_cycle_after_automated_up(
     pending = data.get("drive_after_close_pending")
     if isinstance(pending, dict):
         pending.pop(cover_entity_id, None)
+
+
+def get_sun_protect_status_for_areas(
+    hass: HomeAssistant, entry: ConfigEntry, areas: list
+) -> dict[str, dict[str, Any]]:
+    """Runtime sun protection status per area for the dashboard."""
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    if not isinstance(data, dict):
+        data = {}
+
+    elev = None
+    sun_state = hass.states.get("sun.sun")
+    if sun_state:
+        try:
+            elev = float(sun_state.attributes.get("elevation", 0))
+        except (TypeError, ValueError, AttributeError):
+            elev = None
+
+    out: dict[str, dict[str, Any]] = {}
+    if not isinstance(areas, list):
+        return out
+
+    for area in areas:
+        if not isinstance(area, dict):
+            continue
+        if not bool(area.get(CONF_AREA_SUN_PROTECT_ENABLED, False)):
+            continue
+        area_id = str(area.get(CONF_AREA_ID) or "").strip()
+        if not area_id:
+            continue
+        e_min, e_max = get_elevation_bounds(area)
+        in_range = elev is not None and elevation_in_sun_protect_range(elev, area)
+        active = is_sun_protect_active(data, area_id)
+        out[area_id] = {
+            "active": active,
+            "in_range": in_range,
+            "elevation_min": e_min,
+            "elevation_max": e_max,
+            "current_elevation": elev,
+        }
+    return out
 
 
 async def set_cover_position(

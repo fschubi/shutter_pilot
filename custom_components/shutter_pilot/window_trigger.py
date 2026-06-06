@@ -21,7 +21,7 @@ from .const import (
     CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
 )
-from .helpers import get_cover_current_position, set_cover_position
+from .helpers import get_cover_current_position, is_system_enabled, set_cover_position
 from .window_helper import get_window_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +90,8 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
 
     @callback
     def _on_window_state_change(event) -> None:
+        if not is_system_enabled(hass, entry):
+            return
         new_state = event.data.get("new_state")
         if new_state is None:
             return

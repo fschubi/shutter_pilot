@@ -32,6 +32,7 @@ from .const import (
     CONF_AREA_UP_ID,
     CONF_AREA_DOWN_ID,
     CONF_NAME,
+    CONF_MASTER_ENTITY_ID,
 )
 from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
@@ -43,7 +44,7 @@ from .cover_tracker import (
     setup_cover_position_tracker,
 )
 from .position_store import get_position_store
-from .helpers import apply_covers_driven_from_persisted
+from .helpers import apply_covers_driven_from_persisted, get_sun_protect_status_for_areas
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,6 +126,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "covers_driven_down": set(),
         "pending_automation_covers": set(),
         "recent_automation_covers": {},
+        "sun_protect_active": {},
+        "master_enabled": True,
     }
 
     get_position_store(hass, entry.entry_id)
@@ -268,7 +271,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
     hass.data[f"{DOMAIN}_ws_registered"] = True
 
     for cmd in (
-        _ws_get_status, _ws_set_auto_mode,
+        _ws_get_status, _ws_set_auto_mode, _ws_set_master_enabled,
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter,
     ):
@@ -308,7 +311,14 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     if not entry or not data:
         connection.send_result(
             msg["id"],
-            {"areas": [], "shutters": [], "auto_modes": {}, "version": PANEL_ASSET_VERSION},
+            {
+                "areas": [],
+                "shutters": [],
+                "auto_modes": {},
+                "master_enabled": True,
+                "sun_protect_status": {},
+                "version": PANEL_ASSET_VERSION,
+            },
         )
         return
 
@@ -327,6 +337,8 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 shutters_out.append(dict(s))
 
     auto_modes = data.get("auto_modes", {})
+    master_enabled = data.get("master_enabled", True)
+    sun_protect_status = get_sun_protect_status_for_areas(hass, entry, raw_areas if isinstance(raw_areas, list) else [])
 
     sun_info = {}
     sun_state = hass.states.get("sun.sun")
@@ -342,9 +354,39 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
         "areas": areas_out,
         "shutters": shutters_out,
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
+        "master_enabled": bool(master_enabled),
+        "sun_protect_status": sun_protect_status,
         "sun": sun_info,
         "version": PANEL_ASSET_VERSION,
     })
+
+
+# -- set_master_enabled -------------------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/set_master_enabled",
+    vol.Required("enabled"): bool,
+})
+@callback
+def _ws_set_master_enabled(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Toggle global Shutter Pilot master switch."""
+    enabled = msg["enabled"]
+    entry, data = _find_entry_data(hass)
+    if not data:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    data["master_enabled"] = bool(enabled)
+    if entry:
+        master_id = str(entry.options.get(CONF_MASTER_ENTITY_ID) or "").strip()
+        if master_id:
+            hass.async_create_task(
+                hass.services.async_call(
+                    "switch",
+                    "turn_on" if enabled else "turn_off",
+                    {"entity_id": master_id},
+                )
+            )
+    connection.send_result(msg["id"], {"ok": True})
 
 
 # -- set_auto_mode ------------------------------------------------------------

@@ -41,8 +41,11 @@ from .const import (
     CONF_DRIVE_AFTER_CLOSE,
 )
 from .helpers import (
+    clear_covers_driven_for_direction,
+    clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     is_auto_enabled,
+    is_sun_protect_active,
     set_cover_position,
     should_skip_automated_up,
     sun_protect_area_ids_from_options,
@@ -72,7 +75,6 @@ def _area_window(area: dict, now: datetime, direction: str) -> bool:
     t = now.time()
     if start <= end:
         return start <= t <= end
-    # overnight window (e.g. 22:00 -> 06:00)
     return t >= start or t <= end
 
 
@@ -82,11 +84,10 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     if not data:
         return
 
-    # Clean up previous listeners
     for unsub in data.get("_brightness_unsubs", []):
         unsub()
     data["_brightness_unsubs"] = []
-    # Gemeinsame Sperren mit Scheduler/Elevation: Rollladen in dieser Phase schon automatisch bewegt.
+
     covers_driven_down: set[str] = data.setdefault("covers_driven_down", set())
     covers_driven_up: set[str] = data.setdefault("covers_driven_up", set())
     pending_up = data.setdefault("_pending_up", {})
@@ -94,7 +95,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     areas = entry.options.get(CONF_AREAS, [])
     if not isinstance(areas, list):
         areas = []
-    # Only areas in brightness mode with a sensor configured are tracked
     brightness_areas: list[dict] = []
     for a in areas:
         if not isinstance(a, dict):
@@ -110,10 +110,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
-        _LOGGER.warning(
-            "Invalid shutters options type in brightness listener: %r – resetting to empty list",
-            type(shutters),
-        )
         shutters = []
 
     raw_areas_opts = entry.options.get(CONF_AREAS, [])
@@ -122,7 +118,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     sun_protect_area_ids = sun_protect_area_ids_from_options(raw_areas_opts)
 
     async def _set_cover_position_with_delay(
-        hass: HomeAssistant,
         entity_id: str,
         position: float,
         reason: str,
@@ -134,7 +129,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         await set_cover_position(hass, entry, entity_id, position, reason)
 
     def _process_brightness(entity_id: str, new_state) -> None:
-        """Evaluate brightness for a sensor state (used by listener AND initial check)."""
         if new_state is None:
             return
         state_str = getattr(new_state, "state", None)
@@ -153,7 +147,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             if not area_id:
                 continue
             if not is_auto_enabled(hass, entry, area):
-                _LOGGER.debug("Brightness: area %s auto disabled, skip", area_id)
                 continue
 
             sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
@@ -161,11 +154,15 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 continue
 
             try:
-                down_threshold = int(area.get(CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD))
+                down_threshold = int(
+                    area.get(CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD)
+                )
             except (TypeError, ValueError):
                 down_threshold = DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD
             try:
-                up_threshold = int(area.get(CONF_AREA_BRIGHTNESS_UP_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD))
+                up_threshold = int(
+                    area.get(CONF_AREA_BRIGHTNESS_UP_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD)
+                )
             except (TypeError, ValueError):
                 up_threshold = DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD
 
@@ -179,12 +176,13 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 area_id, sensor_id, lux, up_threshold, down_threshold,
             )
 
-            handled_down = False
-            handled_up = False
+            moved_down = False
+            moved_up = False
 
-            # Down: within down window and lux <= threshold
             if _area_window(area, now, "down") and lux <= down_threshold:
+                clear_covers_driven_for_direction(data, "down")
                 idx = 0
+                down_covers: list[str] = []
                 for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
                     cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
                     if not cover_entity:
@@ -201,88 +199,89 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         }
                         continue
                     pos = get_effective_close_position(hass, shutter, pos)
+                    down_covers.append(cover_entity)
                     hass.async_create_task(
                         _set_cover_position_with_delay(
-                            hass,
-                            cover_entity,
-                            pos,
-                            "Brightness down",
-                            drive_delay,
-                            idx,
+                            cover_entity, pos, "Brightness down", drive_delay, idx
                         )
                     )
                     idx += 1
                     covers_driven_down.add(cover_entity)
                     covers_driven_up.discard(cover_entity)
-                    handled_down = True
+                    moved_down = True
 
-                if handled_down:
+                if moved_down:
+                    hass.async_create_task(
+                        clear_manual_override_for_covers(hass, entry, down_covers)
+                    )
                     hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
 
-            # Up: within up window AND lux > threshold OR pending-up for today
             is_pending = pending_up.get(area_id) == today
             within_up = _area_window(area, now, "up")
 
-            _LOGGER.debug(
-                "Brightness UP check: area=%s within_up=%s is_pending=%s lux=%.1f > thresh=%d => %s",
-                area_id, within_up, is_pending, lux, up_threshold, lux > up_threshold,
-            )
-
             if within_up and lux <= up_threshold:
                 pending_up[area_id] = today
-                _LOGGER.info("Brightness: area %s marked pending (lux %.1f <= %d)", area_id, lux, up_threshold)
+                _LOGGER.info(
+                    "Brightness: area %s marked pending (lux %.1f <= %d)",
+                    area_id, lux, up_threshold,
+                )
             elif (within_up or is_pending) and lux > up_threshold:
-                idx = 0
-                for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
-                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
-                    if not cover_entity:
-                        continue
-                    if cover_entity in covers_driven_up:
-                        _LOGGER.debug("Brightness up: %s already driven up, skip", cover_entity)
-                        continue
-                    if should_skip_automated_up(
-                        hass, entry, shutter, data, sun_protect_area_ids
-                    ):
-                        _LOGGER.info(
-                            "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
-                            cover_entity,
+                if is_sun_protect_active(data, area_id):
+                    _LOGGER.info(
+                        "Brightness up: area %s skipped – sun protection still active",
+                        area_id,
+                    )
+                else:
+                    clear_covers_driven_for_direction(data, "up")
+                    idx = 0
+                    up_covers: list[str] = []
+                    for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
+                        cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+                        if not cover_entity:
+                            continue
+                        if cover_entity in covers_driven_up:
+                            continue
+                        if should_skip_automated_up(
+                            hass,
+                            entry,
+                            shutter,
+                            data,
+                            sun_protect_area_ids,
+                            within_up_window=within_up or is_pending,
+                        ):
+                            _LOGGER.info(
+                                "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
+                                cover_entity,
+                            )
+                            continue
+                        pos = shutter.get(CONF_POSITION_OPEN, 100)
+                        _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
+                        up_covers.append(cover_entity)
+                        hass.async_create_task(
+                            _set_cover_position_with_delay(
+                                cover_entity, pos, "Brightness up", drive_delay, idx
+                            )
                         )
+                        idx += 1
                         covers_driven_up.add(cover_entity)
                         covers_driven_down.discard(cover_entity)
                         clear_stale_window_cycle_after_automated_up(data, cover_entity)
-                        handled_up = True
-                        continue
-                    pos = shutter.get(CONF_POSITION_OPEN, 100)
-                    _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
-                    hass.async_create_task(
-                        _set_cover_position_with_delay(
-                            hass,
-                            cover_entity,
-                            pos,
-                            "Brightness up",
-                            drive_delay,
-                            idx,
-                        )
-                    )
-                    idx += 1
-                    covers_driven_up.add(cover_entity)
-                    covers_driven_down.discard(cover_entity)
-                    clear_stale_window_cycle_after_automated_up(data, cover_entity)
-                    handled_up = True
+                        moved_up = True
 
-                if handled_up:
-                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
-                    if is_pending:
-                        pending_up.pop(area_id, None)
+                    if moved_up:
+                        hass.async_create_task(
+                            clear_manual_override_for_covers(hass, entry, up_covers)
+                        )
+                        hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
+                        if is_pending:
+                            pending_up.pop(area_id, None)
 
     @callback
     def _on_brightness_change(event) -> None:
-        """Handle brightness sensor state change event."""
         new_state = event.data.get("new_state")
         entity_id = event.data.get("entity_id", "")
         _process_brightness(entity_id, new_state)
 
-    # Register listeners for each brightness sensor
     tracked_sensors: set[str] = set()
     for area in brightness_areas:
         sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
@@ -293,5 +292,3 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         if unsub:
             data["_brightness_unsubs"].append(unsub)
         _LOGGER.info("Brightness listener registered: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
-
-    # No startup movement: evaluate only on real sensor state changes after setup.

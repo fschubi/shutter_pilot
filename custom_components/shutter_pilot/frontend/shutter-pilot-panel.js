@@ -33,6 +33,10 @@ de:{
   f_name:"Name",f_mode:"Steuerungsmodus",
   f_drive_delay:"Verzögerung zwischen Rollläden (Sek.)",
   f_sun_protect:"Sonnenschutz aktivieren",f_elev_thresh:"Elevation-Schwellwert (°)",
+  f_elev_min:"Sonnenschutz ab Elevation (°)",f_elev_max:"Sonnenschutz bis Elevation (°)",
+  master_switch:"System aktiv",
+  sun_prot_active:"Sonnenschutz aktiv",sun_prot_inactive:"Sonnenschutz inaktiv",
+  sun_prot_range:"Elevation-Bereich",sun_prot_waiting:"Warte auf passende Sonnenhöhe",
   f_light_entity:"Lampe/Schalter bei Runter (optional)",f_light_brightness:"Lampe Helligkeit (%)",
   f_time_up:"Woche Hoch",f_time_down:"Woche Runter",
   f_time_we_up:"Wochenende Hoch",f_time_we_down:"Wochenende Runter",
@@ -79,6 +83,10 @@ en:{
   f_name:"Name",f_mode:"Control mode",
   f_drive_delay:"Delay between shutters (sec.)",
   f_sun_protect:"Enable sun protection",f_elev_thresh:"Elevation threshold (°)",
+  f_elev_min:"Sun protect from elevation (°)",f_elev_max:"Sun protect until elevation (°)",
+  master_switch:"System active",
+  sun_prot_active:"Sun protection active",sun_prot_inactive:"Sun protection inactive",
+  sun_prot_range:"Elevation range",sun_prot_waiting:"Waiting for matching sun elevation",
   f_light_entity:"Light/switch on close (optional)",f_light_brightness:"Light brightness (%)",
   f_time_up:"Weekday Up",f_time_down:"Weekday Down",
   f_time_we_up:"Weekend Up",f_time_we_down:"Weekend Down",
@@ -443,7 +451,12 @@ class ShutterPilotPanel extends LitElement {
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-    .title-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;row-gap:4px}
+    .title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;row-gap:4px;width:100%}
+    .master-row{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:14px;color:var(--txt2)}
+    .master-row ha-switch{--mdc-theme-secondary:var(--primary-color,#03a9f4)}
+    .sun-protect-info{margin-top:8px;padding:10px 12px;border-radius:8px;background:rgba(255,152,0,.12);border:1px solid rgba(255,152,0,.35);font-size:13px}
+    .sun-protect-info.active{border-color:rgba(76,175,80,.45);background:rgba(76,175,80,.12)}
+    .sun-protect-info .sun-row{margin:4px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .topbar h1{margin:0;font-size:24px;font-weight:500;color:var(--txt)}
     .topbar .sub{font-size:14px;color:var(--txt2)}
     .sp-ver-badge{font-size:13px;font-weight:600;color:#4caf50;flex-shrink:0;padding:3px 10px;border-radius:10px;border:2px solid #4caf50;background:rgba(76,175,80,.12);line-height:1.2}
@@ -651,10 +664,12 @@ class ShutterPilotPanel extends LitElement {
     const verRaw=this._integrationVersion();
     const ver=verRaw?verRaw:"";
     return html`
-      <div class="topbar"><div>
+      <div class="topbar"><div style="flex:1">
         <div class="title-row">
           <h1>Shutter Pilot</h1>
           ${ver?html`<span class="sp-ver-badge" title="Shutter Pilot v${ver}" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>`:""}
+          ${d?html`<div class="master-row"><span>${T("master_switch")}</span>
+            <ha-switch .checked=${d.master_enabled!==false} @change=${e=>this._toggleMaster(e.target.checked)}></ha-switch></div>`:""}
         </div>
         ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}
       </div></div>
@@ -686,6 +701,7 @@ class ShutterPilotPanel extends LitElement {
       ${mode==="sun"?this._renderSunInfo(area,d):""}
       ${mode==="time"?this._renderTimeInfo(area):""}
       ${mode==="brightness"?this._renderBrightnessInfo(area):""}
+      ${area.sun_protect_enabled?this._renderSunProtectInfo(area,d):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           return html`<div class="srow"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span></span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
@@ -695,6 +711,25 @@ class ShutterPilotPanel extends LitElement {
         <button class="btn close" @click=${()=>this._coverAction(sh,"close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>${this.t("btn_down")}</button>
         <button class="btn sun" @click=${()=>this._coverAction(sh,"sun")}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${this.t("btn_sun")}</button>
       </div></div>`;
+  }
+  _renderSunProtectInfo(area,d){
+    const id=area.id||"";
+    const st=d.sun_protect_status?.[id]||{};
+    const elev=d.sun?.elevation;
+    const eMin=st.elevation_min??area.elevation_min??0;
+    const eMax=st.elevation_max??area.elevation_max??area.elevation_threshold??15;
+    const cur=elev!=null?Number(elev).toFixed(1)+"°":"–";
+    const active=!!st.active;
+    const inRange=!!st.in_range;
+    let statusText=this.t("sun_prot_inactive");
+    if(active)statusText=this.t("sun_prot_active");
+    else if(inRange)statusText=this.t("sun_prot_waiting");
+    return html`<div class="sun-protect-info ${active?"active":""}">
+      <div class="sun-row"><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>
+        <span><b>${statusText}</b></span></div>
+      <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
+        <span>${this.t("sun_prot_range")}: <b>${eMin}° – ${eMax}°</b> · ${this.t("sun_elevation")}: <b>${cur}</b></span></div>
+    </div>`;
   }
   _renderSunInfo(area,d){
     const sun=d.sun||{};
@@ -775,7 +810,7 @@ class ShutterPilotPanel extends LitElement {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_threshold:4,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_min:0,elevation_max:15,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -830,7 +865,7 @@ class ShutterPilotPanel extends LitElement {
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
-      ${a.sun_protect_enabled?f("elevation_threshold",T("f_elev_thresh"),"number"):""}
+      ${a.sun_protect_enabled?html`${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}`:""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
@@ -928,6 +963,7 @@ class ShutterPilotPanel extends LitElement {
 
   /* ─── Actions ─── */
   async _toggleAuto(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
+  async _toggleMaster(on){try{await this.hass.callWS({type:"shutter_pilot/set_master_enabled",enabled:on});await this._load();}catch(e){console.warn(e);}}
   _coverAction(shutters,action){
     const eids=shutters.map(s=>s.cover_entity_id).filter(Boolean);
     if(!eids.length)return;

@@ -69,10 +69,17 @@ CONF_AREA_WE_UP_TO = "we_up_to"
 CONF_AREA_WE_DOWN_FROM = "we_down_from"
 CONF_AREA_WE_DOWN_TO = "we_down_to"
 
-# Per-area sun protection (elevation)
+# Per-area sun protection (elevation range: active when min <= elev <= max)
 CONF_AREA_SUN_PROTECT_ENABLED = "sun_protect_enabled"
-CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"
+CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max
+CONF_AREA_ELEVATION_MIN = "elevation_min"
+CONF_AREA_ELEVATION_MAX = "elevation_max"
 DEFAULT_AREA_ELEVATION_THRESHOLD = 4.0
+DEFAULT_AREA_ELEVATION_MIN = 0.0
+DEFAULT_AREA_ELEVATION_MAX = 15.0
+
+# Global master switch entity id (stored in entry options after first setup)
+CONF_MASTER_ENTITY_ID = "master_entity_id"
 
 # Per-area light action
 CONF_AREA_DOWN_LIGHT_ENTITY = "down_light_entity"

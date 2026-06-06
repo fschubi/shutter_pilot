@@ -33,6 +33,8 @@ from .const import (
     CONF_DRIVE_AFTER_CLOSE,
 )
 from .helpers import (
+    clear_covers_driven_for_direction,
+    clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     filter_shutters_by_area,
     is_auto_enabled,
@@ -111,7 +113,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         delay: int,
         apply_lock_protection: bool = False,
         area_id: str = "",
-    ) -> None:
+    ) -> int:
+        moved = 0
+        driven_covers: list[str] = []
         for shutter in shutter_list:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover:
@@ -137,69 +141,75 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 eff_pos = get_effective_close_position(hass, shutter, position)
             try:
                 if default_position >= 50 and should_skip_automated_up(
-                    hass, entry, shutter, data, sun_protect_area_ids
+                    hass, entry, shutter, data, sun_protect_area_ids, within_up_window=True
                 ):
                     _LOGGER.info(
                         "%s: %s übersprungen (Sonnenschutz/manuelle Position)",
                         direction,
                         cover,
                     )
+                    continue
+                await set_cover_position(
+                    hass,
+                    entry,
+                    cover,
+                    eff_pos,
+                    direction,
+                )
+                if default_position >= 50:
                     covers_driven_up.add(cover)
                     covers_driven_down.discard(cover)
                     clear_stale_window_cycle_after_automated_up(data, cover)
                 else:
-                    await set_cover_position(
-                        hass,
-                        entry,
-                        cover,
-                        eff_pos,
-                        direction,
-                    )
-                    if default_position >= 50:
-                        covers_driven_up.add(cover)
-                        covers_driven_down.discard(cover)
-                        clear_stale_window_cycle_after_automated_up(data, cover)
-                    else:
-                        covers_driven_down.add(cover)
-                        covers_driven_up.discard(cover)
-                    if eff_pos != position:
-                        _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
+                    covers_driven_down.add(cover)
+                    covers_driven_up.discard(cover)
+                driven_covers.append(cover)
+                moved += 1
+                if eff_pos != position:
+                    _LOGGER.info("%s: %s -> %d%% (Aussperrschutz)", direction, cover, int(eff_pos))
             except Exception as e:
                 _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
             await asyncio.sleep(delay)
 
-    def _run_up(area: dict, trigger: str = "scheduler") -> None:
+        if driven_covers:
+            await clear_manual_override_for_covers(hass, entry, driven_covers)
+        return moved
+
+    async def _run_up_async(area: dict, trigger: str = "scheduler") -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping UP", trigger, area_id)
             return
+        clear_covers_driven_for_direction(data, "up")
         filtered = filter_shutters_by_area(shutters, area_id, use_up=True)
-        # Rollläden weglassen, die in dieser Phase schon automatisch hochgefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
             return
-        # Falls es als „pending“ markiert war, jetzt erledigt.
         pending_up.pop(area_id, None)
         try:
             delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
         except (TypeError, ValueError):
             delay = DEFAULT_AREA_DRIVE_DELAY
-        hass.async_create_task(
-            drive_shutters(filtered, 100, f"Schedule up ({area_id})", delay, apply_lock_protection=False, area_id=area_id)
+        moved = await drive_shutters(
+            filtered, 100, f"Schedule up ({area_id})", delay, apply_lock_protection=False, area_id=area_id
         )
-        hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
+        if moved > 0:
+            await run_group_light_action(hass, entry, area_id, "up")
 
-    def _run_down(area: dict, trigger: str = "scheduler") -> None:
+    def _run_up(area: dict, trigger: str = "scheduler") -> None:
+        hass.async_create_task(_run_up_async(area, trigger=trigger))
+
+    async def _run_down_async(area: dict, trigger: str = "scheduler") -> None:
         area_id = str(area.get(CONF_AREA_ID) or "")
         if not area_id:
             return
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping DOWN", trigger, area_id)
             return
+        clear_covers_driven_for_direction(data, "down")
         filtered = filter_shutters_by_area(shutters, area_id, use_up=False)
-        # Rollläden weglassen, die in dieser Phase schon automatisch runtergefahren wurden.
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:
             return
@@ -207,13 +217,15 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
         except (TypeError, ValueError):
             delay = DEFAULT_AREA_DRIVE_DELAY
-        hass.async_create_task(
-            drive_shutters(
-                filtered, 0, f"Schedule down ({area_id})",
-                delay, apply_lock_protection=True, area_id=area_id
-            )
+        moved = await drive_shutters(
+            filtered, 0, f"Schedule down ({area_id})",
+            delay, apply_lock_protection=True, area_id=area_id
         )
-        hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
+        if moved > 0:
+            await run_group_light_action(hass, entry, area_id, "down")
+
+    def _run_down(area: dict, trigger: str = "scheduler") -> None:
+        hass.async_create_task(_run_down_async(area, trigger=trigger))
 
     # Fixed-time schedule: run every minute, fire only once per event per day.
     # On setup/reload we pre-mark already-passed times for today to avoid
