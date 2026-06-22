@@ -55,6 +55,7 @@ de:{
   f_win_open:"Fenster-Status 'offen'",f_win_tilt:"Fenster-Status 'gekippt'",
   f_win_tilt_none:"Deaktiviert (kein Kipp-Status)",
   f_pos_win_open:"Position bei Fenster offen",f_pos_win_tilt:"Position bei Fenster gekippt",
+  f_pos_win_tilt_2state_hint:"Bei 2-Zustands-Kontakten wird diese Position verwendet, wenn der Rollladen geschlossen ist.",
   f_lock:"Aussperrschutz (verhindert vollständiges Schließen bei offener Tür)",
   f_min_pos:"Mindest-Position wenn Tür offen",
   f_area_up:"Bereich (Hoch)",f_area_down:"Bereich (Runter)",
@@ -105,6 +106,7 @@ en:{
   f_win_open:"Window state 'open'",f_win_tilt:"Window state 'tilted'",
   f_win_tilt_none:"Disabled (no tilt state)",
   f_pos_win_open:"Position when window open",f_pos_win_tilt:"Position when window tilted",
+  f_pos_win_tilt_2state_hint:"For 2-state contacts, this position is used when the shutter is closed.",
   f_lock:"Lock protection (prevents full close when door is open)",
   f_min_pos:"Minimum position when door open",
   f_area_up:"Area (Up)",f_area_down:"Area (Down)",
@@ -144,6 +146,7 @@ fr:{
   f_cover:"Volet / Cover",f_window_sensor:"Capteur fenêtre (optionnel)",
   f_win_open:"État fenêtre 'ouverte'",f_win_tilt:"État fenêtre 'basculée'",f_win_tilt_none:"Désactivé",
   f_pos_win_open:"Position fenêtre ouverte",f_pos_win_tilt:"Position fenêtre basculée",
+  f_pos_win_tilt_2state_hint:"Pour les contacts à 2 états, cette position est utilisée lorsque le volet est fermé.",
   f_lock:"Protection anti-enfermement",f_min_pos:"Position min. porte ouverte",
   f_area_up:"Zone (Montée)",f_area_down:"Zone (Descente)",
   f_pos_open:"Position Ouvert",f_pos_closed:"Position Fermé",f_pos_sun:"Position protection solaire",
@@ -180,6 +183,7 @@ es:{
   f_cover:"Persiana / Cover",f_window_sensor:"Sensor ventana (opcional)",
   f_win_open:"Estado ventana 'abierta'",f_win_tilt:"Estado ventana 'inclinada'",f_win_tilt_none:"Desactivado",
   f_pos_win_open:"Posición ventana abierta",f_pos_win_tilt:"Posición ventana inclinada",
+  f_pos_win_tilt_2state_hint:"Para contactos de 2 estados, esta posición se usa cuando la persiana está cerrada.",
   f_lock:"Protección anti-bloqueo",f_min_pos:"Posición mín. puerta abierta",
   f_area_up:"Zona (Subida)",f_area_down:"Zona (Bajada)",
   f_pos_open:"Posición Abierta",f_pos_closed:"Posición Cerrada",f_pos_sun:"Posición protección solar",
@@ -216,6 +220,7 @@ it:{
   f_cover:"Tapparella / Cover",f_window_sensor:"Sensore finestra (opzionale)",
   f_win_open:"Stato finestra 'aperta'",f_win_tilt:"Stato finestra 'ribaltata'",f_win_tilt_none:"Disattivato",
   f_pos_win_open:"Posizione finestra aperta",f_pos_win_tilt:"Posizione finestra ribaltata",
+  f_pos_win_tilt_2state_hint:"Per contatti a 2 stati, questa posizione viene usata quando la tapparella è chiusa.",
   f_lock:"Protezione anti-blocco",f_min_pos:"Posizione min. porta aperta",
   f_area_up:"Zona (Su)",f_area_down:"Zona (Giù)",
   f_pos_open:"Posizione Aperta",f_pos_closed:"Posizione Chiusa",f_pos_sun:"Posizione protezione solare",
@@ -253,6 +258,7 @@ nl:{
   f_cover:"Rolluik / Cover",f_window_sensor:"Raam-/deursensor (optioneel)",
   f_win_open:"Raamstatus 'open'",f_win_tilt:"Raamstatus 'gekanteld'",f_win_tilt_none:"Uitgeschakeld (geen kantelstatus)",
   f_pos_win_open:"Positie bij raam open",f_pos_win_tilt:"Positie bij raam gekanteld",
+  f_pos_win_tilt_2state_hint:"Bij 2-stands contacten wordt deze positie gebruikt wanneer het rolluik gesloten is.",
   f_lock:"Buitensluitbeveiliging (voorkomt volledig sluiten bij open deur)",f_min_pos:"Minimumpositie bij open deur",
   f_area_up:"Zone (Omhoog)",f_area_down:"Zone (Omlaag)",
   f_pos_open:"Positie Open",f_pos_closed:"Positie Gesloten",f_pos_sun:"Zonweringpositie",
@@ -290,6 +296,7 @@ da:{
   f_cover:"Persienne / Cover",f_window_sensor:"Vinduessensor (valgfrit)",
   f_win_open:"Vinduestilstand 'åben'",f_win_tilt:"Vinduestilstand 'vippet'",f_win_tilt_none:"Deaktiveret",
   f_pos_win_open:"Position ved åbent vindue",f_pos_win_tilt:"Position ved vippet vindue",
+  f_pos_win_tilt_2state_hint:"For 2-tilstands kontakter bruges denne position, når rullegardinet er lukket.",
   f_lock:"Låsebeskyttelse",f_min_pos:"Minimumposition ved åben dør",
   f_area_up:"Område (Op)",f_area_down:"Område (Ned)",
   f_pos_open:"Position Åben",f_pos_closed:"Position Lukket",f_pos_sun:"Solbeskyttelsesposition",
@@ -327,6 +334,7 @@ sv:{
   f_cover:"Persienn / Cover",f_window_sensor:"Fönstersensor (valfritt)",
   f_win_open:"Fönsterstatus 'öppet'",f_win_tilt:"Fönsterstatus 'vippat'",f_win_tilt_none:"Inaktiverad",
   f_pos_win_open:"Position vid öppet fönster",f_pos_win_tilt:"Position vid vippat fönster",
+  f_pos_win_tilt_2state_hint:"För 2-lägeskontakter används denna position när rullgardinen är stängd.",
   f_lock:"Utelåsningsskydd",f_min_pos:"Minimiposition vid öppen dörr",
   f_area_up:"Område (Upp)",f_area_down:"Område (Ner)",
   f_pos_open:"Position Öppen",f_pos_closed:"Position Stängd",f_pos_sun:"Solskyddsposition",
@@ -364,6 +372,7 @@ pl:{
   f_cover:"Roleta / Cover",f_window_sensor:"Czujnik okna (opcjonalnie)",
   f_win_open:"Stan okna 'otwarte'",f_win_tilt:"Stan okna 'uchylone'",f_win_tilt_none:"Wyłączone",
   f_pos_win_open:"Pozycja przy otwartym oknie",f_pos_win_tilt:"Pozycja przy uchylonym oknie",
+  f_pos_win_tilt_2state_hint:"Dla kontaktów 2-stanowych ta pozycja jest używana, gdy roleta jest zamknięta.",
   f_lock:"Blokada bezpieczeństwa",f_min_pos:"Minimalna pozycja przy otwartych drzwiach",
   f_area_up:"Strefa (W górę)",f_area_down:"Strefa (W dół)",
   f_pos_open:"Pozycja Otwarta",f_pos_closed:"Pozycja Zamknięta",f_pos_sun:"Pozycja osłony słonecznej",
@@ -401,6 +410,7 @@ pt:{
   f_cover:"Estore / Cover",f_window_sensor:"Sensor de janela (opcional)",
   f_win_open:"Estado janela 'aberta'",f_win_tilt:"Estado janela 'basculante'",f_win_tilt_none:"Desativado",
   f_pos_win_open:"Posição janela aberta",f_pos_win_tilt:"Posição janela basculante",
+  f_pos_win_tilt_2state_hint:"Para contactos de 2 estados, esta posição é usada quando a persiana está fechada.",
   f_lock:"Proteção anti-bloqueio",f_min_pos:"Posição mín. porta aberta",
   f_area_up:"Zona (Subir)",f_area_down:"Zona (Descer)",
   f_pos_open:"Posição Aberta",f_pos_closed:"Posição Fechada",f_pos_sun:"Posição proteção solar",
@@ -438,6 +448,7 @@ nb:{
   f_cover:"Persienne / Cover",f_window_sensor:"Vindussensor (valgfritt)",
   f_win_open:"Vindustilstand 'åpent'",f_win_tilt:"Vindustilstand 'vippet'",f_win_tilt_none:"Deaktivert",
   f_pos_win_open:"Posisjon ved åpent vindu",f_pos_win_tilt:"Posisjon ved vippet vindu",
+  f_pos_win_tilt_2state_hint:"For 2-tilstandskontakter brukes denne posisjonen når persiennen er lukket.",
   f_lock:"Utestengingsbeskyttelse",f_min_pos:"Minimumsposisjon ved åpen dør",
   f_area_up:"Område (Opp)",f_area_down:"Område (Ned)",
   f_pos_open:"Posisjon Åpen",f_pos_closed:"Posisjon Lukket",f_pos_sun:"Solbeskyttelsesposisjon",
@@ -947,6 +958,7 @@ class ShutterPilotPanel extends LitElement {
         [{v:"none",l:T("f_win_tilt_none")},...WIN_TILT_OPTS.filter(x=>x!=="none").map(x=>({v:x,l:x}))])}
       ${pct("position_when_window_open",T("f_pos_win_open"))}
       ${pct("position_when_window_tilted",T("f_pos_win_tilt"))}
+      ${(!s.window_tilted_state||s.window_tilted_state==="none")?html`<div class="hint">${T("f_pos_win_tilt_2state_hint")}</div>`:""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.lock_protection} @change=${e=>{s.lock_protection=e.target.checked;this.requestUpdate();}}> ${T("f_lock")}</label></div>
       ${s.lock_protection?pct("min_position_when_open",T("f_min_pos")):""}
       ${areaSel("area_up_id",T("f_area_up"))}

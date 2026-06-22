@@ -14,7 +14,6 @@ from .const import (
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID,
-    CONF_WINDOW_OPEN_STATE,
     CONF_WINDOW_TILTED_STATE,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
@@ -38,6 +37,12 @@ def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool
     return current_position <= (pos_closed + _CLOSED_TOLERANCE_PCT)
 
 
+def _has_tilt_state(shutter: dict) -> bool:
+    """True if window contact supports a distinct tilted state (3-state)."""
+    tilted = shutter.get(CONF_WINDOW_TILTED_STATE, "none")
+    return bool(tilted) and str(tilted).lower() != "none"
+
+
 def _get_target_position_for_window_state(
     shutter: dict, state_str: str
 ) -> float | None:
@@ -45,11 +50,11 @@ def _get_target_position_for_window_state(
     if state_str == "closed":
         return None
     if state_str == "tilted":
-        tilted = shutter.get(CONF_WINDOW_TILTED_STATE, "none")
-        if not tilted or tilted.lower() == "none":
-            return shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN, 100)
         return shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
     if state_str == "open":
+        if not _has_tilt_state(shutter):
+            # 2-state contact: open and tilt are indistinguishable -> ventilation position
+            return shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
         return shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN, 100)
     return None
 
@@ -134,7 +139,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 saved = current_pos
                 trigger_heights[cover_entity] = saved
                 trigger_actions[cover_entity] = "triggered"
-                reason = "Window tilted" if window_state == "tilted" else "Window opened"
+                if window_state == "tilted":
+                    reason = "Window tilted"
+                elif not _has_tilt_state(shutter):
+                    reason = "Window opened (2-state ventilation)"
+                else:
+                    reason = "Window opened"
                 hass.async_create_task(
                     set_cover_position(hass, entry, cover_entity, target_pos, reason)
                 )
