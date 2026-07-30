@@ -21,6 +21,23 @@ const COMPASS_PRESETS = [
 ];
 const REFRESH_MS = 30000;
 
+/* Nur die Home-Assistant-App für macOS (Mac Catalyst) stürzt bei
+   <input type="time"> ab: WebKit öffnet dort einen UIDatePicker mit
+   UIPickerView, das im Mac-Idiom nicht unterstützt ist. iPhone, iPad und
+   normale Browser sind nicht betroffen und behalten den nativen Picker.
+   Erkennung: Companion-App + macOS + keine Touch-Punkte. Ein iPad meldet
+   maxTouchPoints > 0 und bekommt daher weiterhin den Picker. */
+const TIME_PICKER_UNSAFE = (() => {
+  try {
+    const inApp = !!(window.webkit?.messageHandlers?.externalBus || window.externalApp);
+    if (!inApp) return false;
+    const plat = navigator.platform || navigator.userAgent || "";
+    return /Mac/i.test(plat) && (navigator.maxTouchPoints || 0) === 0;
+  } catch (_) {
+    return false;
+  }
+})();
+
 /* ─── i18n ─── */
 const I18N = {
 de:{
@@ -803,6 +820,9 @@ class ShutterPilotPanel extends LitElement {
     .tabs::-webkit-scrollbar{height:6px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s;flex:0 0 auto;scroll-snap-align:start}
     .tab:hover{color:var(--txt)}
+    .time-row{display:flex;align-items:center;gap:8px}
+    .time-row select{flex:1 1 0;min-width:0}
+    .time-sep{font-weight:600;color:var(--txt2)}
     .preset-row{display:flex;flex-wrap:wrap;gap:6px}
     .btn.preset{padding:6px 12px;font-size:13px;background:var(--card2, rgba(127,127,127,.12));color:var(--txt)}
     .btn.preset.active{background:var(--sp);color:#fff}
@@ -1038,15 +1058,27 @@ class ShutterPilotPanel extends LitElement {
   }
   _timeField(obj,key,label,fallback="07:00"){
     const cur=this._normalizeTime(obj[key])||fallback;
+    // Überall ausser in der macOS-App: nativer Zeit-Picker, auf dem Handy
+    // also weiterhin das gewohnte Scrollrad.
+    if(!TIME_PICKER_UNSAFE){
+      return html`<div class="field"><label>${label}</label>
+        <input type="time" .value=${cur}
+          @change=${e=>{const v=this._normalizeTime(e.target.value);if(v)obj[key]=v;}}></div>`;
+    }
+    // macOS-App: zwei Auswahlfelder statt Tippen. <select> nutzt dort ein
+    // natives Menü und löst den UIPickerView-Absturz nicht aus.
+    const [h,mi]=cur.split(":").map(Number);
+    const two=n=>String(n).padStart(2,"0");
+    const set=(hh,mm)=>{obj[key]=`${two(hh)}:${two(mm)}`;this.requestUpdate();};
     return html`<div class="field"><label>${label}</label>
-      <input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM"
-        .value=${cur}
-        @change=${e=>{
-          const v=this._normalizeTime(e.target.value);
-          if(v)obj[key]=v;
-          e.target.value=this._normalizeTime(obj[key])||fallback;
-          this.requestUpdate();
-        }}></div>`;
+      <div class="time-row">
+        <select .value=${String(h)} @change=${e=>set(Number(e.target.value),mi)}>
+          ${Array.from({length:24},(_,x)=>html`<option value="${x}" ?selected=${x===h}>${two(x)}</option>`)}
+        </select><span class="time-sep">:</span>
+        <select .value=${String(mi)} @change=${e=>set(h,Number(e.target.value))}>
+          ${Array.from({length:60},(_,x)=>html`<option value="${x}" ?selected=${x===mi}>${two(x)}</option>`)}
+        </select>
+      </div></div>`;
   }
   /* Entitätsauswahl als natives <select>.
      Vorher ein <input list> mit <datalist>: Safari zeigt Datalists praktisch

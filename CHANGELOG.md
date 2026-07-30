@@ -4,6 +4,13 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.1.3]
+
+### Geändert
+- **Zeit-Picker auf Handy und im Browser zurück.** In 2.1.2 wurden alle Zeitfelder zu Textfeldern, um den Absturz der macOS-App zu vermeiden – das verschlechterte aber die Bedienung überall sonst, wo man vorher bequem scrollend auswählen konnte. Der native Picker kommt jetzt überall zurück; nur die Home-Assistant-App für macOS bekommt eine Alternative, weil ausschliesslich dort der Absturz auftritt.
+- **In der macOS-App: zwei Auswahlfelder für Stunde und Minute** statt Tippen. `<select>` nutzt dort ein natives Menü und löst den `UIPickerView`-Absturz nicht aus.
+- Erkannt wird die betroffene Umgebung über Companion-App + macOS + keine Touch-Punkte. iPhone, iPad, Android und alle Browser behalten den nativen Picker.
+
 ## [2.1.2]
 
 ### Behoben
