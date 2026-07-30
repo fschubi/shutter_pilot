@@ -4,6 +4,13 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.1.2]
+
+### Behoben
+- **Home-Assistant-App für macOS stürzte beim Klick auf ein Zeitfeld komplett ab.** Ursache war nicht das Panel, sondern eine Einschränkung von Mac Catalyst: Für `<input type="time">` öffnet WebKit einen `UIDatePicker` mit `UIPickerView`, und `UIPickerView` ist im Mac-Idiom nicht unterstützt. UIKit wirft dann eine ungefangene Exception (`_throwForUnsupportedMacIdiomBehaviorWithReason:`), die die gesamte App beendet. Alle Zeitfelder sind jetzt normale Textfelder im Format `HH:MM` und lösen keinen nativen Picker mehr aus. Die Eingabe akzeptiert `7:00`, `0700`, `07.00` und `07:00` und normalisiert automatisch; ungültige Eingaben werden auf den letzten gültigen Wert zurückgesetzt.
+
+  Die in 2.1.1 vermutete Ursache (Re-Render-Sturm) war falsch – sie erklärte das Schließen des Dialogs, nicht den Absturz der App. Die Änderungen aus 2.1.1 bleiben trotzdem sinnvoll und aktiv.
+
 ## [2.1.1]
 
 ### Behoben

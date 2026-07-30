@@ -1022,6 +1022,32 @@ class ShutterPilotPanel extends LitElement {
   async _load(){if(!this.hass)return;try{this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});}catch(e){console.warn("SP load",e);}}
   _entities(domains){if(!this.hass?.states)return[];return Object.keys(this.hass.states).filter(e=>domains.some(d=>e.startsWith(d+"."))).sort();}
   _entityLabel(eid){const n=this.hass?.states?.[eid]?.attributes?.friendly_name;return n?`${n} (${eid})`:eid;}
+  /* Zeiteingabe bewusst als Textfeld, nicht als <input type="time">.
+     Die Home-Assistant-App für macOS ist eine Mac-Catalyst-App. Dort öffnet
+     WebKit für type="time" einen UIDatePicker mit UIPickerView – und
+     UIPickerView ist im Mac-Idiom nicht unterstützt. UIKit wirft dann eine
+     ungefangene Exception und die gesamte App stürzt ab, nicht nur das Panel.
+     Ein Textfeld löst keinen nativen Picker aus und funktioniert überall
+     gleich. Akzeptiert 7:00, 0700, 07.00 und 07:00. */
+  _normalizeTime(raw){
+    const m=String(raw??"").trim().match(/^(\d{1,2})[:.\s]?(\d{2})$/);
+    if(!m)return null;
+    const h=Number(m[1]),mi=Number(m[2]);
+    if(!Number.isFinite(h)||!Number.isFinite(mi)||h>23||mi>59)return null;
+    return String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0");
+  }
+  _timeField(obj,key,label,fallback="07:00"){
+    const cur=this._normalizeTime(obj[key])||fallback;
+    return html`<div class="field"><label>${label}</label>
+      <input type="text" inputmode="numeric" maxlength="5" placeholder="HH:MM"
+        .value=${cur}
+        @change=${e=>{
+          const v=this._normalizeTime(e.target.value);
+          if(v)obj[key]=v;
+          e.target.value=this._normalizeTime(obj[key])||fallback;
+          this.requestUpdate();
+        }}></div>`;
+  }
   /* Entitätsauswahl als natives <select>.
      Vorher ein <input list> mit <datalist>: Safari zeigt Datalists praktisch
      nicht an, dort war schlicht nichts auswählbar. Ein <select> funktioniert
@@ -1239,7 +1265,7 @@ class ShutterPilotPanel extends LitElement {
        reißt damit die Cursorposition bzw. den nativen Zeit-Dialog weg. Der
        Wert steht im Objekt, gerendert werden muss dafür nichts. */
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""} @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
-    const tm=(k,lbl)=>html`<div class="field"><label>${lbl}</label><input type="time" .value=${a[k]||"07:00"} @change=${e=>{if(e.target.value)a[k]=e.target.value;}}></div>`;
+    const tm=(k,lbl)=>this._timeField(a,k,lbl);
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
