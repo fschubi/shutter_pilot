@@ -4,6 +4,14 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.1.4]
+
+### Behoben
+- **In der Home-Assistant-App für macOS liessen sich Auswahlfelder nicht bedienen.** Die Pfeile waren sichtbar, aber ein Klick öffnete nichts. In Mac Catalyst sind native Formular-Popups im WebView defekt – das betraf sowohl die in 2.1.3 eingeführten Stunden-/Minuten-Felder als auch die Entitätsauswahl (Workday-Sensor, Helligkeitssensor, Lampe, Cover).
+- **Zeitfelder in der macOS-App**: eigenes Steuerelement mit `−`/`+`-Schaltflächen für Stunde und Minute, mit Überlauf (23 → 00) und weiterhin direkter Eingabemöglichkeit.
+- **Entitätsauswahl in der macOS-App**: Suchfeld mit anklickbarer Ergebnisliste statt Dropdown.
+- Beides nutzt ausschliesslich `<button>` und `<input type="text">`, also Elemente, die in dieser Umgebung nachweislich funktionieren. Auf iPhone, iPad, Android und in allen Browsern bleiben die nativen Elemente unverändert erhalten.
+
 ## [2.1.3]
 
 ### Geändert

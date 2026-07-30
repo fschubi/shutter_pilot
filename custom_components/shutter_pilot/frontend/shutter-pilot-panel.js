@@ -21,13 +21,15 @@ const COMPASS_PRESETS = [
 ];
 const REFRESH_MS = 30000;
 
-/* Nur die Home-Assistant-App für macOS (Mac Catalyst) stürzt bei
-   <input type="time"> ab: WebKit öffnet dort einen UIDatePicker mit
-   UIPickerView, das im Mac-Idiom nicht unterstützt ist. iPhone, iPad und
-   normale Browser sind nicht betroffen und behalten den nativen Picker.
+/* In der Home-Assistant-App für macOS (Mac Catalyst) sind native Formular-
+   Popups defekt: <input type="time"> beendet die App (UIPickerView ist im
+   Mac-Idiom nicht unterstützt), und <select>-Dropdowns öffnen sich gar nicht
+   erst – man sieht nur die Pfeile. Auf dieser Plattform werden deshalb
+   eigene Bedienelemente aus reinem HTML gerendert. iPhone, iPad, Android und
+   normale Browser sind nicht betroffen und behalten die nativen Elemente.
    Erkennung: Companion-App + macOS + keine Touch-Punkte. Ein iPad meldet
-   maxTouchPoints > 0 und bekommt daher weiterhin den Picker. */
-const TIME_PICKER_UNSAFE = (() => {
+   maxTouchPoints > 0 und bleibt damit bei den nativen Elementen. */
+const NATIVE_PICKERS_BROKEN = (() => {
   try {
     const inApp = !!(window.webkit?.messageHandlers?.externalBus || window.externalApp);
     if (!inApp) return false;
@@ -41,6 +43,7 @@ const TIME_PICKER_UNSAFE = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Workday-Sensor (optional)",
@@ -121,6 +124,7 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Workday sensor (optional)",
@@ -201,6 +205,7 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Capteur jour ouvré (optionnel)",
@@ -267,6 +272,7 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de día laborable (opcional)",
@@ -333,6 +339,7 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensore giorno feriale (opzionale)",
@@ -399,6 +406,7 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Werkdag-sensor (optioneel)",
@@ -466,6 +474,7 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbejdsdag-sensor (valgfri)",
@@ -533,6 +542,7 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbetsdagssensor (valfri)",
@@ -600,6 +610,7 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Czujnik dnia roboczego (opcjonalnie)",
@@ -667,6 +678,7 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de dia útil (opcional)",
@@ -734,6 +746,7 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbeidsdag-sensor (valgfri)",
@@ -823,6 +836,20 @@ class ShutterPilotPanel extends LitElement {
     .time-row{display:flex;align-items:center;gap:8px}
     .time-row select{flex:1 1 0;min-width:0}
     .time-sep{font-weight:600;color:var(--txt2)}
+    .spin{display:flex;align-items:center;gap:4px;flex:1 1 0}
+    .spin-btn{flex:0 0 auto;min-width:38px;height:38px;font-size:18px;line-height:1;
+      cursor:pointer;border:none;border-radius:8px;background:var(--card2, rgba(127,127,127,.18));color:var(--txt)}
+    .spin-btn:hover{background:var(--sp);color:#fff}
+    .spin-val{flex:1 1 0;min-width:0;text-align:center}
+    .picked{padding:8px 10px;border-radius:8px;background:var(--card2, rgba(127,127,127,.12));
+      margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
+    .ent-list{max-height:200px;overflow-y:auto;border-radius:8px;
+      border:1px solid var(--divider);margin-top:6px}
+    .ent-row{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--divider)}
+    .ent-row:last-child{border-bottom:none}
+    .ent-row:hover{background:var(--card2, rgba(127,127,127,.15))}
+    .ent-row.sel{background:var(--sp);color:#fff}
+    .ent-row.empty{cursor:default;color:var(--txt2)}
     .preset-row{display:flex;flex-wrap:wrap;gap:6px}
     .btn.preset{padding:6px 12px;font-size:13px;background:var(--card2, rgba(127,127,127,.12));color:var(--txt)}
     .btn.preset.active{background:var(--sp);color:#fff}
@@ -1060,24 +1087,34 @@ class ShutterPilotPanel extends LitElement {
     const cur=this._normalizeTime(obj[key])||fallback;
     // Überall ausser in der macOS-App: nativer Zeit-Picker, auf dem Handy
     // also weiterhin das gewohnte Scrollrad.
-    if(!TIME_PICKER_UNSAFE){
+    if(!NATIVE_PICKERS_BROKEN){
       return html`<div class="field"><label>${label}</label>
         <input type="time" .value=${cur}
           @change=${e=>{const v=this._normalizeTime(e.target.value);if(v)obj[key]=v;}}></div>`;
     }
-    // macOS-App: zwei Auswahlfelder statt Tippen. <select> nutzt dort ein
-    // natives Menü und löst den UIPickerView-Absturz nicht aus.
+    // macOS-App: eigenes Steuerelement. Nur <button> und <input type="text">,
+    // beides funktioniert dort zuverlässig. Tippen bleibt möglich, ist aber
+    // nicht nötig – die Werte lassen sich komplett per Klick einstellen.
     const [h,mi]=cur.split(":").map(Number);
     const two=n=>String(n).padStart(2,"0");
-    const set=(hh,mm)=>{obj[key]=`${two(hh)}:${two(mm)}`;this.requestUpdate();};
+    const set=(hh,mm)=>{
+      const H=((hh%24)+24)%24, M=((mm%60)+60)%60;
+      obj[key]=`${two(H)}:${two(M)}`;
+      this.requestUpdate();
+    };
+    const spin=(val,onMinus,onPlus,onType,max)=>html`
+      <div class="spin">
+        <button class="spin-btn" @click=${onMinus}>−</button>
+        <input class="spin-val" type="text" inputmode="numeric" maxlength="2" .value=${two(val)}
+          @change=${e=>{const n=parseInt(e.target.value,10);
+            if(Number.isFinite(n)&&n>=0&&n<=max)onType(n);else this.requestUpdate();}}>
+        <button class="spin-btn" @click=${onPlus}>+</button>
+      </div>`;
     return html`<div class="field"><label>${label}</label>
       <div class="time-row">
-        <select .value=${String(h)} @change=${e=>set(Number(e.target.value),mi)}>
-          ${Array.from({length:24},(_,x)=>html`<option value="${x}" ?selected=${x===h}>${two(x)}</option>`)}
-        </select><span class="time-sep">:</span>
-        <select .value=${String(mi)} @change=${e=>set(h,Number(e.target.value))}>
-          ${Array.from({length:60},(_,x)=>html`<option value="${x}" ?selected=${x===mi}>${two(x)}</option>`)}
-        </select>
+        ${spin(h,()=>set(h-1,mi),()=>set(h+1,mi),n=>set(n,mi),23)}
+        <span class="time-sep">:</span>
+        ${spin(mi,()=>set(h,mi-1),()=>set(h,mi+1),n=>set(h,n),59)}
       </div></div>`;
   }
   /* Entitätsauswahl als natives <select>.
@@ -1090,12 +1127,33 @@ class ShutterPilotPanel extends LitElement {
     const cur=obj[key]||"";
     const ents=this._entities(domains);
     if(cur&&!ents.includes(cur))ents.unshift(cur);
+    const missing=cur&&!this.hass?.states?.[cur]
+      ?html`<div class="hint">${this.t("entity_missing")}</div>`:"";
+
+    if(!NATIVE_PICKERS_BROKEN){
+      return html`<div class="field"><label>${label}</label>
+        <select .value=${cur} @change=${e=>{obj[key]=e.target.value;this.requestUpdate();}}>
+          <option value="" ?selected=${!cur}>${this.t("pick_entity")}</option>
+          ${ents.map(e=>html`<option value="${e}" ?selected=${cur===e}>${this._entityLabel(e)}</option>`)}
+        </select>${missing}</div>`;
+    }
+
+    // macOS-App: eigene Auswahlliste, weil sich <select> dort nicht öffnet.
+    // Suchfeld plus anklickbare Zeilen – reines HTML, keine nativen Popups.
+    const fk=`_flt_${key}`;
+    const flt=(this[fk]||"").toLowerCase();
+    const shown=(flt?ents.filter(e=>this._entityLabel(e).toLowerCase().includes(flt)):ents).slice(0,60);
     return html`<div class="field"><label>${label}</label>
-      <select .value=${cur} @change=${e=>{obj[key]=e.target.value;this.requestUpdate();}}>
-        <option value="" ?selected=${!cur}>${this.t("pick_entity")}</option>
-        ${ents.map(e=>html`<option value="${e}" ?selected=${cur===e}>${this._entityLabel(e)}</option>`)}
-      </select>
-      ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
+      <div class="picked">${cur?this._entityLabel(cur):this.t("pick_entity")}
+        ${cur?html`<button class="spin-btn" @click=${()=>{obj[key]="";this.requestUpdate();}}>×</button>`:""}</div>
+      <input type="text" placeholder="${this.t("filter_entity")}" .value=${this[fk]||""}
+        @input=${e=>{this[fk]=e.target.value;this.requestUpdate();}}>
+      <div class="ent-list">
+        ${shown.length?shown.map(e=>html`
+          <div class="ent-row ${cur===e?"sel":""}" @click=${()=>{obj[key]=e;this.requestUpdate();}}>
+            ${this._entityLabel(e)}</div>`)
+          :html`<div class="ent-row empty">${this.t("no_match")}</div>`}
+      </div>${missing}</div>`;
   }
 
   render(){
