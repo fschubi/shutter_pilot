@@ -23,3 +23,9 @@ Automatic shutter, blind, and roller shutter control for Home Assistant.
 4. Create areas and assign shutters
 
 For full documentation see the [README on GitHub](https://github.com/fschubi/shutter_pilot).
+
+## Support
+
+Shutter Pilot is free and open source, built in my spare time. If it helps you, a coffee is always appreciated — but a ⭐ on GitHub or a bug report helps just as much.
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-00457C?logo=paypal&logoColor=white)](https://paypal.me/fschubi)

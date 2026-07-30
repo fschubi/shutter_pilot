@@ -4,6 +4,8 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/v/release/fschubi/shutter_pilot)](https://github.com/fschubi/shutter_pilot/releases)
+[![License](https://img.shields.io/github/license/fschubi/shutter_pilot)](LICENSE)
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/fschubi)
 
 [Deutsche Version / German version](README.de.md)
 
@@ -187,6 +189,16 @@ If your language is not listed, the panel falls back to English. Want to contrib
 **Would you use this feature? [Vote here!](https://github.com/fschubi/shutter_pilot/discussions/1)**
 
 [![Feature Poll](https://img.shields.io/badge/Vote-Awning%20Support%20Poll-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+
+## Support me
+
+Shutter Pilot is built in my spare time and is — and stays — free and open source. If it makes your day a little easier and you'd like to say thanks, I'd appreciate a coffee:
+
+<a href="https://paypal.me/fschubi">
+  <img src="https://img.shields.io/badge/PayPal-Donate-00457C?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" />
+</a>
+
+Just as helpful and completely free: leave a ⭐, [report a bug](https://github.com/fschubi/shutter_pilot/issues), or contribute a translation.
 
 ## Minimum Requirements
 
