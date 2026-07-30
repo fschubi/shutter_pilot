@@ -1,0 +1,61 @@
+name: Bug Report / Fehlerbericht
+description: Ein Problem mit Shutter Pilot melden
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für den Bericht! Bitte fülle möglichst alle Felder aus – das spart Rückfragen.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Was ist passiert?
+      description: Beschreibe das Problem und was du stattdessen erwartet hast.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      placeholder: |
+        1. Bereich im Modus "Helligkeit" angelegt
+        2. Schwellwert auf 400 lx gesetzt
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Shutter Pilot Version
+      placeholder: "2.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant Version
+      placeholder: "2025.7.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnosedaten
+      description: >
+        Einstellungen → Geräte & Dienste → Shutter Pilot → Drei-Punkte-Menü →
+        "Diagnoseinformationen herunterladen". Die Datei enthält keine Passwörter
+        oder Standortdaten und hilft enorm bei der Fehlersuche.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logauszug
+      description: >
+        Relevante Zeilen aus dem Home-Assistant-Log. Für ausführliche Logs siehe
+        TROUBLESHOOTING.md.
+      render: text

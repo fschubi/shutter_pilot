@@ -15,7 +15,6 @@ from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
     is_recent_automation,
-    mark_automation_pending,
     positions_differ_significantly,
     set_cover_position,
 )

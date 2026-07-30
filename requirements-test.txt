@@ -1,0 +1,8 @@
+pytest-homeassistant-custom-component>=0.13.190
+pytest-cov>=5.0.0
+
+# Shutter Pilot registers a sidebar panel, so the integration depends on the
+# `frontend` component. Home Assistant refuses to set it up without the
+# hass_frontend package, which pytest-homeassistant-custom-component does not
+# pull in by itself.
+home-assistant-frontend

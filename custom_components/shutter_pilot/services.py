@@ -13,15 +13,20 @@ from .const import (
     DOMAIN,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
-    CONF_POSITION_OPEN,
-    CONF_POSITION_CLOSED,
-    CONF_POSITION_SUN_PROTECT,
     CONF_AREAS,
     CONF_AREA_ID,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
+    ROLE_CLOSED,
+    ROLE_OPEN,
+    ROLE_SUN_PROTECT,
 )
-from .helpers import filter_shutters_by_area, set_cover_position
+from .helpers import (
+    filter_shutters_by_area,
+    get_position_for_role,
+    get_tilt_for_role,
+    set_cover_position,
+)
 from .window_helper import get_effective_close_position
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,21 +44,37 @@ async def _drive_group(
     hass: HomeAssistant,
     entry: ConfigEntry,
     shutters: list,
-    position: float,
+    role: str,
     direction: str,
     delay: int,
+    area_id: str,
     apply_lock_protection: bool = False,
 ) -> None:
+    """Drive every shutter of a group to its own configured position for `role`."""
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    driven = 0
     for shutter in shutters:
         cover = shutter.get(CONF_COVER_ENTITY_ID)
         if not cover:
             continue
+        position = get_position_for_role(shutter, role)
+        tilt = get_tilt_for_role(shutter, role)
         eff_pos = position
         if apply_lock_protection:
             eff_pos = get_effective_close_position(hass, shutter, position)
         try:
-            await set_cover_position(hass, entry, cover, eff_pos, direction)
+            if driven > 0 and delay > 0:
+                await asyncio.sleep(delay)
+            await set_cover_position(
+                hass,
+                entry,
+                cover,
+                eff_pos,
+                direction,
+                tilt_position=tilt,
+                area_id=area_id,
+            )
+            driven += 1
             if eff_pos != position:
                 _LOGGER.info(
                     "%s: %s -> %d%% (Aussperrschutz: Tür offen)",
@@ -62,7 +83,7 @@ async def _drive_group(
                     int(eff_pos),
                 )
             if isinstance(data, dict):
-                if eff_pos >= 50:
+                if role == ROLE_OPEN:
                     data.setdefault("covers_driven_up", set()).add(cover)
                     data.setdefault("covers_driven_down", set()).discard(cover)
                 else:
@@ -70,7 +91,6 @@ async def _drive_group(
                     data.setdefault("covers_driven_up", set()).discard(cover)
         except Exception as e:
             _LOGGER.warning("Failed %s %s: %s", direction, cover, e)
-        await asyncio.sleep(delay)
 
 
 async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -107,9 +127,10 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass,
             entry,
             shutters,
-            100,
+            ROLE_OPEN,
             f"open_group({area_id})",
             _delay_for_area(area_id),
+            area_id,
         )
 
     async def close_group(call) -> None:
@@ -128,9 +149,10 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass,
             entry,
             shutters,
-            0,
+            ROLE_CLOSED,
             f"close_group({area_id})",
             _delay_for_area(area_id),
+            area_id,
             apply_lock_protection=True,
         )
 
@@ -146,17 +168,14 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             )
             shutters = []
         shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
-        # Use first shutter's sun protect position or default 50
-        pos = 50
-        if shutters:
-            pos = shutters[0].get(CONF_POSITION_SUN_PROTECT, 50)
         await _drive_group(
             hass,
             entry,
             shutters,
-            pos,
+            ROLE_SUN_PROTECT,
             f"sun_protect_group({area_id})",
             _delay_for_area(area_id),
+            area_id,
             apply_lock_protection=True,
         )
 

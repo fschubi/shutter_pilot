@@ -2,230 +2,55 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Shutter Pilot",
-        "description": "Shutter Pilot uses your home location automatically. Click OK.\n\nTo configure: Settings → Devices & Services → Integrations tab → Shutter Pilot → Menu (⋮) → Configure"
-      },
-      "shutters": {
-        "title": "Configure shutters",
-        "description": "Add shutters and assign them to groups and window triggers.",
-        "data": {}
+        "title": "Shutter Pilot",
+        "description": "Shutter Pilot will be set up with three example areas. Location and sun times are taken from your Home Assistant settings automatically.\n\nAfter setup, open **Shutter Pilot** in the sidebar to create your areas and assign your shutters."
       }
     },
     "error": {
-      "cannot_connect": "Connection failed",
-      "invalid_auth": "Invalid credentials",
-      "unknown": "Unknown error"
+      "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Already configured",
-      "not_found": "Shutter not found"
+      "single_instance_allowed": "Shutter Pilot is already set up. All areas and shutters are managed in the sidebar panel."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Shutter Pilot options",
-        "description": "Choose an action. Currently {area_count} area(s) and {shutter_count} shutter(s) configured.",
-        "menu_options": {
-          "manage_areas": "Manage areas",
-          "add_shutter": "Add shutter",
-          "edit_shutter": "Edit shutter",
-          "done": "Done"
-        }
-      },
-      "settings_menu": {
-        "title": "Settings",
-        "description": "Choose the area to configure.",
-        "menu_options": {
-          "settings_general": "General settings (brightness, auto, sun protection)",
-          "settings_schedule_living": "Schedule Living",
-          "settings_schedule_sleep": "Schedule Sleep",
-          "settings_schedule_children": "Schedule Children"
-        }
-      },
-      "settings_general": {
-        "title": "General settings",
-        "description": "Brightness sensor, delay, auto modes, sun protection.",
-        "data": {
-          "brightness_entity_id": "Brightness sensor",
-          "brightness_down_threshold": "Lux threshold down",
-          "brightness_up_threshold": "Lux threshold up",
-          "brightness_down_time": "Time for down logic (HH:MM)",
-          "brightness_up_time": "Time for up logic (HH:MM)",
-          "brightness_ignore_time": "Brightness only (ignore time window)",
-          "drive_delay": "Delay between shutters (seconds)",
-          "use_elevation": "Sun protection by elevation",
-          "elevation_threshold": "Elevation threshold (°)",
-          "auto_living": "Auto mode Living",
-          "auto_sleep": "Auto mode Sleep",
-          "auto_children": "Auto mode Children",
-          "living_down_light_entity": "Living group: light/switch for down",
-          "living_down_light_brightness": "Living group: brightness when going down (%)",
-          "sleep_down_light_entity": "Sleep group: light/switch for down",
-          "sleep_down_light_brightness": "Sleep group: brightness when going down (%)",
-          "children_down_light_entity": "Children group: light/switch for down",
-          "children_down_light_brightness": "Children group: brightness when going down (%)"
-        }
-      },
-      "settings_schedule_living": {
-        "title": "Schedule Living",
-        "description": "Type (Fixed/Sunrise/Sunset), times, offset in minutes.",
-        "data": {
-          "living_type_up": "Type up",
-          "living_type_down": "Type down",
-          "living_sunrise_offset": "Sunrise offset (min., negative=before)",
-          "living_sunset_offset": "Sunset offset (min.)",
-          "living_w_up_min": "Weekday: Up from (HH:MM)",
-          "living_w_up_max": "Weekday: Up until (HH:MM)",
-          "living_w_down": "Weekday: Down (HH:MM)",
-          "living_we_up_min": "Weekend: Up from",
-          "living_we_up_max": "Weekend: Up until",
-          "living_we_down": "Weekend: Down"
-        }
-      },
-      "settings_schedule_sleep": {
-        "title": "Schedule Sleep",
-        "description": "Schedule for sleep area.",
-        "data": {
-          "sleep_type_up": "Type up",
-          "sleep_type_down": "Type down",
-          "sleep_sunrise_offset": "Sunrise offset (min.)",
-          "sleep_sunset_offset": "Sunset offset (min.)",
-          "sleep_w_up_min": "Weekday: Up from",
-          "sleep_w_up_max": "Weekday: Up until",
-          "sleep_w_down": "Weekday: Down",
-          "sleep_we_up_min": "Weekend: Up from",
-          "sleep_we_up_max": "Weekend: Up until",
-          "sleep_we_down": "Weekend: Down"
-        }
-      },
-      "settings_schedule_children": {
-        "title": "Schedule Children",
-        "description": "Schedule for children area.",
-        "data": {
-          "children_type_up": "Type up",
-          "children_type_down": "Type down",
-          "children_sunrise_offset": "Sunrise offset (min.)",
-          "children_sunset_offset": "Sunset offset (min.)",
-          "children_w_up_min": "Weekday: Up from",
-          "children_w_up_max": "Weekday: Up until",
-          "children_w_down": "Weekday: Down",
-          "children_we_up_min": "Weekend: Up from",
-          "children_we_up_max": "Weekend: Up until",
-          "children_we_down": "Weekend: Down"
-        }
-      },
-      "manage_areas": {
-        "title": "Manage areas",
-        "description": "Add, edit or remove areas.",
-        "menu_options": {
-          "add_area": "Add area",
-          "edit_area": "Edit/remove area",
-          "init": "Back"
-        }
-      },
-      "add_area": {
-        "title": "Add area",
-        "data": {
-          "name": "Area name",
-          "mode": "Control mode"
-        }
-      },
-      "add_area_details": {
-        "title": "Area settings"
-      },
-      "edit_area": {
-        "title": "Edit/remove area"
-      },
-      "edit_area_form": {
-        "title": "Edit area"
-      },
-      "edit_area_details": {
-        "title": "Area settings"
-      },
-      "add_shutter": {
-        "title": "Add shutter",
-        "description": "Configure cover, window trigger and areas.",
-        "data": {
-          "cover_entity_id": "Shutter / Cover",
-          "name": "Name",
-          "window_entity_id": "Window/door sensor (optional, binary_sensor or sensor)",
-          "window_open_state": "Window state 'open' (e.g. on)",
-          "window_tilted_state": "Window state 'tilted' (e.g. tilted, none=disabled)",
-          "position_when_window_open": "Position when window open (%)",
-          "position_when_window_tilted": "Position when window tilted (%)",
-          "lock_protection": "Lock protection (min. position when door open)",
-          "min_position_when_open": "Minimum position when door open (%)",
-          "area_up_id": "Area (Up)",
-          "area_down_id": "Area (Down)",
-          "position_open": "Position open (%)",
-          "position_closed": "Position closed (%)",
-          "position_sun_protect": "Sun protection position (%)",
-          "drive_after_close": "Drive after close (when window still open at close time)"
-        }
-      },
-      "edit_shutter": {
-        "title": "Edit or remove shutter",
-        "description": "Select a shutter and the action.",
-        "data": {
-          "shutter_index": "Shutter",
-          "action": "Action"
-        }
-      },
-      "edit_shutter_form": {
-        "title": "Edit shutter",
-        "description": "Change shutter configuration.",
-        "data": {
-          "cover_entity_id": "Shutter / Cover",
-          "name": "Name",
-          "window_entity_id": "Window/door sensor (optional)",
-          "window_open_state": "Window state 'open'",
-          "window_tilted_state": "Window state 'tilted'",
-          "position_when_window_open": "Position when window open (%)",
-          "position_when_window_tilted": "Position when window tilted (%)",
-          "lock_protection": "Lock protection",
-          "min_position_when_open": "Minimum position when door open (%)",
-          "area_up_id": "Area (Up)",
-          "area_down_id": "Area (Down)",
-          "position_open": "Position open (%)",
-          "position_closed": "Position closed (%)",
-          "position_sun_protect": "Sun protection position (%)",
-          "drive_after_close": "Drive after close"
-        }
+        "title": "Shutter Pilot",
+        "description": "Everything is configured in the **Shutter Pilot** panel in the sidebar - areas, shutters, schedules and sun protection.\n\nCurrently configured: {area_count} areas, {shutter_count} shutters.\n\nJust close this dialog and open the panel."
       }
     }
   },
   "services": {
     "open_group": {
-      "name": "Open area",
-      "description": "Opens all shutters of the selected area.",
+      "name": "Open group",
+      "description": "Opens all shutters of the given area.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "The area id (e.g. living, bedroom, kitchen)"
+          "description": "ID of the area (e.g. living, sleep, children)."
         }
       }
     },
     "close_group": {
-      "name": "Close area",
-      "description": "Closes all shutters of the selected area.",
+      "name": "Close group",
+      "description": "Closes all shutters of the given area.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "The area id (e.g. living, bedroom, kitchen)"
+          "description": "ID of the area (e.g. living, sleep, children)."
         }
       }
     },
     "sun_protect_group": {
-      "name": "Sun protection area",
-      "description": "Drives all shutters of the area to sun protection position.",
+      "name": "Sun protection group",
+      "description": "Moves all shutters of the area to their sun protection position.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "The area id (e.g. living, bedroom, kitchen)"
+          "description": "ID of the area (e.g. living, sleep, children)."
         }
       }
     }
   }
-}
 }

@@ -16,7 +16,9 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_time_change
 
 from copy import deepcopy
 
@@ -25,13 +27,7 @@ from .const import (
     CONF_SHUTTERS,
     CONF_AREAS,
     CONF_AREA_ID,
-    CONF_AREA_NAME,
-    CONF_AREA_MODE,
     CONF_AREA_AUTO_ENTITY_ID,
-    CONF_COVER_ENTITY_ID,
-    CONF_AREA_UP_ID,
-    CONF_AREA_DOWN_ID,
-    CONF_NAME,
     CONF_MASTER_ENTITY_ID,
 )
 from .window_trigger import setup_window_triggers
@@ -66,13 +62,47 @@ PANEL_ASSET_VERSION = _read_manifest_version()
 PANEL_ICON = "mdi:window-shutter-settings"
 PANEL_TITLE = "Shutter Pilot"
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+]
+
+# Shutter Pilot is set up from the UI only; there is no YAML configuration.
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Shutter Pilot component."""
     hass.data.setdefault(DOMAIN, {})
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry. Only version 1 exists so far."""
+    _LOGGER.debug("Migration check for entry version %s", entry.version)
+    return True
+
+
+@callback
+def _setup_minute_ticker(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Register one shared per-minute timer for scheduler and sun protection."""
+    data = hass.data[DOMAIN].get(entry.entry_id)
+    if not data or data.get("_minute_ticker_unsub"):
+        return
+
+    @callback
+    def _tick(now: Any) -> None:
+        for name, cb in list(data.get("_minute_callbacks", {}).items()):
+            try:
+                cb(now)
+            except Exception:  # pragma: no cover - one bad callback must not
+                _LOGGER.exception("Minute callback %s failed", name)
+
+    data["_minute_ticker_unsub"] = async_track_time_change(
+        hass, _tick, hour="*", minute="*", second=0
+    )
+    _LOGGER.debug("Shared minute ticker registered")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -142,6 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
+        _setup_minute_ticker(hass, entry)
         hass.async_create_task(async_restore_positions_on_startup(hass, entry))
 
     if hass.is_running:
@@ -203,9 +234,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = hass.data[DOMAIN][entry.entry_id]
         if isinstance(data, dict):
             for key in (
-                "_scheduler_unsubs",
                 "_brightness_unsubs",
-                "_elevation_unsubs",
                 "_window_unsubs",
                 "_cover_tracker_unsubs",
             ):
@@ -215,6 +244,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     except Exception:
                         pass
                 data[key] = []
+
+            ticker = data.pop("_minute_ticker_unsub", None)
+            if ticker:
+                try:
+                    ticker()
+                except Exception:
+                    pass
+            data["_minute_callbacks"] = {}
             _LOGGER.debug("Shutter Pilot: all listeners cancelled for unload")
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
