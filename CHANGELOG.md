@@ -4,6 +4,17 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.1.1]
+
+### Behoben
+- **Formular schloss sich beim Klick auf ein Zeitfeld (Desktop)**: Das Panel rendert bei jeder Zustandsänderung in Home Assistant neu – also viele Male pro Sekunde. Dabei wurde der Wert aller Eingabefelder neu gesetzt, was den nativen Zeit-Dialog des Browsers sofort wieder schloss. Auf dem iPhone fiel das nicht auf, weil der Picker dort ein eigenes Overlay ist. Solange ein Formular geöffnet ist, lösen reine `hass`-Updates jetzt kein Re-Render mehr aus.
+- **Entitäten liessen sich nicht auswählen (z. B. Workday-Sensor)**: Die Auswahlfelder waren Textfelder mit `<datalist>`. Safari zeigt Datalists praktisch nicht an, dort war schlicht nichts anklickbar. Ersetzt durch ein natives `<select>`, das in jedem Browser funktioniert und Freundlichnamen samt Entity-ID anzeigt.
+- **Cursor sprang beim Tippen**: Text- und Zeitfelder lösten bei jedem Tastendruck ein Re-Render aus. Entfernt.
+- Ein bereits gespeicherter, aktuell nicht verfügbarer Entitätswert bleibt jetzt erhalten und wird mit Hinweis angezeigt, statt beim Speichern unbemerkt verloren zu gehen.
+
+### Neu
+- `brand/icon@2x.png` (512×512). Seit Home Assistant 2026.3 liefern Custom Integrations ihre Brand-Bilder selbst aus dem Ordner `brand/` aus; das Brands-Repository nimmt dafür keine Beiträge mehr an.
+
 ## [2.1.0]
 
 ### Neu

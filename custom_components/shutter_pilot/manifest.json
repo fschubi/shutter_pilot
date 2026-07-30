@@ -11,5 +11,5 @@
   "loggers": ["custom_components.shutter_pilot"],
   "requirements": [],
   "single_config_entry": true,
-  "version": "2.1.0"
+  "version": "2.1.1"
 }

@@ -24,6 +24,7 @@ const REFRESH_MS = 30000;
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Workday-Sensor (optional)",
   f_workday_hint:"Wenn gesetzt, gilt bei \"aus\" der Wochenend-Zeitplan – berücksichtigt Feiertage, Urlaub und Schichtarbeit. Ohne Sensor zählen Samstag und Sonntag.",
@@ -103,6 +104,7 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  entity_missing:"Entity not found – it was renamed or is unavailable.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Workday sensor (optional)",
   f_workday_hint:"When set, \"off\" means the weekend schedule applies – covers public holidays, vacation and shift work. Without a sensor, Saturday and Sunday count.",
@@ -182,6 +184,7 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  entity_missing:"Entité introuvable – renommée ou indisponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Capteur jour ouvré (optionnel)",
   f_workday_hint:"Si défini, \"off\" applique l'horaire du week-end – prend en compte jours fériés, congés et travail posté.",
@@ -247,6 +250,7 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de día laborable (opcional)",
   f_workday_hint:"Si se define, \"off\" aplica el horario de fin de semana – cubre festivos, vacaciones y turnos.",
@@ -312,6 +316,7 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  entity_missing:"Entità non trovata: rinominata o non disponibile.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensore giorno feriale (opzionale)",
   f_workday_hint:"Se impostato, \"off\" applica l'orario del fine settimana – copre festivi, ferie e turni.",
@@ -377,6 +382,7 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Werkdag-sensor (optioneel)",
   f_workday_hint:"Indien ingesteld geldt bij \"uit\" het weekendschema – houdt rekening met feestdagen, vakantie en ploegendienst.",
@@ -443,6 +449,7 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbejdsdag-sensor (valgfri)",
   f_workday_hint:"Når den er sat, betyder \"fra\" at weekendplanen gælder – dækker helligdage, ferie og skifteholdsarbejde.",
@@ -509,6 +516,7 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbetsdagssensor (valfri)",
   f_workday_hint:"När den är satt betyder \"av\" att helgschemat gäller – täcker helgdagar, semester och skiftarbete.",
@@ -575,6 +583,7 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Czujnik dnia roboczego (opcjonalnie)",
   f_workday_hint:"Gdy ustawiony, \"off\" oznacza harmonogram weekendowy – obejmuje święta, urlopy i pracę zmianową.",
@@ -641,6 +650,7 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de dia útil (opcional)",
   f_workday_hint:"Quando definido, \"off\" aplica o horário de fim de semana – cobre feriados, férias e turnos.",
@@ -707,6 +717,7 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Arbeidsdag-sensor (valgfri)",
   f_workday_hint:"Når den er satt, betyr \"av\" at helgeplanen gjelder – dekker helligdager, ferie og skiftarbeid.",
@@ -900,6 +911,17 @@ class ShutterPilotPanel extends LitElement {
     this._mqlHandler=null;
     super.disconnectedCallback?.();
   }
+  shouldUpdate(changed){
+    // hass wird bei JEDER Zustandsänderung in Home Assistant neu gesetzt
+    // (hasChanged:()=>true), also viele Male pro Sekunde. Ein Re-Render setzt
+    // dabei .value auf allen Eingabefeldern neu. Steht der Cursor gerade in
+    // einem Feld – etwa im nativen Zeit-Dialog des Browsers – wird dieser
+    // dadurch geschlossen. Solange ein Formular offen ist, ignorieren wir
+    // deshalb reine hass-Updates; die Formulare brauchen hass nur für die
+    // Entitätslisten, und die ändern sich währenddessen praktisch nie.
+    if((this._editArea||this._editShutter)&&changed.size===1&&changed.has("hass"))return false;
+    return true;
+  }
   updated(c){
     if(c.has("hass")&&this.hass&&!this._data)this._load();
     if(c.has("narrow"))this._syncMobile();
@@ -999,6 +1021,24 @@ class ShutterPilotPanel extends LitElement {
 
   async _load(){if(!this.hass)return;try{this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});}catch(e){console.warn("SP load",e);}}
   _entities(domains){if(!this.hass?.states)return[];return Object.keys(this.hass.states).filter(e=>domains.some(d=>e.startsWith(d+"."))).sort();}
+  _entityLabel(eid){const n=this.hass?.states?.[eid]?.attributes?.friendly_name;return n?`${n} (${eid})`:eid;}
+  /* Entitätsauswahl als natives <select>.
+     Vorher ein <input list> mit <datalist>: Safari zeigt Datalists praktisch
+     nicht an, dort war schlicht nichts auswählbar. Ein <select> funktioniert
+     in jedem Browser. Der aktuell gespeicherte Wert wird immer mit angeboten,
+     auch wenn die Entität gerade fehlt – sonst ginge sie beim Speichern
+     unbemerkt verloren. */
+  _entityField(obj,key,label,domains){
+    const cur=obj[key]||"";
+    const ents=this._entities(domains);
+    if(cur&&!ents.includes(cur))ents.unshift(cur);
+    return html`<div class="field"><label>${label}</label>
+      <select .value=${cur} @change=${e=>{obj[key]=e.target.value;this.requestUpdate();}}>
+        <option value="" ?selected=${!cur}>${this.t("pick_entity")}</option>
+        ${ents.map(e=>html`<option value="${e}" ?selected=${cur===e}>${this._entityLabel(e)}</option>`)}
+      </select>
+      ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
+  }
 
   render(){
     const d=this._data;const T=k=>this.t(k);
@@ -1195,14 +1235,15 @@ class ShutterPilotPanel extends LitElement {
   }
   _renderAreaForm(){
     const a=this._editArea;const m=a.mode||"time";const T=k=>this.t(k);
-    const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""}  @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
-    const tm=(k,lbl)=>html`<div class="field"><label>${lbl}</label><input type="time" .value=${a[k]||"07:00"} @input=${e=>{a[k]=e.target.value;this.requestUpdate();}}></div>`;
+    /* Kein requestUpdate() beim Tippen: Jedes Re-Render setzt .value neu und
+       reißt damit die Cursorposition bzw. den nativen Zeit-Dialog weg. Der
+       Wert steht im Objekt, gerendert werden muss dafür nichts. */
+    const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""} @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
+    const tm=(k,lbl)=>html`<div class="field"><label>${lbl}</label><input type="time" .value=${a[k]||"07:00"} @change=${e=>{if(e.target.value)a[k]=e.target.value;}}></div>`;
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
-    const ep=(k,lbl,domains)=>{const lid=`dl_${k}`;const ents=this._entities(domains);return html`<div class="field"><label>${lbl}</label>
-      <input list="${lid}" .value=${a[k]||""} @input=${e=>{a[k]=e.target.value;this.requestUpdate();}} placeholder="${T("pick_entity")}">
-      <datalist id="${lid}">${ents.map(e=>html`<option value="${e}">${this.hass.states[e]?.attributes?.friendly_name||e}</option>`)}</datalist></div>`;};
+    const ep=(k,lbl,domains)=>this._entityField(a,k,lbl,domains);
     return html`<div class="form"><h3>${a._isNew?T("add_area"):T("edit_area")}</h3>
       ${f("name",T("f_name"))}
       ${a._isNew?"":html`<div class="field"><label>${T("col_id")}</label><input disabled .value=${a.id}></div>`}
@@ -1294,13 +1335,11 @@ class ShutterPilotPanel extends LitElement {
   }
   _renderShutterForm(d){
     const s=this._editShutter;const areas=d.areas||[];const T=k=>this.t(k);
-    const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""}  @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;this.requestUpdate();}}></div>`;
+    const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${s[k]??0}%</span></div></div>`;
-    const ep=(k,lbl,domains)=>{const lid=`dl_s_${k}`;const ents=this._entities(domains);return html`<div class="field"><label>${lbl}</label>
-      <input list="${lid}" .value=${s[k]||""} @input=${e=>{s[k]=e.target.value;this.requestUpdate();}} placeholder="${T("pick_entity")}">
-      <datalist id="${lid}">${ents.map(e=>html`<option value="${e}">${this.hass.states[e]?.attributes?.friendly_name||e}</option>`)}</datalist></div>`;};
+    const ep=(k,lbl,domains)=>this._entityField(s,k,lbl,domains);
     const sel=(k,lbl,opts)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
       ${opts.map(o=>typeof o==="string"?html`<option value="${o}" ?selected=${s[k]===o}>${o}</option>`:html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
     const areaSel=(k,lbl)=>sel(k,lbl,areas.map(a=>({v:a.id,l:a.name||a.id})));
