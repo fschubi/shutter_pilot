@@ -1,14 +1,12 @@
-"""Elevation-based sun protection - per area (min-max range)."""
+"""Sun protection per area - elevation range plus optional compass direction."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.core import HomeAssistant
 
 from .const import (
     DOMAIN,
@@ -19,45 +17,34 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_UP_ID,
-    CONF_POSITION_SUN_PROTECT,
-    CONF_POSITION_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
+    ROLE_OPEN,
+    ROLE_SUN_PROTECT,
 )
 from .helpers import (
-    elevation_in_sun_protect_range,
+    get_azimuth_bounds,
     get_elevation_bounds,
+    get_position_for_role,
+    get_sun_angles,
+    get_tilt_for_role,
     is_auto_enabled,
+    register_minute_callback,
     set_cover_position,
     set_sun_protect_active,
+    sun_protect_conditions_met,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 
 _LOGGER = logging.getLogger(__name__)
 
-SUN_ENTITY = "sun.sun"
-
-
-def _current_elevation(hass: HomeAssistant) -> float | None:
-    sun_state = hass.states.get(SUN_ENTITY)
-    if not sun_state:
-        return None
-    try:
-        return float(sun_state.attributes.get("elevation", 0))
-    except (TypeError, ValueError, AttributeError):
-        return None
-
 
 async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Set up periodic sun elevation evaluation for sun protection."""
+    """Set up periodic sun evaluation for sun protection."""
     data = hass.data[DOMAIN].get(entry.entry_id)
     if not data:
         return
-
-    for unsub in data.get("_elevation_unsubs", []):
-        unsub()
-    data["_elevation_unsubs"] = []
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
@@ -74,18 +61,22 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             continue
         protect_areas.append(a)
     if not protect_areas:
+        register_minute_callback(data, "elevation", None)
         return
 
-    async def _drive_sun_protect(area: dict, elev: float) -> int:
+    def _delay_for(area: dict) -> int:
+        try:
+            return max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+        except (TypeError, ValueError):
+            return DEFAULT_AREA_DRIVE_DELAY
+
+    async def _drive_sun_protect(area: dict, elev: float, azim: float | None) -> int:
         """Drive shutters to sun protection position. Returns count moved."""
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
             return 0
         moved = 0
-        try:
-            delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
-        except (TypeError, ValueError):
-            delay = DEFAULT_AREA_DRIVE_DELAY
+        delay = _delay_for(area)
         idx = 0
         for shutter in [
             s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
@@ -93,11 +84,14 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
-            pos = shutter.get(CONF_POSITION_SUN_PROTECT, 50)
-            drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
-            if drive_after and is_window_open_or_tilted(hass, shutter):
+            pos = get_position_for_role(shutter, ROLE_SUN_PROTECT)
+            tilt = get_tilt_for_role(shutter, ROLE_SUN_PROTECT)
+            if shutter.get(CONF_DRIVE_AFTER_CLOSE, False) and is_window_open_or_tilted(
+                hass, shutter
+            ):
                 data.setdefault("drive_after_close_pending", {})[cover_entity] = {
                     "position": pos,
+                    "tilt": tilt,
                     "reason": "Sun protect",
                     "shutter": shutter,
                 }
@@ -105,28 +99,37 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             pos = get_effective_close_position(hass, shutter, pos)
             e_min, e_max = get_elevation_bounds(area)
             _LOGGER.info(
-                "[elevation] area=%s: elev=%.1f in [%.1f–%.1f] → %s -> %d%%",
-                area_id, elev, e_min, e_max, cover_entity, int(pos),
+                "[sun-protect] area=%s: elev=%.1f in [%.1f–%.1f], azimuth=%s → %s -> %d%%",
+                area_id,
+                elev,
+                e_min,
+                e_max,
+                f"{azim:.1f}" if azim is not None else "n/a",
+                cover_entity,
+                int(pos),
             )
             if idx > 0 and delay > 0:
-                await asyncio.sleep(delay * idx)
+                await asyncio.sleep(delay)
             await set_cover_position(
-                hass, entry, cover_entity, pos, f"Sun protect (area={area_id})"
+                hass,
+                entry,
+                cover_entity,
+                pos,
+                f"Sun protect (area={area_id})",
+                tilt_position=tilt,
+                area_id=area_id,
             )
             idx += 1
             moved += 1
         return moved
 
-    async def _release_sun_protect(area: dict, elev: float) -> int:
-        """Drive shutters to open when elevation rises above protection range."""
+    async def _release_sun_protect(area: dict, reason: str) -> int:
+        """Drive shutters back to open once shading is no longer needed."""
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
             return 0
         moved = 0
-        try:
-            delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
-        except (TypeError, ValueError):
-            delay = DEFAULT_AREA_DRIVE_DELAY
+        delay = _delay_for(area)
         idx = 0
         for shutter in [
             s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "").strip() == area_id
@@ -134,23 +137,29 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
-            pos = shutter.get(CONF_POSITION_OPEN, 100)
-            e_min, e_max = get_elevation_bounds(area)
+            pos = get_position_for_role(shutter, ROLE_OPEN)
+            tilt = get_tilt_for_role(shutter, ROLE_OPEN)
             _LOGGER.info(
-                "[elevation] area=%s: elev=%.1f > %.1f – release → %s -> %d%%",
-                area_id, elev, e_max, cover_entity, int(pos),
+                "[sun-protect] area=%s: release (%s) → %s -> %d%%",
+                area_id, reason, cover_entity, int(pos),
             )
             if idx > 0 and delay > 0:
-                await asyncio.sleep(delay * idx)
+                await asyncio.sleep(delay)
             await set_cover_position(
-                hass, entry, cover_entity, pos, f"Sun protect release (area={area_id})"
+                hass,
+                entry,
+                cover_entity,
+                pos,
+                f"Sun protect release (area={area_id})",
+                tilt_position=tilt,
+                area_id=area_id,
             )
             idx += 1
             moved += 1
         return moved
 
-    async def _evaluate_elevation() -> None:
-        elev = _current_elevation(hass)
+    async def _evaluate() -> None:
+        elev, azim = get_sun_angles(hass)
         if elev is None:
             return
 
@@ -161,30 +170,42 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not is_auto_enabled(hass, entry, area):
                 continue
 
-            e_min, e_max = get_elevation_bounds(area)
             was_active = bool(data.get("sun_protect_active", {}).get(area_id))
+            should_protect = sun_protect_conditions_met(elev, azim, area)
 
-            if elevation_in_sun_protect_range(elev, area):
+            if should_protect:
                 set_sun_protect_active(data, area_id, True)
                 if not was_active:
-                    await _drive_sun_protect(area, elev)
-            elif elev > e_max and was_active:
-                set_sun_protect_active(data, area_id, False)
-                await _release_sun_protect(area, elev)
-            elif elev < e_min and was_active:
-                set_sun_protect_active(data, area_id, False)
+                    await _drive_sun_protect(area, elev, azim)
+                continue
+
+            if not was_active:
+                continue
+
+            # Protection was active and no longer applies. Only drive back up
+            # while the sun is still up: below the range the shutters belong to
+            # the evening/night schedule, not to shading.
+            set_sun_protect_active(data, area_id, False)
+            e_min, e_max = get_elevation_bounds(area)
+            if elev > e_max:
+                await _release_sun_protect(area, "sun above range")
+            elif not sun_protect_conditions_met(elev, azim, area) and elev >= e_min:
+                a_min, a_max = get_azimuth_bounds(area)
+                await _release_sun_protect(
+                    area, f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
+                )
+            else:
                 _LOGGER.debug(
-                    "[elevation] area=%s: elev=%.1f < min %.1f – sun protect inactive",
+                    "[sun-protect] area=%s: elev=%.1f below %.1f – protection off, no drive",
                     area_id, elev, e_min,
                 )
 
-    @callback
-    def _elevation_tick(_now: datetime) -> None:
-        hass.async_create_task(_evaluate_elevation())
+    def _tick(_now) -> None:
+        hass.async_create_task(_evaluate())
 
-    unsub = async_track_time_change(hass, _elevation_tick, hour="*", minute="*", second=0)
-    if unsub:
-        data["_elevation_unsubs"].append(unsub)
-
-    hass.async_create_task(_evaluate_elevation())
-    _LOGGER.info("Elevation listener: %d sun-protect areas (minute tick)", len(protect_areas))
+    register_minute_callback(data, "elevation", _tick)
+    hass.async_create_task(_evaluate())
+    _LOGGER.info(
+        "Sun protection: %d areas (elevation + azimuth, minute tick)",
+        len(protect_areas),
+    )

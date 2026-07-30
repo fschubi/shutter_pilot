@@ -5,10 +5,14 @@ Automatic shutter, blind, and roller shutter control for Home Assistant.
 ## Features
 
 - **Three control modes**: Time-based, brightness sensor (lux), or sun position (sunrise/sunset)
-- **Sidebar panel** with Dashboard, Areas, and Shutters management
-- **Window/door sensors** with automatic shutter response
+- **Sidebar panel** with Dashboard, Areas, and Shutters management – no YAML needed
+- **Window/door sensors** with automatic shutter response (2-state and tilt contacts)
 - **Lock protection** – prevents full closing when a door is open
-- **Sun protection** – configurable elevation-based position
+- **Sun protection** by elevation *and* compass direction, so a west-facing room is not shaded at sunrise
+- **Slat control** for venetian blinds
+- **Workday sensor** support for holidays, vacation and shift work
+- **Presence simulation** with a random time offset
+- **Sensors and events** for your own dashboards and automations
 - **11 languages**: DE, EN, FR, ES, IT, NL, DA, SV, PL, PT, NB
 
 ## Quick Start

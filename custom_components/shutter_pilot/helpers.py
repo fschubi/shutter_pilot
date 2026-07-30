@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import datetime
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,21 +12,41 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     DOMAIN,
+    CONF_AREA_AZIMUTH_ENABLED,
+    CONF_AREA_AZIMUTH_MAX,
+    CONF_AREA_AZIMUTH_MIN,
     CONF_AREA_ID,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_ELEVATION_MAX,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
+    CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_AREA_UP_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
-    DEFAULT_AREA_ELEVATION_MAX,
+    CONF_TILT_CLOSED,
+    CONF_TILT_ENABLED,
+    CONF_TILT_OPEN,
+    CONF_TILT_SUN_PROTECT,
+    DEFAULT_AREA_AZIMUTH_MAX,
+    DEFAULT_AREA_AZIMUTH_MIN,
     DEFAULT_AREA_ELEVATION_MIN,
     DEFAULT_AREA_ELEVATION_THRESHOLD,
+    DEFAULT_AREA_MANUAL_OVERRIDE,
+    DEFAULT_TILT_CLOSED,
+    DEFAULT_TILT_OPEN,
+    DEFAULT_TILT_SUN_PROTECT,
+    EVENT_COVER_MOVED,
+    OVERRIDE_DAILY,
+    OVERRIDE_NEXT_ACTION,
+    ROLE_CLOSED,
+    ROLE_OPEN,
+    ROLE_SUN_PROTECT,
 )
 from .position_store import (
     SOURCE_AUTOMATION,
@@ -38,6 +59,22 @@ _LOGGER = logging.getLogger(__name__)
 
 POSITION_TOLERANCE_PCT = 8.0
 AUTOMATION_STATE_GRACE_SEC = 90.0
+
+
+def register_minute_callback(
+    data: dict[str, Any], name: str, callback_fn: Any | None
+) -> None:
+    """Register (or clear) a callback for the shared minute ticker.
+
+    Scheduler and sun protection both need to run once per minute. Keeping them
+    on one ticker avoids duplicate timers and guarantees a stable order after a
+    reload, because re-registering under the same name replaces the old entry.
+    """
+    callbacks = data.setdefault("_minute_callbacks", {})
+    if callback_fn is None:
+        callbacks.pop(name, None)
+    else:
+        callbacks[name] = callback_fn
 
 
 def is_system_enabled(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -116,6 +153,51 @@ def elevation_in_sun_protect_range(elevation: float, area: dict) -> bool:
     return e_min <= elevation <= e_max
 
 
+def get_azimuth_bounds(area: dict) -> tuple[float, float]:
+    """Return (min, max) azimuth for the windows of this area, in degrees."""
+    try:
+        a_min = float(area.get(CONF_AREA_AZIMUTH_MIN, DEFAULT_AREA_AZIMUTH_MIN))
+    except (TypeError, ValueError):
+        a_min = DEFAULT_AREA_AZIMUTH_MIN
+    try:
+        a_max = float(area.get(CONF_AREA_AZIMUTH_MAX, DEFAULT_AREA_AZIMUTH_MAX))
+    except (TypeError, ValueError):
+        a_max = DEFAULT_AREA_AZIMUTH_MAX
+    return a_min % 360.0, a_max % 360.0
+
+
+def azimuth_in_sun_protect_range(azimuth: float | None, area: dict) -> bool:
+    """True when the sun stands in front of this area's windows.
+
+    Ranges may wrap around north (e.g. 300°–60° for a north-facing room), which
+    is why this is not a plain min <= x <= max comparison. If the azimuth check
+    is switched off the answer is always True, preserving legacy behaviour.
+    """
+    if not bool(area.get(CONF_AREA_AZIMUTH_ENABLED, False)):
+        return True
+    if azimuth is None:
+        # Without a reading we must not block shading – fail open.
+        return True
+    a_min, a_max = get_azimuth_bounds(area)
+    az = float(azimuth) % 360.0
+    if a_min == a_max:
+        return True
+    if a_min < a_max:
+        return a_min <= az <= a_max
+    return az >= a_min or az <= a_max
+
+
+def sun_protect_conditions_met(
+    elevation: float | None, azimuth: float | None, area: dict
+) -> bool:
+    """True when both elevation and compass direction call for shading."""
+    if elevation is None:
+        return False
+    if not elevation_in_sun_protect_range(elevation, area):
+        return False
+    return azimuth_in_sun_protect_range(azimuth, area)
+
+
 def is_sun_protect_active(data: dict[str, Any], area_id: str) -> bool:
     """Runtime flag: sun protection currently active for an area."""
     active = data.get("sun_protect_active", {})
@@ -131,6 +213,40 @@ def set_sun_protect_active(data: dict[str, Any], area_id: str, active: bool) -> 
         state[area_id] = True
     else:
         state.pop(area_id, None)
+
+
+_ROLE_POSITION_KEYS = {
+    ROLE_OPEN: (CONF_POSITION_OPEN, 100),
+    ROLE_CLOSED: (CONF_POSITION_CLOSED, 0),
+    ROLE_SUN_PROTECT: (CONF_POSITION_SUN_PROTECT, 50),
+}
+
+_ROLE_TILT_KEYS = {
+    ROLE_OPEN: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
+    ROLE_CLOSED: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
+    ROLE_SUN_PROTECT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
+}
+
+
+def get_position_for_role(shutter: dict[str, Any], role: str) -> float:
+    """Return the configured cover position for open/closed/sun_protect."""
+    key, fallback = _ROLE_POSITION_KEYS.get(role, (CONF_POSITION_OPEN, 100))
+    try:
+        return float(shutter.get(key, fallback))
+    except (TypeError, ValueError):
+        return float(fallback)
+
+
+def get_tilt_for_role(shutter: dict[str, Any], role: str) -> float | None:
+    """Return the slat angle for a role, or None when tilt is not used."""
+    if not bool(shutter.get(CONF_TILT_ENABLED, False)):
+        return None
+    key, fallback = _ROLE_TILT_KEYS.get(role, (CONF_TILT_OPEN, DEFAULT_TILT_OPEN))
+    try:
+        value = float(shutter.get(key, fallback))
+    except (TypeError, ValueError):
+        return float(fallback)
+    return max(0.0, min(100.0, value))
 
 
 def filter_shutters_by_area(shutters: list, area_id: str, use_up: bool) -> list:
@@ -280,6 +396,44 @@ def _persisted_position(hass: HomeAssistant, cover_entity_id: str) -> float | No
     return None
 
 
+def manual_override_still_blocks(
+    store: ShutterPositionStore, cover_entity_id: str, area: dict[str, Any] | None
+) -> bool:
+    """True if a manual position should keep blocking automated opening.
+
+    The behaviour is configurable per area:
+      never       – manual wins until the next close cycle (legacy default)
+      daily       – manual only counts on the calendar day it was set
+      next_action – scheduled actions always win
+    """
+    mode = DEFAULT_AREA_MANUAL_OVERRIDE
+    if isinstance(area, dict):
+        mode = str(area.get(CONF_AREA_MANUAL_OVERRIDE) or DEFAULT_AREA_MANUAL_OVERRIDE)
+
+    if mode == OVERRIDE_NEXT_ACTION:
+        return False
+
+    if mode == OVERRIDE_DAILY:
+        rec = store.get_record(cover_entity_id) or {}
+        raw = rec.get("updated")
+        if not raw:
+            return True
+        try:
+            updated = datetime.fromisoformat(str(raw))
+        except (TypeError, ValueError):
+            return True
+        if updated.date() < datetime.now().astimezone().date():
+            _LOGGER.debug(
+                "Manual override for %s expired (set on %s)",
+                cover_entity_id,
+                updated.date().isoformat(),
+            )
+            return False
+        return True
+
+    return True
+
+
 def should_skip_automated_up(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -288,6 +442,7 @@ def should_skip_automated_up(
     sun_protect_area_ids: set[str],
     *,
     within_up_window: bool = True,
+    area: dict[str, Any] | None = None,
 ) -> bool:
     """True if an automated UP should not run for this shutter."""
     if should_skip_full_open_preserving_sun_protect(
@@ -305,6 +460,9 @@ def should_skip_automated_up(
     store = get_position_store(hass, entry.entry_id)
     source = store.get_source_sync(cover)
     if source != SOURCE_MANUAL:
+        return False
+
+    if not manual_override_still_blocks(store, cover, area):
         return False
 
     try:
@@ -389,13 +547,7 @@ def get_sun_protect_status_for_areas(
     if not isinstance(data, dict):
         data = {}
 
-    elev = None
-    sun_state = hass.states.get("sun.sun")
-    if sun_state:
-        try:
-            elev = float(sun_state.attributes.get("elevation", 0))
-        except (TypeError, ValueError, AttributeError):
-            elev = None
+    elev, azim = get_sun_angles(hass)
 
     out: dict[str, dict[str, Any]] = {}
     if not isinstance(areas, list):
@@ -410,16 +562,40 @@ def get_sun_protect_status_for_areas(
         if not area_id:
             continue
         e_min, e_max = get_elevation_bounds(area)
-        in_range = elev is not None and elevation_in_sun_protect_range(elev, area)
-        active = is_sun_protect_active(data, area_id)
+        a_min, a_max = get_azimuth_bounds(area)
+        azimuth_used = bool(area.get(CONF_AREA_AZIMUTH_ENABLED, False))
         out[area_id] = {
-            "active": active,
-            "in_range": in_range,
+            "active": is_sun_protect_active(data, area_id),
+            "in_range": sun_protect_conditions_met(elev, azim, area),
+            "elevation_in_range": elev is not None
+            and elevation_in_sun_protect_range(elev, area),
+            "azimuth_in_range": azimuth_in_sun_protect_range(azim, area),
             "elevation_min": e_min,
             "elevation_max": e_max,
             "current_elevation": elev,
+            "azimuth_enabled": azimuth_used,
+            "azimuth_min": a_min,
+            "azimuth_max": a_max,
+            "current_azimuth": azim,
         }
     return out
+
+
+def get_sun_angles(hass: HomeAssistant) -> tuple[float | None, float | None]:
+    """Return (elevation, azimuth) from sun.sun, or (None, None)."""
+    sun_state = hass.states.get("sun.sun")
+    if not sun_state:
+        return None, None
+    attrs = sun_state.attributes or {}
+
+    def _num(key: str) -> float | None:
+        try:
+            value = attrs.get(key)
+            return None if value is None else float(value)
+        except (TypeError, ValueError):
+            return None
+
+    return _num("elevation"), _num("azimuth")
 
 
 async def set_cover_position(
@@ -430,8 +606,10 @@ async def set_cover_position(
     reason: str,
     *,
     source: str | None = None,
+    tilt_position: float | None = None,
+    area_id: str | None = None,
 ) -> None:
-    """Set cover position via service call and persist."""
+    """Set cover position (and optionally slat angle) and persist the result."""
     mark_automation_pending(hass, entry, entity_id)
     try:
         await hass.services.async_call(
@@ -441,6 +619,9 @@ async def set_cover_position(
             blocking=True,
         )
         _LOGGER.info("%s: %s -> %d%%", reason, entity_id, int(position))
+
+        if tilt_position is not None:
+            await _set_cover_tilt(hass, entity_id, tilt_position, reason)
 
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
         if isinstance(data, dict):
@@ -452,6 +633,18 @@ async def set_cover_position(
             position,
             source or SOURCE_AUTOMATION,
         )
+
+        hass.bus.async_fire(
+            EVENT_COVER_MOVED,
+            {
+                "entity_id": entity_id,
+                "position": float(position),
+                "tilt_position": tilt_position,
+                "reason": reason,
+                "area_id": area_id,
+                "source": source or SOURCE_AUTOMATION,
+            },
+        )
     except Exception as e:
         _LOGGER.warning("Failed to set %s: %s", entity_id, e)
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
@@ -459,3 +652,30 @@ async def set_cover_position(
             data.setdefault("pending_automation_covers", set()).discard(entity_id)
             recent = data.setdefault("recent_automation_covers", {})
             recent.pop(entity_id, None)
+
+
+async def _set_cover_tilt(
+    hass: HomeAssistant, entity_id: str, tilt_position: float, reason: str
+) -> None:
+    """Set the slat angle. Covers without tilt support are skipped quietly."""
+    state = hass.states.get(entity_id)
+    supported = 0
+    if state is not None:
+        try:
+            supported = int(state.attributes.get("supported_features") or 0)
+        except (TypeError, ValueError):
+            supported = 0
+    # CoverEntityFeature.SET_TILT_POSITION == 128
+    if supported and not supported & 128:
+        _LOGGER.debug("%s does not support tilt – skipping slat angle", entity_id)
+        return
+    try:
+        await hass.services.async_call(
+            "cover",
+            "set_cover_tilt_position",
+            {"entity_id": entity_id, "tilt_position": tilt_position},
+            blocking=True,
+        )
+        _LOGGER.info("%s: %s slats -> %d%%", reason, entity_id, int(tilt_position))
+    except Exception as e:  # pragma: no cover - defensive
+        _LOGGER.debug("Tilt for %s failed: %s", entity_id, e)

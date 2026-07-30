@@ -36,14 +36,16 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_AREA_UP_ID,
     CONF_AREA_DOWN_ID,
-    CONF_POSITION_OPEN,
-    CONF_POSITION_CLOSED,
     CONF_DRIVE_AFTER_CLOSE,
+    ROLE_CLOSED,
+    ROLE_OPEN,
 )
 from .helpers import (
     clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
+    get_position_for_role,
+    get_tilt_for_role,
     is_auto_enabled,
     is_sun_protect_active,
     set_cover_position,
@@ -52,26 +54,26 @@ from .helpers import (
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
-from .scheduler import _parse_time
+from .schedule_times import is_weekend_schedule, parse_time
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _is_weekend(d: datetime) -> bool:
-    return d.weekday() in (5, 6)
+_parse_time = parse_time
 
 
-def _area_window(area: dict, now: datetime, direction: str) -> bool:
-    """direction: 'up' or 'down'."""
-    is_we = _is_weekend(now)
+def _area_window(
+    area: dict, now: datetime, direction: str, hass: HomeAssistant | None = None
+) -> bool:
+    """True if `now` lies inside the allowed window. direction: 'up' or 'down'."""
+    is_we = is_weekend_schedule(hass, area, now)
     if direction == "up":
         f_key = CONF_AREA_WE_UP_FROM if is_we else CONF_AREA_W_UP_FROM
         t_key = CONF_AREA_WE_UP_TO if is_we else CONF_AREA_W_UP_TO
     else:
         f_key = CONF_AREA_WE_DOWN_FROM if is_we else CONF_AREA_W_DOWN_FROM
         t_key = CONF_AREA_WE_DOWN_TO if is_we else CONF_AREA_W_DOWN_TO
-    start = _parse_time(area.get(f_key, "00:00"))
-    end = _parse_time(area.get(t_key, "23:59"))
+    start = parse_time(area.get(f_key, "00:00"))
+    end = parse_time(area.get(t_key, "23:59"))
     t = now.time()
     if start <= end:
         return start <= t <= end
@@ -123,10 +125,20 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         reason: str,
         delay: int,
         index: int,
+        tilt: float | None = None,
+        area_id: str = "",
     ) -> None:
         if delay > 0 and index > 0:
             await asyncio.sleep(delay * index)
-        await set_cover_position(hass, entry, entity_id, position, reason)
+        await set_cover_position(
+            hass,
+            entry,
+            entity_id,
+            position,
+            reason,
+            tilt_position=tilt,
+            area_id=area_id,
+        )
 
     def _process_brightness(entity_id: str, new_state) -> None:
         if new_state is None:
@@ -179,7 +191,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             moved_down = False
             moved_up = False
 
-            if _area_window(area, now, "down") and lux <= down_threshold:
+            if _area_window(area, now, "down", hass) and lux <= down_threshold:
                 clear_covers_driven_for_direction(data, "down")
                 idx = 0
                 down_covers: list[str] = []
@@ -189,11 +201,13 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         continue
                     if cover_entity in covers_driven_down:
                         continue
-                    pos = shutter.get(CONF_POSITION_CLOSED, 0)
+                    pos = get_position_for_role(shutter, ROLE_CLOSED)
+                    tilt = get_tilt_for_role(shutter, ROLE_CLOSED)
                     drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
                     if drive_after and is_window_open_or_tilted(hass, shutter):
                         data.setdefault("drive_after_close_pending", {})[cover_entity] = {
                             "position": pos,
+                            "tilt": tilt,
                             "reason": "Brightness down",
                             "shutter": shutter,
                         }
@@ -202,7 +216,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     down_covers.append(cover_entity)
                     hass.async_create_task(
                         _set_cover_position_with_delay(
-                            cover_entity, pos, "Brightness down", drive_delay, idx
+                            cover_entity, pos, "Brightness down", drive_delay, idx,
+                            tilt=tilt, area_id=area_id,
                         )
                     )
                     idx += 1
@@ -217,7 +232,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
 
             is_pending = pending_up.get(area_id) == today
-            within_up = _area_window(area, now, "up")
+            within_up = _area_window(area, now, "up", hass)
 
             if within_up and lux <= up_threshold:
                 pending_up[area_id] = today
@@ -248,18 +263,21 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                             data,
                             sun_protect_area_ids,
                             within_up_window=within_up or is_pending,
+                            area=area,
                         ):
                             _LOGGER.info(
                                 "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
                                 cover_entity,
                             )
                             continue
-                        pos = shutter.get(CONF_POSITION_OPEN, 100)
+                        pos = get_position_for_role(shutter, ROLE_OPEN)
+                        tilt = get_tilt_for_role(shutter, ROLE_OPEN)
                         _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
                         up_covers.append(cover_entity)
                         hass.async_create_task(
                             _set_cover_position_with_delay(
-                                cover_entity, pos, "Brightness up", drive_delay, idx
+                                cover_entity, pos, "Brightness up", drive_delay, idx,
+                                tilt=tilt, area_id=area_id,
                             )
                         )
                         idx += 1

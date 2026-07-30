@@ -1,6 +1,6 @@
 /**
- * Shutter Pilot – Home Assistant Sidebar Panel v4
- * Multi-language (DE/EN/FR/ES/IT) · Tabs: Dashboard | Areas | Shutters
+ * Shutter Pilot – Home Assistant Sidebar Panel v5
+ * 11 languages · Tabs: Dashboard | Areas | Shutters
  */
 const LitElement = Object.getPrototypeOf(
   customElements.get("ha-panel-lovelace") ?? customElements.get("hui-view")
@@ -11,10 +11,47 @@ const css  = LitElement?.prototype?.css  ?? ((s)=>s);
 const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset"};
 const WIN_OPEN_OPTS = ["on","open","true","offen"];
 const WIN_TILT_OPTS = ["none","tilted","gekippt","kipp","2"];
+const OVERRIDE_OPTS = ["never","daily","next_action"];
+/* Kompassrichtungen als Schnellwahl für den Azimut-Bereich (Fensterrichtung) */
+const COMPASS_PRESETS = [
+  {key:"north", min:315, max:45},
+  {key:"east",  min:45,  max:135},
+  {key:"south", min:135, max:225},
+  {key:"west",  min:225, max:315},
+];
+const REFRESH_MS = 30000;
 
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Workday-Sensor (optional)",
+  f_workday_hint:"Wenn gesetzt, gilt bei \"aus\" der Wochenend-Zeitplan – berücksichtigt Feiertage, Urlaub und Schichtarbeit. Ohne Sensor zählen Samstag und Sonntag.",
+  f_random_offset:"Zufalls-Offset (Anwesenheitssimulation)",
+  f_random_offset_hint:"Verschiebt die Fahrzeiten täglich zufällig um bis zu ± diesen Wert. 0 = aus.",
+  f_manual_override:"Manuelle Position",
+  f_manual_override_hint:"Wie lange eine von Hand gesetzte Position die Automatik blockiert.",
+  f_override_never:"Bis zur nächsten Schließfahrt",
+  f_override_daily:"Nur am selben Tag",
+  f_override_next_action:"Automatik hat Vorrang",
+  f_azimuth:"Nur bei passender Fensterrichtung",
+  f_azimuth_hint:"Beschattet nur, wenn die Sonne wirklich vor den Fenstern steht. Ohne diese Option wird auch morgens beschattet, wenn die Sonne hinter dem Haus steht.",
+  f_azimuth_preset:"Himmelsrichtung",
+  f_azimuth_min:"Azimut von",
+  f_azimuth_max:"Azimut bis",
+  compass_north:"Nord",
+  compass_east:"Ost",
+  compass_south:"Süd",
+  compass_west:"West",
+  f_tilt:"Lamellen steuern (Jalousie/Raffstore)",
+  f_tilt_hint:"Zusätzlich zur Höhe wird der Lamellenwinkel gesetzt.",
+  f_tilt_unsupported:"Diese Entität meldet keine Lamellen-Unterstützung – die Einstellung wird ignoriert.",
+  f_tilt_open:"Lamellen Offen",
+  f_tilt_closed:"Lamellen Geschlossen",
+  f_tilt_sun:"Lamellen Sonnenschutz",
+  sun_prot_direction:"Fensterrichtung",
+  sun_azimuth:"Sonnen-Azimut",
+  sun_prot_wrong_dir:"Sonne steht nicht vor den Fenstern",
   tab_dashboard:"Dashboard",tab_areas:"Bereiche",tab_shutters:"Rollläden",
   subtitle:"{a} Bereiche, {s} Rollläden",
   loading:"Laden…",
@@ -66,6 +103,34 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Workday sensor (optional)",
+  f_workday_hint:"When set, \"off\" means the weekend schedule applies – covers public holidays, vacation and shift work. Without a sensor, Saturday and Sunday count.",
+  f_random_offset:"Random offset (presence simulation)",
+  f_random_offset_hint:"Shifts the scheduled times by up to ± this value, chosen once per day. 0 = off.",
+  f_manual_override:"Manual position",
+  f_manual_override_hint:"How long a manually set position blocks the automation.",
+  f_override_never:"Until the next closing run",
+  f_override_daily:"Only on the same day",
+  f_override_next_action:"Automation always wins",
+  f_azimuth:"Only when the sun faces the windows",
+  f_azimuth_hint:"Shades only while the sun actually stands in front of the windows. Without this, shading also triggers in the morning when the sun is behind the house.",
+  f_azimuth_preset:"Compass direction",
+  f_azimuth_min:"Azimuth from",
+  f_azimuth_max:"Azimuth to",
+  compass_north:"North",
+  compass_east:"East",
+  compass_south:"South",
+  compass_west:"West",
+  f_tilt:"Control slats (venetian blind)",
+  f_tilt_hint:"Sets the slat angle in addition to the height.",
+  f_tilt_unsupported:"This entity reports no tilt support – the setting will be ignored.",
+  f_tilt_open:"Slats Open",
+  f_tilt_closed:"Slats Closed",
+  f_tilt_sun:"Slats sun protection",
+  sun_prot_direction:"Window direction",
+  sun_azimuth:"Sun azimuth",
+  sun_prot_wrong_dir:"sun is not facing the windows",
   tab_dashboard:"Dashboard",tab_areas:"Areas",tab_shutters:"Shutters",
   subtitle:"{a} areas, {s} shutters",
   loading:"Loading…",
@@ -117,6 +182,34 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Capteur jour ouvré (optionnel)",
+  f_workday_hint:"Si défini, \"off\" applique l'horaire du week-end – prend en compte jours fériés, congés et travail posté.",
+  f_random_offset:"Décalage aléatoire (simulation de présence)",
+  f_random_offset_hint:"Décale les horaires de ± cette valeur, tiré une fois par jour. 0 = désactivé.",
+  f_manual_override:"Position manuelle",
+  f_manual_override_hint:"Durée pendant laquelle une position manuelle bloque l'automatisme.",
+  f_override_never:"Jusqu'à la prochaine fermeture",
+  f_override_daily:"Seulement le même jour",
+  f_override_next_action:"L'automatisme est prioritaire",
+  f_azimuth:"Uniquement si le soleil fait face aux fenêtres",
+  f_azimuth_hint:"N'ombrage que lorsque le soleil est réellement devant les fenêtres.",
+  f_azimuth_preset:"Point cardinal",
+  f_azimuth_min:"Azimut de",
+  f_azimuth_max:"Azimut à",
+  compass_north:"Nord",
+  compass_east:"Est",
+  compass_south:"Sud",
+  compass_west:"Ouest",
+  f_tilt:"Piloter les lames (store vénitien)",
+  f_tilt_hint:"Règle l'angle des lames en plus de la hauteur.",
+  f_tilt_unsupported:"Cette entité n'indique aucune prise en charge des lames – le réglage sera ignoré.",
+  f_tilt_open:"Lames Ouvertes",
+  f_tilt_closed:"Lames Fermées",
+  f_tilt_sun:"Lames protection solaire",
+  sun_prot_direction:"Orientation des fenêtres",
+  sun_azimuth:"Azimut solaire",
+  sun_prot_wrong_dir:"le soleil ne fait pas face aux fenêtres",
   tab_dashboard:"Tableau de bord",tab_areas:"Zones",tab_shutters:"Volets",
   subtitle:"{a} zones, {s} volets",loading:"Chargement…",
   mode_time:"Horaire",mode_brightness:"Luminosité",mode_sun:"Position solaire",
@@ -154,6 +247,34 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Sensor de día laborable (opcional)",
+  f_workday_hint:"Si se define, \"off\" aplica el horario de fin de semana – cubre festivos, vacaciones y turnos.",
+  f_random_offset:"Desfase aleatorio (simulación de presencia)",
+  f_random_offset_hint:"Desplaza los horarios ± este valor, elegido una vez al día. 0 = desactivado.",
+  f_manual_override:"Posición manual",
+  f_manual_override_hint:"Cuánto tiempo una posición manual bloquea la automatización.",
+  f_override_never:"Hasta el próximo cierre",
+  f_override_daily:"Solo el mismo día",
+  f_override_next_action:"La automatización tiene prioridad",
+  f_azimuth:"Solo cuando el sol da a las ventanas",
+  f_azimuth_hint:"Sombrea solo cuando el sol está realmente frente a las ventanas.",
+  f_azimuth_preset:"Punto cardinal",
+  f_azimuth_min:"Azimut desde",
+  f_azimuth_max:"Azimut hasta",
+  compass_north:"Norte",
+  compass_east:"Este",
+  compass_south:"Sur",
+  compass_west:"Oeste",
+  f_tilt:"Controlar lamas (persiana veneciana)",
+  f_tilt_hint:"Ajusta el ángulo de las lamas además de la altura.",
+  f_tilt_unsupported:"Esta entidad no indica compatibilidad con lamas – el ajuste se ignorará.",
+  f_tilt_open:"Lamas Abiertas",
+  f_tilt_closed:"Lamas Cerradas",
+  f_tilt_sun:"Lamas protección solar",
+  sun_prot_direction:"Orientación de ventanas",
+  sun_azimuth:"Azimut solar",
+  sun_prot_wrong_dir:"el sol no da a las ventanas",
   tab_dashboard:"Panel",tab_areas:"Zonas",tab_shutters:"Persianas",
   subtitle:"{a} zonas, {s} persianas",loading:"Cargando…",
   mode_time:"Horario",mode_brightness:"Brillo",mode_sun:"Posición solar",
@@ -191,6 +312,34 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Sensore giorno feriale (opzionale)",
+  f_workday_hint:"Se impostato, \"off\" applica l'orario del fine settimana – copre festivi, ferie e turni.",
+  f_random_offset:"Scarto casuale (simulazione di presenza)",
+  f_random_offset_hint:"Sposta gli orari di ± questo valore, scelto una volta al giorno. 0 = disattivato.",
+  f_manual_override:"Posizione manuale",
+  f_manual_override_hint:"Per quanto tempo una posizione manuale blocca l'automazione.",
+  f_override_never:"Fino alla prossima chiusura",
+  f_override_daily:"Solo lo stesso giorno",
+  f_override_next_action:"L'automazione ha la priorità",
+  f_azimuth:"Solo quando il sole è di fronte alle finestre",
+  f_azimuth_hint:"Ombreggia solo quando il sole è realmente davanti alle finestre.",
+  f_azimuth_preset:"Punto cardinale",
+  f_azimuth_min:"Azimut da",
+  f_azimuth_max:"Azimut a",
+  compass_north:"Nord",
+  compass_east:"Est",
+  compass_south:"Sud",
+  compass_west:"Ovest",
+  f_tilt:"Controllo lamelle (veneziana)",
+  f_tilt_hint:"Imposta l'angolo delle lamelle oltre all'altezza.",
+  f_tilt_unsupported:"Questa entità non segnala supporto per le lamelle – l'impostazione sarà ignorata.",
+  f_tilt_open:"Lamelle Aperte",
+  f_tilt_closed:"Lamelle Chiuse",
+  f_tilt_sun:"Lamelle protezione solare",
+  sun_prot_direction:"Orientamento finestre",
+  sun_azimuth:"Azimut solare",
+  sun_prot_wrong_dir:"il sole non è di fronte alle finestre",
   tab_dashboard:"Pannello",tab_areas:"Zone",tab_shutters:"Tapparelle",
   subtitle:"{a} zone, {s} tapparelle",loading:"Caricamento…",
   mode_time:"Orario",mode_brightness:"Luminosità",mode_sun:"Posizione solare",
@@ -228,6 +377,34 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Werkdag-sensor (optioneel)",
+  f_workday_hint:"Indien ingesteld geldt bij \"uit\" het weekendschema – houdt rekening met feestdagen, vakantie en ploegendienst.",
+  f_random_offset:"Willekeurige afwijking (aanwezigheidssimulatie)",
+  f_random_offset_hint:"Verschuift de tijden met ± deze waarde, één keer per dag gekozen. 0 = uit.",
+  f_manual_override:"Handmatige positie",
+  f_manual_override_hint:"Hoe lang een handmatig ingestelde positie de automatisering blokkeert.",
+  f_override_never:"Tot de volgende sluitbeweging",
+  f_override_daily:"Alleen op dezelfde dag",
+  f_override_next_action:"Automatisering gaat voor",
+  f_azimuth:"Alleen als de zon op de ramen staat",
+  f_azimuth_hint:"Beschaduwt alleen wanneer de zon daadwerkelijk voor de ramen staat.",
+  f_azimuth_preset:"Windrichting",
+  f_azimuth_min:"Azimut van",
+  f_azimuth_max:"Azimut tot",
+  compass_north:"Noord",
+  compass_east:"Oost",
+  compass_south:"Zuid",
+  compass_west:"West",
+  f_tilt:"Lamellen aansturen (jaloezie)",
+  f_tilt_hint:"Stelt naast de hoogte ook de lamelhoek in.",
+  f_tilt_unsupported:"Deze entiteit meldt geen lamelondersteuning – de instelling wordt genegeerd.",
+  f_tilt_open:"Lamellen Open",
+  f_tilt_closed:"Lamellen Dicht",
+  f_tilt_sun:"Lamellen zonwering",
+  sun_prot_direction:"Raamrichting",
+  sun_azimuth:"Zon-azimut",
+  sun_prot_wrong_dir:"zon staat niet op de ramen",
   tab_dashboard:"Dashboard",tab_areas:"Zones",tab_shutters:"Rolluiken",
   subtitle:"{a} zones, {s} rolluiken",loading:"Laden…",
   mode_time:"Tijd",mode_brightness:"Helderheid",mode_sun:"Zonnestand",
@@ -266,6 +443,34 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Arbejdsdag-sensor (valgfri)",
+  f_workday_hint:"Når den er sat, betyder \"fra\" at weekendplanen gælder – dækker helligdage, ferie og skifteholdsarbejde.",
+  f_random_offset:"Tilfældig forskydning (tilstedeværelsessimulering)",
+  f_random_offset_hint:"Forskyder tiderne med ± denne værdi, valgt én gang om dagen. 0 = fra.",
+  f_manual_override:"Manuel position",
+  f_manual_override_hint:"Hvor længe en manuelt sat position blokerer automatikken.",
+  f_override_never:"Indtil næste lukning",
+  f_override_daily:"Kun samme dag",
+  f_override_next_action:"Automatikken har forrang",
+  f_azimuth:"Kun når solen står mod vinduerne",
+  f_azimuth_hint:"Skygger kun, når solen faktisk står foran vinduerne.",
+  f_azimuth_preset:"Verdenshjørne",
+  f_azimuth_min:"Azimut fra",
+  f_azimuth_max:"Azimut til",
+  compass_north:"Nord",
+  compass_east:"Øst",
+  compass_south:"Syd",
+  compass_west:"Vest",
+  f_tilt:"Styr lameller (persienne)",
+  f_tilt_hint:"Indstiller lamelvinklen ud over højden.",
+  f_tilt_unsupported:"Denne enhed melder ingen lamelunderstøttelse – indstillingen ignoreres.",
+  f_tilt_open:"Lameller Åbne",
+  f_tilt_closed:"Lameller Lukkede",
+  f_tilt_sun:"Lameller solafskærmning",
+  sun_prot_direction:"Vinduesretning",
+  sun_azimuth:"Sol-azimut",
+  sun_prot_wrong_dir:"solen står ikke mod vinduerne",
   tab_dashboard:"Dashboard",tab_areas:"Områder",tab_shutters:"Persienner",
   subtitle:"{a} områder, {s} persienner",loading:"Indlæser…",
   mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposition",
@@ -304,6 +509,34 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Arbetsdagssensor (valfri)",
+  f_workday_hint:"När den är satt betyder \"av\" att helgschemat gäller – täcker helgdagar, semester och skiftarbete.",
+  f_random_offset:"Slumpmässig förskjutning (närvarosimulering)",
+  f_random_offset_hint:"Förskjuter tiderna med ± detta värde, valt en gång per dag. 0 = av.",
+  f_manual_override:"Manuellt läge",
+  f_manual_override_hint:"Hur länge ett manuellt satt läge blockerar automatiken.",
+  f_override_never:"Till nästa stängning",
+  f_override_daily:"Endast samma dag",
+  f_override_next_action:"Automatiken har företräde",
+  f_azimuth:"Endast när solen står mot fönstren",
+  f_azimuth_hint:"Skuggar bara när solen faktiskt står framför fönstren.",
+  f_azimuth_preset:"Väderstreck",
+  f_azimuth_min:"Azimut från",
+  f_azimuth_max:"Azimut till",
+  compass_north:"Norr",
+  compass_east:"Öst",
+  compass_south:"Syd",
+  compass_west:"Väst",
+  f_tilt:"Styr lameller (persienn)",
+  f_tilt_hint:"Ställer in lamellvinkeln utöver höjden.",
+  f_tilt_unsupported:"Den här entiteten rapporterar inget lamellstöd – inställningen ignoreras.",
+  f_tilt_open:"Lameller Öppna",
+  f_tilt_closed:"Lameller Stängda",
+  f_tilt_sun:"Lameller solskydd",
+  sun_prot_direction:"Fönsterriktning",
+  sun_azimuth:"Sol-azimut",
+  sun_prot_wrong_dir:"solen står inte mot fönstren",
   tab_dashboard:"Dashboard",tab_areas:"Områden",tab_shutters:"Persienner",
   subtitle:"{a} områden, {s} persienner",loading:"Laddar…",
   mode_time:"Tid",mode_brightness:"Ljusstyrka",mode_sun:"Solposition",
@@ -342,6 +575,34 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Czujnik dnia roboczego (opcjonalnie)",
+  f_workday_hint:"Gdy ustawiony, \"off\" oznacza harmonogram weekendowy – obejmuje święta, urlopy i pracę zmianową.",
+  f_random_offset:"Losowe przesunięcie (symulacja obecności)",
+  f_random_offset_hint:"Przesuwa godziny o ± tę wartość, losowaną raz dziennie. 0 = wyłączone.",
+  f_manual_override:"Pozycja ręczna",
+  f_manual_override_hint:"Jak długo ręcznie ustawiona pozycja blokuje automatykę.",
+  f_override_never:"Do następnego zamknięcia",
+  f_override_daily:"Tylko tego samego dnia",
+  f_override_next_action:"Automatyka ma pierwszeństwo",
+  f_azimuth:"Tylko gdy słońce pada na okna",
+  f_azimuth_hint:"Zacienia tylko wtedy, gdy słońce rzeczywiście stoi przed oknami.",
+  f_azimuth_preset:"Kierunek świata",
+  f_azimuth_min:"Azymut od",
+  f_azimuth_max:"Azymut do",
+  compass_north:"Północ",
+  compass_east:"Wschód",
+  compass_south:"Południe",
+  compass_west:"Zachód",
+  f_tilt:"Sterowanie lamelami (żaluzja)",
+  f_tilt_hint:"Ustawia kąt lameli oprócz wysokości.",
+  f_tilt_unsupported:"Ta encja nie zgłasza obsługi lameli – ustawienie zostanie zignorowane.",
+  f_tilt_open:"Lamele Otwarte",
+  f_tilt_closed:"Lamele Zamknięte",
+  f_tilt_sun:"Lamele ochrona słoneczna",
+  sun_prot_direction:"Kierunek okien",
+  sun_azimuth:"Azymut słońca",
+  sun_prot_wrong_dir:"słońce nie pada na okna",
   tab_dashboard:"Panel",tab_areas:"Strefy",tab_shutters:"Rolety",
   subtitle:"{a} stref, {s} rolet",loading:"Ładowanie…",
   mode_time:"Czas",mode_brightness:"Jasność",mode_sun:"Pozycja słońca",
@@ -380,6 +641,34 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Sensor de dia útil (opcional)",
+  f_workday_hint:"Quando definido, \"off\" aplica o horário de fim de semana – cobre feriados, férias e turnos.",
+  f_random_offset:"Desvio aleatório (simulação de presença)",
+  f_random_offset_hint:"Desloca os horários em ± este valor, escolhido uma vez por dia. 0 = desligado.",
+  f_manual_override:"Posição manual",
+  f_manual_override_hint:"Durante quanto tempo uma posição manual bloqueia a automação.",
+  f_override_never:"Até ao próximo fecho",
+  f_override_daily:"Apenas no mesmo dia",
+  f_override_next_action:"A automação tem prioridade",
+  f_azimuth:"Apenas quando o sol incide nas janelas",
+  f_azimuth_hint:"Sombreia apenas quando o sol está realmente em frente às janelas.",
+  f_azimuth_preset:"Ponto cardeal",
+  f_azimuth_min:"Azimute de",
+  f_azimuth_max:"Azimute até",
+  compass_north:"Norte",
+  compass_east:"Este",
+  compass_south:"Sul",
+  compass_west:"Oeste",
+  f_tilt:"Controlar lâminas (estore veneziano)",
+  f_tilt_hint:"Define o ângulo das lâminas além da altura.",
+  f_tilt_unsupported:"Esta entidade não indica suporte a lâminas – a definição será ignorada.",
+  f_tilt_open:"Lâminas Abertas",
+  f_tilt_closed:"Lâminas Fechadas",
+  f_tilt_sun:"Lâminas proteção solar",
+  sun_prot_direction:"Orientação das janelas",
+  sun_azimuth:"Azimute solar",
+  sun_prot_wrong_dir:"o sol não incide nas janelas",
   tab_dashboard:"Painel",tab_areas:"Zonas",tab_shutters:"Estores",
   subtitle:"{a} zonas, {s} estores",loading:"A carregar…",
   mode_time:"Horário",mode_brightness:"Luminosidade",mode_sun:"Posição solar",
@@ -418,6 +707,34 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
+  f_workday_sensor:"Arbeidsdag-sensor (valgfri)",
+  f_workday_hint:"Når den er satt, betyr \"av\" at helgeplanen gjelder – dekker helligdager, ferie og skiftarbeid.",
+  f_random_offset:"Tilfeldig forskyvning (tilstedeværelsessimulering)",
+  f_random_offset_hint:"Forskyver tidene med ± denne verdien, valgt én gang per dag. 0 = av.",
+  f_manual_override:"Manuell posisjon",
+  f_manual_override_hint:"Hvor lenge en manuelt satt posisjon blokkerer automatikken.",
+  f_override_never:"Til neste lukking",
+  f_override_daily:"Bare samme dag",
+  f_override_next_action:"Automatikken har forrang",
+  f_azimuth:"Bare når sola står mot vinduene",
+  f_azimuth_hint:"Skjermer bare når sola faktisk står foran vinduene.",
+  f_azimuth_preset:"Himmelretning",
+  f_azimuth_min:"Asimut fra",
+  f_azimuth_max:"Asimut til",
+  compass_north:"Nord",
+  compass_east:"Øst",
+  compass_south:"Sør",
+  compass_west:"Vest",
+  f_tilt:"Styr lameller (persienne)",
+  f_tilt_hint:"Setter lamellvinkelen i tillegg til høyden.",
+  f_tilt_unsupported:"Denne enheten melder ingen lamellstøtte – innstillingen ignoreres.",
+  f_tilt_open:"Lameller Åpne",
+  f_tilt_closed:"Lameller Lukket",
+  f_tilt_sun:"Lameller solskjerming",
+  sun_prot_direction:"Vindusretning",
+  sun_azimuth:"Sol-asimut",
+  sun_prot_wrong_dir:"sola står ikke mot vinduene",
   tab_dashboard:"Dashboard",tab_areas:"Områder",tab_shutters:"Persienner",
   subtitle:"{a} områder, {s} persienner",loading:"Laster…",
   mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposisjon",
@@ -475,6 +792,9 @@ class ShutterPilotPanel extends LitElement {
     .tabs::-webkit-scrollbar{height:6px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s;flex:0 0 auto;scroll-snap-align:start}
     .tab:hover{color:var(--txt)}
+    .preset-row{display:flex;flex-wrap:wrap;gap:6px}
+    .btn.preset{padding:6px 12px;font-size:13px;background:var(--card2, rgba(127,127,127,.12));color:var(--txt)}
+    .btn.preset.active{background:var(--sp);color:#fff}
     .tab.active{color:var(--sp);border-bottom-color:var(--sp)}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:16px}
     .card{background:var(--card-bg);border-radius:12px;padding:20px;box-shadow:var(--ha-card-box-shadow,0 2px 6px rgba(0,0,0,.15));min-width:0}
@@ -549,10 +869,17 @@ class ShutterPilotPanel extends LitElement {
     this._isMobile=false;
     this._mql=null;
     this._mqlHandler=null;
+    this._refreshTimer=null;
   }
   connectedCallback(){
     super.connectedCallback?.();
     this._load();
+    // Sonnenstand, Sonnenschutz-Status und die berechneten Fahrzeiten ändern
+    // sich laufend. Ohne diesen Timer bliebe das Panel auf dem Stand vom
+    // Öffnen stehen. Nicht neu laden, während ein Formular offen ist.
+    this._refreshTimer=window.setInterval(()=>{
+      if(!this._editArea&&!this._editShutter)this._load();
+    },REFRESH_MS);
     try{
       this._mql=window.matchMedia("(max-width: 600px)");
       this._mqlHandler=()=>this._syncMobile();
@@ -562,6 +889,7 @@ class ShutterPilotPanel extends LitElement {
     this._syncMobile();
   }
   disconnectedCallback(){
+    if(this._refreshTimer){window.clearInterval(this._refreshTimer);this._refreshTimer=null;}
     try{
       if(this._mql&&this._mqlHandler){
         if(this._mql.removeEventListener)this._mql.removeEventListener("change",this._mqlHandler);
@@ -585,7 +913,9 @@ class ShutterPilotPanel extends LitElement {
   }
 
   get _lang(){const l=(this.hass?.language||"en").substring(0,2);return I18N[l]?l:"en";}
-  t(k){return(I18N[this._lang]||I18N.en)[k]||k;}
+  // Fällt auf Englisch zurück, damit neue Schlüssel in noch nicht
+  // übersetzten Sprachen lesbar bleiben statt als Rohschlüssel zu erscheinen.
+  t(k){return (I18N[this._lang]||{})[k]||I18N.en[k]||k;}
   _modeName(m){return this.t("mode_"+m)||m;}
 
   /** Versionsnummer aus ?v= der geladenen Panel-URL (funktioniert auch wenn get_status noch keine version liefert). */
@@ -735,11 +1065,18 @@ class ShutterPilotPanel extends LitElement {
     let statusText=this.t("sun_prot_inactive");
     if(active)statusText=this.t("sun_prot_active");
     else if(inRange)statusText=this.t("sun_prot_waiting");
+    const azEnabled=st.azimuth_enabled??!!area.azimuth_enabled;
+    const azMin=st.azimuth_min??area.azimuth_min??90;
+    const azMax=st.azimuth_max??area.azimuth_max??270;
+    const azCur=st.current_azimuth!=null?Number(st.current_azimuth).toFixed(0)+"°":"–";
     return html`<div class="sun-protect-info ${active?"active":""}">
       <div class="sun-row"><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>
         <span><b>${statusText}</b></span></div>
       <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
         <span>${this.t("sun_prot_range")}: <b>${eMin}° – ${eMax}°</b> · ${this.t("sun_elevation")}: <b>${cur}</b></span></div>
+      ${azEnabled?html`<div class="sun-row"><ha-icon icon="mdi:compass-outline"></ha-icon>
+        <span>${this.t("sun_prot_direction")}: <b>${Math.round(azMin)}° – ${Math.round(azMax)}°</b> · ${this.t("sun_azimuth")}: <b>${azCur}</b>
+        ${st.azimuth_in_range===false?html`<span class="sun-off"> · ${this.t("sun_prot_wrong_dir")}</span>`:""}</span></div>`:""}
     </div>`;
   }
   _renderSunInfo(area,d){
@@ -821,7 +1158,7 @@ class ShutterPilotPanel extends LitElement {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,sun_protect_enabled:false,elevation_min:0,elevation_max:15,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -875,8 +1212,26 @@ class ShutterPilotPanel extends LitElement {
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
+      ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"])}
+      <div class="hint">${T("f_workday_hint")}</div>
+      ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
+      <div class="hint">${T("f_random_offset_hint")}</div>
+      <div class="field"><label>${T("f_manual_override")}</label>
+        <select .value=${a.manual_override||"never"} @change=${e=>{a.manual_override=e.target.value;this.requestUpdate();}}>
+          ${OVERRIDE_OPTS.map(o=>html`<option value="${o}" ?selected=${(a.manual_override||"never")===o}>${T("f_override_"+o)}</option>`)}
+        </select><div class="hint">${T("f_manual_override_hint")}</div></div>
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
-      ${a.sun_protect_enabled?html`${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}`:""}
+      ${a.sun_protect_enabled?html`
+        ${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
+        <div class="field"><label><input type="checkbox" .checked=${!!a.azimuth_enabled} @change=${e=>{a.azimuth_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_azimuth")}</label>
+          <div class="hint">${T("f_azimuth_hint")}</div></div>
+        ${a.azimuth_enabled?html`
+          <div class="field"><label>${T("f_azimuth_preset")}</label>
+            <div class="preset-row">${COMPASS_PRESETS.map(p=>html`
+              <button class="btn preset ${(Number(a.azimuth_min)===p.min&&Number(a.azimuth_max)===p.max)?"active":""}"
+                @click=${()=>{a.azimuth_min=p.min;a.azimuth_max=p.max;this.requestUpdate();}}>${T("compass_"+p.key)}</button>`)}
+            </div></div>
+          ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
@@ -894,7 +1249,7 @@ class ShutterPilotPanel extends LitElement {
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -966,6 +1321,9 @@ class ShutterPilotPanel extends LitElement {
       ${pct("position_open",T("f_pos_open"))}
       ${pct("position_closed",T("f_pos_closed"))}
       ${pct("position_sun_protect",T("f_pos_sun"))}
+      <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>
+        <div class="hint">${this._supportsTilt(s.cover_entity_id)?T("f_tilt_hint"):T("f_tilt_unsupported")}</div></div>
+      ${s.tilt_enabled?html`${pct("tilt_open",T("f_tilt_open"))}${pct("tilt_closed",T("f_tilt_closed"))}${pct("tilt_sun_protect",T("f_tilt_sun"))}`:""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
         <div class="hint">${T("f_drive_after_hint")}</div></div>
       <div class="form-actions">
@@ -974,6 +1332,13 @@ class ShutterPilotPanel extends LitElement {
   }
 
   /* ─── Actions ─── */
+  _supportsTilt(entityId){
+    // CoverEntityFeature.SET_TILT_POSITION === 128
+    const st=entityId&&this.hass?.states?.[entityId];
+    if(!st)return true;
+    const f=Number(st.attributes?.supported_features||0);
+    return !f||!!(f&128);
+  }
   async _toggleAuto(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
   async _toggleMaster(on){try{await this.hass.callWS({type:"shutter_pilot/set_master_enabled",enabled:on});await this._load();}catch(e){console.warn(e);}}
   _coverAction(shutters,action){

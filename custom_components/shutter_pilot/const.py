@@ -2,6 +2,9 @@
 
 DOMAIN = "shutter_pilot"
 
+# Bus events
+EVENT_COVER_MOVED = "shutter_pilot_cover_moved"
+
 # Config entry keys
 CONF_SHUTTERS = "shutters"
 
@@ -38,6 +41,20 @@ CONF_AREA_DOWN_ID = "area_down_id"
 CONF_POSITION_OPEN = "position_open"
 CONF_POSITION_CLOSED = "position_closed"
 CONF_POSITION_SUN_PROTECT = "position_sun_protect"
+
+# Slat/tilt angles per shutter (venetian blinds). Disabled unless tilt_enabled.
+CONF_TILT_ENABLED = "tilt_enabled"
+CONF_TILT_OPEN = "tilt_open"
+CONF_TILT_CLOSED = "tilt_closed"
+CONF_TILT_SUN_PROTECT = "tilt_sun_protect"
+DEFAULT_TILT_OPEN = 100
+DEFAULT_TILT_CLOSED = 0
+DEFAULT_TILT_SUN_PROTECT = 30
+
+# Roles used to resolve position/tilt for a shutter
+ROLE_OPEN = "open"
+ROLE_CLOSED = "closed"
+ROLE_SUN_PROTECT = "sun_protect"
 
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
@@ -77,6 +94,35 @@ CONF_AREA_ELEVATION_MAX = "elevation_max"
 DEFAULT_AREA_ELEVATION_THRESHOLD = 4.0
 DEFAULT_AREA_ELEVATION_MIN = 0.0
 DEFAULT_AREA_ELEVATION_MAX = 15.0
+
+# Per-area sun protection: compass direction of the windows (azimuth, degrees).
+# 0 = North, 90 = East, 180 = South, 270 = West.
+# Full circle (0–360) means "any direction" and keeps legacy behaviour.
+CONF_AREA_AZIMUTH_ENABLED = "azimuth_enabled"
+CONF_AREA_AZIMUTH_MIN = "azimuth_min"
+CONF_AREA_AZIMUTH_MAX = "azimuth_max"
+DEFAULT_AREA_AZIMUTH_MIN = 90.0
+DEFAULT_AREA_AZIMUTH_MAX = 270.0
+
+# Per-area workday sensor. When set, "on" = weekday schedule, "off" = weekend
+# schedule. Replaces the hard-coded Saturday/Sunday check (holidays, shift work).
+CONF_AREA_WORKDAY_SENSOR = "workday_sensor"
+
+# Per-area presence simulation: random jitter in minutes applied to scheduled
+# up/down times. 0 disables it. The offset is stable for a given day.
+CONF_AREA_RANDOM_OFFSET = "random_offset"
+DEFAULT_AREA_RANDOM_OFFSET = 0
+
+# Per-area handling of manual positions:
+#   never       – a manual position blocks automated opening until the next close
+#   daily       – manual position only counts on the day it was set
+#   next_action – scheduled actions always win over a manual position
+CONF_AREA_MANUAL_OVERRIDE = "manual_override"
+OVERRIDE_NEVER = "never"
+OVERRIDE_DAILY = "daily"
+OVERRIDE_NEXT_ACTION = "next_action"
+MANUAL_OVERRIDE_MODES = [OVERRIDE_NEVER, OVERRIDE_DAILY, OVERRIDE_NEXT_ACTION]
+DEFAULT_AREA_MANUAL_OVERRIDE = OVERRIDE_NEVER
 
 # Global master switch entity id (stored in entry options after first setup)
 CONF_MASTER_ENTITY_ID = "master_entity_id"

@@ -17,12 +17,16 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 - **Sidebar panel** with Dashboard, Areas, and Shutters tabs for full management
 - **Window/door sensors** – automatically opens shutters when windows are opened
 - **Lock protection** – prevents full closing when a door is open
-- **Sun protection** – drives shutters to a configurable position when sun elevation drops
+- **Sun protection with compass direction** – shades only when the sun is within the elevation range **and** actually facing the windows
 - **Drive-after-close** – catches up scheduled movements when a window was still open
 - **Per-shutter positions** – configurable open, closed, and sun-protection positions
+- **Slat control** – optional tilt angle for venetian blinds
+- **Workday sensor** – handles public holidays, vacation and shift work instead of a fixed Saturday/Sunday rule
+- **Presence simulation** – random ±X minute offset on scheduled times
 - **Light actions** – turn on a light/switch when shutters close
 - **Auto-mode switches** – enable/disable automation per area via HA switches
-- **Multi-language panel** – automatically adapts to your HA language (DE, EN, FR, ES, IT)
+- **Own entities** – next scheduled action and sun protection state as sensors for dashboards and automations
+- **Multi-language panel** – automatically adapts to your HA language (11 languages)
 - **Weekday/weekend schedules** – separate time windows for weekdays and weekends (time mode and brightness mode)
 - **Sun info on dashboard** – shows next sunrise/sunset, configured offsets, and calculated trigger times for sun-mode areas
 
@@ -116,7 +120,43 @@ The Dashboard tab shows all areas as cards with:
 | `shutter_pilot.close_group` | Close all shutters in an area |
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 
-All services accept an `area_id` parameter (e.g. `living`, `bedroom`).
+All services accept an `area_id` parameter (e.g. `living`, `bedroom`). Every shutter moves to its own configured position.
+
+## Entities
+
+Besides the panel, Shutter Pilot creates entities you can use on regular dashboards and in your own automations:
+
+| Entity | Description |
+|--------|-------------|
+| `switch.shutter_pilot_system` | Master switch for all automation |
+| `switch.shutter_pilot_auto_<area>` | Automation per area |
+| `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
+| `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
+
+## Event
+
+Every automated movement fires `shutter_pilot_cover_moved` on the event bus:
+
+```yaml
+automation:
+  - alias: Notify when shutters close
+    trigger:
+      - platform: event
+        event_type: shutter_pilot_cover_moved
+    condition: "{{ trigger.event.data.position < 20 }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            {{ trigger.event.data.entity_id }} to
+            {{ trigger.event.data.position }}% ({{ trigger.event.data.reason }})
+```
+
+Fields: `entity_id`, `position`, `tilt_position`, `reason`, `area_id`, `source`.
+
+## Troubleshooting
+
+For bug reports, download diagnostics: **Settings → Devices & Services → Shutter Pilot → ⋮ → Download diagnostics**. The file contains configuration, runtime state and sun data; home coordinates are redacted.
 
 ## Supported Languages
 
@@ -154,4 +194,4 @@ If your language is not listed, the panel falls back to English. Want to contrib
 
 ## License
 
-This project is open source. See the [LICENSE](LICENSE) file for details.
+MIT – see the [LICENSE](LICENSE) file for details.

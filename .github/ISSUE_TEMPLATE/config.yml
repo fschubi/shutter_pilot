@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Frage oder Diskussion
+    url: https://github.com/fschubi/shutter_pilot/discussions
+    about: Für Fragen zur Einrichtung, Ideen und allgemeinen Austausch.

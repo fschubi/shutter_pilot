@@ -17,7 +17,6 @@ from .const import (
     CONF_WINDOW_TILTED_STATE,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
-    CONF_POSITION_OPEN,
     CONF_POSITION_CLOSED,
 )
 from .helpers import get_cover_current_position, is_system_enabled, set_cover_position
@@ -158,7 +157,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     reason = pending_entry.get("reason", "Drive after close")
                     hass.async_create_task(
                         set_cover_position(
-                            hass, entry, cover_entity, target_pos, reason
+                            hass,
+                            entry,
+                            cover_entity,
+                            target_pos,
+                            reason,
+                            tilt_position=pending_entry.get("tilt"),
                         )
                     )
                     _LOGGER.info(

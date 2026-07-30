@@ -1,0 +1,24 @@
+name: Feature Request / Funktionswunsch
+description: Eine neue Funktion vorschlagen
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem soll gelöst werden?
+      description: Beschreibe die Situation, in der dir etwas fehlt.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Wie könnte die Lösung aussehen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen
+      description: Hast du das Problem bisher anders gelöst, z. B. mit einer eigenen Automation?

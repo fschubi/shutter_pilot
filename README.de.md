@@ -17,12 +17,16 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 - **Sidebar-Panel** mit Dashboard, Bereiche und Rollläden-Tabs zur vollständigen Verwaltung
 - **Fenster-/Türsensoren** – öffnet Rollläden automatisch bei geöffnetem Fenster
 - **Aussperrschutz** – verhindert vollständiges Schließen bei offener Tür
-- **Sonnenschutz** – fährt Rollläden auf konfigurierbare Position wenn die Sonnenhöhe sinkt
+- **Sonnenschutz mit Himmelsrichtung** – beschattet nur, wenn die Sonne im eingestellten Höhenwinkel **und** vor den Fenstern steht
 - **Nachholfunktion** – holt geplante Fahrten nach, wenn das Fenster bei der Schließzeit noch offen war
 - **Pro-Rollladen-Positionen** – konfigurierbare Offen-, Geschlossen- und Sonnenschutz-Positionen
+- **Lamellen-Steuerung** – optionaler Lamellenwinkel für Jalousien und Raffstores
+- **Workday-Sensor** – Feiertage, Urlaub und Schichtarbeit statt starrer Samstag/Sonntag-Logik
+- **Anwesenheitssimulation** – zufälliger Zeit-Offset von ±X Minuten
 - **Licht-Aktionen** – schaltet ein Licht/Schalter ein wenn Rollläden schließen
 - **Auto-Modus-Schalter** – Automatik pro Bereich ein-/ausschalten über HA-Switches
-- **Mehrsprachiges Panel** – passt sich automatisch an die HA-Sprache an (DE, EN, FR, ES, IT)
+- **Eigene Entitäten** – nächste Fahrt und Sonnenschutz-Status als Sensoren für Dashboard und Automationen
+- **Mehrsprachiges Panel** – passt sich automatisch an die HA-Sprache an (11 Sprachen)
 - **Wochentag-/Wochenend-Zeitpläne** – separate Zeitfenster für Wochentage und Wochenenden (Zeitmodus und Helligkeitsmodus)
 - **Sonnenstand-Info im Dashboard** – zeigt nächsten Sonnenaufgang/-untergang, Offset und berechnete Trigger-Zeit für Sonnenstand-Bereiche
 
@@ -116,7 +120,43 @@ Das Dashboard zeigt alle Bereiche als Karten mit:
 | `shutter_pilot.close_group` | Alle Rollläden eines Bereichs schließen |
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 
-Alle Services erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`).
+Alle Services erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`). Jeder Rollladen fährt dabei auf seine eigene konfigurierte Position.
+
+## Entitäten
+
+Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dashboards und in eigenen Automationen verwenden kannst:
+
+| Entität | Beschreibung |
+|---------|-------------|
+| `switch.shutter_pilot_system` | Master-Schalter für die gesamte Automatik |
+| `switch.shutter_pilot_auto_<bereich>` | Automatik pro Bereich |
+| `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
+| `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
+
+## Event
+
+Bei jeder automatischen Fahrt wird `shutter_pilot_cover_moved` auf dem Event-Bus gefeuert – ideal für eigene Benachrichtigungen:
+
+```yaml
+automation:
+  - alias: Melden wenn Rollläden schließen
+    trigger:
+      - platform: event
+        event_type: shutter_pilot_cover_moved
+    condition: "{{ trigger.event.data.position < 20 }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            {{ trigger.event.data.entity_id }} auf
+            {{ trigger.event.data.position }}% ({{ trigger.event.data.reason }})
+```
+
+Enthaltene Felder: `entity_id`, `position`, `tilt_position`, `reason`, `area_id`, `source`.
+
+## Fehlersuche
+
+Bei Problemen hilft der Diagnose-Download: **Einstellungen → Geräte & Dienste → Shutter Pilot → ⋮ → Diagnoseinformationen herunterladen**. Die Datei enthält Konfiguration, Laufzeitstatus und Sonnendaten – Standortkoordinaten werden geschwärzt.
 
 ## Unterstützte Sprachen
 
@@ -154,4 +194,4 @@ Wenn deine Sprache nicht aufgeführt ist, wird automatisch Englisch verwendet. D
 
 ## Lizenz
 
-Dieses Projekt ist Open Source. Siehe die [LICENSE](LICENSE) Datei für Details.
+MIT – siehe die [LICENSE](LICENSE) Datei für Details.
