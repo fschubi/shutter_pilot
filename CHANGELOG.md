@@ -4,6 +4,15 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.2.1]
+
+### Geändert
+- **Entitätsauswahl klappt jetzt zu.** In 2.2.0 stand die Trefferliste dauerhaft offen und belegte pro Feld rund sieben Zeilen – bei mehreren Auswahlfeldern in einem Formular wurde das schnell unübersichtlich. Jetzt ist nur eine Zeile sichtbar. Ein Klick darauf klappt die Suche auf, der Cursor springt direkt ins Suchfeld, und nach der Auswahl klappt alles wieder zu. Schliessen geht auch mit `Esc` oder über den Pfeil. Es ist immer höchstens eine Auswahl gleichzeitig offen.
+- **Formulare in Abschnitte gegliedert.** Bereichs- und Rollladen-Formular liefen bisher als eine lange Feldliste durch, ohne erkennbare Grenzen zwischen den Themen. Beide haben jetzt Überschriften mit Symbol und Trennlinie:
+  - Bereich: Grunddaten · Zeitplan · Kalender & manuelle Bedienung · Sonnenschutz · Licht
+  - Rollladen: Rollladen · Bereiche · Positionen · Fenster & Lüftung · Lamellen
+- **Zeitplan steht jetzt direkt hinter der Modusauswahl.** Vorher standen die Zeitfelder ganz am Ende des Formulars, weit weg von der Einstellung, zu der sie gehören.
+
 ## [2.2.0]
 
 Dieses Release setzt die Rückmeldungen aus dem Forum um.

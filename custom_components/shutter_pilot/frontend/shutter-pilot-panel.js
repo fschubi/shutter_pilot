@@ -55,6 +55,23 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  sec_basics:"Grunddaten",
+  sec_schedule:"Zeitplan",
+  sec_schedule_time:"nach Uhrzeit",
+  sec_schedule_brightness:"nach Helligkeit",
+  sec_schedule_sun:"nach Sonnenstand",
+  sec_calendar:"Kalender & manuelle Bedienung",
+  sec_sunprotect:"Sonnenschutz",
+  sec_light:"Licht",
+  sec_light_sub:"beim Schliessen einschalten",
+  sec_shutter:"Rollladen",
+  sec_areas:"Bereiche",
+  sec_areas_sub:"welcher Bereich steuert hoch bzw. runter",
+  sec_positions:"Positionen",
+  sec_window:"Fenster & Lüftung",
+  sec_window_sub:"Kontakte, Lüftungsposition, Aussperrschutz",
+  sec_slats:"Lamellen",
+  sec_slats_sub:"nur für Jalousien und Raffstores",
   ent_matching:"Passende",
   ent_others:"Alle weiteren",
   ent_more:"… und {n} weitere – bitte Suche verfeinern",
@@ -151,6 +168,23 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  sec_basics:"Basics",
+  sec_schedule:"Schedule",
+  sec_schedule_time:"by time",
+  sec_schedule_brightness:"by brightness",
+  sec_schedule_sun:"by sun position",
+  sec_calendar:"Calendar & manual control",
+  sec_sunprotect:"Sun protection",
+  sec_light:"Light",
+  sec_light_sub:"turn on when closing",
+  sec_shutter:"Shutter",
+  sec_areas:"Areas",
+  sec_areas_sub:"which area drives up and down",
+  sec_positions:"Positions",
+  sec_window:"Window & ventilation",
+  sec_window_sub:"contacts, ventilation position, lock protection",
+  sec_slats:"Slats",
+  sec_slats_sub:"venetian blinds only",
   ent_matching:"Matching",
   ent_others:"All others",
   ent_more:"… and {n} more – please refine your search",
@@ -247,6 +281,23 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  sec_basics:"Général",
+  sec_schedule:"Horaire",
+  sec_schedule_time:"par heure",
+  sec_schedule_brightness:"par luminosité",
+  sec_schedule_sun:"par position solaire",
+  sec_calendar:"Calendrier & commande manuelle",
+  sec_sunprotect:"Protection solaire",
+  sec_light:"Lumière",
+  sec_light_sub:"allumer à la fermeture",
+  sec_shutter:"Volet",
+  sec_areas:"Zones",
+  sec_areas_sub:"quelle zone commande la montée et la descente",
+  sec_positions:"Positions",
+  sec_window:"Fenêtre & aération",
+  sec_window_sub:"contacts, position d'aération, anti-enfermement",
+  sec_slats:"Lames",
+  sec_slats_sub:"stores vénitiens uniquement",
   ent_matching:"Correspondants",
   ent_others:"Tous les autres",
   ent_more:"… et {n} de plus – affinez la recherche",
@@ -329,6 +380,23 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  sec_basics:"Datos básicos",
+  sec_schedule:"Horario",
+  sec_schedule_time:"por hora",
+  sec_schedule_brightness:"por luminosidad",
+  sec_schedule_sun:"por posición solar",
+  sec_calendar:"Calendario y control manual",
+  sec_sunprotect:"Protección solar",
+  sec_light:"Luz",
+  sec_light_sub:"encender al cerrar",
+  sec_shutter:"Persiana",
+  sec_areas:"Zonas",
+  sec_areas_sub:"qué zona controla subida y bajada",
+  sec_positions:"Posiciones",
+  sec_window:"Ventana y ventilación",
+  sec_window_sub:"contactos, posición de ventilación, antibloqueo",
+  sec_slats:"Lamas",
+  sec_slats_sub:"solo persianas venecianas",
   ent_matching:"Coincidencias",
   ent_others:"Todos los demás",
   ent_more:"… y {n} más – refina la búsqueda",
@@ -411,6 +479,23 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  sec_basics:"Dati di base",
+  sec_schedule:"Orario",
+  sec_schedule_time:"per orario",
+  sec_schedule_brightness:"per luminosità",
+  sec_schedule_sun:"per posizione solare",
+  sec_calendar:"Calendario e comando manuale",
+  sec_sunprotect:"Protezione solare",
+  sec_light:"Luce",
+  sec_light_sub:"accendi alla chiusura",
+  sec_shutter:"Tapparella",
+  sec_areas:"Zone",
+  sec_areas_sub:"quale zona comanda salita e discesa",
+  sec_positions:"Posizioni",
+  sec_window:"Finestra e aerazione",
+  sec_window_sub:"contatti, posizione di aerazione, antichiusura",
+  sec_slats:"Lamelle",
+  sec_slats_sub:"solo veneziane",
   ent_matching:"Corrispondenti",
   ent_others:"Tutti gli altri",
   ent_more:"… e altri {n} – affina la ricerca",
@@ -493,6 +578,23 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  sec_basics:"Basisgegevens",
+  sec_schedule:"Schema",
+  sec_schedule_time:"op tijd",
+  sec_schedule_brightness:"op helderheid",
+  sec_schedule_sun:"op zonnestand",
+  sec_calendar:"Kalender & handbediening",
+  sec_sunprotect:"Zonwering",
+  sec_light:"Licht",
+  sec_light_sub:"inschakelen bij sluiten",
+  sec_shutter:"Rolluik",
+  sec_areas:"Zones",
+  sec_areas_sub:"welke zone stuurt omhoog en omlaag",
+  sec_positions:"Posities",
+  sec_window:"Raam & ventilatie",
+  sec_window_sub:"contacten, ventilatiestand, uitsluitbeveiliging",
+  sec_slats:"Lamellen",
+  sec_slats_sub:"alleen jaloezieën",
   ent_matching:"Passend",
   ent_others:"Alle overige",
   ent_more:"… en nog {n} – verfijn de zoekopdracht",
@@ -576,6 +678,23 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  sec_basics:"Grunddata",
+  sec_schedule:"Tidsplan",
+  sec_schedule_time:"efter tid",
+  sec_schedule_brightness:"efter lysstyrke",
+  sec_schedule_sun:"efter solposition",
+  sec_calendar:"Kalender & manuel betjening",
+  sec_sunprotect:"Solafskærmning",
+  sec_light:"Lys",
+  sec_light_sub:"tænd ved lukning",
+  sec_shutter:"Persienne",
+  sec_areas:"Områder",
+  sec_areas_sub:"hvilket område styrer op og ned",
+  sec_positions:"Positioner",
+  sec_window:"Vindue & udluftning",
+  sec_window_sub:"kontakter, udluftningsposition, låsesikring",
+  sec_slats:"Lameller",
+  sec_slats_sub:"kun persienner",
   ent_matching:"Matchende",
   ent_others:"Alle øvrige",
   ent_more:"… og {n} mere – forfin søgningen",
@@ -659,6 +778,23 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  sec_basics:"Grunduppgifter",
+  sec_schedule:"Schema",
+  sec_schedule_time:"efter tid",
+  sec_schedule_brightness:"efter ljusstyrka",
+  sec_schedule_sun:"efter solposition",
+  sec_calendar:"Kalender & manuell styrning",
+  sec_sunprotect:"Solskydd",
+  sec_light:"Ljus",
+  sec_light_sub:"tänd vid stängning",
+  sec_shutter:"Persienn",
+  sec_areas:"Områden",
+  sec_areas_sub:"vilket område styr upp och ner",
+  sec_positions:"Positioner",
+  sec_window:"Fönster & vädring",
+  sec_window_sub:"kontakter, vädringsläge, utelåsningsskydd",
+  sec_slats:"Lameller",
+  sec_slats_sub:"endast persienner",
   ent_matching:"Matchande",
   ent_others:"Alla övriga",
   ent_more:"… och {n} till – förfina sökningen",
@@ -742,6 +878,23 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  sec_basics:"Dane podstawowe",
+  sec_schedule:"Harmonogram",
+  sec_schedule_time:"według godziny",
+  sec_schedule_brightness:"według jasności",
+  sec_schedule_sun:"według położenia słońca",
+  sec_calendar:"Kalendarz i obsługa ręczna",
+  sec_sunprotect:"Ochrona przeciwsłoneczna",
+  sec_light:"Światło",
+  sec_light_sub:"włącz przy zamykaniu",
+  sec_shutter:"Roleta",
+  sec_areas:"Strefy",
+  sec_areas_sub:"która strefa steruje w górę i w dół",
+  sec_positions:"Pozycje",
+  sec_window:"Okno i wietrzenie",
+  sec_window_sub:"kontaktrony, pozycja wietrzenia, zabezpieczenie",
+  sec_slats:"Lamele",
+  sec_slats_sub:"tylko żaluzje",
   ent_matching:"Pasujące",
   ent_others:"Wszystkie pozostałe",
   ent_more:"… i {n} więcej – uściślij wyszukiwanie",
@@ -825,6 +978,23 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  sec_basics:"Dados básicos",
+  sec_schedule:"Horário",
+  sec_schedule_time:"por hora",
+  sec_schedule_brightness:"por luminosidade",
+  sec_schedule_sun:"por posição solar",
+  sec_calendar:"Calendário e controlo manual",
+  sec_sunprotect:"Proteção solar",
+  sec_light:"Luz",
+  sec_light_sub:"ligar ao fechar",
+  sec_shutter:"Estore",
+  sec_areas:"Zonas",
+  sec_areas_sub:"que zona comanda subida e descida",
+  sec_positions:"Posições",
+  sec_window:"Janela e ventilação",
+  sec_window_sub:"contactos, posição de ventilação, proteção",
+  sec_slats:"Lâminas",
+  sec_slats_sub:"apenas estores venezianos",
   ent_matching:"Correspondentes",
   ent_others:"Todos os outros",
   ent_more:"… e mais {n} – refine a pesquisa",
@@ -908,6 +1078,23 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  sec_basics:"Grunndata",
+  sec_schedule:"Tidsplan",
+  sec_schedule_time:"etter tid",
+  sec_schedule_brightness:"etter lysstyrke",
+  sec_schedule_sun:"etter solposisjon",
+  sec_calendar:"Kalender og manuell betjening",
+  sec_sunprotect:"Solskjerming",
+  sec_light:"Lys",
+  sec_light_sub:"slå på ved lukking",
+  sec_shutter:"Persienne",
+  sec_areas:"Områder",
+  sec_areas_sub:"hvilket område styrer opp og ned",
+  sec_positions:"Posisjoner",
+  sec_window:"Vindu og lufting",
+  sec_window_sub:"kontakter, luftestilling, utelåsingsvern",
+  sec_slats:"Lameller",
+  sec_slats_sub:"kun persienner",
   ent_matching:"Treff",
   ent_others:"Alle andre",
   ent_more:"… og {n} til – avgrens søket",
@@ -1018,13 +1205,27 @@ class ShutterPilotPanel extends LitElement {
       cursor:pointer;border:none;border-radius:8px;background:var(--card2, rgba(127,127,127,.18));color:var(--txt)}
     .spin-btn:hover{background:var(--sp);color:#fff}
     .spin-val{flex:1 1 0;min-width:0;text-align:center}
-    .picked{padding:8px 10px;border-radius:8px;background:var(--card2, rgba(127,127,127,.12));
-      margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;
-      color:var(--txt2)}
+    .picked{padding:10px;border-radius:8px;background:var(--card2, rgba(127,127,127,.12));
+      display:flex;align-items:center;gap:8px;font-size:14px;color:var(--txt2)}
+    .picked.trigger{cursor:pointer;border:1px solid var(--divider)}
+    .picked.trigger:hover{border-color:var(--sp)}
     .picked.has{color:var(--txt);font-weight:500}
-    .picked-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .ent-list{max-height:220px;overflow-y:auto;border-radius:8px;
+    .picked-val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .chev{flex:0 0 auto;color:var(--txt2);font-size:12px}
+    .search-row{display:flex;align-items:center;gap:6px}
+    .search-row input{flex:1;min-width:0}
+    .ent-list{max-height:190px;overflow-y:auto;border-radius:8px;
       border:1px solid var(--divider);margin-top:6px}
+    /* Abschnitte im Formular sichtbar trennen: vorher lief alles als eine
+       lange Feldliste durch und man sah nicht, wo ein neues Thema anfängt. */
+    .sec{margin:22px 0 12px;padding-top:14px;border-top:2px solid var(--divider);
+      display:flex;align-items:center;gap:8px}
+    .sec:first-of-type{margin-top:6px;padding-top:0;border-top:none}
+    .sec ha-icon{--mdc-icon-size:19px;color:var(--sp)}
+    .sec h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--txt)}
+    .sec .sec-sub{font-size:12px;color:var(--txt2);font-weight:400}
+    .field.open{background:var(--card2, rgba(127,127,127,.07));padding:10px;
+      border-radius:8px;border:1px solid var(--sp)}
     .ent-group{padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
       color:var(--txt2);background:var(--card2, rgba(127,127,127,.10));position:sticky;top:0}
     .ent-row{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--divider)}
@@ -1333,8 +1534,41 @@ class ShutterPilotPanel extends LitElement {
      sich <select> in der macOS-App gar nicht.
      Der gespeicherte Wert wird immer angeboten, auch wenn die Entität gerade
      fehlt – sonst ginge sie beim Speichern unbemerkt verloren. */
+  _openEntityPicker(key){
+    this._openPicker=key;
+    this[`_flt_${key}`]="";
+    this.requestUpdate();
+    // Direkt ins Suchfeld springen, damit man nach dem Aufklappen sofort
+    // lostippen kann und nicht noch einmal klicken muss.
+    this.updateComplete?.then(()=>{
+      const el=this.renderRoot?.querySelector(`#sp_search_${key}`);
+      if(el)el.focus();
+    });
+  }
+  _closeEntityPicker(){this._openPicker=null;this.requestUpdate();}
+  _section(icon,titleKey,subKey=null){
+    return html`<div class="sec"><ha-icon icon="${icon}"></ha-icon>
+      <h4>${this.t(titleKey)}</h4>
+      ${subKey?html`<span class="sec-sub">${this.t(subKey)}</span>`:""}</div>`;
+  }
+
   _entityField(obj,key,label,domains,hint=null){
     const cur=obj[key]||"";
+    const open=this._openPicker===key;
+
+    // Zugeklappt nur eine Zeile. Vorher stand die Liste dauerhaft offen und
+    // hat sieben Zeilen belegt – bei mehreren Feldern im Formular wurde das
+    // unübersichtlich.
+    if(!open){
+      return html`<div class="field"><label>${label}</label>
+        <div class="picked trigger ${cur?"has":""}" @click=${()=>this._openEntityPicker(key)}>
+          <span class="picked-val">${cur?this._entityLabel(cur):this.t("pick_entity")}</span>
+          ${cur?html`<button class="spin-btn" title="${this.t("clear")}"
+            @click=${e=>{e.stopPropagation();obj[key]="";this.requestUpdate();}}>×</button>`:""}
+          <span class="chev">▾</span></div>
+        ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
+    }
+
     const all=this._entities(domains);
     if(cur&&!all.includes(cur))all.unshift(cur);
 
@@ -1353,16 +1587,18 @@ class ShutterPilotPanel extends LitElement {
     const hidden=(matching.length+others.length)-(shownMatching.length+shownOthers.length);
 
     const row=e=>html`<div class="ent-row ${cur===e?"sel":""}"
-      @click=${()=>{obj[key]=e;this[fk]="";this.requestUpdate();}}>
+      @click=${()=>{obj[key]=e;this[fk]="";this._closeEntityPicker();}}>
       ${this._entityLabel(e)}</div>`;
 
-    return html`<div class="field"><label>${label}</label>
-      <div class="picked ${cur?"has":""}">
-        <span class="picked-val">${cur?this._entityLabel(cur):this.t("pick_entity")}</span>
-        ${cur?html`<button class="spin-btn" title="${this.t("clear")}"
-          @click=${()=>{obj[key]="";this.requestUpdate();}}>×</button>`:""}</div>
-      <input type="text" placeholder="${this.t("filter_entity")}" .value=${this[fk]||""}
-        @input=${e=>{this[fk]=e.target.value;this.requestUpdate();}}>
+    return html`<div class="field open"><label>${label}</label>
+      <div class="search-row">
+        <input id="sp_search_${key}" type="text" placeholder="${this.t("filter_entity")}"
+          .value=${this[fk]||""}
+          @input=${e=>{this[fk]=e.target.value;this.requestUpdate();}}
+          @keydown=${e=>{if(e.key==="Escape")this._closeEntityPicker();}}>
+        <button class="spin-btn" title="${this.t("btn_cancel")}"
+          @click=${()=>this._closeEntityPicker()}>▴</button>
+      </div>
       <div class="ent-list">
         ${shownMatching.length?html`<div class="ent-group">${this.t("ent_matching")}</div>`:""}
         ${shownMatching.map(row)}
@@ -1370,8 +1606,7 @@ class ShutterPilotPanel extends LitElement {
         ${shownOthers.map(row)}
         ${!filtered.length?html`<div class="ent-row empty">${this.t("no_match")}</div>`:""}
         ${hidden>0?html`<div class="ent-row empty">${this.t("ent_more").replace("{n}",hidden)}</div>`:""}
-      </div>
-      ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
+      </div></div>`;
   }
 
   render(){
@@ -1580,6 +1815,8 @@ class ShutterPilotPanel extends LitElement {
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
     const ep=(k,lbl,domains,hint=null)=>this._entityField(a,k,lbl,domains,hint);
     return html`<div class="form"><h3>${a._isNew?T("add_area"):T("edit_area")}</h3>
+
+      ${this._section("mdi:tag-outline","sec_basics")}
       ${f("name",T("f_name"))}
       ${a._isNew?"":html`<div class="field"><label>${T("col_id")}</label><input disabled .value=${a.id}></div>`}
       <div class="field"><label>${T("f_mode")}</label>
@@ -1588,6 +1825,15 @@ class ShutterPilotPanel extends LitElement {
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
+
+      ${this._section(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m)}
+      ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
+        m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}`:
+        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
+          ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
+          ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
+
+      ${this._section("mdi:calendar-check","sec_calendar")}
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
       <div class="hint">${T("f_workday_hint")}</div>
       ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
@@ -1596,6 +1842,8 @@ class ShutterPilotPanel extends LitElement {
         <select .value=${a.manual_override||"never"} @change=${e=>{a.manual_override=e.target.value;this.requestUpdate();}}>
           ${OVERRIDE_OPTS.map(o=>html`<option value="${o}" ?selected=${(a.manual_override||"never")===o}>${T("f_override_"+o)}</option>`)}
         </select><div class="hint">${T("f_manual_override_hint")}</div></div>
+
+      ${this._section("mdi:sun-wireless-outline","sec_sunprotect")}
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
       ${a.sun_protect_enabled?html`
         ${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
@@ -1621,13 +1869,10 @@ class ShutterPilotPanel extends LitElement {
               <div class="hint">${T("f_sun_cond_num_hint")}</div>`:""}
             ${eid&&isBinary?html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`:""}`;
         })}`:""}
+      ${this._section("mdi:lightbulb-outline","sec_light","sec_light_sub")}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
-      ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
-        m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}`:
-        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
-          ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
-          ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
+
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveArea()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
         <button class="btn cancel" @click=${()=>{this._editArea=null;this.requestUpdate();}}>${T("btn_cancel")}</button></div></div>`;
@@ -1692,8 +1937,21 @@ class ShutterPilotPanel extends LitElement {
       ${opts.map(o=>typeof o==="string"?html`<option value="${o}" ?selected=${s[k]===o}>${o}</option>`:html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
     const areaSel=(k,lbl)=>sel(k,lbl,areas.map(a=>({v:a.id,l:a.name||a.id})));
     return html`<div class="form"><h3>${s._isNew?T("add_shutter"):T("edit_shutter")}</h3>
+
+      ${this._section("mdi:window-shutter","sec_shutter")}
       ${ep("cover_entity_id",T("f_cover"),["cover"],null)}
       ${f("name",T("f_name"))}
+
+      ${this._section("mdi:map-marker","sec_areas","sec_areas_sub")}
+      ${areaSel("area_up_id",T("f_area_up"))}
+      ${areaSel("area_down_id",T("f_area_down"))}
+
+      ${this._section("mdi:arrow-up-down","sec_positions")}
+      ${pct("position_open",T("f_pos_open"))}
+      ${pct("position_closed",T("f_pos_closed"))}
+      ${pct("position_sun_protect",T("f_pos_sun"))}
+
+      ${this._section("mdi:window-open-variant","sec_window","sec_window_sub")}
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}
       ${s.window_entity_id||s.window_tilted_entity_id?html`
         ${ep("window_tilted_entity_id",T("f_window_tilt_sensor"),["binary_sensor","sensor"],HINTS.window)}
@@ -1706,16 +1964,14 @@ class ShutterPilotPanel extends LitElement {
       ${(!s.window_tilted_state||s.window_tilted_state==="none")?html`<div class="hint">${T("f_pos_win_tilt_2state_hint")}</div>`:""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.lock_protection} @change=${e=>{s.lock_protection=e.target.checked;this.requestUpdate();}}> ${T("f_lock")}</label></div>
       ${s.lock_protection?pct("min_position_when_open",T("f_min_pos")):""}
-      ${areaSel("area_up_id",T("f_area_up"))}
-      ${areaSel("area_down_id",T("f_area_down"))}
-      ${pct("position_open",T("f_pos_open"))}
-      ${pct("position_closed",T("f_pos_closed"))}
-      ${pct("position_sun_protect",T("f_pos_sun"))}
+      <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
+        <div class="hint">${T("f_drive_after_hint")}</div></div>
+
+      ${this._section("mdi:blinds-horizontal","sec_slats","sec_slats_sub")}
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>
         <div class="hint">${this._supportsTilt(s.cover_entity_id)?T("f_tilt_hint"):T("f_tilt_unsupported")}</div></div>
       ${s.tilt_enabled?html`${pct("tilt_open",T("f_tilt_open"))}${pct("tilt_closed",T("f_tilt_closed"))}${pct("tilt_sun_protect",T("f_tilt_sun"))}`:""}
-      <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
-        <div class="hint">${T("f_drive_after_hint")}</div></div>
+
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveShutter()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
         <button class="btn cancel" @click=${()=>{this._editShutter=null;this.requestUpdate();}}>${T("btn_cancel")}</button></div></div>`;
