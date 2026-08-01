@@ -229,6 +229,59 @@ Danke nochmal, das hat die Integration deutlich besser gemacht. Weiteres Feedbac
 ---
 ---
 
+# KURZE NEUERUNGS-MELDUNG 2.3.0 (reiner Text, ohne Formatierung)
+
+*Zum direkten Kopieren in Foren, die kein Markdown rendern.*
+
+```
+Shutter Pilot 2.3.0 ist da
+
+Wetter und Vorhersage
+Ihr könnt jetzt eure Wetter-Entitaet hinterlegen. Shutter Pilot holt sich
+daraus die Tagesvorhersage: erwartete Hoechsttemperatur und Wetterlage.
+Damit laesst sich einstellen "beschatte nur, wenn es heute ueber 24 Grad
+wird". An kuehlen Tagen bleibt die Sonne dann drin und waermt mit.
+
+Sensoren mit Text statt Zahlen
+Bedingungen konnten bisher nur mit Zahlen umgehen. Jetzt versteht Shutter
+Pilot auch Zustaende wie sonnig oder bewoelkt. Damit funktionieren
+Wetter-Entitaeten und selbstgebaute Sensoren direkt. Bei Wetter-Entitaeten
+klickt ihr einfach an, bei welchem Wetter beschattet werden soll.
+
+Vier Bedingungen statt zwei
+Wer Helligkeit, Wetter und Temperatur kombinieren will, hat jetzt genug
+Platz. Die weiteren Felder erscheinen erst, wenn das vorherige gefuellt ist.
+
+Beschattung nur in bestimmten Monaten
+Pro Bereich einstellbar, zum Beispiel nur April bis September. Auch ueber
+den Jahreswechsel, etwa Oktober bis Maerz. So faehrt im Winter nichts
+runter, nur weil die Sonne hell scheint.
+
+Fenster in verschiedene Himmelsrichtungen
+Bisher galt die Ausrichtung fuer den ganzen Bereich. Wer in einem Raum ein
+Sued- und ein Westfenster hat, kann sie jetzt am einzelnen Rollladen
+einstellen. Das Suedfenster wird dann mittags verschattet, das Westfenster
+nachmittags, beide im selben Bereich mit einem Zeitplan.
+
+Abends nur halb schliessen
+Fuer heisse Sommerabende: Im Bereich legt ihr fest, wann das gelten soll,
+beim Rollladen, wie weit er dann zufaehrt, zum Beispiel 50 Prozent. So
+bleibt gelueftet. Betrifft nur die Rollaeden, bei denen ihr das eingestellt
+habt.
+
+Ausserdem: Lueften laesst sich jetzt direkt per Knopf ausloesen, es gibt
+einen zweiten Fenstersensor fuer Kipp-Erkennung, und die Entitaetsauswahl
+ist eine Suche mit Vorfilterung statt einer langen Liste.
+
+Update wie immer ueber HACS. Danach die Seite einmal hart neu laden
+(Strg+Shift+R), damit das Panel aktualisiert wird.
+
+https://github.com/fschubi/shutter_pilot
+```
+
+---
+---
+
 # ANTWORTBEITRAG ZWEITES FORUM (Version 2.3.0)
 
 *Für den Thread mit Schlumperdix und Linos.*
