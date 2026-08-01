@@ -167,41 +167,58 @@ Benötigt Home Assistant 2024.6.0+. Feedback und Ideen sehr willkommen!
 ---
 ---
 
-# ANTWORTBEITRAG ZU VERSION 2.2.0
+# ANTWORTBEITRAG (Version 2.2.1)
 
-*Zum Posten als Antwort im Thread, nachdem 2.2.0 veröffentlicht ist.*
+*Zum Posten als Antwort im Thread. Fasst 2.2.0 und 2.2.1 zusammen.*
 
-Danke euch dreien für das ausführliche Feedback – das war extrem hilfreich. **Version 2.2.0 ist raus und setzt alles davon um.**
+Danke euch für das ausführliche Feedback – das war extrem hilfreich. **Version 2.2.1 ist raus und setzt alles davon um.**
 
-**@Bjoerg und @JayJayX – die Entitätsauswahl**
+## @Bjoerg und @JayJayX – die Entitätsauswahl
 
-Ihr habt völlig recht, das war unbenutzbar. Es war eine simple Auswahlliste mit *allen* Entitäten einer Domain, beim Helligkeitssensor also mehreren hundert Einträgen, und sortiert war sie auch noch nach der internen Entity-ID statt nach dem Namen. Ein Sensor „Flur Sensor" mit der ID `sensor.0x00158d0001abcdef` stand damit unter „0". Kein Wunder, dass man da nicht durchscrollen will.
+Ihr habt völlig recht, das war unbenutzbar. Es war eine simple Auswahlliste mit *allen* Entitäten einer Domain – beim Helligkeitssensor also mehrere hundert Einträge – und sortiert war sie auch noch nach der internen Entity-ID statt nach dem Namen. Ein Sensor „Flur Sensor" mit der ID `sensor.0x00158d0001abcdef` stand damit unter „0". Kein Wunder, dass da niemand durchscrollen will.
 
-Jetzt gibt es ein **Suchfeld mit Trefferliste**:
+Jetzt ist es ein Feld mit **einer Zeile**. Klick drauf, tippen, fertig:
+
+- **Suche** über Anzeigename und Entity-ID, Cursor springt beim Aufklappen direkt ins Suchfeld
 - Sortiert nach **Anzeigename**, nicht nach Entity-ID
 - **Vorgefiltert je Feld** – beim Fenstersensor stehen Fenster- und Türkontakte oben, beim Helligkeitssensor die Lux-Sensoren, beim Cover die Rollläden
 - Erkannt wird über `device_class` **und** über den Namen, damit auch Sensoren ohne gesetzte `device_class` oben landen
-- Der Rest bleibt trotzdem erreichbar – nichts wird versteckt, damit niemand seinen exotischen Sensor sucht
+- Der Rest bleibt trotzdem erreichbar – nichts wird versteckt, damit niemand seinen exotischen Sensor vergeblich sucht
 
-**@JayJayX – zweiter Sensor für die Fenstererkennung**
+## Formulare sind jetzt gegliedert
 
-Eingebaut. Es gibt jetzt ein optionales zweites Feld für einen separaten „gekippt"-Sensor. Der Kipp-Kontakt hat dabei Vorrang, weil viele Fenster im Kippzustand zusätzlich „offen" melden. Wer einen Kontakt mit drei Zuständen hat, lässt das Feld einfach leer.
+Beim Testen fiel auf, dass die Einstellungen als eine lange Feldliste durchliefen – man sah nicht, wo ein neues Thema anfängt. Beide Formulare haben jetzt Überschriften mit Symbol und Trennlinie:
 
-**@Nicknol – Lüftungsposition**
+- **Bereich:** Grunddaten · Zeitplan · Kalender & manuelle Bedienung · Sonnenschutz · Licht
+- **Rollladen:** Rollladen · Bereiche · Positionen · Fenster & Lüftung · Lamellen
+
+Die Zeitfelder standen außerdem ganz am Ende des Bereichsformulars, weit weg von der Modusauswahl, zu der sie gehören. Die stehen jetzt direkt dahinter.
+
+## @JayJayX – zweiter Sensor für die Fenstererkennung
+
+Eingebaut. Es gibt ein optionales zweites Feld für einen separaten „gekippt"-Sensor. Der Kipp-Kontakt hat dabei Vorrang, weil viele Fenster im Kippzustand zusätzlich „offen" melden. Wer einen Kontakt mit drei Zuständen hat, lässt das Feld einfach leer.
+
+## @Nicknol – Lüftungsposition
 
 Die gab es tatsächlich schon, sie war nur nicht direkt erreichbar, sondern hing ausschließlich am Fensterkontakt. Jetzt gibt es einen **Knopf „Lüften"** auf jeder Bereichskarte und den Service `shutter_pilot.ventilate_group`. Bewusst dieselbe Position wie bei gekipptem Fenster – ein weiteres Feld zum Ausfüllen wollte ich euch ersparen.
 
-**@Nicknol – Einstrahlung und Temperatur**
+## @Nicknol – Einstrahlung und Temperatur
 
-Der wichtigste Punkt, und du hast völlig recht: Sonnenstand sagt nur, *wo* die Sonne steht, nicht ob sie scheint. Es gibt jetzt pro Bereich **bis zu zwei Zusatzbedingungen**, die zusätzlich zu Höhenwinkel und Himmelsrichtung erfüllt sein müssen:
+Der wichtigste inhaltliche Punkt, und du hast völlig recht: Der Sonnenstand sagt nur, *wo* die Sonne steht, nicht ob sie scheint. Es gibt jetzt pro Bereich **bis zu zwei Zusatzbedingungen**, die zusätzlich zu Höhenwinkel und Himmelsrichtung erfüllt sein müssen:
 
 - **Binärsensor** wie dein Einstrahlungssensor → beschattet wird, solange er `on` ist. Deine Hysterese steckt ja schon im Sensor
-- **Zahlensensor** (Lux, W/m², °C) → mit „Beschatten ab" und optional „Aufheben unter". Der Abstand zwischen beiden Schwellen ist genau die Hysterese, damit nichts flattert wenn eine Wolke vorbeizieht
+- **Zahlensensor** (Lux, W/m², °C) → mit „Beschatten ab" und optional „Aufheben unter". Der Abstand zwischen beiden Schwellen ist genau die Hysterese, damit nichts flattert, wenn eine Wolke vorbeizieht
 
-Damit lässt sich dein Fall direkt abbilden: Einstrahlungssensor als Bedingung 1, Außentemperatur als Bedingung 2. Im Frühjahr und Herbst bleibt die Sonnenwärme dann drin, weil die Temperaturbedingung nicht erfüllt ist.
+Damit lässt sich dein Fall direkt abbilden: Einstrahlungssensor als Bedingung 1, Außentemperatur als Bedingung 2. An einem sonnigen, aber kühlen Apriltag wird dann nicht beschattet – die Sonnenwärme bleibt drin, wo sie erwünscht ist.
 
-Eine **eigene Vorhersage-Auswertung** habe ich bewusst weggelassen – das wäre eine starre Speziallösung geworden. Stattdessen: Template-Sensor mit der Tageshöchsttemperatur aus `weather.get_forecasts` anlegen und den als Bedingung eintragen. Ein fertiges Rezept dafür steht jetzt in der README. Damit ist es sogar flexibler, weil man jede beliebige Größe reinhängen kann.
+Eine **eigene Vorhersage-Auswertung** habe ich bewusst weggelassen, das wäre eine starre Speziallösung geworden. Stattdessen: Template-Sensor mit der Tageshöchsttemperatur aus `weather.get_forecasts` anlegen und als Bedingung eintragen. Ein fertiges Rezept steht in der README. So lässt sich jede beliebige Größe einhängen, nicht nur die Temperatur.
 
-**Zum Punkt „Automation lässt sich leichter tracen"** – berechtigt. Deshalb gibt es seit 2.1.0 einen Diagnose-Download mit dem kompletten Laufzeitzustand und ein Event `shutter_pilot_cover_moved` bei jeder automatischen Fahrt, inklusive Grund. Damit kann man im Logbuch nachvollziehen, warum ein Rollladen gefahren ist.
+## Zum Punkt „eine Automation lässt sich leichter tracen"
 
-Update kommt wie gewohnt über HACS. Danke nochmal, und weiteres Feedback gerne! 🙂
+Berechtigt. Deshalb gibt es einen **Diagnose-Download** mit dem kompletten Laufzeitzustand und ein Event `shutter_pilot_cover_moved` bei jeder automatischen Fahrt, inklusive Grund, Position und Bereich. Damit lässt sich im Logbuch nachvollziehen, warum ein Rollladen gefahren ist.
+
+---
+
+Update kommt wie gewohnt über HACS – danach einmal hart neu laden (Strg/Cmd+Shift+R), damit das Panel neu geladen wird.
+
+Danke nochmal, das hat die Integration deutlich besser gemacht. Weiteres Feedback gerne! 🙂
