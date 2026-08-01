@@ -4,7 +4,8 @@ Hallo zusammen,
 
 ich möchte euch meine Home-Assistant-Integration **Shutter Pilot** vorstellen. Sie steuert Rollläden und Jalousien vollautomatisch – **ohne eine einzige Zeile YAML, ohne Automation, ohne Skript**. Die komplette Konfiguration läuft über ein eigenes Panel in der Seitenleiste.
 
-👉 **GitHub: https://github.com/fschubi/shutter_pilot**
+👉 GitHub:
+https://github.com/fschubi/shutter_pilot
 
 ---
 
@@ -89,7 +90,8 @@ Alles wird direkt gespeichert, ein Neustart von Home Assistant ist dafür nicht 
 
 1. HACS öffnen
 2. Oben rechts das Drei-Punkte-Menü → **Benutzerdefinierte Repositories**
-3. `https://github.com/fschubi/shutter_pilot` als Kategorie **Integration** hinzufügen
+3. Diese Adresse als Kategorie **Integration** hinzufügen:
+   https://github.com/fschubi/shutter_pilot
 4. Nach „Shutter Pilot" suchen und installieren
 5. Home Assistant neu starten
 
@@ -159,7 +161,8 @@ Dazu:
 - Positionen bleiben nach Neustart erhalten, manuelle Bedienung wird respektiert
 - Panel in 11 Sprachen, läuft komplett lokal
 
-**Installation:** HACS → Benutzerdefinierte Repositories → `https://github.com/fschubi/shutter_pilot` als *Integration* → installieren → neu starten → unter Geräte & Dienste hinzufügen.
+**Installation:** HACS → Benutzerdefinierte Repositories → die Adresse unten als *Integration* hinzufügen → installieren → neu starten → unter Geräte & Dienste hinzufügen.
+https://github.com/fschubi/shutter_pilot
 
 Benötigt Home Assistant 2024.6.0+. Feedback und Ideen sehr willkommen!
 👉 https://github.com/fschubi/shutter_pilot
