@@ -208,31 +208,43 @@ The gap between the two thresholds stops the shutters from bouncing when clouds 
 
 An empty field means no condition. An unavailable or broken sensor never blocks shading.
 
-### Shading based on the weather forecast
+### Weather and forecast
 
-Forecast handling is deliberately not built in – a template sensor solves it more flexibly. Create one with the expected daily high and use it as a condition:
+Set your `weather.*` entity in the **Settings** tab. Shutter Pilot then fetches the daily forecast itself and provides two sensors:
 
-```yaml
-template:
-  - trigger:
-      - trigger: time_pattern
-        hours: /1
-    action:
-      - action: weather.get_forecasts
-        target:
-          entity_id: weather.your_weather
-        data:
-          type: daily
-        response_variable: fc
-    sensor:
-      - name: Daily high temperature
-        unique_id: max_temp_today
-        unit_of_measurement: "°C"
-        device_class: temperature
-        state: "{{ fc['weather.your_weather'].forecast[0].temperature }}"
-```
+| Sensor | Content |
+|--------|---------|
+| Forecast high temperature | expected daily high |
+| Forecast condition | expected condition, e.g. `sunny` |
 
-Then set that sensor as a condition with "Shade above" at e.g. 24.
+Pick either as an ordinary condition. A typical setup is **forecast high, shade above 24 °C** — so nothing is shaded on cool days and the sun warms the house.
+
+An unreachable weather backend never blocks shading; the last known value is kept.
+
+### Sensors with a text state
+
+Conditions can compare **states** instead of numbers. That lets you use a `weather.*` entity or your own scrape sensor directly: simply pick the conditions that should trigger shading. For weather entities the standard conditions are offered as buttons.
+
+### Shading season
+
+Each area can be limited to certain months, e.g. April to September. Ranges may wrap across the new year, such as October to March.
+
+A temperature condition usually makes this unnecessary: if the winter forecast stays below the threshold, no shading happens anyway.
+
+## Rooms with windows facing several directions
+
+Elevation and compass direction normally apply to the whole area. If one window faces a different way than the others in the same room, enable **Own orientation** on that shutter and set its elevation and azimuth there.
+
+South and west windows of the same room are then shaded at different times of day, without maintaining two areas with duplicated schedules.
+
+## Closing only part way in the evening
+
+To keep certain shutters from closing fully on hot evenings so the room can keep ventilating:
+
+1. In the **area**, under *Partial closing*, set a condition — e.g. a sensor for heat and presence
+2. On the relevant **shutters**, set a partial position, e.g. 50 %
+
+Only shutters with a partial position deviate; all others close normally.
 
 ## Support me
 

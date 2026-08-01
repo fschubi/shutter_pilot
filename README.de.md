@@ -208,31 +208,43 @@ Der Abstand zwischen den beiden Schwellen verhindert, dass die Rollläden bei du
 
 Ein leeres Feld bedeutet: keine Bedingung. Ein nicht verfügbarer oder defekter Sensor blockiert die Beschattung nie.
 
-### Nach Wettervorhersage beschatten
+### Wetter und Vorhersage
 
-Eine eigene Vorhersage-Auswertung ist absichtlich nicht eingebaut – das lässt sich mit Bordmitteln flexibler lösen. Lege einen Template-Sensor mit der erwarteten Tageshöchsttemperatur an und trage ihn als Bedingung ein:
+Hinterlege im Tab **Einstellungen** deine `weather.*`-Entität. Shutter Pilot ruft dann selbst die Tagesvorhersage ab und stellt zwei Sensoren bereit:
 
-```yaml
-template:
-  - trigger:
-      - trigger: time_pattern
-        hours: /1
-    action:
-      - action: weather.get_forecasts
-        target:
-          entity_id: weather.dein_wetter
-        data:
-          type: daily
-        response_variable: fc
-    sensor:
-      - name: Tageshöchsttemperatur
-        unique_id: max_temp_heute
-        unit_of_measurement: "°C"
-        device_class: temperature
-        state: "{{ fc['weather.dein_wetter'].forecast[0].temperature }}"
-```
+| Sensor | Inhalt |
+|--------|--------|
+| Vorhersage Höchsttemperatur | erwarteter Tageshöchstwert |
+| Vorhersage Wetterlage | erwartete Wetterlage, z. B. `sunny` |
 
-Dann im Bereich als Bedingung `sensor.tageshochsttemperatur` mit „Beschatten ab" z. B. 24 eintragen. Fertig.
+Beide wählst du ganz normal als Bedingung aus. Typisch: **Vorhersage Höchsttemperatur, beschatten ab 24 °C**. Damit wird an kühlen Tagen nicht beschattet, und die Sonne wärmt das Haus.
+
+Ein nicht erreichbares Wetter-Backend blockiert die Beschattung nie – der letzte bekannte Wert bleibt erhalten.
+
+### Sensoren mit Textzustand
+
+Bedingungen können auch **Zustände** vergleichen statt Zahlen. Damit lassen sich eine `weather.*`-Entität oder ein selbstgebauter Scrape-Sensor direkt eintragen: Du wählst einfach die Wetterlagen aus, bei denen beschattet werden soll. Bei Wetter-Entitäten stehen die Standardlagen als Schaltflächen bereit.
+
+### Beschattungszeitraum
+
+Pro Bereich lässt sich einstellen, in welchen Monaten überhaupt beschattet wird – etwa nur April bis September. Zeiträume über den Jahreswechsel sind möglich, z. B. Oktober bis März.
+
+Meist erübrigt sich das durch eine Temperaturbedingung: Wenn die Vorhersage im Winter ohnehin unter der Schwelle bleibt, wird gar nicht erst beschattet.
+
+## Räume mit Fenstern in mehreren Himmelsrichtungen
+
+Höhenwinkel und Himmelsrichtung gelten normalerweise für den ganzen Bereich. Zeigt ein Fenster in eine andere Richtung als die übrigen im selben Raum, aktivierst du beim betreffenden Rollladen **Eigene Ausrichtung** und stellst dort Höhenwinkel und Azimut ein.
+
+So werden Süd- und Westfenster desselben Raums zu unterschiedlichen Tageszeiten beschattet, ohne dass du zwei Bereiche mit doppeltem Zeitplan pflegen musst.
+
+## Abends nur teilweise schließen
+
+Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu lüften:
+
+1. Im **Bereich** unter *Abweichendes Schliessen* eine Bedingung hinterlegen – etwa einen Sensor für Hitze und Anwesenheit
+2. Bei den betreffenden **Rollläden** eine Teilposition setzen, z. B. 50 %
+
+Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
 ## Unterstützt mich
 

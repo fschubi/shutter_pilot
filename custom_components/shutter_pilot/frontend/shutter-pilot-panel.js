@@ -20,6 +20,11 @@ const COMPASS_PRESETS = [
   {key:"west",  min:225, max:315},
 ];
 const REFRESH_MS = 30000;
+const COND_SLOTS = ["a","b","c","d"];
+const WEATHER_CONDITIONS = ["sunny","partlycloudy","cloudy","rainy","pouring",
+  "snowy","snowy-rainy","fog","hail","lightning","lightning-rainy","windy",
+  "windy-variant","clear-night","exceptional"];
+const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
 
 /* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
    Anzeigenamen samt Entity-ID. Beides nur zum Vorsortieren – nichts wird
@@ -55,6 +60,44 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  tab_settings:"Einstellungen",
+  sec_weather:"Wetter",
+  sec_weather_sub:"Grundlage für Beschattungsbedingungen",
+  f_weather_entity:"Wetter-Entität",
+  f_weather_hint:"Optional. Ist sie gesetzt, holt Shutter Pilot die Tagesvorhersage selbst ab und stellt daraus zwei Sensoren bereit, die du unten bei den Bedingungen auswählen kannst.",
+  f_weather_sensors_hint:"Verfügbar als: Vorhersage Höchsttemperatur und Vorhersage Wetterlage.",
+  w_temp_max:"Höchsttemperatur heute",
+  w_condition:"Wetterlage heute",
+  w_updated:"Zuletzt abgerufen",
+  f_sun_cond_n:"Bedingung {n} (optional)",
+  f_sun_cond_states:"Erlaubte Zustände",
+  f_sun_cond_states_hint:"Beschattet wird nur, wenn der Sensor einen der ausgewählten Zustände meldet.",
+  f_season:"Beschattungszeitraum",
+  f_season_all:"ganzjährig",
+  f_season_hint:"Nur in diesen Monaten beschatten. Zeiträume über den Jahreswechsel sind möglich, z. B. Oktober bis März.",
+  sec_altclose:"Abweichendes Schliessen",
+  sec_altclose_sub:"z. B. abends bei Hitze nur teilweise",
+  f_close_cond:"Bedingung (optional)",
+  f_close_cond_hint:"Ist diese Bedingung abends erfüllt, schliessen Rollläden mit hinterlegter Teilposition nur so weit statt ganz.",
+  f_pos_closed_alt:"Abweichende Schliessposition nutzen",
+  f_pos_closed_alt_val:"Teilweise geschlossen",
+  f_pos_closed_alt_hint:"Greift nur, wenn im Bereich eine Schliessbedingung hinterlegt ist und diese zutrifft.",
+  sec_shutter_sun:"Sonnenschutz",
+  sec_shutter_sun_sub:"nur nötig bei abweichender Fensterrichtung",
+  f_geo_override:"Eigene Ausrichtung für diesen Rollladen",
+  f_geo_override_hint:"Normalerweise gelten die Werte des Bereichs. Aktiviere das nur, wenn dieses Fenster in eine andere Richtung zeigt als die übrigen im Bereich.",
+  month_1:"Januar",
+  month_2:"Februar",
+  month_3:"März",
+  month_4:"April",
+  month_5:"Mai",
+  month_6:"Juni",
+  month_7:"Juli",
+  month_8:"August",
+  month_9:"September",
+  month_10:"Oktober",
+  month_11:"November",
+  month_12:"Dezember",
   sec_basics:"Grunddaten",
   sec_schedule:"Zeitplan",
   sec_schedule_time:"nach Uhrzeit",
@@ -168,6 +211,44 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  tab_settings:"Settings",
+  sec_weather:"Weather",
+  sec_weather_sub:"basis for shading conditions",
+  f_weather_entity:"Weather entity",
+  f_weather_hint:"Optional. When set, Shutter Pilot fetches the daily forecast itself and provides two sensors you can pick in the conditions below.",
+  f_weather_sensors_hint:"Available as: forecast high temperature and forecast condition.",
+  w_temp_max:"High today",
+  w_condition:"Condition today",
+  w_updated:"Last fetched",
+  f_sun_cond_n:"Condition {n} (optional)",
+  f_sun_cond_states:"Allowed states",
+  f_sun_cond_states_hint:"Shading only runs while the sensor reports one of the selected states.",
+  f_season:"Shading season",
+  f_season_all:"all year",
+  f_season_hint:"Shade only during these months. Ranges may wrap across the new year, e.g. October to March.",
+  sec_altclose:"Partial closing",
+  sec_altclose_sub:"e.g. only part way on hot evenings",
+  f_close_cond:"Condition (optional)",
+  f_close_cond_hint:"When this condition holds in the evening, shutters with a partial position only close that far instead of fully.",
+  f_pos_closed_alt:"Use a partial closing position",
+  f_pos_closed_alt_val:"Partially closed",
+  f_pos_closed_alt_hint:"Only applies when the area has a closing condition and it is met.",
+  sec_shutter_sun:"Sun protection",
+  sec_shutter_sun_sub:"only needed for a different window direction",
+  f_geo_override:"Own orientation for this shutter",
+  f_geo_override_hint:"Normally the area values apply. Enable this only if this window faces a different direction than the others in the area.",
+  month_1:"January",
+  month_2:"February",
+  month_3:"March",
+  month_4:"April",
+  month_5:"May",
+  month_6:"June",
+  month_7:"July",
+  month_8:"August",
+  month_9:"September",
+  month_10:"October",
+  month_11:"November",
+  month_12:"December",
   sec_basics:"Basics",
   sec_schedule:"Schedule",
   sec_schedule_time:"by time",
@@ -281,6 +362,20 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  tab_settings:"Réglages",
+  f_season_all:"toute l'année",
+  month_1:"Janvier",
+  month_2:"Février",
+  month_3:"Mars",
+  month_4:"Avril",
+  month_5:"Mai",
+  month_6:"Juin",
+  month_7:"Juillet",
+  month_8:"Août",
+  month_9:"Septembre",
+  month_10:"Octobre",
+  month_11:"Novembre",
+  month_12:"Décembre",
   sec_basics:"Général",
   sec_schedule:"Horaire",
   sec_schedule_time:"par heure",
@@ -380,6 +475,20 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  tab_settings:"Ajustes",
+  f_season_all:"todo el año",
+  month_1:"Enero",
+  month_2:"Febrero",
+  month_3:"Marzo",
+  month_4:"Abril",
+  month_5:"Mayo",
+  month_6:"Junio",
+  month_7:"Julio",
+  month_8:"Agosto",
+  month_9:"Septiembre",
+  month_10:"Octubre",
+  month_11:"Noviembre",
+  month_12:"Diciembre",
   sec_basics:"Datos básicos",
   sec_schedule:"Horario",
   sec_schedule_time:"por hora",
@@ -479,6 +588,20 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  tab_settings:"Impostazioni",
+  f_season_all:"tutto l'anno",
+  month_1:"Gennaio",
+  month_2:"Febbraio",
+  month_3:"Marzo",
+  month_4:"Aprile",
+  month_5:"Maggio",
+  month_6:"Giugno",
+  month_7:"Luglio",
+  month_8:"Agosto",
+  month_9:"Settembre",
+  month_10:"Ottobre",
+  month_11:"Novembre",
+  month_12:"Dicembre",
   sec_basics:"Dati di base",
   sec_schedule:"Orario",
   sec_schedule_time:"per orario",
@@ -578,6 +701,20 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  tab_settings:"Instellingen",
+  f_season_all:"hele jaar",
+  month_1:"Januari",
+  month_2:"Februari",
+  month_3:"Maart",
+  month_4:"April",
+  month_5:"Mei",
+  month_6:"Juni",
+  month_7:"Juli",
+  month_8:"Augustus",
+  month_9:"September",
+  month_10:"Oktober",
+  month_11:"November",
+  month_12:"December",
   sec_basics:"Basisgegevens",
   sec_schedule:"Schema",
   sec_schedule_time:"op tijd",
@@ -678,6 +815,20 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  tab_settings:"Indstillinger",
+  f_season_all:"hele året",
+  month_1:"Januar",
+  month_2:"Februar",
+  month_3:"Marts",
+  month_4:"April",
+  month_5:"Maj",
+  month_6:"Juni",
+  month_7:"Juli",
+  month_8:"August",
+  month_9:"September",
+  month_10:"Oktober",
+  month_11:"November",
+  month_12:"December",
   sec_basics:"Grunddata",
   sec_schedule:"Tidsplan",
   sec_schedule_time:"efter tid",
@@ -778,6 +929,20 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  tab_settings:"Inställningar",
+  f_season_all:"hela året",
+  month_1:"Januari",
+  month_2:"Februari",
+  month_3:"Mars",
+  month_4:"April",
+  month_5:"Maj",
+  month_6:"Juni",
+  month_7:"Juli",
+  month_8:"Augusti",
+  month_9:"September",
+  month_10:"Oktober",
+  month_11:"November",
+  month_12:"December",
   sec_basics:"Grunduppgifter",
   sec_schedule:"Schema",
   sec_schedule_time:"efter tid",
@@ -878,6 +1043,20 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  tab_settings:"Ustawienia",
+  f_season_all:"cały rok",
+  month_1:"Styczeń",
+  month_2:"Luty",
+  month_3:"Marzec",
+  month_4:"Kwiecień",
+  month_5:"Maj",
+  month_6:"Czerwiec",
+  month_7:"Lipiec",
+  month_8:"Sierpień",
+  month_9:"Wrzesień",
+  month_10:"Październik",
+  month_11:"Listopad",
+  month_12:"Grudzień",
   sec_basics:"Dane podstawowe",
   sec_schedule:"Harmonogram",
   sec_schedule_time:"według godziny",
@@ -978,6 +1157,20 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  tab_settings:"Definições",
+  f_season_all:"todo o ano",
+  month_1:"Janeiro",
+  month_2:"Fevereiro",
+  month_3:"Março",
+  month_4:"Abril",
+  month_5:"Maio",
+  month_6:"Junho",
+  month_7:"Julho",
+  month_8:"Agosto",
+  month_9:"Setembro",
+  month_10:"Outubro",
+  month_11:"Novembro",
+  month_12:"Dezembro",
   sec_basics:"Dados básicos",
   sec_schedule:"Horário",
   sec_schedule_time:"por hora",
@@ -1078,6 +1271,20 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  tab_settings:"Innstillinger",
+  f_season_all:"hele året",
+  month_1:"Januar",
+  month_2:"Februar",
+  month_3:"Mars",
+  month_4:"April",
+  month_5:"Mai",
+  month_6:"Juni",
+  month_7:"Juli",
+  month_8:"August",
+  month_9:"September",
+  month_10:"Oktober",
+  month_11:"November",
+  month_12:"Desember",
   sec_basics:"Grunndata",
   sec_schedule:"Tidsplan",
   sec_schedule_time:"etter tid",
@@ -1546,6 +1753,71 @@ class ShutterPilotPanel extends LitElement {
     });
   }
   _closeEntityPicker(){this._openPicker=null;this.requestUpdate();}
+  /* Zustandsvergleich statt Zahlenvergleich: Wetter-Entitäten und
+     Scrape-Sensoren melden Text wie "sunny". Vorbelegt wird anhand des
+     aktuellen Zustands, damit man es meist gar nicht anfassen muss. */
+  _isStateEntity(eid){
+    if(!eid)return false;
+    if(eid.startsWith("weather."))return true;
+    const st=this.hass?.states?.[eid];
+    if(!st)return false;
+    return Number.isNaN(Number(st.state));
+  }
+  _condStates(obj,key){
+    const raw=obj[key];
+    if(Array.isArray(raw))return raw;
+    if(typeof raw==="string"&&raw.trim())return raw.split(",").map(x=>x.trim());
+    return [];
+  }
+  _renderConditionSlots(a,ep,f){
+    const T=k=>this.t(k);
+    const out=[];
+    for(let i=0;i<COND_SLOTS.length;i++){
+      const slot=COND_SLOTS[i];
+      const ek=`sun_cond_${slot}_entity`;
+      const eid=a[ek]||"";
+      // Nächsten Slot erst zeigen, wenn der vorherige gefüllt ist – sonst
+      // stehen vier leere Auswahlfelder im Formular herum.
+      if(i>0&&!a[`sun_cond_${COND_SLOTS[i-1]}_entity`]&&!eid)break;
+      out.push(html`
+        ${ep(ek,T("f_sun_cond_n").replace("{n}",i+1),["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${eid?this._renderCondDetail(a,slot,eid,f):""}`);
+      if(!eid)break;
+    }
+    return out;
+  }
+  _renderCondDetail(a,slot,eid,f){
+    const T=k=>this.t(k);
+    if(eid.startsWith("binary_sensor."))
+      return html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`;
+
+    const sk=`sun_cond_${slot}_states`;
+    const useStates=this._condStates(a,sk).length>0||this._isStateEntity(eid);
+    if(!useStates){
+      return html`
+        ${f(`sun_cond_${slot}_on_above`,T("f_sun_cond_on"),"number")}
+        ${f(`sun_cond_${slot}_off_below`,T("f_sun_cond_off"),"number")}
+        <div class="hint">${T("f_sun_cond_num_hint")}</div>`;
+    }
+
+    const chosen=new Set(this._condStates(a,sk));
+    const toggle=v=>{
+      chosen.has(v)?chosen.delete(v):chosen.add(v);
+      a[sk]=[...chosen];
+      this.requestUpdate();
+    };
+    // Bei Wetter-Entitäten die Standardlagen anbieten, sonst nur den aktuell
+    // gemeldeten Zustand – Abtippen ist zu fehleranfällig.
+    const known=eid.startsWith("weather.")||eid.includes("wetterlage")
+      ? WEATHER_CONDITIONS
+      : [...new Set([...chosen,String(this.hass?.states?.[eid]?.state||"")].filter(Boolean))];
+    return html`
+      <div class="field"><label>${T("f_sun_cond_states")}</label>
+        <div class="preset-row">${known.map(v=>html`
+          <button class="btn preset ${chosen.has(v)?"active":""}"
+            @click=${()=>toggle(v)}>${v}</button>`)}</div>
+        <div class="hint">${T("f_sun_cond_states_hint")}</div></div>`;
+  }
   _section(icon,titleKey,subKey=null){
     return html`<div class="sec"><ha-icon icon="${icon}"></ha-icon>
       <h4>${this.t(titleKey)}</h4>
@@ -1624,14 +1896,45 @@ class ShutterPilotPanel extends LitElement {
         ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}
       </div></div>
       <div class="tabs">
-        ${["dashboard","areas","shutters"].map(t=>html`
+        ${["dashboard","areas","shutters","settings"].map(t=>html`
           <div class="tab ${this._tab===t?"active":""}" @click=${()=>{this._tab=t;this._editArea=null;this._editShutter=null;this.requestUpdate();}}>
             ${T("tab_"+t)}</div>`)}
       </div>
       ${!d?html`<div class="empty">${T("loading")}</div>`:
         this._tab==="dashboard"?this._renderDashboard(d):
         this._tab==="areas"?this._renderAreas(d):
+        this._tab==="settings"?this._renderSettings(d):
         this._renderShutters(d)}`;
+  }
+
+  /* ─── Einstellungen ─── */
+  _renderSettings(d){
+    const T=k=>this.t(k);
+    const s=this._settings??(this._settings={...(d.settings||{})});
+    const w=d.weather||{};
+    const fmt=v=>v==null?"–":v;
+    return html`<div class="form">
+      ${this._section("mdi:weather-partly-cloudy","sec_weather","sec_weather_sub")}
+      <div class="hint">${T("f_weather_hint")}</div>
+      ${this._entityField(s,"weather_entity",T("f_weather_entity"),["weather"],null)}
+      ${s.weather_entity?html`
+        <div class="kv" style="margin-top:10px">
+          <div class="k">${T("w_temp_max")}</div><div class="v">${fmt(w.temp_max)}</div>
+          <div class="k">${T("w_condition")}</div><div class="v">${fmt(w.condition)}</div>
+          <div class="k">${T("w_updated")}</div>
+          <div class="v">${w.updated?new Date(w.updated).toLocaleString():"–"}</div>
+        </div>
+        <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
+      <div class="form-actions">
+        <button class="btn save" @click=${()=>this._saveSettings()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
+      </div></div>`;
+  }
+  async _saveSettings(){
+    try{
+      await this.hass.callWS({type:"shutter_pilot/save_settings",settings:{...this._settings}});
+      this._settings=null;
+      await this._load();
+    }catch(e){console.warn(e);alert("Error: "+e.message);}
   }
 
   /* ─── Dashboard ─── */
@@ -1768,7 +2071,7 @@ class ShutterPilotPanel extends LitElement {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -1856,19 +2159,24 @@ class ShutterPilotPanel extends LitElement {
                 @click=${()=>{a.azimuth_min=p.min;a.azimuth_max=p.max;this.requestUpdate();}}>${T("compass_"+p.key)}</button>`)}
             </div></div>
           ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}
+        <div class="field"><label>${T("f_season")}</label>
+          <div class="time-row">
+            <select .value=${String(a.season_from||"")} @change=${e=>{a.season_from=e.target.value;this.requestUpdate();}}>
+              <option value="">${T("f_season_all")}</option>
+              ${MONTHS.map(m=>html`<option value="${m}" ?selected=${String(a.season_from)===String(m)}>${T("month_"+m)}</option>`)}
+            </select><span class="time-sep">–</span>
+            <select .value=${String(a.season_to||"")} @change=${e=>{a.season_to=e.target.value;this.requestUpdate();}}>
+              <option value="">${T("f_season_all")}</option>
+              ${MONTHS.map(m=>html`<option value="${m}" ?selected=${String(a.season_to)===String(m)}>${T("month_"+m)}</option>`)}
+            </select></div>
+          <div class="hint">${T("f_season_hint")}</div></div>
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
-        ${["a","b"].map(slot=>{
-          const ek=`sun_cond_${slot}_entity`;
-          const eid=a[ek]||"";
-          const isBinary=eid.startsWith("binary_sensor.");
-          return html`
-            ${ep(ek,T("f_sun_cond_"+slot),["binary_sensor","sensor"],HINTS.condition)}
-            ${eid&&!isBinary?html`
-              ${f(`sun_cond_${slot}_on_above`,T("f_sun_cond_on"),"number")}
-              ${f(`sun_cond_${slot}_off_below`,T("f_sun_cond_off"),"number")}
-              <div class="hint">${T("f_sun_cond_num_hint")}</div>`:""}
-            ${eid&&isBinary?html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`:""}`;
-        })}`:""}
+        ${this._renderConditionSlots(a,ep,f)}`:""}
+
+      ${this._section("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub")}
+      <div class="hint">${T("f_close_cond_hint")}</div>
+      ${ep("sun_cond_close_entity",T("f_close_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
+      ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
       ${this._section("mdi:lightbulb-outline","sec_light","sec_light_sub")}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
@@ -1883,7 +2191,7 @@ class ShutterPilotPanel extends LitElement {
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -1933,6 +2241,9 @@ class ShutterPilotPanel extends LitElement {
       <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${s[k]??0}%</span></div></div>`;
     const ep=(k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint);
+    const pctRange=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`;
     const sel=(k,lbl,opts)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
       ${opts.map(o=>typeof o==="string"?html`<option value="${o}" ?selected=${s[k]===o}>${o}</option>`:html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
     const areaSel=(k,lbl)=>sel(k,lbl,areas.map(a=>({v:a.id,l:a.name||a.id})));
@@ -1950,6 +2261,28 @@ class ShutterPilotPanel extends LitElement {
       ${pct("position_open",T("f_pos_open"))}
       ${pct("position_closed",T("f_pos_closed"))}
       ${pct("position_sun_protect",T("f_pos_sun"))}
+      <div class="field"><label><input type="checkbox" .checked=${s.position_closed_alt!==""&&s.position_closed_alt!=null}
+        @change=${e=>{s.position_closed_alt=e.target.checked?50:"";this.requestUpdate();}}> ${T("f_pos_closed_alt")}</label>
+        <div class="hint">${T("f_pos_closed_alt_hint")}</div></div>
+      ${s.position_closed_alt!==""&&s.position_closed_alt!=null?pct("position_closed_alt",T("f_pos_closed_alt_val")):""}
+
+      ${this._section("mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub")}
+      <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
+        @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
+        <div class="hint">${T("f_geo_override_hint")}</div></div>
+      ${s.sun_geometry_override?html`
+        ${pctRange("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}
+        ${pctRange("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
+        <div class="field"><label><input type="checkbox" .checked=${!!s.azimuth_enabled}
+          @change=${e=>{s.azimuth_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_azimuth")}</label></div>
+        ${s.azimuth_enabled?html`
+          <div class="field"><label>${T("f_azimuth_preset")}</label>
+            <div class="preset-row">${COMPASS_PRESETS.map(p=>html`
+              <button class="btn preset ${(Number(s.azimuth_min)===p.min&&Number(s.azimuth_max)===p.max)?"active":""}"
+                @click=${()=>{s.azimuth_min=p.min;s.azimuth_max=p.max;this.requestUpdate();}}>${T("compass_"+p.key)}</button>`)}
+            </div></div>
+          ${pctRange("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}
+          ${pctRange("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
 
       ${this._section("mdi:window-open-variant","sec_window","sec_window_sub")}
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}

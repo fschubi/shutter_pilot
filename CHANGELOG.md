@@ -4,6 +4,24 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.3.0]
+
+Umsetzung der Rückmeldungen aus dem zweiten Forum.
+
+### Neu
+- **Wetter und Vorhersage direkt in der Integration.** Im neuen Tab **Einstellungen** lässt sich eine `weather.*`-Entität hinterlegen. Shutter Pilot ruft dann selbst die Tagesvorhersage ab und stellt zwei Sensoren bereit: **Vorhersage Höchsttemperatur** und **Vorhersage Wetterlage**. Beide sind ganz normal als Bedingung auswählbar – der Template-Sensor aus der README ist damit nicht mehr nötig. Seit Home Assistant 2024.4 liegen Vorhersagen nicht mehr in Attributen, sondern nur noch hinter dem Dienst `weather.get_forecasts`.
+- **Bedingungen können Zustände vergleichen.** Bisher wurden nur Zahlen und Binärsensoren ausgewertet. Jetzt lässt sich auch auf Textzustände prüfen – etwa `sunny` oder `bewölkt`. Damit funktionieren Wetter-Entitäten und selbstgebaute Scrape-Sensoren direkt als Bedingung. Bei Wetter-Entitäten werden die Standardlagen als Schaltflächen angeboten statt sie abtippen zu müssen.
+- **Vier Bedingungen statt zwei.** Bedingung 3 und 4 erscheinen erst, wenn die vorherige gefüllt ist.
+- **Beschattungszeitraum pro Bereich.** „Nur von April bis September" – Zeiträume über den Jahreswechsel sind möglich, z. B. Oktober bis März. Damit bleibt die Wintersonne draußen aus der Beschattung und drinnen als Wärme.
+- **Eigene Ausrichtung pro Rollladen.** Für Räume mit Fenstern in mehreren Himmelsrichtungen lassen sich Höhenwinkel und Azimut jetzt am einzelnen Rollladen überschreiben. Süd- und Westfenster desselben Raums werden dadurch zu unterschiedlichen Tageszeiten beschattet. Ohne diesen Schalter gelten unverändert die Werte des Bereichs.
+- **Abweichende Schließposition.** Der Bereich legt über eine Bedingung fest *wann*, der einzelne Rollladen über eine Teilposition *wie weit*. So schließen an heißen Abenden nur ausgewählte Rollläden teilweise, um weiter zu lüften.
+
+### Behoben
+- **Sensoren mit Textzustand wurden stillschweigend ignoriert.** `float()` schlug fehl, die Bedingung galt als erfüllt, und es gab keinerlei Hinweis – der Sensor sah konfiguriert aus und tat nichts. Ohne hinterlegte Zustandsliste erscheint jetzt eine Warnung im Log.
+
+### Hinweis
+Ein fehlendes, nicht erreichbares oder fehlerhaft antwortendes Wetter-Backend blockiert die Beschattung nie. Der letzte bekannte Wert bleibt erhalten, gewarnt wird nur einmal.
+
 ## [2.2.1]
 
 ### Geändert
