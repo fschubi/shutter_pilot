@@ -225,3 +225,61 @@ Berechtigt. Deshalb gibt es einen **Diagnose-Download** mit dem kompletten Laufz
 Update kommt wie gewohnt über HACS – danach einmal hart neu laden (Strg/Cmd+Shift+R), damit das Panel neu geladen wird.
 
 Danke nochmal, das hat die Integration deutlich besser gemacht. Weiteres Feedback gerne! 🙂
+
+---
+---
+
+# ANTWORTBEITRAG ZWEITES FORUM (Version 2.3.0)
+
+*Für den Thread mit Schlumperdix und Linos.*
+
+Danke für das ausführliche Feedback, gerade von euch beiden, die das heute schon mit vielen Automationen und Helfern lösen. **Version 2.3.0 setzt alles davon um.**
+
+Und danke für den Hinweis auf die kaputten Links – die waren tatsächlich defekt. Ich hatte die Adressen im Beitrag fett bzw. als Code formatiert, und das Forum hat die Sonderzeichen mit in die URL gezogen. Ist repariert.
+
+## Wetter und Vorhersage
+
+Shutter Pilot holt die Vorhersage jetzt selbst. Man hinterlegt im neuen Tab **Einstellungen** einfach seine `weather`-Entität, und daraus entstehen zwei Sensoren:
+
+- **Vorhersage Höchsttemperatur**
+- **Vorhersage Wetterlage**
+
+Beide wählt man ganz normal als Bedingung aus. Typisch: *Höchsttemperatur, beschatten ab 24 °C*. An kühlen Tagen wird dann nicht beschattet.
+
+@Linos, damit ist dein Punkt „Sonne auch rein lassen für Energielieferung" abgedeckt – im Winter wird die Schwelle einfach nie erreicht.
+
+## @Schlumperdix – spezielle Sensoren
+
+Ja, und dein Scrape-Sensor war sogar der Auslöser für einen echten Fehler: Bedingungen konnten bisher nur Zahlen und Binärsensoren auswerten. Ein Sensor mit Textzustand wurde **kommentarlos ignoriert** – die Bedingung galt als erfüllt, ohne jeden Hinweis. Der Sensor sah konfiguriert aus und tat nichts.
+
+Jetzt kann man direkt auf Zustände prüfen. Bei Wetter-Entitäten stehen die Standardlagen als Schaltflächen bereit, man klickt also an, bei welchem Wetter beschattet werden soll.
+
+Deine Aufzählung – Azimut, Elevation, Lux, Wetterzustand, Jahreszeit, Uhrzeit, Temperatur – hat außerdem gezeigt, dass zwei Bedingungen zu wenig sind. Es sind jetzt **vier**, und Bedingung 3 und 4 tauchen erst auf, wenn die vorherige gefüllt ist.
+
+## @Schlumperdix – Jahreszeiten
+
+Deinen Helfer brauchst du nicht mehr: Pro Bereich lässt sich ein **Beschattungszeitraum** in Monaten einstellen, auch über den Jahreswechsel hinweg. Genau dein Fall mit den 60 000 Lux, die im Sommer Beschattung bedeuten und im Winter erwünschte Wärme.
+
+In der Praxis reicht oft schon die Temperaturbedingung, weil die Schwelle im Winter ohnehin nicht erreicht wird – aber wer es ausdrücklich am Kalender festmachen will, kann das jetzt.
+
+## @Linos – Räume mit mehreren Himmelsrichtungen
+
+Das war der größte Umbau. Höhenwinkel und Himmelsrichtung galten bisher für den ganzen Bereich, ein Raum mit Süd- und Westfenster hätte also zwei Bereiche mit doppeltem Zeitplan gebraucht.
+
+Jetzt lässt sich die Ausrichtung **am einzelnen Rollladen** überschreiben. Das Südfenster wird mittags beschattet, das Westfenster nachmittags, beide im selben Bereich und mit einem Zeitplan.
+
+## @Linos – abends nur teilweise schließen
+
+Auch drin. Der **Bereich** legt über eine Bedingung fest *wann* – etwa ein Sensor für Hitze und Anwesenheit – und der **Rollladen** über eine Teilposition *wie weit*. Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal. Damit gilt es genau für deine „bestimmten Cover".
+
+## Zum Thema Nachvollziehbarkeit
+
+@Schlumperdix, dein Punkt, dass eine Automation leichter zu tracen ist, stimmt grundsätzlich. Deshalb gibt es einen **Diagnose-Download** mit dem kompletten Laufzeitzustand – inklusive der aktuell aktiven Bedingungen und Wetterdaten – und ein Event `shutter_pilot_cover_moved` bei jeder automatischen Fahrt, mit Grund, Position und Bereich. Damit lässt sich im Logbuch nachvollziehen, warum ein Rollladen gefahren ist.
+
+---
+
+Update wie gewohnt über HACS, danach einmal hart neu laden (Strg/Cmd+Shift+R).
+
+Ein fehlendes oder hängendes Wetter-Backend blockiert die Beschattung übrigens nie – der letzte bekannte Wert bleibt stehen. Das war mir wichtig, weil eine Rollladensteuerung nicht ausfallen darf, nur weil ein Wetterdienst zickt.
+
+Weiteres Feedback gerne! 🙂
