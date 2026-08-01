@@ -4,6 +4,30 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.2.0]
+
+Dieses Release setzt die Rückmeldungen aus dem Forum um.
+
+### Neu
+- **Entitätsauswahl komplett überarbeitet.** Statt einer Auswahlliste mit sämtlichen Entitäten einer Domain gibt es jetzt ein Suchfeld mit Trefferliste. Sortiert wird nach **Anzeigename** statt nach Entity-ID – ein Sensor namens „Flur Sensor" mit der ID `sensor.0x00158d0001abcdef` steht jetzt unter F und nicht mehr unter 0. Passende Entitäten stehen oben unter „Passende", alle übrigen bleiben darunter erreichbar. Die Vorauswahl nutzt `device_class` **und** den Namen, damit auch Sensoren ohne gesetzte `device_class` gefunden werden.
+- **Zweiter Fenstersensor pro Rollladen** für Hardware, die „offen" und „gekippt" als zwei getrennte Entitäten meldet. Der Kipp-Kontakt hat Vorrang, weil viele Fenster im Kippzustand zusätzlich „offen" melden. Ohne zweiten Sensor bleibt alles wie bisher.
+- **Lüftungsposition ist jetzt direkt ansteuerbar** – bisher war sie nur über einen Fensterkontakt erreichbar. Neu: Service `shutter_pilot.ventilate_group` und ein Knopf **Lüften** auf jeder Bereichskarte. Es wird dieselbe Position genutzt wie bei gekipptem Fenster, es gibt also kein zusätzliches Feld zum Ausfüllen.
+- **Zusatzbedingungen für den Sonnenschutz.** Pro Bereich lassen sich bis zu zwei Bedingungen hinterlegen, die zusätzlich zu Höhenwinkel und Himmelsrichtung erfüllt sein müssen:
+  - Ein **Binärsensor** (z. B. „hohe Sonneneinstrahlung") wirkt direkt – die Hysterese steckt dann im Sensor selbst.
+  - Ein **Zahlensensor** bekommt eine Schwelle „Beschatten ab" und optional „Aufheben unter". Der Abstand zwischen beiden verhindert, dass die Rollläden bei durchziehenden Wolken hin- und herfahren.
+
+  Damit lässt sich beides abbilden: nur beschatten, wenn wirklich die Sonne knallt, und nur, wenn es warm genug ist. Im Frühjahr und Herbst bleibt die Sonnenwärme so erwünschterweise drin. Ein fehlender, unbekannter oder nicht verfügbarer Sensor blockiert die Beschattung nie.
+
+### Geändert
+- Die Sonnenschutz-Freigabe berücksichtigt die neuen Bedingungen: Fällt eine Bedingung weg, während Sonnenstand und Richtung noch passen, fahren die Rollläden wieder hoch.
+- Das Panel nutzt jetzt auf allen Plattformen dieselbe Entitätsauswahl. Der Sonderfall für die macOS-App entfällt damit an dieser Stelle.
+
+### Hinweis zur Wettervorhersage
+Eine eigene Vorhersage-Auswertung ist bewusst nicht eingebaut. Wer nach der Tageshöchsttemperatur beschatten will, legt einen Template-Sensor mit dem Vorhersagewert an und trägt diesen als Bedingung ein – siehe README.
+
+### Tests
+143 statt 107 Tests. Neu abgedeckt: Fensterzustand mit zwei Sensoren, Bedingungen mit Hysterese, `ventilate_group`. Die Sortier- und Vorfilterlogik des Panels ist zusätzlich mit einem eigenständigen Node-Skript geprüft.
+
 ## [2.1.4]
 
 ### Behoben

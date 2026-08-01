@@ -50,6 +50,16 @@ async def test_sun_protect_group_uses_per_shutter_positions(hass, entry, cover_c
     assert _positions(cover_calls) == {"cover.living_room": 40, "cover.kitchen": 60}
 
 
+async def test_ventilate_group_uses_tilted_position(hass, entry, cover_calls):
+    """Ventilation reuses the position configured for a tilted window."""
+    await hass.services.async_call(
+        DOMAIN, "ventilate_group", {"area_id": "living"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    # Defaults apply: no explicit position_when_window_tilted in the fixture.
+    assert _positions(cover_calls) == {"cover.living_room": 50, "cover.kitchen": 50}
+
+
 async def test_unknown_area_does_nothing(hass, entry, cover_calls):
     await hass.services.async_call(
         DOMAIN, "close_group", {"area_id": "does_not_exist"}, blocking=True

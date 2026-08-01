@@ -33,6 +33,7 @@ from .helpers import (
     register_minute_callback,
     set_cover_position,
     set_sun_protect_active,
+    sun_extra_conditions_met,
     sun_protect_conditions_met,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
@@ -171,7 +172,9 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 continue
 
             was_active = bool(data.get("sun_protect_active", {}).get(area_id))
-            should_protect = sun_protect_conditions_met(elev, azim, area)
+            should_protect = sun_protect_conditions_met(
+                elev, azim, area
+            ) and sun_extra_conditions_met(hass, area, data)
 
             if should_protect:
                 set_sun_protect_active(data, area_id, True)
@@ -187,18 +190,24 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # the evening/night schedule, not to shading.
             set_sun_protect_active(data, area_id, False)
             e_min, e_max = get_elevation_bounds(area)
+            geometry_ok = sun_protect_conditions_met(elev, azim, area)
+
             if elev > e_max:
                 await _release_sun_protect(area, "sun above range")
-            elif not sun_protect_conditions_met(elev, azim, area) and elev >= e_min:
+            elif elev < e_min:
+                _LOGGER.debug(
+                    "[sun-protect] area=%s: elev=%.1f below %.1f – protection off, no drive",
+                    area_id, elev, e_min,
+                )
+            elif not geometry_ok:
                 a_min, a_max = get_azimuth_bounds(area)
                 await _release_sun_protect(
                     area, f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
                 )
             else:
-                _LOGGER.debug(
-                    "[sun-protect] area=%s: elev=%.1f below %.1f – protection off, no drive",
-                    area_id, elev, e_min,
-                )
+                # Geometry still fits, so an extra condition dropped out –
+                # clouds moved in or it cooled down. Let the light back in.
+                await _release_sun_protect(area, "shading condition no longer met")
 
     def _tick(_now) -> None:
         hass.async_create_task(_evaluate())

@@ -29,6 +29,11 @@ from .const import (
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
+    CONF_POSITION_WHEN_WINDOW_TILTED,
+    DEFAULT_POSITION_WHEN_WINDOW_TILTED,
+    ROLE_VENTILATION,
+    SUN_CONDITION_SLOTS,
+    sun_condition_keys,
     CONF_TILT_CLOSED,
     CONF_TILT_ENABLED,
     CONF_TILT_OPEN,
@@ -198,6 +203,101 @@ def sun_protect_conditions_met(
     return azimuth_in_sun_protect_range(azimuth, area)
 
 
+def _condition_slot_met(
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    slot: str,
+    memory: dict[str, bool],
+) -> bool:
+    """Evaluate one extra shading condition, remembering it for hysteresis.
+
+    A binary sensor answers directly. A numeric sensor becomes satisfied at
+    `on_above` and stays satisfied until it drops below `off_below`, so a
+    passing cloud does not make the shutters bounce. Anything unusable – no
+    sensor, unknown, unavailable, non-numeric – never blocks shading.
+    """
+    entity_key, on_key, off_key = sun_condition_keys(slot)
+    entity_id = str(area.get(entity_key) or "").strip()
+    if not entity_id:
+        return True
+
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        _LOGGER.debug(
+            "Sun condition %s: %s unavailable – not blocking shading",
+            slot,
+            entity_id,
+        )
+        return True
+
+    if entity_id.startswith("binary_sensor."):
+        met = str(state.state).lower() in ("on", "true", "1")
+        memory[slot] = met
+        return met
+
+    try:
+        value = float(state.state)
+    except (TypeError, ValueError):
+        return True
+
+    try:
+        on_above = float(area.get(on_key))
+    except (TypeError, ValueError):
+        # Threshold not configured – the sensor alone cannot decide anything.
+        return True
+
+    try:
+        off_below = float(area.get(off_key))
+    except (TypeError, ValueError):
+        off_below = on_above
+    if off_below > on_above:
+        off_below = on_above
+
+    if memory.get(slot):
+        met = value >= off_below
+    else:
+        met = value >= on_above
+    memory[slot] = met
+    return met
+
+
+def sun_extra_conditions_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when every configured extra condition for shading is satisfied."""
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    all_memory = data.setdefault("sun_cond_state", {})
+    memory = all_memory.setdefault(area_id, {})
+    for slot in SUN_CONDITION_SLOTS:
+        if not _condition_slot_met(hass, area, slot, memory):
+            return False
+    return True
+
+
+def get_sun_condition_status(
+    hass: HomeAssistant, area: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Per-slot status of the extra shading conditions, for the dashboard."""
+    out: list[dict[str, Any]] = []
+    for slot in SUN_CONDITION_SLOTS:
+        entity_key, on_key, _ = sun_condition_keys(slot)
+        entity_id = str(area.get(entity_key) or "").strip()
+        if not entity_id:
+            continue
+        state = hass.states.get(entity_id)
+        out.append(
+            {
+                "slot": slot,
+                "entity_id": entity_id,
+                "state": state.state if state else None,
+                "on_above": area.get(on_key),
+                "available": state is not None
+                and state.state not in ("unknown", "unavailable"),
+            }
+        )
+    return out
+
+
 def is_sun_protect_active(data: dict[str, Any], area_id: str) -> bool:
     """Runtime flag: sun protection currently active for an area."""
     active = data.get("sun_protect_active", {})
@@ -219,12 +319,19 @@ _ROLE_POSITION_KEYS = {
     ROLE_OPEN: (CONF_POSITION_OPEN, 100),
     ROLE_CLOSED: (CONF_POSITION_CLOSED, 0),
     ROLE_SUN_PROTECT: (CONF_POSITION_SUN_PROTECT, 50),
+    # Ventilation deliberately reuses the tilted-window position instead of
+    # introducing a fourth setting users would have to fill in twice.
+    ROLE_VENTILATION: (
+        CONF_POSITION_WHEN_WINDOW_TILTED,
+        DEFAULT_POSITION_WHEN_WINDOW_TILTED,
+    ),
 }
 
 _ROLE_TILT_KEYS = {
     ROLE_OPEN: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
     ROLE_CLOSED: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     ROLE_SUN_PROTECT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
+    ROLE_VENTILATION: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
 }
 
 

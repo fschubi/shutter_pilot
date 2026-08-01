@@ -21,6 +21,18 @@ const COMPASS_PRESETS = [
 ];
 const REFRESH_MS = 30000;
 
+/* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
+   Anzeigenamen samt Entity-ID. Beides nur zum Vorsortieren – nichts wird
+   ausgeblendet, denn längst nicht jeder setzt eine device_class. */
+const HINTS = {
+  window:      {classes:["window","door","opening","garage_door"], pattern:/fenster|window|t[uü]r|door|kontakt|contact|kipp|tilt/i},
+  illuminance: {classes:["illuminance"], pattern:/illumin|lux|helligkeit|brightness|einstrahl|radiation|solar|\blx\b/i},
+  temperature: {classes:["temperature"], pattern:/temp|grad|celsius/i},
+  workday:     {classes:[], pattern:/workday|arbeitstag|werktag|feiertag|holiday/i},
+  condition:   {classes:["illuminance","temperature","irradiance","power"],
+                pattern:/illumin|lux|helligkeit|brightness|einstrahl|radiation|solar|temp|\blx\b/i},
+};
+
 /* In der Home-Assistant-App für macOS (Mac Catalyst) sind native Formular-
    Popups defekt: <input type="time"> beendet die App (UIPickerView ist im
    Mac-Idiom nicht unterstützt), und <select>-Dropdowns öffnen sich gar nicht
@@ -43,6 +55,21 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  ent_matching:"Passende",
+  ent_others:"Alle weiteren",
+  ent_more:"… und {n} weitere – bitte Suche verfeinern",
+  clear:"Auswahl löschen",
+  btn_vent:"Lüften",
+  f_window_tilt_sensor:"Zusätzlicher Sensor für „gekippt“ (optional)",
+  f_window_tilt_sensor_hint:"Nur nötig, wenn dein Fenster zwei getrennte Entitäten hat: eine für „offen“ und eine für „gekippt“. Bei einem Kontakt mit drei Zuständen bleibt dieses Feld leer.",
+  f_sun_cond_title:"Zusätzliche Bedingungen",
+  f_sun_cond_hint:"Beschattet nur, wenn diese Bedingungen erfüllt sind – z. B. wirklich Sonne oder wirklich warm. Leer lassen heisst: keine Bedingung.",
+  f_sun_cond_a:"Bedingung 1 (optional)",
+  f_sun_cond_b:"Bedingung 2 (optional)",
+  f_sun_cond_on:"Beschatten ab",
+  f_sun_cond_off:"Aufheben unter",
+  f_sun_cond_num_hint:"„Aufheben unter“ darf niedriger sein als „Beschatten ab“ – der Abstand verhindert Flattern bei durchziehenden Wolken. Leer = gleicher Wert.",
+  f_sun_cond_bin_hint:"Binärsensor: beschattet wird, solange er „an“ ist.",
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -124,6 +151,21 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  ent_matching:"Matching",
+  ent_others:"All others",
+  ent_more:"… and {n} more – please refine your search",
+  clear:"Clear selection",
+  btn_vent:"Ventilate",
+  f_window_tilt_sensor:"Extra sensor for tilted (optional)",
+  f_window_tilt_sensor_hint:"Only needed if your window exposes two separate entities: one for open and one for tilted. Leave empty for a single 3-state contact.",
+  f_sun_cond_title:"Extra conditions",
+  f_sun_cond_hint:"Shade only while these conditions hold – e.g. real sunshine or real warmth. Leave empty for no condition.",
+  f_sun_cond_a:"Condition 1 (optional)",
+  f_sun_cond_b:"Condition 2 (optional)",
+  f_sun_cond_on:"Shade above",
+  f_sun_cond_off:"Release below",
+  f_sun_cond_num_hint:"Release below may be lower than Shade above – the gap prevents flapping when clouds pass. Empty = same value.",
+  f_sun_cond_bin_hint:"Binary sensor: shading runs while it is on.",
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -205,6 +247,21 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  ent_matching:"Correspondants",
+  ent_others:"Tous les autres",
+  ent_more:"… et {n} de plus – affinez la recherche",
+  clear:"Effacer",
+  btn_vent:"Aérer",
+  f_window_tilt_sensor:"Capteur supplémentaire basculé (optionnel)",
+  f_window_tilt_sensor_hint:"Nécessaire uniquement si votre fenêtre expose deux entités distinctes.",
+  f_sun_cond_title:"Conditions supplémentaires",
+  f_sun_cond_hint:"N'ombrage que si ces conditions sont remplies. Vide = aucune condition.",
+  f_sun_cond_a:"Condition 1 (optionnel)",
+  f_sun_cond_b:"Condition 2 (optionnel)",
+  f_sun_cond_on:"Ombrager au-dessus de",
+  f_sun_cond_off:"Lever en dessous de",
+  f_sun_cond_num_hint:"L'écart entre les deux seuils évite les oscillations. Vide = même valeur.",
+  f_sun_cond_bin_hint:"Capteur binaire : ombrage tant qu'il est actif.",
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -272,6 +329,21 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  ent_matching:"Coincidencias",
+  ent_others:"Todos los demás",
+  ent_more:"… y {n} más – refina la búsqueda",
+  clear:"Borrar",
+  btn_vent:"Ventilar",
+  f_window_tilt_sensor:"Sensor adicional inclinada (opcional)",
+  f_window_tilt_sensor_hint:"Solo necesario si tu ventana expone dos entidades separadas.",
+  f_sun_cond_title:"Condiciones adicionales",
+  f_sun_cond_hint:"Sombrea solo si se cumplen estas condiciones. Vacío = sin condición.",
+  f_sun_cond_a:"Condición 1 (opcional)",
+  f_sun_cond_b:"Condición 2 (opcional)",
+  f_sun_cond_on:"Sombrear por encima de",
+  f_sun_cond_off:"Liberar por debajo de",
+  f_sun_cond_num_hint:"La diferencia entre umbrales evita oscilaciones. Vacío = mismo valor.",
+  f_sun_cond_bin_hint:"Sensor binario: sombrea mientras esté activo.",
   filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -339,6 +411,21 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  ent_matching:"Corrispondenti",
+  ent_others:"Tutti gli altri",
+  ent_more:"… e altri {n} – affina la ricerca",
+  clear:"Cancella",
+  btn_vent:"Aerare",
+  f_window_tilt_sensor:"Sensore aggiuntivo ribaltata (opzionale)",
+  f_window_tilt_sensor_hint:"Serve solo se la finestra espone due entità separate.",
+  f_sun_cond_title:"Condizioni aggiuntive",
+  f_sun_cond_hint:"Ombreggia solo se queste condizioni sono soddisfatte. Vuoto = nessuna condizione.",
+  f_sun_cond_a:"Condizione 1 (opzionale)",
+  f_sun_cond_b:"Condizione 2 (opzionale)",
+  f_sun_cond_on:"Ombreggia sopra",
+  f_sun_cond_off:"Rilascia sotto",
+  f_sun_cond_num_hint:"Il divario tra le soglie evita oscillazioni. Vuoto = stesso valore.",
+  f_sun_cond_bin_hint:"Sensore binario: ombreggia finché è attivo.",
   filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -406,6 +493,21 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  ent_matching:"Passend",
+  ent_others:"Alle overige",
+  ent_more:"… en nog {n} – verfijn de zoekopdracht",
+  clear:"Wissen",
+  btn_vent:"Ventileren",
+  f_window_tilt_sensor:"Extra sensor voor gekanteld (optioneel)",
+  f_window_tilt_sensor_hint:"Alleen nodig als je raam twee aparte entiteiten heeft.",
+  f_sun_cond_title:"Extra voorwaarden",
+  f_sun_cond_hint:"Beschaduwt alleen als aan deze voorwaarden is voldaan. Leeg = geen voorwaarde.",
+  f_sun_cond_a:"Voorwaarde 1 (optioneel)",
+  f_sun_cond_b:"Voorwaarde 2 (optioneel)",
+  f_sun_cond_on:"Beschaduwen boven",
+  f_sun_cond_off:"Opheffen onder",
+  f_sun_cond_num_hint:"Het verschil tussen de drempels voorkomt pendelen. Leeg = zelfde waarde.",
+  f_sun_cond_bin_hint:"Binaire sensor: beschaduwt zolang deze aan is.",
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -474,6 +576,21 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  ent_matching:"Matchende",
+  ent_others:"Alle øvrige",
+  ent_more:"… og {n} mere – forfin søgningen",
+  clear:"Ryd",
+  btn_vent:"Udluft",
+  f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
+  f_window_tilt_sensor_hint:"Kun nødvendigt hvis dit vindue har to separate enheder.",
+  f_sun_cond_title:"Ekstra betingelser",
+  f_sun_cond_hint:"Skygger kun når disse betingelser er opfyldt. Tom = ingen betingelse.",
+  f_sun_cond_a:"Betingelse 1 (valgfri)",
+  f_sun_cond_b:"Betingelse 2 (valgfri)",
+  f_sun_cond_on:"Skyg over",
+  f_sun_cond_off:"Ophæv under",
+  f_sun_cond_num_hint:"Afstanden mellem tærsklerne forhindrer svingninger. Tom = samme værdi.",
+  f_sun_cond_bin_hint:"Binær sensor: skygger så længe den er aktiv.",
   filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -542,6 +659,21 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  ent_matching:"Matchande",
+  ent_others:"Alla övriga",
+  ent_more:"… och {n} till – förfina sökningen",
+  clear:"Rensa",
+  btn_vent:"Vädra",
+  f_window_tilt_sensor:"Extra sensor för vädringsläge (valfri)",
+  f_window_tilt_sensor_hint:"Behövs bara om fönstret har två separata entiteter.",
+  f_sun_cond_title:"Ytterligare villkor",
+  f_sun_cond_hint:"Skuggar bara när dessa villkor är uppfyllda. Tomt = inget villkor.",
+  f_sun_cond_a:"Villkor 1 (valfritt)",
+  f_sun_cond_b:"Villkor 2 (valfritt)",
+  f_sun_cond_on:"Skugga över",
+  f_sun_cond_off:"Släpp under",
+  f_sun_cond_num_hint:"Avståndet mellan trösklarna förhindrar pendling. Tomt = samma värde.",
+  f_sun_cond_bin_hint:"Binär sensor: skuggar så länge den är aktiv.",
   filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -610,6 +742,21 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  ent_matching:"Pasujące",
+  ent_others:"Wszystkie pozostałe",
+  ent_more:"… i {n} więcej – uściślij wyszukiwanie",
+  clear:"Wyczyść",
+  btn_vent:"Wietrzenie",
+  f_window_tilt_sensor:"Dodatkowy czujnik uchylenia (opcjonalnie)",
+  f_window_tilt_sensor_hint:"Potrzebne tylko, gdy okno udostępnia dwie osobne encje.",
+  f_sun_cond_title:"Dodatkowe warunki",
+  f_sun_cond_hint:"Zacienia tylko, gdy warunki są spełnione. Puste = brak warunku.",
+  f_sun_cond_a:"Warunek 1 (opcjonalnie)",
+  f_sun_cond_b:"Warunek 2 (opcjonalnie)",
+  f_sun_cond_on:"Zacieniaj powyżej",
+  f_sun_cond_off:"Zwolnij poniżej",
+  f_sun_cond_num_hint:"Odstęp między progami zapobiega oscylacjom. Puste = ta sama wartość.",
+  f_sun_cond_bin_hint:"Czujnik binarny: zacienia, gdy jest włączony.",
   filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -678,6 +825,21 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  ent_matching:"Correspondentes",
+  ent_others:"Todos os outros",
+  ent_more:"… e mais {n} – refine a pesquisa",
+  clear:"Limpar",
+  btn_vent:"Ventilar",
+  f_window_tilt_sensor:"Sensor adicional basculante (opcional)",
+  f_window_tilt_sensor_hint:"Só é necessário se a janela tiver duas entidades separadas.",
+  f_sun_cond_title:"Condições adicionais",
+  f_sun_cond_hint:"Sombreia apenas se estas condições se verificarem. Vazio = sem condição.",
+  f_sun_cond_a:"Condição 1 (opcional)",
+  f_sun_cond_b:"Condição 2 (opcional)",
+  f_sun_cond_on:"Sombrear acima de",
+  f_sun_cond_off:"Libertar abaixo de",
+  f_sun_cond_num_hint:"A diferença entre limiares evita oscilações. Vazio = mesmo valor.",
+  f_sun_cond_bin_hint:"Sensor binário: sombreia enquanto estiver ativo.",
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -746,6 +908,21 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  ent_matching:"Treff",
+  ent_others:"Alle andre",
+  ent_more:"… og {n} til – avgrens søket",
+  clear:"Tøm",
+  btn_vent:"Lufte",
+  f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
+  f_window_tilt_sensor_hint:"Bare nødvendig hvis vinduet har to separate enheter.",
+  f_sun_cond_title:"Flere betingelser",
+  f_sun_cond_hint:"Skjermer bare når disse betingelsene er oppfylt. Tom = ingen betingelse.",
+  f_sun_cond_a:"Betingelse 1 (valgfri)",
+  f_sun_cond_b:"Betingelse 2 (valgfri)",
+  f_sun_cond_on:"Skjerm over",
+  f_sun_cond_off:"Frigi under",
+  f_sun_cond_num_hint:"Avstanden mellom tersklene hindrer pendling. Tom = samme verdi.",
+  f_sun_cond_bin_hint:"Binær sensor: skjermer så lenge den er aktiv.",
   filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -842,9 +1019,14 @@ class ShutterPilotPanel extends LitElement {
     .spin-btn:hover{background:var(--sp);color:#fff}
     .spin-val{flex:1 1 0;min-width:0;text-align:center}
     .picked{padding:8px 10px;border-radius:8px;background:var(--card2, rgba(127,127,127,.12));
-      margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
-    .ent-list{max-height:200px;overflow-y:auto;border-radius:8px;
+      margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;
+      color:var(--txt2)}
+    .picked.has{color:var(--txt);font-weight:500}
+    .picked-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ent-list{max-height:220px;overflow-y:auto;border-radius:8px;
       border:1px solid var(--divider);margin-top:6px}
+    .ent-group{padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+      color:var(--txt2);background:var(--card2, rgba(127,127,127,.10));position:sticky;top:0}
     .ent-row{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--divider)}
     .ent-row:last-child{border-bottom:none}
     .ent-row:hover{background:var(--card2, rgba(127,127,127,.15))}
@@ -1067,8 +1249,34 @@ class ShutterPilotPanel extends LitElement {
   }
 
   async _load(){if(!this.hass)return;try{this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});}catch(e){console.warn("SP load",e);}}
-  _entities(domains){if(!this.hass?.states)return[];return Object.keys(this.hass.states).filter(e=>domains.some(d=>e.startsWith(d+"."))).sort();}
+  /* Nach Anzeigename sortiert, nicht nach Entity-ID. Nutzer suchen nach
+     "Küche", nicht nach "sensor.0x00158d000...". */
+  _entities(domains){
+    if(!this.hass?.states)return[];
+    return Object.keys(this.hass.states)
+      .filter(e=>domains.some(d=>e.startsWith(d+".")))
+      .sort((a,b)=>this._entityLabel(a).localeCompare(this._entityLabel(b),undefined,{sensitivity:"base",numeric:true}));
+  }
   _entityLabel(eid){const n=this.hass?.states?.[eid]?.attributes?.friendly_name;return n?`${n} (${eid})`:eid;}
+  _deviceClass(eid){return String(this.hass?.states?.[eid]?.attributes?.device_class||"").toLowerCase();}
+  /* Weiche Vorfilterung: passende Entitäten nach oben, der Rest bleibt
+     erreichbar. Hart filtern wäre riskant – längst nicht jeder setzt bei
+     seinen Sensoren eine device_class, und dann fände man seinen Sensor
+     überhaupt nicht mehr. */
+  _matchesHint(eid,hint){
+    if(!hint)return false;
+    const dc=this._deviceClass(eid);
+    const label=this._entityLabel(eid).toLowerCase();
+    if(hint.classes?.includes(dc))return true;
+    if(hint.pattern&&hint.pattern.test(label))return true;
+    return false;
+  }
+  _rankEntities(ids,hint){
+    if(!hint)return{matching:[],others:ids};
+    const matching=[],others=[];
+    for(const e of ids)(this._matchesHint(e,hint)?matching:others).push(e);
+    return{matching,others};
+  }
   /* Zeiteingabe bewusst als Textfeld, nicht als <input type="time">.
      Die Home-Assistant-App für macOS ist eine Mac-Catalyst-App. Dort öffnet
      WebKit für type="time" einen UIDatePicker mit UIPickerView – und
@@ -1117,43 +1325,53 @@ class ShutterPilotPanel extends LitElement {
         ${spin(mi,()=>set(h,mi-1),()=>set(h,mi+1),n=>set(h,n),59)}
       </div></div>`;
   }
-  /* Entitätsauswahl als natives <select>.
-     Vorher ein <input list> mit <datalist>: Safari zeigt Datalists praktisch
-     nicht an, dort war schlicht nichts auswählbar. Ein <select> funktioniert
-     in jedem Browser. Der aktuell gespeicherte Wert wird immer mit angeboten,
-     auch wenn die Entität gerade fehlt – sonst ginge sie beim Speichern
-     unbemerkt verloren. */
-  _entityField(obj,key,label,domains){
+  /* Entitätsauswahl: Suchfeld mit Trefferliste, auf allen Plattformen gleich.
+     Vorher ein natives <select> mit sämtlichen Entitäten der Domain – beim
+     Helligkeitssensor also die komplette sensor.-Domain, in einer normalen
+     Installation mehrere hundert Einträge, sortiert nach Entity-ID und ohne
+     Suche. Genau daran sind Nutzer im Forum gescheitert. Ausserdem öffnete
+     sich <select> in der macOS-App gar nicht.
+     Der gespeicherte Wert wird immer angeboten, auch wenn die Entität gerade
+     fehlt – sonst ginge sie beim Speichern unbemerkt verloren. */
+  _entityField(obj,key,label,domains,hint=null){
     const cur=obj[key]||"";
-    const ents=this._entities(domains);
-    if(cur&&!ents.includes(cur))ents.unshift(cur);
-    const missing=cur&&!this.hass?.states?.[cur]
-      ?html`<div class="hint">${this.t("entity_missing")}</div>`:"";
+    const all=this._entities(domains);
+    if(cur&&!all.includes(cur))all.unshift(cur);
 
-    if(!NATIVE_PICKERS_BROKEN){
-      return html`<div class="field"><label>${label}</label>
-        <select .value=${cur} @change=${e=>{obj[key]=e.target.value;this.requestUpdate();}}>
-          <option value="" ?selected=${!cur}>${this.t("pick_entity")}</option>
-          ${ents.map(e=>html`<option value="${e}" ?selected=${cur===e}>${this._entityLabel(e)}</option>`)}
-        </select>${missing}</div>`;
-    }
-
-    // macOS-App: eigene Auswahlliste, weil sich <select> dort nicht öffnet.
-    // Suchfeld plus anklickbare Zeilen – reines HTML, keine nativen Popups.
     const fk=`_flt_${key}`;
-    const flt=(this[fk]||"").toLowerCase();
-    const shown=(flt?ents.filter(e=>this._entityLabel(e).toLowerCase().includes(flt)):ents).slice(0,60);
+    const flt=(this[fk]||"").trim().toLowerCase();
+    const filtered=flt
+      ? all.filter(e=>this._entityLabel(e).toLowerCase().includes(flt))
+      : all;
+    const {matching,others}=this._rankEntities(filtered,hint);
+
+    const LIMIT=40;
+    let budget=LIMIT;
+    const take=list=>{const part=list.slice(0,Math.max(0,budget));budget-=part.length;return part;};
+    const shownMatching=take(matching);
+    const shownOthers=take(others);
+    const hidden=(matching.length+others.length)-(shownMatching.length+shownOthers.length);
+
+    const row=e=>html`<div class="ent-row ${cur===e?"sel":""}"
+      @click=${()=>{obj[key]=e;this[fk]="";this.requestUpdate();}}>
+      ${this._entityLabel(e)}</div>`;
+
     return html`<div class="field"><label>${label}</label>
-      <div class="picked">${cur?this._entityLabel(cur):this.t("pick_entity")}
-        ${cur?html`<button class="spin-btn" @click=${()=>{obj[key]="";this.requestUpdate();}}>×</button>`:""}</div>
+      <div class="picked ${cur?"has":""}">
+        <span class="picked-val">${cur?this._entityLabel(cur):this.t("pick_entity")}</span>
+        ${cur?html`<button class="spin-btn" title="${this.t("clear")}"
+          @click=${()=>{obj[key]="";this.requestUpdate();}}>×</button>`:""}</div>
       <input type="text" placeholder="${this.t("filter_entity")}" .value=${this[fk]||""}
         @input=${e=>{this[fk]=e.target.value;this.requestUpdate();}}>
       <div class="ent-list">
-        ${shown.length?shown.map(e=>html`
-          <div class="ent-row ${cur===e?"sel":""}" @click=${()=>{obj[key]=e;this.requestUpdate();}}>
-            ${this._entityLabel(e)}</div>`)
-          :html`<div class="ent-row empty">${this.t("no_match")}</div>`}
-      </div>${missing}</div>`;
+        ${shownMatching.length?html`<div class="ent-group">${this.t("ent_matching")}</div>`:""}
+        ${shownMatching.map(row)}
+        ${shownOthers.length&&shownMatching.length?html`<div class="ent-group">${this.t("ent_others")}</div>`:""}
+        ${shownOthers.map(row)}
+        ${!filtered.length?html`<div class="ent-row empty">${this.t("no_match")}</div>`:""}
+        ${hidden>0?html`<div class="ent-row empty">${this.t("ent_more").replace("{n}",hidden)}</div>`:""}
+      </div>
+      ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
   }
 
   render(){
@@ -1207,6 +1425,7 @@ class ShutterPilotPanel extends LitElement {
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
         <button class="btn close" @click=${()=>this._coverAction(sh,"close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>${this.t("btn_down")}</button>
         <button class="btn sun" @click=${()=>this._coverAction(sh,"sun")}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${this.t("btn_sun")}</button>
+        <button class="btn vent" @click=${()=>this._coverAction(sh,"vent")}><ha-icon icon="mdi:air-filter"></ha-icon>${this.t("btn_vent")}</button>
       </div></div>`;
   }
   _renderSunProtectInfo(area,d){
@@ -1314,7 +1533,7 @@ class ShutterPilotPanel extends LitElement {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -1359,7 +1578,7 @@ class ShutterPilotPanel extends LitElement {
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
-    const ep=(k,lbl,domains)=>this._entityField(a,k,lbl,domains);
+    const ep=(k,lbl,domains,hint=null)=>this._entityField(a,k,lbl,domains,hint);
     return html`<div class="form"><h3>${a._isNew?T("add_area"):T("edit_area")}</h3>
       ${f("name",T("f_name"))}
       ${a._isNew?"":html`<div class="field"><label>${T("col_id")}</label><input disabled .value=${a.id}></div>`}
@@ -1369,7 +1588,7 @@ class ShutterPilotPanel extends LitElement {
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
-      ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"])}
+      ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
       <div class="hint">${T("f_workday_hint")}</div>
       ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
       <div class="hint">${T("f_random_offset_hint")}</div>
@@ -1388,12 +1607,25 @@ class ShutterPilotPanel extends LitElement {
               <button class="btn preset ${(Number(a.azimuth_min)===p.min&&Number(a.azimuth_max)===p.max)?"active":""}"
                 @click=${()=>{a.azimuth_min=p.min;a.azimuth_max=p.max;this.requestUpdate();}}>${T("compass_"+p.key)}</button>`)}
             </div></div>
-          ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
+          ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}
+        <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
+        ${["a","b"].map(slot=>{
+          const ek=`sun_cond_${slot}_entity`;
+          const eid=a[ek]||"";
+          const isBinary=eid.startsWith("binary_sensor.");
+          return html`
+            ${ep(ek,T("f_sun_cond_"+slot),["binary_sensor","sensor"],HINTS.condition)}
+            ${eid&&!isBinary?html`
+              ${f(`sun_cond_${slot}_on_above`,T("f_sun_cond_on"),"number")}
+              ${f(`sun_cond_${slot}_off_below`,T("f_sun_cond_off"),"number")}
+              <div class="hint">${T("f_sun_cond_num_hint")}</div>`:""}
+            ${eid&&isBinary?html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`:""}`;
+        })}`:""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
         m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}`:
-        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"])}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
+        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
       <div class="form-actions">
@@ -1406,7 +1638,7 @@ class ShutterPilotPanel extends LitElement {
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -1455,14 +1687,17 @@ class ShutterPilotPanel extends LitElement {
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${s[k]??0}%</span></div></div>`;
-    const ep=(k,lbl,domains)=>this._entityField(s,k,lbl,domains);
+    const ep=(k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint);
     const sel=(k,lbl,opts)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
       ${opts.map(o=>typeof o==="string"?html`<option value="${o}" ?selected=${s[k]===o}>${o}</option>`:html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
     const areaSel=(k,lbl)=>sel(k,lbl,areas.map(a=>({v:a.id,l:a.name||a.id})));
     return html`<div class="form"><h3>${s._isNew?T("add_shutter"):T("edit_shutter")}</h3>
-      ${ep("cover_entity_id",T("f_cover"),["cover"])}
+      ${ep("cover_entity_id",T("f_cover"),["cover"],null)}
       ${f("name",T("f_name"))}
-      ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"])}
+      ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}
+      ${s.window_entity_id||s.window_tilted_entity_id?html`
+        ${ep("window_tilted_entity_id",T("f_window_tilt_sensor"),["binary_sensor","sensor"],HINTS.window)}
+        <div class="hint">${T("f_window_tilt_sensor_hint")}</div>`:""}
       ${sel("window_open_state",T("f_win_open"),WIN_OPEN_OPTS)}
       ${sel("window_tilted_state",T("f_win_tilt"),
         [{v:"none",l:T("f_win_tilt_none")},...WIN_TILT_OPTS.filter(x=>x!=="none").map(x=>({v:x,l:x}))])}
@@ -1503,6 +1738,8 @@ class ShutterPilotPanel extends LitElement {
     else if(action==="close")this.hass.callService("cover","close_cover",{entity_id:eids});
     else if(action==="stop")this.hass.callService("cover","stop_cover",{entity_id:eids});
     else if(action==="sun"){for(const s of shutters){const eid=s.cover_entity_id;const pos=s.position_sun_protect??50;if(eid)this.hass.callService("cover","set_cover_position",{entity_id:eid,position:pos});}}
+    // Lüften nutzt dieselbe Position wie ein gekipptes Fenster.
+    else if(action==="vent"){for(const s of shutters){const eid=s.cover_entity_id;const pos=s.position_when_window_tilted??50;if(eid)this.hass.callService("cover","set_cover_position",{entity_id:eid,position:pos});}}
   }
   async _saveArea(){
     const a={...this._editArea};delete a._isNew;delete a._index;

@@ -32,6 +32,12 @@ CONF_NAME = "name"
 CONF_WINDOW_ENTITY_ID = "window_entity_id"
 CONF_WINDOW_OPEN_STATE = "window_open_state"
 CONF_WINDOW_TILTED_STATE = "window_tilted_state"
+# Optional second contact that only reports the tilted state. Some window
+# sensors expose "open" and "tilted" as two separate entities instead of one
+# entity with three states.
+CONF_WINDOW_TILTED_ENTITY_ID = "window_tilted_entity_id"
+CONF_WINDOW_TILTED_ENTITY_STATE = "window_tilted_entity_state"
+DEFAULT_WINDOW_TILTED_ENTITY_STATE = "on"
 CONF_POSITION_WHEN_WINDOW_OPEN = "position_when_window_open"
 CONF_POSITION_WHEN_WINDOW_TILTED = "position_when_window_tilted"
 CONF_LOCK_PROTECTION = "lock_protection"
@@ -55,6 +61,9 @@ DEFAULT_TILT_SUN_PROTECT = 30
 ROLE_OPEN = "open"
 ROLE_CLOSED = "closed"
 ROLE_SUN_PROTECT = "sun_protect"
+# Ventilation reuses the position configured for a tilted window, so it needs
+# no extra config key – it just makes that position reachable on purpose.
+ROLE_VENTILATION = "ventilation"
 
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
@@ -103,6 +112,26 @@ CONF_AREA_AZIMUTH_MIN = "azimuth_min"
 CONF_AREA_AZIMUTH_MAX = "azimuth_max"
 DEFAULT_AREA_AZIMUTH_MIN = 90.0
 DEFAULT_AREA_AZIMUTH_MAX = 270.0
+
+# Up to two extra conditions that must hold before shading kicks in.
+# One mechanism covers radiation, brightness and temperature:
+#   binary_sensor -> "on" satisfies the condition (hysteresis lives in the
+#                    sensor itself, which is how most such helpers work)
+#   numeric sensor -> satisfied at value >= on_above, released below off_below
+# An unset, unknown or unavailable sensor never blocks shading (fail open).
+SUN_CONDITION_SLOTS = ("a", "b")
+CONF_SUN_COND_ENTITY = "sun_cond_{slot}_entity"
+CONF_SUN_COND_ON_ABOVE = "sun_cond_{slot}_on_above"
+CONF_SUN_COND_OFF_BELOW = "sun_cond_{slot}_off_below"
+
+
+def sun_condition_keys(slot: str) -> tuple[str, str, str]:
+    """Return (entity, on_above, off_below) option keys for a condition slot."""
+    return (
+        CONF_SUN_COND_ENTITY.format(slot=slot),
+        CONF_SUN_COND_ON_ABOVE.format(slot=slot),
+        CONF_SUN_COND_OFF_BELOW.format(slot=slot),
+    )
 
 # Per-area workday sensor. When set, "on" = weekday schedule, "off" = weekend
 # schedule. Replaces the hard-coded Saturday/Sunday check (holidays, shift work).

@@ -27,7 +27,8 @@ Genau diese Fälle nimmt Shutter Pilot einem ab. Man legt **Bereiche** an (z. B.
 **Fenster- und Türkontakte werden berücksichtigt:**
 
 - Wird ein Fenster geöffnet oder gekippt, während der Rollladen unten ist, fährt er automatisch auf **Lüftungsposition**. Wird das Fenster wieder geschlossen, fährt er zurück auf die Position von vorher.
-- Es funktionieren sowohl **einfache Kontakte** (nur offen/zu) als auch **3-Zustands-Kontakte** mit Kipperkennung.
+- Es funktionieren **einfache Kontakte** (nur offen/zu), **3-Zustands-Kontakte** mit Kipperkennung und auch Hardware, die **offen und gekippt als zwei getrennte Entitäten** meldet.
+- Die Lüftungsposition lässt sich auch **direkt anfahren**, per Knopf auf der Bereichskarte oder per Service – ganz ohne Fensterkontakt.
 - Steht der Rollladen tagsüber ohnehin schon oben, passiert beim Fensteröffnen nichts – kein sinnloses Gefahre.
 
 **Aussperrschutz:**
@@ -36,8 +37,12 @@ Steht die Terrassentür offen, wird der Rollladen **nicht komplett zugefahren**,
 **Nachholfunktion (Drive-after-close):**
 War das Fenster zum eigentlichen Schließzeitpunkt offen, merkt sich Shutter Pilot die Fahrt und führt sie aus, **sobald das Fenster geschlossen wird**. Die abendliche Fahrt fällt also nicht einfach aus.
 
-**Sonnenschutz nach Sonnenstand und Himmelsrichtung:**
+**Sonnenschutz nach Sonnenstand, Himmelsrichtung und echten Messwerten:**
 Man definiert pro Bereich einen Höhenwinkel-Bereich (z. B. 0° bis 15°) und optional die Himmelsrichtung der Fenster. Sobald die Sonne flach genug steht **und** tatsächlich vor den Fenstern steht, fahren die Rollläden auf eine einstellbare Beschattungsposition. Ohne die Richtungsangabe würde ein Westzimmer auch morgens beschattet, weil der Höhenwinkel-Bereich zweimal täglich durchlaufen wird. Für Nord, Ost, Süd und West gibt es eine Schnellwahl.
+
+Sonnenstand sagt aber nur, **wo** die Sonne steht – nicht, ob sie scheint. Deshalb lassen sich bis zu **zwei Zusatzbedingungen** hinterlegen, die zusätzlich erfüllt sein müssen. Das kann ein Binärsensor „hohe Sonneneinstrahlung" sein oder ein Zahlensensor mit Schwellwert – Lux, W/m² oder Temperatur. Bei Zahlensensoren gibt es zwei Schwellen (beschatten ab / aufheben unter), damit die Rollläden bei durchziehenden Wolken nicht ständig hin- und herfahren.
+
+Damit wird nur beschattet, wenn die Sonne wirklich knallt und es warm genug ist. Im Frühjahr und Herbst bleibt die Sonnenwärme drin, wo sie erwünscht ist. Wer nach der **Wettervorhersage** beschatten will, legt einen Template-Sensor mit der Tageshöchsttemperatur an und trägt den als Bedingung ein – ein Rezept dafür steht in der README.
 
 **Lamellen für Jalousien und Raffstores:**
 Neben der Höhe lässt sich pro Rollladen der Lamellenwinkel für Offen, Geschlossen und Sonnenschutz einstellen. Entitäten ohne Lamellen-Unterstützung werden automatisch übersprungen.
@@ -140,10 +145,11 @@ Steuert Rollläden und Jalousien vollautomatisch, komplett über ein eigenes Pan
 Pro Bereich wählbar: **Zeit** (getrennt für Woche/Wochenende), **Helligkeit** (Lux-Sensor mit Zeitfenstern) oder **Sonnenstand** (Sonnenauf-/-untergang mit Offset).
 
 Dazu:
-- Fenster-/Türkontakte: Rollladen fährt beim Öffnen auf Lüftungsposition und danach zurück (auch mit Kipperkennung)
+- Fenster-/Türkontakte: Rollladen fährt beim Öffnen auf Lüftungsposition und danach zurück (auch mit Kipperkennung, auch mit zwei getrennten Sensoren)
 - **Aussperrschutz** – fährt bei offener Terrassentür nicht komplett zu
 - **Nachholfunktion** – verpasste Fahrten werden ausgeführt, sobald das Fenster zu ist
 - **Sonnenschutz** nach Höhenwinkel **und** Himmelsrichtung der Fenster – kein Beschatten am falschen Tagesende
+- **Zusatzbedingungen** für die Beschattung: nur bei echter Einstrahlung und ausreichender Wärme
 - **Lamellen-Steuerung** für Jalousien und Raffstores
 - **Workday-Sensor** für Feiertage, Urlaub und Schichtarbeit
 - **Anwesenheitssimulation** über zufälligen Zeit-Offset
@@ -157,3 +163,45 @@ Dazu:
 
 Benötigt Home Assistant 2024.6.0+. Feedback und Ideen sehr willkommen!
 👉 https://github.com/fschubi/shutter_pilot
+
+---
+---
+
+# ANTWORTBEITRAG ZU VERSION 2.2.0
+
+*Zum Posten als Antwort im Thread, nachdem 2.2.0 veröffentlicht ist.*
+
+Danke euch dreien für das ausführliche Feedback – das war extrem hilfreich. **Version 2.2.0 ist raus und setzt alles davon um.**
+
+**@Bjoerg und @JayJayX – die Entitätsauswahl**
+
+Ihr habt völlig recht, das war unbenutzbar. Es war eine simple Auswahlliste mit *allen* Entitäten einer Domain, beim Helligkeitssensor also mehreren hundert Einträgen, und sortiert war sie auch noch nach der internen Entity-ID statt nach dem Namen. Ein Sensor „Flur Sensor" mit der ID `sensor.0x00158d0001abcdef` stand damit unter „0". Kein Wunder, dass man da nicht durchscrollen will.
+
+Jetzt gibt es ein **Suchfeld mit Trefferliste**:
+- Sortiert nach **Anzeigename**, nicht nach Entity-ID
+- **Vorgefiltert je Feld** – beim Fenstersensor stehen Fenster- und Türkontakte oben, beim Helligkeitssensor die Lux-Sensoren, beim Cover die Rollläden
+- Erkannt wird über `device_class` **und** über den Namen, damit auch Sensoren ohne gesetzte `device_class` oben landen
+- Der Rest bleibt trotzdem erreichbar – nichts wird versteckt, damit niemand seinen exotischen Sensor sucht
+
+**@JayJayX – zweiter Sensor für die Fenstererkennung**
+
+Eingebaut. Es gibt jetzt ein optionales zweites Feld für einen separaten „gekippt"-Sensor. Der Kipp-Kontakt hat dabei Vorrang, weil viele Fenster im Kippzustand zusätzlich „offen" melden. Wer einen Kontakt mit drei Zuständen hat, lässt das Feld einfach leer.
+
+**@Nicknol – Lüftungsposition**
+
+Die gab es tatsächlich schon, sie war nur nicht direkt erreichbar, sondern hing ausschließlich am Fensterkontakt. Jetzt gibt es einen **Knopf „Lüften"** auf jeder Bereichskarte und den Service `shutter_pilot.ventilate_group`. Bewusst dieselbe Position wie bei gekipptem Fenster – ein weiteres Feld zum Ausfüllen wollte ich euch ersparen.
+
+**@Nicknol – Einstrahlung und Temperatur**
+
+Der wichtigste Punkt, und du hast völlig recht: Sonnenstand sagt nur, *wo* die Sonne steht, nicht ob sie scheint. Es gibt jetzt pro Bereich **bis zu zwei Zusatzbedingungen**, die zusätzlich zu Höhenwinkel und Himmelsrichtung erfüllt sein müssen:
+
+- **Binärsensor** wie dein Einstrahlungssensor → beschattet wird, solange er `on` ist. Deine Hysterese steckt ja schon im Sensor
+- **Zahlensensor** (Lux, W/m², °C) → mit „Beschatten ab" und optional „Aufheben unter". Der Abstand zwischen beiden Schwellen ist genau die Hysterese, damit nichts flattert wenn eine Wolke vorbeizieht
+
+Damit lässt sich dein Fall direkt abbilden: Einstrahlungssensor als Bedingung 1, Außentemperatur als Bedingung 2. Im Frühjahr und Herbst bleibt die Sonnenwärme dann drin, weil die Temperaturbedingung nicht erfüllt ist.
+
+Eine **eigene Vorhersage-Auswertung** habe ich bewusst weggelassen – das wäre eine starre Speziallösung geworden. Stattdessen: Template-Sensor mit der Tageshöchsttemperatur aus `weather.get_forecasts` anlegen und den als Bedingung eintragen. Ein fertiges Rezept dafür steht jetzt in der README. Damit ist es sogar flexibler, weil man jede beliebige Größe reinhängen kann.
+
+**Zum Punkt „Automation lässt sich leichter tracen"** – berechtigt. Deshalb gibt es seit 2.1.0 einen Diagnose-Download mit dem kompletten Laufzeitzustand und ein Event `shutter_pilot_cover_moved` bei jeder automatischen Fahrt, inklusive Grund. Damit kann man im Logbuch nachvollziehen, warum ein Rollladen gefahren ist.
+
+Update kommt wie gewohnt über HACS. Danke nochmal, und weiteres Feedback gerne! 🙂

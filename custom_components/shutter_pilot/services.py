@@ -20,6 +20,7 @@ from .const import (
     ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
+    ROLE_VENTILATION,
 )
 from .helpers import (
     filter_shutters_by_area,
@@ -34,6 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_OPEN_GROUP = "open_group"
 SERVICE_CLOSE_GROUP = "close_group"
 SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
+SERVICE_VENTILATE_GROUP = "ventilate_group"
 
 SERVICE_SCHEMA = vol.Schema(
     {vol.Required("area_id"): str}
@@ -179,10 +181,34 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             apply_lock_protection=True,
         )
 
+    async def ventilate_group(call) -> None:
+        """Move a group to its ventilation position (tilted-window position)."""
+        area_id = str(call.data.get("area_id") or "").strip()
+        if not area_id:
+            return
+        shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            _LOGGER.warning(
+                "Invalid shutters options type in ventilate_group service: %r – resetting to empty list",
+                type(shutters),
+            )
+            shutters = []
+        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
+        await _drive_group(
+            hass,
+            entry,
+            shutters,
+            ROLE_VENTILATION,
+            f"ventilate_group({area_id})",
+            _delay_for_area(area_id),
+            area_id,
+        )
+
     def _unregister() -> None:
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_CLOSE_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_SUN_PROTECT_GROUP)
+        hass.services.async_remove(DOMAIN, SERVICE_VENTILATE_GROUP)
         _LOGGER.debug("Services unregistered")
 
     hass.services.async_register(
@@ -194,5 +220,10 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_SUN_PROTECT_GROUP, sun_protect_group, schema=SERVICE_SCHEMA
     )
+    hass.services.async_register(
+        DOMAIN, SERVICE_VENTILATE_GROUP, ventilate_group, schema=SERVICE_SCHEMA
+    )
     entry.async_on_unload(_unregister)
-    _LOGGER.info("Services registered: open_group, close_group, sun_protect_group")
+    _LOGGER.info(
+        "Services registered: open_group, close_group, sun_protect_group, ventilate_group"
+    )

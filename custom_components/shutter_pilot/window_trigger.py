@@ -20,7 +20,11 @@ from .const import (
     CONF_POSITION_CLOSED,
 )
 from .helpers import get_cover_current_position, is_system_enabled, set_cover_position
-from .window_helper import get_window_state
+from .window_helper import (
+    get_tilt_entity_id,
+    get_window_state,
+    has_separate_tilt_entity,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +41,12 @@ def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool
 
 
 def _has_tilt_state(shutter: dict) -> bool:
-    """True if window contact supports a distinct tilted state (3-state)."""
+    """True if this shutter can tell "tilted" apart from "open".
+
+    Either through a 3-state contact or through a second, dedicated entity.
+    """
+    if has_separate_tilt_entity(shutter):
+        return True
     tilted = shutter.get(CONF_WINDOW_TILTED_STATE, "none")
     return bool(tilted) and str(tilted).lower() != "none"
 
@@ -80,17 +89,24 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     trigger_heights = data["trigger_heights"]
     trigger_actions = data["trigger_actions"]
 
-    # Collect unique window entity IDs and their associated shutters
+    # Collect every watched entity and the shutters it belongs to. A shutter
+    # may register under two entities: the main contact and an optional
+    # separate tilt contact.
     window_to_shutters: dict[str, list[dict]] = {}
+
+    def _watch(entity_id: str, shutter: dict) -> None:
+        if not entity_id:
+            return
+        bucket = window_to_shutters.setdefault(entity_id, [])
+        if shutter not in bucket:
+            bucket.append(shutter)
+
     for shutter in shutters:
         window_id = shutter.get(CONF_WINDOW_ENTITY_ID)
-        if not window_id or (isinstance(window_id, list) and not window_id):
-            continue
         if isinstance(window_id, list):
-            window_id = window_id[0]
-        if window_id not in window_to_shutters:
-            window_to_shutters[window_id] = []
-        window_to_shutters[window_id].append(shutter)
+            window_id = window_id[0] if window_id else ""
+        _watch(str(window_id or "").strip(), shutter)
+        _watch(get_tilt_entity_id(shutter), shutter)
 
     @callback
     def _on_window_state_change(event) -> None:
@@ -107,10 +123,9 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             new_val = getattr(new_state, "state", None)
 
         for shutter in window_to_shutters.get(entity_id, []):
-            if not shutter.get(CONF_WINDOW_ENTITY_ID):
+            cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+            if not cover_entity:
                 continue
-
-            cover_entity = shutter[CONF_COVER_ENTITY_ID]
             pos_closed = shutter.get(CONF_POSITION_CLOSED, 0)
 
             # Use window_helper for consistent binary_sensor + sensor support

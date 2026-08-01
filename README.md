@@ -91,7 +91,8 @@ Click **"Add area"** to create a new area. Choose a control mode:
 | **Sun position** | Uses Home Assistant's sunrise/sunset tracking with configurable offsets |
 
 Each area can also have:
-- **Sun protection** – drives shutters to a mid-position when sun elevation drops below threshold
+- **Sun protection** – drives shutters to a mid-position when the sun is within the elevation range **and** facing the windows
+- **Extra shading conditions** – up to two sensors that must also be satisfied (see below)
 - **Light action** – turns on a light/switch entity when shutters close
 - **Drive delay** – seconds between individual shutters (prevents circuit overload)
 
@@ -101,6 +102,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 
 - **Cover entity** – your `cover.*` entity
 - **Window sensor** – optional `binary_sensor.*` for window open/tilt detection
+- **Extra sensor for "tilted"** – only needed if your window exposes two separate entities, one for open and one for tilted. Leave empty for a single 3-state contact
 - **Area Up / Area Down** – which area controls this shutter for up/down movements
 - **Position sliders** – open, closed, and sun protection positions (0-100%)
 - **Lock protection** – minimum position when a door is open (prevents lockout)
@@ -121,6 +123,7 @@ The Dashboard tab shows all areas as cards with:
 | `shutter_pilot.open_group` | Open all shutters in an area |
 | `shutter_pilot.close_group` | Close all shutters in an area |
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
+| `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
 
 All services accept an `area_id` parameter (e.g. `living`, `bedroom`). Every shutter moves to its own configured position.
 
@@ -189,6 +192,47 @@ If your language is not listed, the panel falls back to English. Want to contrib
 **Would you use this feature? [Vote here!](https://github.com/fschubi/shutter_pilot/discussions/1)**
 
 [![Feature Poll](https://img.shields.io/badge/Vote-Awning%20Support%20Poll-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+
+## Shade only on real sun and real warmth
+
+Elevation and compass direction only tell you **where** the sun is – not whether it is actually shining, or whether it is warm enough to matter. In spring and autumn the solar warmth is usually welcome.
+
+That is why each area can carry up to **two extra conditions**. Shading only runs while all of them hold:
+
+| Sensor type | Behaviour |
+|-------------|-----------|
+| **Binary sensor** (e.g. "high solar radiation") | Shades while it is `on`. The hysteresis lives in your sensor |
+| **Numeric sensor** (lux, W/m², °C) | Shades from "Shade above", releases only below "Release below" |
+
+The gap between the two thresholds stops the shutters from bouncing when clouds pass. Leave "Release below" empty to use the same value.
+
+An empty field means no condition. An unavailable or broken sensor never blocks shading.
+
+### Shading based on the weather forecast
+
+Forecast handling is deliberately not built in – a template sensor solves it more flexibly. Create one with the expected daily high and use it as a condition:
+
+```yaml
+template:
+  - trigger:
+      - trigger: time_pattern
+        hours: /1
+    action:
+      - action: weather.get_forecasts
+        target:
+          entity_id: weather.your_weather
+        data:
+          type: daily
+        response_variable: fc
+    sensor:
+      - name: Daily high temperature
+        unique_id: max_temp_today
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: "{{ fc['weather.your_weather'].forecast[0].temperature }}"
+```
+
+Then set that sensor as a condition with "Shade above" at e.g. 24.
 
 ## Support me
 

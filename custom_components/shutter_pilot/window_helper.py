@@ -9,9 +9,12 @@ from homeassistant.core import HomeAssistant
 from .const import (
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_OPEN_STATE,
+    CONF_WINDOW_TILTED_ENTITY_ID,
+    CONF_WINDOW_TILTED_ENTITY_STATE,
     CONF_WINDOW_TILTED_STATE,
     CONF_LOCK_PROTECTION,
     CONF_MIN_POSITION_WHEN_OPEN,
+    DEFAULT_WINDOW_TILTED_ENTITY_STATE,
 )
 
 
@@ -21,6 +24,37 @@ def _normalize_state(val: Any) -> str:
     return str(val).lower().strip()
 
 
+def _first_entity_id(value: Any) -> str:
+    """Accept both a plain entity id and a single-element list."""
+    if isinstance(value, list):
+        value = value[0] if value else ""
+    return str(value or "").strip()
+
+
+def get_tilt_entity_id(shutter: dict) -> str:
+    """Entity id of the optional separate tilt contact, or empty string."""
+    return _first_entity_id(shutter.get(CONF_WINDOW_TILTED_ENTITY_ID))
+
+
+def has_separate_tilt_entity(shutter: dict) -> bool:
+    """True if this shutter uses a dedicated entity for the tilted state."""
+    return bool(get_tilt_entity_id(shutter))
+
+
+def _separate_tilt_active(hass: HomeAssistant, shutter: dict) -> bool:
+    """True if the dedicated tilt contact currently reports 'tilted'."""
+    entity_id = get_tilt_entity_id(shutter)
+    if not entity_id:
+        return False
+    state = hass.states.get(entity_id)
+    if not state:
+        return False
+    expected = _normalize_state(
+        shutter.get(CONF_WINDOW_TILTED_ENTITY_STATE, DEFAULT_WINDOW_TILTED_ENTITY_STATE)
+    ) or DEFAULT_WINDOW_TILTED_ENTITY_STATE
+    return _normalize_state(state.state) == expected
+
+
 def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
     """
     Return: "closed" | "tilted" | "open"
@@ -28,12 +62,15 @@ def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
     - binary_sensor: uses window_open_state / window_tilted_state (e.g. on/off, tilted)
     - sensor: uses state directly - "open", "tilted", "closed" (or similar variants)
     """
-    window_id = shutter.get(CONF_WINDOW_ENTITY_ID)
-    if not window_id:
-        return "closed"  # No window = treat as closed
+    # A dedicated tilt contact wins: some hardware reports "open" and "tilted"
+    # as two separate entities, and while tilted both may read as open.
+    if _separate_tilt_active(hass, shutter):
+        return "tilted"
 
-    if isinstance(window_id, list):
-        window_id = window_id[0] if window_id else ""
+    window_id = _first_entity_id(shutter.get(CONF_WINDOW_ENTITY_ID))
+    if not window_id:
+        # Only a tilt contact configured – it is not tilted, so it is closed.
+        return "closed"
 
     state = hass.states.get(window_id)
     if not state:

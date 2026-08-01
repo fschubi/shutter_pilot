@@ -91,7 +91,8 @@ Klicke auf **"Bereich hinzufügen"** um einen neuen Bereich zu erstellen. Wähle
 | **Sonnenstand** | Nutzt Home Assistants Sonnenauf-/untergang-Tracking mit konfigurierbarem Offset |
 
 Jeder Bereich kann zusätzlich haben:
-- **Sonnenschutz** – fährt Rollläden auf eine Mittelposition wenn die Sonnenhöhe unter den Schwellwert fällt
+- **Sonnenschutz** – fährt Rollläden auf eine Mittelposition, wenn die Sonne im eingestellten Höhenwinkel-Bereich **und** vor den Fenstern steht
+- **Zusatzbedingungen für den Sonnenschutz** – bis zu zwei Sensoren, die zusätzlich erfüllt sein müssen (siehe unten)
 - **Licht-Aktion** – schaltet ein Licht/Schalter ein wenn Rollläden schließen
 - **Fahrverzögerung** – Sekunden zwischen einzelnen Rollläden (verhindert Sicherungsüberlastung)
 
@@ -101,6 +102,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 
 - **Cover-Entity** – deine `cover.*` Entity
 - **Fenstersensor** – optionaler `binary_sensor.*` für Fenster-Offen/Kipp-Erkennung
+- **Zusätzlicher Sensor für „gekippt"** – nur nötig, wenn dein Fenster zwei getrennte Entitäten meldet, eine für offen und eine für gekippt. Bei einem Kontakt mit drei Zuständen bleibt das Feld leer
 - **Bereich Hoch / Bereich Runter** – welcher Bereich diesen Rollladen für Hoch-/Runter-Fahrten steuert
 - **Positions-Slider** – Offen-, Geschlossen- und Sonnenschutz-Positionen (0-100%)
 - **Aussperrschutz** – Mindest-Position bei offener Tür (verhindert Aussperren)
@@ -121,6 +123,7 @@ Das Dashboard zeigt alle Bereiche als Karten mit:
 | `shutter_pilot.open_group` | Alle Rollläden eines Bereichs öffnen |
 | `shutter_pilot.close_group` | Alle Rollläden eines Bereichs schließen |
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
+| `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
 
 Alle Services erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`). Jeder Rollladen fährt dabei auf seine eigene konfigurierte Position.
 
@@ -189,6 +192,47 @@ Wenn deine Sprache nicht aufgeführt ist, wird automatisch Englisch verwendet. D
 **Würdest du diese Funktion nutzen? [Hier abstimmen!](https://github.com/fschubi/shutter_pilot/discussions/1)**
 
 [![Feature-Umfrage](https://img.shields.io/badge/Abstimmen-Markisen%20Umfrage-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+
+## Sonnenschutz nur bei echter Sonne und Wärme
+
+Höhenwinkel und Himmelsrichtung sagen nur, **wo** die Sonne steht – nicht, ob sie tatsächlich scheint oder ob es überhaupt warm genug ist. Im Frühjahr und Herbst ist die Sonnenwärme im Zimmer ja oft erwünscht.
+
+Deshalb lassen sich pro Bereich bis zu **zwei Zusatzbedingungen** hinterlegen. Beschattet wird nur, wenn alle erfüllt sind:
+
+| Sensortyp | Verhalten |
+|-----------|-----------|
+| **Binärsensor** (z. B. „hohe Sonneneinstrahlung") | Beschattet, solange er `on` ist. Die Hysterese steckt in deinem Sensor |
+| **Zahlensensor** (Lux, Watt/m², °C) | Beschattet ab „Beschatten ab", aufgehoben erst unter „Aufheben unter" |
+
+Der Abstand zwischen den beiden Schwellen verhindert, dass die Rollläden bei durchziehenden Wolken ständig hin- und herfahren. Lässt du „Aufheben unter" leer, gilt derselbe Wert.
+
+Ein leeres Feld bedeutet: keine Bedingung. Ein nicht verfügbarer oder defekter Sensor blockiert die Beschattung nie.
+
+### Nach Wettervorhersage beschatten
+
+Eine eigene Vorhersage-Auswertung ist absichtlich nicht eingebaut – das lässt sich mit Bordmitteln flexibler lösen. Lege einen Template-Sensor mit der erwarteten Tageshöchsttemperatur an und trage ihn als Bedingung ein:
+
+```yaml
+template:
+  - trigger:
+      - trigger: time_pattern
+        hours: /1
+    action:
+      - action: weather.get_forecasts
+        target:
+          entity_id: weather.dein_wetter
+        data:
+          type: daily
+        response_variable: fc
+    sensor:
+      - name: Tageshöchsttemperatur
+        unique_id: max_temp_heute
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: "{{ fc['weather.dein_wetter'].forecast[0].temperature }}"
+```
+
+Dann im Bereich als Bedingung `sensor.tageshochsttemperatur` mit „Beschatten ab" z. B. 24 eintragen. Fertig.
 
 ## Unterstützt mich
 

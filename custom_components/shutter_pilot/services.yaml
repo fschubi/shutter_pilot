@@ -28,3 +28,15 @@ sun_protect_group:
       selector:
         text:
 
+ventilate_group:
+  name: Gruppe lüften
+  description: >-
+    Fährt alle Rollläden des Bereichs in die Lüftungsposition, also auf die
+    Position, die auch bei gekipptem Fenster angefahren wird.
+  fields:
+    area_id:
+      name: Bereich-ID
+      description: ID des Bereichs (z. B. living, schlafzimmer, kueche).
+      selector:
+        text:
+
