@@ -64,6 +64,8 @@ ROLE_SUN_PROTECT = "sun_protect"
 # Ventilation reuses the position configured for a tilted window, so it needs
 # no extra config key – it just makes that position reachable on purpose.
 ROLE_VENTILATION = "ventilation"
+# Partial close, used when the area's close condition is met.
+ROLE_CLOSED_ALT = "closed_alt"
 
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
@@ -119,19 +121,50 @@ DEFAULT_AREA_AZIMUTH_MAX = 270.0
 #                    sensor itself, which is how most such helpers work)
 #   numeric sensor -> satisfied at value >= on_above, released below off_below
 # An unset, unknown or unavailable sensor never blocks shading (fail open).
-SUN_CONDITION_SLOTS = ("a", "b")
+SUN_CONDITION_SLOTS = ("a", "b", "c", "d")
 CONF_SUN_COND_ENTITY = "sun_cond_{slot}_entity"
 CONF_SUN_COND_ON_ABOVE = "sun_cond_{slot}_on_above"
 CONF_SUN_COND_OFF_BELOW = "sun_cond_{slot}_off_below"
+# Allowed states for a text condition, e.g. a weather entity or a scrape
+# sensor reporting "sunny" / "bewölkt". Stored as a list of strings.
+CONF_SUN_COND_STATES = "sun_cond_{slot}_states"
+
+# Slot used for the alternative closing position. Same evaluation, own name.
+CLOSE_CONDITION_SLOT = "close"
+
+# Standard weather conditions in Home Assistant, offered as checkboxes.
+WEATHER_CONDITIONS = (
+    "clear-night", "cloudy", "exceptional", "fog", "hail", "lightning",
+    "lightning-rainy", "partlycloudy", "pouring", "rainy", "snowy",
+    "snowy-rainy", "sunny", "windy", "windy-variant",
+)
 
 
-def sun_condition_keys(slot: str) -> tuple[str, str, str]:
-    """Return (entity, on_above, off_below) option keys for a condition slot."""
+def sun_condition_keys(slot: str) -> tuple[str, str, str, str]:
+    """Return (entity, on_above, off_below, states) option keys for a slot."""
     return (
         CONF_SUN_COND_ENTITY.format(slot=slot),
         CONF_SUN_COND_ON_ABOVE.format(slot=slot),
         CONF_SUN_COND_OFF_BELOW.format(slot=slot),
+        CONF_SUN_COND_STATES.format(slot=slot),
     )
+
+
+# Per-area shading season, as month numbers 1-12. Empty means all year.
+# Ranges may wrap across the turn of the year (e.g. 10 -> 3 for winter).
+CONF_AREA_SEASON_FROM = "season_from"
+CONF_AREA_SEASON_TO = "season_to"
+
+# Global weather entity used to fetch today's forecast.
+CONF_WEATHER_ENTITY = "weather_entity"
+
+# Per-shutter override of the shading geometry, for rooms whose windows face
+# different directions. Without the switch the area values apply unchanged.
+CONF_SUN_GEOMETRY_OVERRIDE = "sun_geometry_override"
+
+# Alternative closing position per shutter, used when the area's close
+# condition is met. Empty means the normal closed position applies.
+CONF_POSITION_CLOSED_ALT = "position_closed_alt"
 
 # Per-area workday sensor. When set, "on" = weekday schedule, "off" = weekend
 # schedule. Replaces the hard-coded Saturday/Sunday check (holidays, shift work).

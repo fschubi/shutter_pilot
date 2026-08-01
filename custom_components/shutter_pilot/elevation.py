@@ -30,8 +30,12 @@ from .helpers import (
     get_sun_angles,
     get_tilt_for_role,
     is_auto_enabled,
+    is_cover_sun_protected,
     register_minute_callback,
+    resolve_sun_geometry,
+    season_allows_shading,
     set_cover_position,
+    set_cover_sun_protected,
     set_sun_protect_active,
     sun_extra_conditions_met,
     sun_protect_conditions_met,
@@ -71,17 +75,17 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
         except (TypeError, ValueError):
             return DEFAULT_AREA_DRIVE_DELAY
 
-    async def _drive_sun_protect(area: dict, elev: float, azim: float | None) -> int:
-        """Drive shutters to sun protection position. Returns count moved."""
+    async def _drive_sun_protect(
+        area: dict, elev: float, azim: float | None, targets: list[dict]
+    ) -> int:
+        """Drive the given shutters to their sun protection position."""
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
             return 0
         moved = 0
         delay = _delay_for(area)
         idx = 0
-        for shutter in [
-            s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
-        ]:
+        for shutter in targets:
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
@@ -124,17 +128,17 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             moved += 1
         return moved
 
-    async def _release_sun_protect(area: dict, reason: str) -> int:
-        """Drive shutters back to open once shading is no longer needed."""
+    async def _release_sun_protect(
+        area: dict, reason: str, targets: list[dict]
+    ) -> int:
+        """Drive the given shutters back to open once shading is not needed."""
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
             return 0
         moved = 0
         delay = _delay_for(area)
         idx = 0
-        for shutter in [
-            s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "").strip() == area_id
-        ]:
+        for shutter in targets:
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
@@ -171,43 +175,81 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not is_auto_enabled(hass, entry, area):
                 continue
 
-            was_active = bool(data.get("sun_protect_active", {}).get(area_id))
-            should_protect = sun_protect_conditions_met(
-                elev, azim, area
-            ) and sun_extra_conditions_met(hass, area, data)
+            # Conditions and season apply to the whole area; only the geometry
+            # can differ per window.
+            conditions_ok = sun_extra_conditions_met(hass, area, data)
+            season_ok = season_allows_shading(area)
 
-            if should_protect:
-                set_sun_protect_active(data, area_id, True)
+            to_shade: list[dict] = []
+            to_release: list[tuple[dict, str]] = []
+
+            for shutter in shutters:
+                cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+                if not cover:
+                    continue
+                in_down = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
+                in_up = str(shutter.get(CONF_AREA_UP_ID) or "").strip() == area_id
+                if not in_down and not in_up:
+                    continue
+
+                # A room may have windows facing different ways, so each
+                # shutter is judged with its own geometry.
+                geo = resolve_sun_geometry(area, shutter)
+                geometry_ok = sun_protect_conditions_met(elev, azim, geo)
+                should_protect = geometry_ok and conditions_ok and season_ok
+                was_active = is_cover_sun_protected(data, cover)
+
+                if should_protect:
+                    if not was_active and in_down:
+                        to_shade.append(shutter)
+                        set_cover_sun_protected(data, cover, True)
+                    continue
+
                 if not was_active:
-                    await _drive_sun_protect(area, elev, azim)
-                continue
+                    continue
 
-            if not was_active:
-                continue
+                e_min, e_max = get_elevation_bounds(geo)
+                if elev < e_min:
+                    # Below the range the shutters belong to the evening
+                    # schedule, not to shading. Drop the flag, do not drive.
+                    set_cover_sun_protected(data, cover, False)
+                    _LOGGER.debug(
+                        "[sun-protect] %s: elev=%.1f below %.1f – off, no drive",
+                        cover, elev, e_min,
+                    )
+                    continue
 
-            # Protection was active and no longer applies. Only drive back up
-            # while the sun is still up: below the range the shutters belong to
-            # the evening/night schedule, not to shading.
-            set_sun_protect_active(data, area_id, False)
-            e_min, e_max = get_elevation_bounds(area)
-            geometry_ok = sun_protect_conditions_met(elev, azim, area)
+                set_cover_sun_protected(data, cover, False)
+                if not in_up:
+                    continue
+                if elev > e_max:
+                    reason = "sun above range"
+                elif not geometry_ok:
+                    a_min, a_max = get_azimuth_bounds(geo)
+                    reason = f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
+                elif not season_ok:
+                    reason = "outside shading season"
+                else:
+                    # Geometry still fits, so a condition dropped out – clouds
+                    # moved in or it cooled down. Let the light back in.
+                    reason = "shading condition no longer met"
+                to_release.append((shutter, reason))
 
-            if elev > e_max:
-                await _release_sun_protect(area, "sun above range")
-            elif elev < e_min:
-                _LOGGER.debug(
-                    "[sun-protect] area=%s: elev=%.1f below %.1f – protection off, no drive",
-                    area_id, elev, e_min,
-                )
-            elif not geometry_ok:
-                a_min, a_max = get_azimuth_bounds(area)
-                await _release_sun_protect(
-                    area, f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
-                )
-            else:
-                # Geometry still fits, so an extra condition dropped out –
-                # clouds moved in or it cooled down. Let the light back in.
-                await _release_sun_protect(area, "shading condition no longer met")
+            if to_shade:
+                await _drive_sun_protect(area, elev, azim, to_shade)
+            for reason in {r for _, r in to_release}:
+                targets = [s for s, r in to_release if r == reason]
+                await _release_sun_protect(area, reason, targets)
+
+            # Area flag stays as the aggregate so brightness, the binary
+            # sensor, diagnostics and the panel keep working unchanged.
+            covers = data.get("sun_protect_covers", set())
+            any_active = any(
+                str(s.get(CONF_COVER_ENTITY_ID) or "") in covers
+                for s in shutters
+                if str(s.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
+            )
+            set_sun_protect_active(data, area_id, any_active)
 
     def _tick(_now) -> None:
         hass.async_create_task(_evaluate())

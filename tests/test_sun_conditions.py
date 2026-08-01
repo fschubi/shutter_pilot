@@ -20,8 +20,8 @@ from custom_components.shutter_pilot.helpers import (
     sun_protect_conditions_met,
 )
 
-A_ENTITY, A_ON, A_OFF = sun_condition_keys("a")
-B_ENTITY, B_ON, B_OFF = sun_condition_keys("b")
+A_ENTITY, A_ON, A_OFF, A_STATES = sun_condition_keys("a")
+B_ENTITY, B_ON, B_OFF, B_STATES = sun_condition_keys("b")
 
 
 def _area(**overrides) -> dict:
@@ -91,10 +91,12 @@ class TestNumericSensor:
         area = _area(**{A_ENTITY: "sensor.lux"})
         assert sun_extra_conditions_met(hass, area, data) is True
 
-    async def test_non_numeric_state_never_blocks(self, hass, data):
+    async def test_non_numeric_state_never_blocks(self, hass, data, caplog):
+        """Still fails open – but no longer silently."""
         hass.states.async_set("sensor.lux", "sonnig")
         area = _area(**{A_ENTITY: "sensor.lux", A_ON: 30000})
         assert sun_extra_conditions_met(hass, area, data) is True
+        assert "non-numeric state" in caplog.text
 
 
 class TestHysteresis:

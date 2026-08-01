@@ -1,6 +1,7 @@
 {
   "domain": "shutter_pilot",
   "name": "Shutter Pilot",
+  "after_dependencies": ["weather"],
   "codeowners": ["@fschubi"],
   "config_flow": true,
   "dependencies": ["http", "frontend", "websocket_api"],

@@ -21,8 +21,14 @@ from .const import (
     CONF_AREA_ELEVATION_MAX,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
+    CLOSE_CONDITION_SLOT,
     CONF_AREA_MANUAL_OVERRIDE,
+    CONF_AREA_SEASON_FROM,
+    CONF_AREA_SEASON_TO,
     CONF_AREA_SUN_PROTECT_ENABLED,
+    CONF_SUN_GEOMETRY_OVERRIDE,
+    CONF_POSITION_CLOSED_ALT,
+    ROLE_CLOSED_ALT,
     CONF_AREA_UP_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
@@ -216,7 +222,7 @@ def _condition_slot_met(
     passing cloud does not make the shutters bounce. Anything unusable – no
     sensor, unknown, unavailable, non-numeric – never blocks shading.
     """
-    entity_key, on_key, off_key = sun_condition_keys(slot)
+    entity_key, on_key, off_key, states_key = sun_condition_keys(slot)
     entity_id = str(area.get(entity_key) or "").strip()
     if not entity_id:
         return True
@@ -230,6 +236,17 @@ def _condition_slot_met(
         )
         return True
 
+    # A list of allowed states wins: that covers weather entities and scrape
+    # sensors whose state is text like "sunny" or "bewölkt".
+    allowed = area.get(states_key)
+    if isinstance(allowed, str):
+        allowed = [p.strip() for p in allowed.split(",")]
+    if isinstance(allowed, (list, tuple)) and any(str(x).strip() for x in allowed):
+        wanted = {str(x).strip().lower() for x in allowed if str(x).strip()}
+        met = str(state.state).strip().lower() in wanted
+        memory[slot] = met
+        return met
+
     if entity_id.startswith("binary_sensor."):
         met = str(state.state).lower() in ("on", "true", "1")
         memory[slot] = met
@@ -238,6 +255,15 @@ def _condition_slot_met(
     try:
         value = float(state.state)
     except (TypeError, ValueError):
+        # Text state without a configured state list. Previously this passed
+        # silently, so a scrape sensor looked configured but did nothing.
+        _LOGGER.warning(
+            "Sun condition %s: %s reports the non-numeric state %r. Configure "
+            "the allowed states for this condition, otherwise it is ignored.",
+            slot,
+            entity_id,
+            state.state,
+        )
         return True
 
     try:
@@ -272,6 +298,91 @@ def sun_extra_conditions_met(
         if not _condition_slot_met(hass, area, slot, memory):
             return False
     return True
+
+
+def close_condition_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when the area's condition for a partial evening close applies.
+
+    Uses the same evaluation as the shading conditions, just its own slot.
+    Without a configured entity this is False, so nothing changes for anyone
+    who has not set it up – unlike the shading conditions, where an unset
+    condition must not block.
+    """
+    entity_key = sun_condition_keys(CLOSE_CONDITION_SLOT)[0]
+    if not str(area.get(entity_key) or "").strip():
+        return False
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    memory = data.setdefault("sun_cond_state", {}).setdefault(area_id, {})
+    return _condition_slot_met(hass, area, CLOSE_CONDITION_SLOT, memory)
+
+
+def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> bool:
+    """True if today lies inside the configured shading season.
+
+    Months are inclusive and may wrap across the turn of the year, so 10 to 3
+    means October through March. Same wrap-around idea as the azimuth range.
+    Unset means all year round.
+    """
+    try:
+        start = int(area.get(CONF_AREA_SEASON_FROM) or 0)
+        end = int(area.get(CONF_AREA_SEASON_TO) or 0)
+    except (TypeError, ValueError):
+        return True
+    if not (1 <= start <= 12) or not (1 <= end <= 12):
+        return True
+
+    month = (now or datetime.now()).month
+    if start <= end:
+        return start <= month <= end
+    return month >= start or month <= end
+
+
+def resolve_sun_geometry(
+    area: dict[str, Any], shutter: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Merge area and shutter shading geometry into one config dict.
+
+    A room can have windows facing different directions, so elevation and
+    azimuth may be overridden per shutter. Returning a merged dict keeps
+    get_elevation_bounds(), get_azimuth_bounds() and sun_protect_conditions_met()
+    working unchanged – they simply read from the merged config.
+    """
+    if not shutter or not bool(shutter.get(CONF_SUN_GEOMETRY_OVERRIDE, False)):
+        return area
+
+    merged = dict(area)
+    for key in (
+        CONF_AREA_ELEVATION_MIN,
+        CONF_AREA_ELEVATION_MAX,
+        CONF_AREA_AZIMUTH_ENABLED,
+        CONF_AREA_AZIMUTH_MIN,
+        CONF_AREA_AZIMUTH_MAX,
+    ):
+        if shutter.get(key) is not None:
+            merged[key] = shutter[key]
+    # A per-shutter override replaces the legacy single threshold as well,
+    # otherwise get_elevation_bounds() would fall back to the area value.
+    merged.pop(CONF_AREA_ELEVATION_THRESHOLD, None)
+    return merged
+
+
+def is_cover_sun_protected(data: dict[str, Any], cover_entity_id: str) -> bool:
+    """True if shading currently holds this specific cover."""
+    covers = data.get("sun_protect_covers")
+    return isinstance(covers, set) and cover_entity_id in covers
+
+
+def set_cover_sun_protected(
+    data: dict[str, Any], cover_entity_id: str, active: bool
+) -> None:
+    """Track shading per cover, so windows facing different ways act apart."""
+    covers = data.setdefault("sun_protect_covers", set())
+    if active:
+        covers.add(cover_entity_id)
+    else:
+        covers.discard(cover_entity_id)
 
 
 def get_sun_condition_status(
@@ -325,13 +436,27 @@ _ROLE_POSITION_KEYS = {
         CONF_POSITION_WHEN_WINDOW_TILTED,
         DEFAULT_POSITION_WHEN_WINDOW_TILTED,
     ),
+    ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
 }
+
+
+def has_alt_close_position(shutter: dict[str, Any]) -> bool:
+    """True if this shutter defines a partial closing position."""
+    raw = shutter.get(CONF_POSITION_CLOSED_ALT)
+    if raw is None or str(raw).strip() == "":
+        return False
+    try:
+        float(raw)
+    except (TypeError, ValueError):
+        return False
+    return True
 
 _ROLE_TILT_KEYS = {
     ROLE_OPEN: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
     ROLE_CLOSED: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     ROLE_SUN_PROTECT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_VENTILATION: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
+    ROLE_CLOSED_ALT: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
 }
 
 

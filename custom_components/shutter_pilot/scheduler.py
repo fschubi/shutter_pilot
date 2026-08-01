@@ -23,9 +23,12 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_DRIVE_AFTER_CLOSE,
     ROLE_CLOSED,
+    ROLE_CLOSED_ALT,
     ROLE_OPEN,
 )
 from .helpers import (
+    close_condition_met,
+    has_alt_close_position,
     clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
@@ -95,12 +98,25 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         driven_covers: list[str] = []
         area_cfg = areas_by_id.get(area_id)
         role = ROLE_OPEN if direction_up else ROLE_CLOSED
+        # Some shutters should only close part way on hot evenings, to keep
+        # ventilating. The area decides when, the shutter decides how far.
+        alt_close = (
+            not direction_up
+            and area_cfg is not None
+            and close_condition_met(hass, area_cfg, data)
+        )
         for shutter in shutter_list:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover:
                 continue
-            position = get_position_for_role(shutter, role)
-            tilt = get_tilt_for_role(shutter, role)
+            shutter_role = role
+            if alt_close and has_alt_close_position(shutter):
+                shutter_role = ROLE_CLOSED_ALT
+                _LOGGER.info(
+                    "%s: %s closes only part way (condition met)", direction, cover
+                )
+            position = get_position_for_role(shutter, shutter_role)
+            tilt = get_tilt_for_role(shutter, shutter_role)
             drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
             if apply_lock_protection and drive_after and is_window_open_or_tilted(hass, shutter):
                 data["drive_after_close_pending"][cover] = {

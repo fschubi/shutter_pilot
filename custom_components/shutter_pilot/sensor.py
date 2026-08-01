@@ -14,13 +14,17 @@ from homeassistant.util import dt as dt_util
 
 from datetime import timedelta
 
+from homeassistant.const import UnitOfTemperature
+
 from .const import (
     CONF_AREA_ID,
     CONF_AREA_MODE,
     CONF_AREA_NAME,
     CONF_AREAS,
+    CONF_WEATHER_ENTITY,
 )
 from .schedule_times import get_next_action
+from .weather_data import get_weather_data
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -44,8 +48,85 @@ async def async_setup_entry(
             continue
         entities.append(ShutterPilotNextActionSensor(entry, area_id))
 
+    # Only when a weather entity is configured – otherwise these would sit
+    # around as permanently unknown entities.
+    if str(entry.options.get(CONF_WEATHER_ENTITY) or "").strip():
+        entities.append(ShutterPilotForecastTempSensor(entry))
+        entities.append(ShutterPilotForecastConditionSensor(entry))
+
     if entities:
         async_add_entities(entities)
+
+
+class _ForecastSensorBase(SensorEntity):
+    """Shared plumbing for the forecast sensors."""
+
+    _attr_has_entity_name = False
+    _attr_should_poll = False
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        self._entry = entry
+        self._unsub = None
+
+    def _weather(self) -> dict[str, Any]:
+        return get_weather_data(self.hass, self._entry.entry_id)
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._unsub = async_track_time_interval(self.hass, self._on_tick, SCAN_INTERVAL)
+        self.async_on_remove(self._cancel)
+
+    @callback
+    def _cancel(self) -> None:
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+
+    @callback
+    def _on_tick(self, _now: datetime) -> None:
+        self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        w = self._weather()
+        return {
+            "source": w.get("source"),
+            "updated": w.get("updated"),
+            "temp_min": w.get("temp_min"),
+            "precipitation_probability": w.get("precipitation_probability"),
+        }
+
+
+class ShutterPilotForecastTempSensor(_ForecastSensorBase):
+    """Today's forecast high, ready to use as a shading condition."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_icon = "mdi:thermometer-high"
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        super().__init__(entry)
+        self._attr_unique_id = f"{entry.entry_id}_forecast_temp_max"
+        self._attr_name = "Shutter Pilot Vorhersage Höchsttemperatur"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._weather().get("temp_max")
+
+
+class ShutterPilotForecastConditionSensor(_ForecastSensorBase):
+    """Today's forecast weather condition, e.g. sunny or rainy."""
+
+    _attr_icon = "mdi:weather-partly-cloudy"
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        super().__init__(entry)
+        self._attr_unique_id = f"{entry.entry_id}_forecast_condition"
+        self._attr_name = "Shutter Pilot Vorhersage Wetterlage"
+
+    @property
+    def native_value(self) -> str | None:
+        return self._weather().get("condition")
 
 
 class ShutterPilotNextActionSensor(SensorEntity):

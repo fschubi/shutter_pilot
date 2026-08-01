@@ -85,6 +85,9 @@ async def async_get_config_entry_diagnostics(
             "master_enabled": data.get("master_enabled"),
             "auto_modes": data.get("auto_modes", {}),
             "sun_protect_active": data.get("sun_protect_active", {}),
+            "sun_protect_covers": sorted(data.get("sun_protect_covers", set())),
+            "sun_cond_state": data.get("sun_cond_state", {}),
+            "weather": data.get("weather", {}),
             "covers_driven_up": sorted(data.get("covers_driven_up", set())),
             "covers_driven_down": sorted(data.get("covers_driven_down", set())),
             "drive_after_close_pending": sorted(

@@ -29,11 +29,13 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_WEATHER_ENTITY,
 )
 from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
+from .weather_data import setup_weather
 from .services import async_setup_services
 from .cover_tracker import (
     async_restore_positions_on_startup,
@@ -172,6 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
+        await setup_weather(hass, entry)
         _setup_minute_ticker(hass, entry)
         hass.async_create_task(async_restore_positions_on_startup(hass, entry))
 
@@ -311,6 +314,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
         _ws_get_status, _ws_set_auto_mode, _ws_set_master_enabled,
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter,
+        _ws_save_settings,
     ):
         websocket_api.async_register_command(hass, cmd)
     _LOGGER.debug("Shutter Pilot WebSocket commands registered")
@@ -354,6 +358,8 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 "auto_modes": {},
                 "master_enabled": True,
                 "sun_protect_status": {},
+                "settings": {},
+                "weather": {},
                 "version": PANEL_ASSET_VERSION,
             },
         )
@@ -390,6 +396,8 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     connection.send_result(msg["id"], {
         "areas": areas_out,
         "shutters": shutters_out,
+        "settings": {CONF_WEATHER_ENTITY: entry.options.get(CONF_WEATHER_ENTITY, "")},
+        "weather": dict(data.get("weather") or {}),
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
         "master_enabled": bool(master_enabled),
         "sun_protect_status": sun_protect_status,
@@ -536,6 +544,29 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
         shutters[idx] = shutter_data
     else:
         shutters.append(shutter_data)
+    _update_entry_options(hass, entry, opts)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- save_settings (global options) -------------------------------------------
+
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/save_settings",
+    vol.Required("settings"): dict,
+})
+@websocket_api.async_response
+async def _ws_save_settings(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Store global options such as the weather entity."""
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    opts = deepcopy(dict(entry.options or {}))
+    for key, value in msg["settings"].items():
+        if key in (CONF_AREAS, CONF_SHUTTERS):
+            continue  # areas and shutters have their own commands
+        opts[key] = value
     _update_entry_options(hass, entry, opts)
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
