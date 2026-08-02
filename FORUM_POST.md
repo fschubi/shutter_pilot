@@ -229,6 +229,85 @@ Danke nochmal, das hat die Integration deutlich besser gemacht. Weiteres Feedbac
 ---
 ---
 
+# ANTWORT AUF DIE ARCHITEKTUR-DISKUSSION (Version 2.4.0)
+
+*Für den Thread mit MartyBr und bjoerg. Reiner Text.*
+
+```
+Danke für die ausführliche Diskussion, das war sehr hilfreich. Version 2.4.0
+setzt eure Punkte um.
+
+@MartyBr - Eigenschaften ans Rollo statt an den Bereich
+
+Du hast recht, und ihr beide beschreibt eigentlich dieselbe Lösung. Du willst
+Sensoren pro Fenster, bjoerg will nicht alles pro Raum neu einstellen. Die
+Antwort darauf ist ein Rückfall:
+
+Der Bereich liefert den Standard. Was am Rollladen gesetzt ist, gilt für
+dieses Fenster.
+
+Jeder Rollladen hat jetzt eigene Bedingungs-Felder. Der Rückfall wirkt dabei
+je Bedingung, nicht alles oder nichts. Konkret bei dir:
+
+  Bereich:      Vorhersage-Höchsttemperatur ab 24 Grad, gilt überall
+  Südfenster:   zusätzlich der Helligkeitssensor am Südfenster
+  Westfenster:  zusätzlich der Helligkeitssensor am Westfenster
+
+Beide erben die Temperaturbedingung und haben trotzdem ihren eigenen Sensor.
+Genauso lässt sich die Innentemperatur pro Raum hinterlegen. Azimut und
+Elevation pro Rollo gab es schon seit 2.3.0.
+
+Wichtig dabei: Jedes Fenster führt seine Hysterese getrennt. Vorher hing der
+Zustand am Bereich, eine Wolke vor dem einen Fenster hätte die Beschattung
+des anderen aufgehoben.
+
+@MartyBr - frühestens 7:30, spätestens 9:00
+
+Das ging bisher wirklich nicht, Zeitklammern gab es nur im Helligkeitsmodus.
+Jetzt kann man im Sonnenmodus eine früheste und eine späteste Uhrzeit setzen,
+getrennt für Hoch und Runter, mit eigenen Wochenendwerten. Bleiben die leer,
+gelten die Wochentagswerte.
+
+Damit ist genau dein Fall abbildbar: nach Elevation fahren, frühestens 7:30
+werktags und 8:00 am Wochenende, spätestens 9:00 in beiden Fällen. Im Sommer
+wartet der Rollladen, im Winter geht er spätestens um 9 hoch.
+
+@bjoerg - einmal einstellen und zuordnen
+
+Genau das ist der Rückfall oben. Du pflegst deine Helligkeitswerte einmal im
+Bereich, und nur die Fenster, die anders sind, bekommen eigene Werte. Ein
+drittes Konfigurationsobjekt wollte ich euch ersparen - das wäre nur eine
+weitere Ebene zum Verstehen gewesen.
+
+Danke auch für den Hinweis auf den NACC-Blueprint
+
+Die Rubrik Cover Hardware hat mich auf einen echten Fehler gebracht: Shutter
+Pilot hat die Zielposition nach dem Befehl als Tatsache gespeichert. Bei
+Funk-Rollläden geht aber gelegentlich ein Befehl verloren, und die
+Integration rechnete danach dauerhaft mit einer nie erreichten Position
+weiter - konnte also zum Beispiel ein Hochfahren überspringen, weil sie den
+Rollladen für schon oben hielt.
+
+Jetzt gibt es optional eine Fahrtkontrolle: nach einstellbarer Wartezeit
+wird geprüft, ob die Position erreicht wurde, bei Abweichung wird der Befehl
+wiederholt. Schlägt es endgültig fehl, wird der gespeicherte Wert korrigiert
+und ein Ereignis gefeuert, auf das man eine Benachrichtigung bauen kann.
+Rollläden ohne Positionsmeldung werden übersprungen.
+
+Was ich bewusst noch nicht gemacht habe
+
+Auslösen nach Sonnenhöhe in Grad statt Sonnenauf-/untergang plus Minuten,
+und eine Verzögerung, bevor die Beschattung fährt. Beides steht auf der
+Liste. Sagt gerne, ob euch das eine mehr fehlt als das andere.
+
+Update wie immer über HACS, danach einmal hart neu laden (Strg+Shift+R).
+
+https://github.com/fschubi/shutter_pilot
+```
+
+---
+---
+
 # KURZE NEUERUNGS-MELDUNG 2.3.0 (reiner Text, ohne Formatierung)
 
 *Zum direkten Kopieren in Foren, die kein Markdown rendern.*
