@@ -4,6 +4,16 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.4.1]
+
+### Neu
+- **Menü-Knopf auf dem Handy.** Auf schmalen Bildschirmen blendet Home Assistant die Seitenleiste aus – aus dem Panel kam man dann nur noch über den Zurück-Knopf des Browsers heraus. Links neben dem Titel steht jetzt das gewohnte Menü-Symbol, das die Seitenleiste aufklappt.
+
+### Behoben
+- **Hauptschalter startete nach einer Neuinstallation ausgeschaltet.** Home Assistant merkt sich den Zustand eines Schalters über die Entitäts-ID, nicht über die Integration. Wer Shutter Pilot entfernt und neu hinzufügt, bekam wieder dieselbe Entitäts-ID – und erbte damit ein „aus" aus der alten Installation. Der Schalter merkt sich jetzt, zu welcher Installation ein Zustand gehört, und startet bei einer neuen eingeschaltet. Ein bewusst ausgeschalteter Schalter aus einer älteren Version bleibt beim Update unverändert.
+- **Hauptschalter startete ausgeschaltet, wenn die Entität beim letzten Beenden nicht bereit war.** `unavailable` und `unknown` wurden als „aus" gewertet. Beides gilt jetzt als „an", denn es ist keine Entscheidung des Nutzers.
+- **Panel konnte weiß bleiben.** Das Panel holt sich seine Basisklasse aus einem bereits geladenen Element des Home-Assistant-Frontends. War keins der beiden bisher geprüften Elemente vorhanden, brach das Panel wortlos ab. Jetzt werden zehn Elemente geprüft, Mixins in der Vererbungskette übersprungen, und wenn wirklich nichts passt, erscheint eine Meldung mit Hinweis statt einer weißen Seite. Fehler beim Aufbau der Ansicht werden ebenfalls angezeigt, statt sie leer zu lassen.
+
 ## [2.4.0]
 
 Umsetzung der Architekturdiskussion aus dem Forum.

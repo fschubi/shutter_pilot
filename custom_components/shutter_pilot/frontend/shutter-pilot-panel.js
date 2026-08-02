@@ -2,11 +2,55 @@
  * Shutter Pilot – Home Assistant Sidebar Panel v5
  * 11 languages · Tabs: Dashboard | Areas | Shutters
  */
-const LitElement = Object.getPrototypeOf(
-  customElements.get("ha-panel-lovelace") ?? customElements.get("hui-view")
-);
+/* Home Assistant liefert kein Modul, aus dem sich LitElement importieren
+   liesse. Die Klasse ist nur über die Prototypenkette eines bereits
+   registrierten HA-Elements erreichbar. Welche Elemente geladen sind, hängt
+   davon ab, welche Seite der Browser vorher offen hatte, und wie tief
+   LitElement in der Kette steckt, hängt von der Frontend-Version ab (manche
+   Elemente sitzen hinter Mixins). Deshalb mehrere Kandidaten durchgehen und
+   die Kette hochlaufen, bis die Klasse gefunden ist, die html und css selbst
+   mitbringt. Wird nichts gefunden, darf das Panel NICHT einfach weiterlaufen:
+   ohne echtes css() ist static styles ungültig, Lit wirft beim ersten Rendern
+   und der Nutzer sieht nur eine weisse Seite. In dem Fall wird unten eine
+   lesbare Meldung angezeigt. */
+const LIT_HOSTS = ["ha-panel-lovelace","hui-masonry-view","hui-view","ha-panel-config",
+  "home-assistant-main","ha-sidebar","ha-card","ha-icon","ha-textfield","ha-switch"];
+const LitElement = (() => {
+  const usable = c => typeof c?.prototype?.html === "function" && typeof c?.prototype?.css === "function";
+  for (const name of LIT_HOSTS) {
+    let cur = customElements.get(name);
+    if (!usable(cur)) continue;
+    // Höchste Klasse der Kette nehmen, die html und css noch kennt – das ist
+    // LitElement selbst und nicht das konkrete Element oder ein Mixin.
+    let best = null;
+    while (usable(cur)) { best = cur; cur = Object.getPrototypeOf(cur); }
+    if (best && best !== customElements.get(name)) return best;
+    if (best) return Object.getPrototypeOf(best);
+  }
+  return null;
+})();
+const LIT_MISSING = !LitElement;
+if (LIT_MISSING) {
+  console.error("[shutter_pilot] LitElement nicht gefunden – Home-Assistant-Frontend inkompatibel oder Panel zu früh geladen.");
+}
 const html = LitElement?.prototype?.html ?? ((s,...v)=>s.reduce((a,b,i)=>a+v[i-1]+b));
 const css  = LitElement?.prototype?.css  ?? ((s)=>s);
+
+/* Notfall-Basisklasse: kein Lit, aber auch keine weisse Seite. */
+const PanelBase = LitElement ?? class extends HTMLElement {
+  connectedCallback(){
+    this.innerHTML =
+      '<div style="padding:24px;font-family:sans-serif;color:var(--primary-text-color,#212121);'
+      + 'background:var(--card-background-color,#fff);border-radius:12px;line-height:1.5">'
+      + '<h2 style="margin:0 0 8px">Shutter Pilot</h2>'
+      + '<p>Das Panel konnte die Frontend-Basis von Home Assistant nicht laden.</p>'
+      + '<p>Bitte zuerst ein Dashboard öffnen und dann erneut hierher wechseln, '
+      + 'oder die Seite mit Strg+F5 (Mac: Cmd+Shift+R) neu laden.</p>'
+      + '<p style="color:var(--secondary-text-color,#727272);font-size:13px">'
+      + 'Bleibt es dabei, hilft die Fehlermeldung aus der Browser-Konsole (F12) im Issue weiter.</p>'
+      + '</div>';
+  }
+};
 
 const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset"};
 const WIN_OPEN_OPTS = ["on","open","true","offen"];
@@ -140,6 +184,7 @@ de:{
   ent_others:"Alle weiteren",
   ent_more:"… und {n} weitere – bitte Suche verfeinern",
   clear:"Auswahl löschen",
+  menu:"Menü",
   btn_vent:"Lüften",
   f_window_tilt_sensor:"Zusätzlicher Sensor für „gekippt“ (optional)",
   f_window_tilt_sensor_hint:"Nur nötig, wenn dein Fenster zwei getrennte Entitäten hat: eine für „offen“ und eine für „gekippt“. Bei einem Kontakt mit drei Zuständen bleibt dieses Feld leer.",
@@ -312,6 +357,7 @@ en:{
   ent_others:"All others",
   ent_more:"… and {n} more – please refine your search",
   clear:"Clear selection",
+  menu:"Menu",
   btn_vent:"Ventilate",
   f_window_tilt_sensor:"Extra sensor for tilted (optional)",
   f_window_tilt_sensor_hint:"Only needed if your window exposes two separate entities: one for open and one for tilted. Leave empty for a single 3-state contact.",
@@ -439,6 +485,7 @@ fr:{
   ent_others:"Tous les autres",
   ent_more:"… et {n} de plus – affinez la recherche",
   clear:"Effacer",
+  menu:"Menu",
   btn_vent:"Aérer",
   f_window_tilt_sensor:"Capteur supplémentaire basculé (optionnel)",
   f_window_tilt_sensor_hint:"Nécessaire uniquement si votre fenêtre expose deux entités distinctes.",
@@ -552,6 +599,7 @@ es:{
   ent_others:"Todos los demás",
   ent_more:"… y {n} más – refina la búsqueda",
   clear:"Borrar",
+  menu:"Menú",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional inclinada (opcional)",
   f_window_tilt_sensor_hint:"Solo necesario si tu ventana expone dos entidades separadas.",
@@ -665,6 +713,7 @@ it:{
   ent_others:"Tutti gli altri",
   ent_more:"… e altri {n} – affina la ricerca",
   clear:"Cancella",
+  menu:"Menu",
   btn_vent:"Aerare",
   f_window_tilt_sensor:"Sensore aggiuntivo ribaltata (opzionale)",
   f_window_tilt_sensor_hint:"Serve solo se la finestra espone due entità separate.",
@@ -778,6 +827,7 @@ nl:{
   ent_others:"Alle overige",
   ent_more:"… en nog {n} – verfijn de zoekopdracht",
   clear:"Wissen",
+  menu:"Menu",
   btn_vent:"Ventileren",
   f_window_tilt_sensor:"Extra sensor voor gekanteld (optioneel)",
   f_window_tilt_sensor_hint:"Alleen nodig als je raam twee aparte entiteiten heeft.",
@@ -892,6 +942,7 @@ da:{
   ent_others:"Alle øvrige",
   ent_more:"… og {n} mere – forfin søgningen",
   clear:"Ryd",
+  menu:"Menu",
   btn_vent:"Udluft",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Kun nødvendigt hvis dit vindue har to separate enheder.",
@@ -1006,6 +1057,7 @@ sv:{
   ent_others:"Alla övriga",
   ent_more:"… och {n} till – förfina sökningen",
   clear:"Rensa",
+  menu:"Meny",
   btn_vent:"Vädra",
   f_window_tilt_sensor:"Extra sensor för vädringsläge (valfri)",
   f_window_tilt_sensor_hint:"Behövs bara om fönstret har två separata entiteter.",
@@ -1120,6 +1172,7 @@ pl:{
   ent_others:"Wszystkie pozostałe",
   ent_more:"… i {n} więcej – uściślij wyszukiwanie",
   clear:"Wyczyść",
+  menu:"Menu",
   btn_vent:"Wietrzenie",
   f_window_tilt_sensor:"Dodatkowy czujnik uchylenia (opcjonalnie)",
   f_window_tilt_sensor_hint:"Potrzebne tylko, gdy okno udostępnia dwie osobne encje.",
@@ -1234,6 +1287,7 @@ pt:{
   ent_others:"Todos os outros",
   ent_more:"… e mais {n} – refine a pesquisa",
   clear:"Limpar",
+  menu:"Menu",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional basculante (opcional)",
   f_window_tilt_sensor_hint:"Só é necessário se a janela tiver duas entidades separadas.",
@@ -1348,6 +1402,7 @@ nb:{
   ent_others:"Alle andre",
   ent_more:"… og {n} til – avgrens søket",
   clear:"Tøm",
+  menu:"Meny",
   btn_vent:"Lufte",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Bare nødvendig hvis vinduet har to separate enheter.",
@@ -1428,12 +1483,16 @@ nb:{
 },
 };
 
-class ShutterPilotPanel extends LitElement {
+class ShutterPilotPanel extends PanelBase {
   static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     .title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;row-gap:4px;width:100%}
+    .menu-btn{flex-shrink:0;margin-left:-8px;color:var(--txt);--mdc-icon-button-size:40px}
+    .menu-fallback{flex-shrink:0;margin-left:-4px;display:inline-flex;align-items:center;justify-content:center;
+      width:40px;height:40px;padding:0;border:none;border-radius:50%;background:transparent;color:var(--txt);cursor:pointer}
+    .menu-fallback:hover{background:rgba(127,127,127,.15)}
     .master-row{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:14px;color:var(--txt2)}
     .master-row ha-switch{--mdc-theme-secondary:var(--primary-color,#03a9f4)}
     .sun-protect-info{margin-top:8px;padding:10px 12px;border-radius:8px;background:rgba(255,152,0,.12);border:1px solid rgba(255,152,0,.35);font-size:13px}
@@ -1563,6 +1622,9 @@ class ShutterPilotPanel extends LitElement {
   }
   connectedCallback(){
     super.connectedCallback?.();
+    // Ohne Lit zeigt die Notfall-Basisklasse nur ihre Meldung. Alles Weitere
+    // würde hier ins Leere laufen.
+    if(LIT_MISSING)return;
     this._load();
     // Sonnenstand, Sonnenschutz-Status und die berechneten Fahrzeiten ändern
     // sich laufend. Ohne diesen Timer bliebe das Panel auf dem Stand vom
@@ -1936,12 +1998,46 @@ class ShutterPilotPanel extends LitElement {
   }
 
   render(){
+    // Wirft das Rendern, hängt Lit sich auf und der Nutzer sieht eine leere,
+    // weisse Seite ohne jeden Hinweis. Lieber die Meldung anzeigen – damit
+    // ist im Forum sofort klar, woran es liegt.
+    try{
+      return this._renderPanel();
+    }catch(err){
+      console.error("[shutter_pilot] Fehler beim Rendern des Panels:",err);
+      return html`<div class="form">
+        <h3>Shutter Pilot</h3>
+        <div class="hint">Beim Aufbau der Ansicht ist ein Fehler aufgetreten:
+          <code>${String(err?.message||err)}</code></div>
+        <div class="hint">Bitte die Seite neu laden (Strg+F5). Bleibt es dabei,
+          hilft diese Meldung samt Browser-Konsole (F12) im Issue weiter.</div>
+        <div class="form-actions">
+          <button class="btn save" @click=${()=>{this._editArea=null;this._editShutter=null;this._settings=null;this._tab="dashboard";this.requestUpdate();}}>Zurück zum Dashboard</button>
+        </div></div>`;
+    }
+  }
+  /* Auf schmalen Bildschirmen blendet Home Assistant die Seitenleiste aus.
+     Ohne diesen Knopf kommt man aus dem Panel nur noch über den Zurück-Knopf
+     des Browsers heraus – in der App gibt es den nicht immer. ha-menu-button
+     ist das Original aus dem Frontend (klappt die Seitenleiste auf und zeigt
+     auch den Benachrichtigungspunkt). Ist es nicht geladen, tut es ein
+     eigener Knopf, der dasselbe Ereignis feuert. */
+  _renderMenuButton(){
+    if(!(this.narrow||this._isMobile))return "";
+    if(customElements.get("ha-menu-button"))
+      return html`<ha-menu-button class="menu-btn" .hass=${this.hass} .narrow=${true}></ha-menu-button>`;
+    return html`<button class="menu-fallback" title="${this.t("menu")}" aria-label="${this.t("menu")}"
+      @click=${()=>this.dispatchEvent(new CustomEvent("hass-toggle-menu",{bubbles:true,composed:true}))}>
+      <ha-icon icon="mdi:menu"></ha-icon></button>`;
+  }
+  _renderPanel(){
     const d=this._data;const T=k=>this.t(k);
     const verRaw=this._integrationVersion();
     const ver=verRaw?verRaw:"";
     return html`
       <div class="topbar"><div style="flex:1">
         <div class="title-row">
+          ${this._renderMenuButton()}
           <h1>Shutter Pilot</h1>
           ${ver?html`<span class="sp-ver-badge" title="Shutter Pilot v${ver}" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>`:""}
           ${d?html`<div class="master-row"><span>${T("master_switch")}</span>

@@ -20,6 +20,35 @@ from .const import (
     CONF_MASTER_ENTITY_ID,
 )
 
+# Zustände, die keine Nutzerentscheidung sind: Die Entität war beim letzten
+# Beenden noch nicht bereit oder der Wert stammt aus einer früheren
+# Installation. In beiden Fällen muss der Schalter eingeschaltet starten –
+# sonst steht die Automatik nach einer Neuinstallation still, ohne dass
+# jemand sie ausgeschaltet hätte.
+_ON_STATES = ("on", "true", "1")
+_UNSET_STATES = ("", "unknown", "unavailable", "none")
+# Kennzeichnet, aus welchem Config-Entry ein gespeicherter Zustand stammt.
+# RestoreEntity merkt sich Zustände über die entity_id, nicht über die
+# unique_id: Nach Entfernen und erneutem Hinzufügen bekommt der Schalter
+# denselben Namen und würde sonst das alte "aus" erben.
+ATTR_ENTRY_ID = "config_entry_id"
+
+
+def _restored_is_on(last_state: Any, entry_id: str) -> bool:
+    """Return the restored switch state, defaulting to on."""
+    if last_state is None:
+        return True
+    stored_entry = str(last_state.attributes.get(ATTR_ENTRY_ID) or "")
+    # Fehlt die Kennung, stammt der Zustand aus einer Version vor 2.4.1 –
+    # dann gehört er zur laufenden Installation und bleibt gültig. Steht dort
+    # ein anderes Entry, ist es eine Neuinstallation.
+    if stored_entry and stored_entry != entry_id:
+        return True
+    value = str(last_state.state or "").strip().lower()
+    if value in _UNSET_STATES:
+        return True
+    return value in _ON_STATES
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,14 +95,12 @@ class ShutterPilotMasterSwitch(RestoreEntity, SwitchEntity):
         self._attr_name = "Shutter Pilot System"
         self._attr_unique_id = f"{entry.entry_id}_master"
         self._attr_is_on = True
+        self._attr_extra_state_attributes = {ATTR_ENTRY_ID: entry.entry_id}
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._attr_is_on = str(last_state.state).lower() in ("on", "true", "1")
-        else:
-            self._attr_is_on = True
+        self._attr_is_on = _restored_is_on(last_state, self._entry.entry_id)
 
         data = self._hass.data.setdefault(DOMAIN, {}).setdefault(
             self._entry.entry_id, {}
@@ -124,14 +151,12 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
         self._attr_name = f"Shutter Pilot {name}"
         self._attr_unique_id = f"{entry.entry_id}_auto_area_{area_id}"
         self._attr_is_on = True
+        self._attr_extra_state_attributes = {ATTR_ENTRY_ID: entry.entry_id}
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._attr_is_on = str(last_state.state).lower() in ("on", "true", "1")
-        else:
-            self._attr_is_on = True
+        self._attr_is_on = _restored_is_on(last_state, self._entry.entry_id)
 
         data = self._hass.data.setdefault(DOMAIN, {}).setdefault(
             self._entry.entry_id, {}
