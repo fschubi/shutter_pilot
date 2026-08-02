@@ -296,6 +296,13 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         frontend_url_path="shutter-pilot",
+        # Das Panel bleibt für alle Benutzer sichtbar: Es ist zugleich die
+        # Bedienoberfläche für die Rollläden (hoch, runter, Sonnenschutz,
+        # Lüften) und die läuft über die normalen cover-Dienste, für die Home
+        # Assistant selbst die Rechte prüft. Konfiguriert werden kann hier
+        # nichts ohne Administratorrechte: Jeder ändernde WebSocket-Befehl
+        # trägt @websocket_api.require_admin, und das Panel blendet die
+        # Konfigurationsbereiche bei Nicht-Administratoren aus.
         require_admin=False,
         config={
             "shutter_pilot_version": PANEL_ASSET_VERSION,
@@ -427,6 +434,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 
 # -- set_master_enabled -------------------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/set_master_enabled",
     vol.Required("enabled"): bool,
@@ -455,6 +463,7 @@ def _ws_set_master_enabled(hass: HomeAssistant, connection: websocket_api.Active
 
 # -- set_auto_mode ------------------------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/set_auto_mode",
     vol.Required("area_id"): str,
@@ -486,6 +495,7 @@ def _ws_set_auto_mode(hass: HomeAssistant, connection: websocket_api.ActiveConne
 
 # -- save_area (create / update) ----------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/save_area",
     vol.Required("area"): dict,
@@ -516,6 +526,7 @@ async def _ws_save_area(hass: HomeAssistant, connection: websocket_api.ActiveCon
 
 # -- delete_area --------------------------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/delete_area",
     vol.Required("area_id"): str,
@@ -543,6 +554,7 @@ async def _ws_delete_area(hass: HomeAssistant, connection: websocket_api.ActiveC
 
 # -- save_shutter (create / update) -------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/save_shutter",
     vol.Required("shutter"): dict,
@@ -570,6 +582,7 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
 
 # -- save_settings (global options) -------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/save_settings",
     vol.Required("settings"): dict,
@@ -593,6 +606,7 @@ async def _ws_save_settings(hass: HomeAssistant, connection: websocket_api.Activ
 
 # -- delete_shutter -----------------------------------------------------------
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({
     vol.Required("type"): "shutter_pilot/delete_shutter",
     vol.Required("index"): int,

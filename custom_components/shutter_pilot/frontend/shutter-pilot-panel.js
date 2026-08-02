@@ -185,6 +185,7 @@ de:{
   ent_more:"… und {n} weitere – bitte Suche verfeinern",
   clear:"Auswahl löschen",
   menu:"Menü",
+  admin_only:"Konfiguration ist Administratoren vorbehalten.",
   btn_vent:"Lüften",
   f_window_tilt_sensor:"Zusätzlicher Sensor für „gekippt“ (optional)",
   f_window_tilt_sensor_hint:"Nur nötig, wenn dein Fenster zwei getrennte Entitäten hat: eine für „offen“ und eine für „gekippt“. Bei einem Kontakt mit drei Zuständen bleibt dieses Feld leer.",
@@ -358,6 +359,7 @@ en:{
   ent_more:"… and {n} more – please refine your search",
   clear:"Clear selection",
   menu:"Menu",
+  admin_only:"Configuration is reserved for administrators.",
   btn_vent:"Ventilate",
   f_window_tilt_sensor:"Extra sensor for tilted (optional)",
   f_window_tilt_sensor_hint:"Only needed if your window exposes two separate entities: one for open and one for tilted. Leave empty for a single 3-state contact.",
@@ -486,6 +488,7 @@ fr:{
   ent_more:"… et {n} de plus – affinez la recherche",
   clear:"Effacer",
   menu:"Menu",
+  admin_only:"La configuration est réservée aux administrateurs.",
   btn_vent:"Aérer",
   f_window_tilt_sensor:"Capteur supplémentaire basculé (optionnel)",
   f_window_tilt_sensor_hint:"Nécessaire uniquement si votre fenêtre expose deux entités distinctes.",
@@ -600,6 +603,7 @@ es:{
   ent_more:"… y {n} más – refina la búsqueda",
   clear:"Borrar",
   menu:"Menú",
+  admin_only:"La configuración está reservada a los administradores.",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional inclinada (opcional)",
   f_window_tilt_sensor_hint:"Solo necesario si tu ventana expone dos entidades separadas.",
@@ -714,6 +718,7 @@ it:{
   ent_more:"… e altri {n} – affina la ricerca",
   clear:"Cancella",
   menu:"Menu",
+  admin_only:"La configurazione è riservata agli amministratori.",
   btn_vent:"Aerare",
   f_window_tilt_sensor:"Sensore aggiuntivo ribaltata (opzionale)",
   f_window_tilt_sensor_hint:"Serve solo se la finestra espone due entità separate.",
@@ -828,6 +833,7 @@ nl:{
   ent_more:"… en nog {n} – verfijn de zoekopdracht",
   clear:"Wissen",
   menu:"Menu",
+  admin_only:"Configuratie is voorbehouden aan beheerders.",
   btn_vent:"Ventileren",
   f_window_tilt_sensor:"Extra sensor voor gekanteld (optioneel)",
   f_window_tilt_sensor_hint:"Alleen nodig als je raam twee aparte entiteiten heeft.",
@@ -943,6 +949,7 @@ da:{
   ent_more:"… og {n} mere – forfin søgningen",
   clear:"Ryd",
   menu:"Menu",
+  admin_only:"Konfiguration er forbeholdt administratorer.",
   btn_vent:"Udluft",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Kun nødvendigt hvis dit vindue har to separate enheder.",
@@ -1058,6 +1065,7 @@ sv:{
   ent_more:"… och {n} till – förfina sökningen",
   clear:"Rensa",
   menu:"Meny",
+  admin_only:"Konfiguration är förbehållen administratörer.",
   btn_vent:"Vädra",
   f_window_tilt_sensor:"Extra sensor för vädringsläge (valfri)",
   f_window_tilt_sensor_hint:"Behövs bara om fönstret har två separata entiteter.",
@@ -1173,6 +1181,7 @@ pl:{
   ent_more:"… i {n} więcej – uściślij wyszukiwanie",
   clear:"Wyczyść",
   menu:"Menu",
+  admin_only:"Konfiguracja jest zastrzeżona dla administratorów.",
   btn_vent:"Wietrzenie",
   f_window_tilt_sensor:"Dodatkowy czujnik uchylenia (opcjonalnie)",
   f_window_tilt_sensor_hint:"Potrzebne tylko, gdy okno udostępnia dwie osobne encje.",
@@ -1288,6 +1297,7 @@ pt:{
   ent_more:"… e mais {n} – refine a pesquisa",
   clear:"Limpar",
   menu:"Menu",
+  admin_only:"A configuração é reservada aos administradores.",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional basculante (opcional)",
   f_window_tilt_sensor_hint:"Só é necessário se a janela tiver duas entidades separadas.",
@@ -1403,6 +1413,7 @@ nb:{
   ent_more:"… og {n} til – avgrens søket",
   clear:"Tøm",
   menu:"Meny",
+  admin_only:"Konfigurasjon er forbeholdt administratorer.",
   btn_vent:"Lufte",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Bare nødvendig hvis vinduet har to separate enheter.",
@@ -1501,6 +1512,8 @@ class ShutterPilotPanel extends PanelBase {
     .topbar h1{margin:0;font-size:24px;font-weight:500;color:var(--txt)}
     .topbar .sub{font-size:14px;color:var(--txt2)}
     .sp-ver-badge{font-size:13px;font-weight:600;color:#4caf50;flex-shrink:0;padding:3px 10px;border-radius:10px;border:2px solid #4caf50;background:rgba(76,175,80,.12);line-height:1.2}
+    /* Ohne Konfigurationstabs bleibt nur eine Trennlinie über dem Dashboard. */
+    .tabs-spacer{border-bottom:2px solid var(--divider);margin-bottom:20px}
     .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
     .tabs::-webkit-scrollbar{height:6px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s;flex:0 0 auto;scroll-snap-align:start}
@@ -1679,6 +1692,13 @@ class ShutterPilotPanel extends PanelBase {
   // Fällt auf Englisch zurück, damit neue Schlüssel in noch nicht
   // übersetzten Sprachen lesbar bleiben statt als Rohschlüssel zu erscheinen.
   t(k){return (I18N[this._lang]||{})[k]||I18N.en[k]||k;}
+  /* Konfigurieren darf nur, wer in Home Assistant Administrator ist – die
+     schreibenden WebSocket-Befehle weisen alle anderen ohnehin ab. Das Panel
+     blendet deshalb aus, was für sie nicht bedienbar wäre; die Rollladen-
+     Bedienung bleibt für alle da, die läuft über die cover-Dienste. Fehlt
+     hass.user (kurz nach dem Laden), gilt Administrator: Verstecken wäre für
+     den Admin nur störend, und geschützt wird ohnehin auf der Serverseite. */
+  _isAdmin(){return this.hass?.user?.is_admin!==false;}
   _modeName(m){return this.t("mode_"+m)||m;}
 
   /** Versionsnummer aus ?v= der geladenen Panel-URL (funktioniert auch wenn get_status noch keine version liefert). */
@@ -2034,26 +2054,33 @@ class ShutterPilotPanel extends PanelBase {
     const d=this._data;const T=k=>this.t(k);
     const verRaw=this._integrationVersion();
     const ver=verRaw?verRaw:"";
+    const admin=this._isAdmin();
+    // Ohne Administratorrechte bleibt nur das Dashboard. Der Tab-Zustand wird
+    // hier abgefangen, damit auch ein alter Wert aus der Sitzung nicht in ein
+    // Formular führt, das sich gar nicht speichern liesse.
+    const tabs=admin?["dashboard","areas","shutters","settings"]:["dashboard"];
+    const tab=tabs.includes(this._tab)?this._tab:"dashboard";
     return html`
       <div class="topbar"><div style="flex:1">
         <div class="title-row">
           ${this._renderMenuButton()}
           <h1>Shutter Pilot</h1>
           ${ver?html`<span class="sp-ver-badge" title="Shutter Pilot v${ver}" aria-label="Shutter Pilot Version ${ver}">v${ver}</span>`:""}
-          ${d?html`<div class="master-row"><span>${T("master_switch")}</span>
+          ${d&&admin?html`<div class="master-row"><span>${T("master_switch")}</span>
             <ha-switch .checked=${d.master_enabled!==false} @change=${e=>this._toggleMaster(e.target.checked)}></ha-switch></div>`:""}
         </div>
         ${d?html`<div class="sub">${T("subtitle").replace("{a}",d.areas?.length||0).replace("{s}",d.shutters?.length||0)}</div>`:""}
+        ${admin?"":html`<div class="sub">${T("admin_only")}</div>`}
       </div></div>
-      <div class="tabs">
-        ${["dashboard","areas","shutters","settings"].map(t=>html`
-          <div class="tab ${this._tab===t?"active":""}" @click=${()=>{this._tab=t;this._editArea=null;this._editShutter=null;this.requestUpdate();}}>
+      ${tabs.length>1?html`<div class="tabs">
+        ${tabs.map(t=>html`
+          <div class="tab ${tab===t?"active":""}" @click=${()=>{this._tab=t;this._editArea=null;this._editShutter=null;this.requestUpdate();}}>
             ${T("tab_"+t)}</div>`)}
-      </div>
+      </div>`:html`<div class="tabs-spacer"></div>`}
       ${!d?html`<div class="empty">${T("loading")}</div>`:
-        this._tab==="dashboard"?this._renderDashboard(d):
-        this._tab==="areas"?this._renderAreas(d):
-        this._tab==="settings"?this._renderSettings(d):
+        tab==="dashboard"?this._renderDashboard(d):
+        tab==="areas"?this._renderAreas(d):
+        tab==="settings"?this._renderSettings(d):
         this._renderShutters(d)}`;
   }
 
@@ -2120,7 +2147,8 @@ class ShutterPilotPanel extends PanelBase {
       <div class="card-hdr"><div class="ic"><ha-icon icon="${MODE_ICONS[mode]||"mdi:blinds"}"></ha-icon></div>
         <div class="info"><h2>${name}</h2><span>${this._modeName(mode)} · ${sh.length} ${this.t("shutter_s")}</span></div></div>
       <div class="auto-row"><span class="lbl">${this.t("auto")}</span>
-        <ha-switch .checked=${autoOn} @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
+        <ha-switch .checked=${autoOn} ?disabled=${!this._isAdmin()}
+          @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
       ${mode==="sun"?this._renderSunInfo(area,d):""}
       ${mode==="time"?this._renderTimeInfo(area):""}
       ${mode==="brightness"?this._renderBrightnessInfo(area):""}

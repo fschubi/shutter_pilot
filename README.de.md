@@ -76,6 +76,8 @@ Klicke auf ein Bild, um es auf GitHub in **voller Auflösung** zu öffnen (hier 
 2. Suche nach **Shutter Pilot** und klicke zum Hinzufügen
 3. Nach der Einrichtung erscheint "Shutter Pilot" in der Seitenleiste
 
+> **Hinweis:** Das Panel steht allen Benutzern in der Seitenleiste zur Verfügung, **konfigurieren kann es aber nur ein Administrator**. Ohne Administratorrechte zeigt das Panel das Dashboard mit den Bedienknöpfen (hoch, runter, stopp, Sonnenschutz, lüften); die Tabs für Bereiche, Rollläden und Einstellungen sowie der Hauptschalter und die Automatik-Schalter sind ausgeblendet. Alle ändernden Befehle werden zusätzlich serverseitig geprüft.
+
 ## Konfiguration
 
 Die gesamte Konfiguration erfolgt über das **Shutter Pilot Sidebar-Panel**:

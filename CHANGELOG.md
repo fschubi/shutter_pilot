@@ -4,6 +4,12 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.4.2]
+
+### Geändert
+- **Konfiguration nur noch für Administratoren.** Aus dem Review zur Aufnahme in HACS (danke, @frenck): Die schreibenden WebSocket-Befehle prüften keine Rechte. Jeder angemeldete Benutzer ohne Administratorrechte konnte damit Bereiche und Rollläden umkonfigurieren sowie den Hauptschalter und die Automatik pro Bereich umlegen. Alle ändernden Befehle – Bereiche und Rollläden speichern und löschen, Einstellungen speichern, Hauptschalter, Automatik pro Bereich – verlangen jetzt Administratorrechte. Der lesende Statusbefehl bleibt unverändert.
+- **Panel passt sich den Rechten an.** Es bleibt für alle Benutzer in der Seitenleiste, denn es ist zugleich die Bedienoberfläche für die Rollläden. Ohne Administratorrechte erscheint nur das Dashboard mit den Bedienknöpfen; die Tabs für Bereiche, Rollläden und Einstellungen sowie Hauptschalter und Automatik-Schalter sind ausgeblendet. Die Bedienung selbst läuft über die normalen `cover`-Dienste, für die Home Assistant die Rechte ohnehin selbst prüft.
+
 ## [2.4.1]
 
 ### Neu

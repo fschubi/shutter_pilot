@@ -76,6 +76,8 @@ Click an image to open it **full size** on GitHub (thumbnails are scaled down in
 2. Search for **Shutter Pilot** and click to add
 3. After setup, "Shutter Pilot" appears in the sidebar
 
+> **Note:** The panel is available to every user in the sidebar, but **only an administrator can configure it**. Without administrator rights the panel shows the dashboard with the control buttons (up, down, stop, sun protection, ventilate); the tabs for areas, shutters and settings as well as the master and auto switches are hidden. Every write command is checked server-side on top of that.
+
 ## Configuration
 
 All configuration is done through the **Shutter Pilot sidebar panel**:
