@@ -93,14 +93,26 @@ async def async_setup_entry(
         cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
         if not cover:
             continue
-        name = str(shutter.get(CONF_NAME) or "").strip() or cover.split(".")[-1]
+        # Der Name aus dem Panel ist der, unter dem der Nutzer den Rollladen
+        # kennt – der gehört auch in die Entität. Ohne ihn der Anzeigename des
+        # Covers, erst zuletzt die nackte Entity-ID.
+        name = str(shutter.get(CONF_NAME) or "").strip()
+        if not name:
+            cover_state = hass.states.get(cover)
+            name = str(
+                (cover_state.attributes.get("friendly_name") if cover_state else "") or ""
+            ).strip() or cover.split(".")[-1]
+        # "Rollladen" statt "Auto": Bereiche heissen bereits "Auto <Bereich>",
+        # und Bereich und Rollladen tragen oft denselben Namen (Wohnzimmer).
+        # Sonst stünden zwei gleichnamige Schalter in der Liste und Home
+        # Assistant hängte an einen davon ein "_2".
         entities.append(
             ShutterPilotShutterAutomationSwitch(
                 hass=hass,
                 entry=entry,
                 index=index,
                 cover_entity_id=cover,
-                name=f"Auto {name}",
+                name=f"Rollladen {name}",
                 configured_on=bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True)),
             )
         )

@@ -332,6 +332,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
 
     for cmd in (
         _ws_get_status, _ws_set_auto_mode, _ws_set_master_enabled,
+        _ws_set_shutter_automation,
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter,
         _ws_save_settings,
@@ -488,6 +489,40 @@ def _ws_set_auto_mode(hass: HomeAssistant, connection: websocket_api.ActiveConne
         if str(a.get(CONF_AREA_ID) or "") != area_id:
             continue
         eid = str(a.get(CONF_AREA_AUTO_ENTITY_ID) or "").strip()
+        if eid:
+            hass.async_create_task(
+                hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})
+            )
+        break
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- set_shutter_automation ---------------------------------------------------
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/set_shutter_automation",
+    vol.Required("cover_entity_id"): str,
+    vol.Required("enabled"): bool,
+})
+@callback
+def _ws_set_shutter_automation(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Toggle automation for a single shutter, straight from the panel."""
+    cover, enabled = str(msg["cover_entity_id"]).strip(), msg["enabled"]
+    entry, data = _find_entry_data(hass)
+    if not data:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    # Laufzeitwert sofort setzen, damit die nächste Auswertung ihn schon sieht,
+    # und den Schalter nachziehen – der ist die Anzeige in Home Assistant.
+    data.setdefault("shutter_automation", {})[cover] = enabled
+    raw_shutters = entry.options.get(CONF_SHUTTERS, []) if entry else []
+    for s in raw_shutters:
+        if not isinstance(s, dict):
+            continue
+        if str(s.get(CONF_COVER_ENTITY_ID) or "").strip() != cover:
+            continue
+        eid = str(s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip()
         if eid:
             hass.async_create_task(
                 hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})

@@ -1601,6 +1601,8 @@ class ShutterPilotPanel extends PanelBase {
     .auto-row .lbl{font-size:14px;color:var(--txt)}
     .srow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider)}
     .srow.auto-off .nm{opacity:.55}
+    .srow-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .sh-auto{--mdc-theme-secondary:var(--primary-color,#03a9f4);transform:scale(.8);transform-origin:right center}
     .auto-off-ic{--mdc-icon-size:17px;margin-left:6px;color:var(--txt2);flex-shrink:0}
     .srow:last-child{border-bottom:none}
     .srow .nm-wrap{display:flex;align-items:center;min-width:0;flex:1;gap:0}
@@ -1814,6 +1816,23 @@ class ShutterPilotPanel extends PanelBase {
     const st=eid?this.hass?.states?.[eid]:null;
     if(st&&(st.state==="on"||st.state==="off"))return st.state==="off";
     return s.automation_enabled===false;
+  }
+  /* Schalter für die Automatik eines einzelnen Rollladens – dasselbe Muster
+     wie der Automatik-Schalter am Bereich. Ohne Administratorrechte nur
+     Anzeige; der Server weist die Änderung ohnehin ab. */
+  _shutterAutoSwitch(s){
+    const cover=(s.cover_entity_id||"").trim();
+    if(!cover)return "";
+    const on=!this._shutterAutoOff(s);
+    return html`<ha-switch class="sh-auto" .checked=${on} ?disabled=${!this._isAdmin()}
+      title="${this.t("auto")}"
+      @change=${e=>this._toggleShutterAuto(cover,e.target.checked)}></ha-switch>`;
+  }
+  async _toggleShutterAuto(cover,on){
+    try{
+      await this.hass.callWS({type:"shutter_pilot/set_shutter_automation",cover_entity_id:cover,enabled:on});
+      await this._load();
+    }catch(e){console.warn(e);}
   }
   _dashShutterRole(s,areaId){
     const up=(s.area_up_id||"")===areaId;
@@ -2200,7 +2219,7 @@ class ShutterPilotPanel extends PanelBase {
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           const autoOff=this._shutterAutoOff(s);
-          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
+          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></span></div>`;})}</div>
       <div class="actions">
         <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
@@ -2459,6 +2478,7 @@ class ShutterPilotPanel extends PanelBase {
                     <span style="font-size:12px">${coverLine}${entityId&&friendly?html`<span class="sun-off"> · ${entityId}</span>`:""}</span>
                   </div>
                 </div>
+                <div class="auto-row"><span class="lbl">${T("auto")}</span>${this._shutterAutoSwitch(s)}</div>
                 <div class="kv">
                   <div class="k">${T("col_area_up")}</div><div class="v">${areaName(s.area_up_id)||"–"}</div>
                   <div class="k">${T("col_area_down")}</div><div class="v">${areaName(s.area_down_id)||"–"}</div>
@@ -2472,13 +2492,14 @@ class ShutterPilotPanel extends PanelBase {
           </div>
         `:html`
           <div class="card"><div class="table-wrap"><table>
-            <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_up")}</th><th>${T("col_area_down")}</th><th>${T("col_window")}</th><th></th></tr>
+            <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_up")}</th><th>${T("col_area_down")}</th><th>${T("col_window")}</th><th>${T("auto")}</th><th></th></tr>
             ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
               return html`<tr>
                 <td><strong>${s.name||"–"}</strong></td>
                 <td style="color:var(--txt2)">${st?.attributes?.friendly_name||s.cover_entity_id}</td>
                 <td>${areaName(s.area_up_id)}</td><td>${areaName(s.area_down_id)}</td>
                 <td>${s.window_entity_id||"–"}</td>
+                <td>${this._shutterAutoSwitch(s)}</td>
                 <td style="text-align:right">
                   <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
                   <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}

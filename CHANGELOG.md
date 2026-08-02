@@ -4,6 +4,12 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.5.1]
+
+### Geändert
+- **Automatik pro Rollladen direkt im Panel schaltbar.** Bisher ging das nur über die Entität. Jetzt sitzt der Schalter dort, wo man ihn sucht: im **Dashboard** in der Rollladenzeile des Bereichs und im Tab **Rollläden** in der Liste – genau wie der Automatik-Schalter am Bereich. Der Haken im Rollladenformular bleibt als Startwert erhalten.
+- **Eindeutigere Namen für die Rollladen-Schalter.** Sie hiessen `switch.shutter_pilot_auto_<name>` – dasselbe Muster wie die Bereichsschalter. Trugen ein Bereich und ein Rollladen denselben Namen (Wohnzimmer ist beides), standen zwei gleich benannte Schalter in der Liste und Home Assistant hängte an einen davon ein `_2`. Die Rollladen-Schalter heissen jetzt **Shutter Pilot Rollladen &lt;Name&gt;** und nutzen das Namensfeld aus dem Rollladenformular. Bei Installationen, die bereits 2.5.0 hatten, ändert sich nur der Anzeigename; die Entitäts-ID bleibt, wie Home Assistant sie angelegt hat.
+
 ## [2.5.0]
 
 Aus dem Feld-Feedback von Linos aus dem Forum.

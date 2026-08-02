@@ -93,15 +93,27 @@ class TestFlagResolution:
 
 class TestSwitchEntity:
     def test_switch_created_per_shutter(self, hass, entry):
-        """Je Rollladen ein eigener Schalter, zusätzlich zu Haupt- und Bereichsschalter."""
-        assert hass.states.get("switch.shutter_pilot_auto_wohnzimmer") is not None
-        assert hass.states.get("switch.shutter_pilot_auto_kuche") is not None
+        """Je Rollladen ein eigener Schalter, benannt nach dem Namensfeld."""
+        assert hass.states.get("switch.shutter_pilot_rollladen_wohnzimmer") is not None
+        assert hass.states.get("switch.shutter_pilot_rollladen_kuche") is not None
+
+    def test_name_does_not_collide_with_area_switch(self, hass, entry):
+        """Bereich "Wohnbereich" und Rollladen dürfen sich nicht ins Gehege kommen.
+
+        Beide hiessen früher "Shutter Pilot Auto <Name>"; bei gleichem Namen
+        hängte Home Assistant an einen davon ein "_2".
+        """
+        area = hass.states.get("switch.shutter_pilot_auto_wohnbereich")
+        shutter = hass.states.get("switch.shutter_pilot_rollladen_wohnzimmer")
+        assert area is not None and shutter is not None
+        assert area.entity_id != shutter.entity_id
+        assert shutter.attributes["friendly_name"] == "Shutter Pilot Rollladen Wohnzimmer"
 
     async def test_turning_switch_off_updates_runtime(self, hass, entry):
         await hass.services.async_call(
             "switch",
             "turn_off",
-            {"entity_id": "switch.shutter_pilot_auto_wohnzimmer"},
+            {"entity_id": "switch.shutter_pilot_rollladen_wohnzimmer"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -161,3 +173,42 @@ class TestOptionsRoundTrip:
 
         data = hass.data[DOMAIN][entry.entry_id]
         assert data["shutter_automation"]["cover.living_room"] is False
+
+
+class TestWebSocketToggle:
+    """Der Schalter im Panel geht über einen eigenen Befehl, wie bei Bereichen."""
+
+    async def test_toggle_from_panel(self, hass, entry, hass_ws_client):
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "shutter_pilot/set_shutter_automation",
+                "cover_entity_id": "cover.living_room",
+                "enabled": False,
+            }
+        )
+        result = await client.receive_json()
+        assert result["success"] is True
+        await hass.async_block_till_done()
+
+        data = hass.data[DOMAIN][entry.entry_id]
+        assert data["shutter_automation"]["cover.living_room"] is False
+        # Der Schalter in Home Assistant zieht mit, sonst stünde dort noch "an".
+        assert hass.states.get("switch.shutter_pilot_rollladen_wohnzimmer").state == "off"
+
+    async def test_requires_admin(self, hass, entry, hass_ws_client, hass_admin_user):
+        """Ohne Administratorrechte wird der Befehl abgewiesen."""
+        hass_admin_user.groups = []
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "shutter_pilot/set_shutter_automation",
+                "cover_entity_id": "cover.living_room",
+                "enabled": False,
+            }
+        )
+        result = await client.receive_json()
+        assert result["success"] is False
+        assert result["error"]["code"] == "unauthorized"

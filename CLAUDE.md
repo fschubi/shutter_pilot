@@ -37,7 +37,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (243 Tests)
+tests/               pytest-Suite (246 Tests)
 ```
 
 ## Funktionsumfang
@@ -142,7 +142,7 @@ Rollläden · Einstellungen. Besonderheiten, die man kennen muss:
 | --- | --- |
 | `shutter_pilot/get_status` | alle (lesend) |
 | `save_area`, `delete_area`, `save_shutter`, `delete_shutter` | **Admin** |
-| `save_settings`, `set_master_enabled`, `set_auto_mode` | **Admin** |
+| `save_settings`, `set_master_enabled`, `set_auto_mode`, `set_shutter_automation` | **Admin** |
 
 Alle ändernden Befehle tragen `@websocket_api.require_admin` (außen, darunter
 `websocket_command` – Reihenfolge wie in HA Core). Kommt ein neuer schreibender
@@ -162,7 +162,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 243 Tests, ~3 s
+.venv/bin/pytest            # 246 Tests, ~3 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -188,7 +188,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.5.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.5.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -277,6 +277,13 @@ Zwei Dinge, die man dabei wissen muss:
 | Profile/Label | bräuchte dritte Stufe in `resolve_shading_config()` + Migration. Zwischenschritt: Kopierknopf im Formular |
 | Lüften mit Bedingungen | rein manuell, kein Automatikpfad; Bedingungs-Slots wären wiederverwendbar |
 | Zweiter Azimutbereich | ein Bereich je Rollladen, Wrap-around unterstützt. Nötig nur bei getrennten Richtungen an einem Aktor |
+
+**Nachtrag 2.5.1:** Schalten geht jetzt auch im Panel – Dashboard-Zeile und
+Rollläden-Tab – über den neuen Befehl `set_shutter_automation` (Muster von
+`set_auto_mode`: Laufzeitwert setzen und die Schalter-Entität nachziehen).
+Ausserdem heissen die Rollladen-Schalter **Shutter Pilot Rollladen <Name>**
+statt „Auto <Name>": Bereich und Rollladen tragen oft denselben Namen, und
+zwei gleich benannte Schalter liefern in HA ein `_2` an einem davon.
 
 **Fallstrick, einmal reingefallen:** In `__init__.py` stehen die
 WebSocket-Dekoratoren direkt über der Funktion. Eine neue Hilfsfunktion

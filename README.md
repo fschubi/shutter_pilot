@@ -137,7 +137,7 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 |--------|-------------|
 | `switch.shutter_pilot_system` | Master switch for all automation |
 | `switch.shutter_pilot_auto_<area>` | Automation per area |
-| `switch.shutter_pilot_auto_<shutter>` | Automation per shutter |
+| `switch.shutter_pilot_rollladen_<name>` | Automation per shutter (named after the **Name** field) |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
 
@@ -151,7 +151,15 @@ Automation can be paused on three levels, independently of each other:
 | **Area** | only this area pauses |
 | **Shutter** | exactly this shutter stays put, the rest of its area keeps going |
 
-The shutter level is meant for a shutter that must not move for a while – a broken drive waiting for a spare part. The **Automation active** checkbox sits at the top of the shutter form; on the dashboard a disabled shutter gets an icon, so nobody has to guess why it stays put.
+The shutter level is meant for a shutter that must not move for a while – a broken drive waiting for a spare part.
+
+It can be toggled in three equivalent places:
+
+- on the **dashboard**, right in the shutter row of its area
+- in the **Shutters** tab list
+- through the `switch.shutter_pilot_rollladen_<name>` entity, from your own automations too
+
+The **Automation active** checkbox in the shutter form sets the initial value. A disabled shutter also gets an icon on the dashboard, so nobody has to guess why it stays put.
 
 Note that only **automation** is switched off. Manual control keeps working – the dashboard buttons, the `open_group`/`close_group` services and the cover entity itself. Otherwise you could not even test the shutter after repairing it.
 
