@@ -47,6 +47,7 @@ from .helpers import (
     get_position_for_role,
     get_tilt_for_role,
     is_auto_enabled,
+    is_shutter_automation_enabled,
     is_sun_protect_active,
     set_cover_position,
     should_skip_automated_up,
@@ -201,6 +202,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         continue
                     if cover_entity in covers_driven_down:
                         continue
+                    if not is_shutter_automation_enabled(hass, entry, shutter):
+                        continue
                     pos = get_position_for_role(shutter, ROLE_CLOSED)
                     tilt = get_tilt_for_role(shutter, ROLE_CLOSED)
                     drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
@@ -255,6 +258,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         if not cover_entity:
                             continue
                         if cover_entity in covers_driven_up:
+                            continue
+                        if not is_shutter_automation_enabled(hass, entry, shutter):
                             continue
                         if should_skip_automated_up(
                             hass,

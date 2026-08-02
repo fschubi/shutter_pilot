@@ -36,6 +36,7 @@ from .helpers import (
     get_position_for_role,
     get_tilt_for_role,
     is_auto_enabled,
+    is_shutter_automation_enabled,
     register_minute_callback,
     set_cover_position,
     should_skip_automated_up,
@@ -108,6 +109,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         for shutter in shutter_list:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover:
+                continue
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                _LOGGER.info("%s: %s übersprungen (Automatik am Rollladen aus)", direction, cover)
                 continue
             shutter_role = role
             if alt_close and has_alt_close_position(shutter):

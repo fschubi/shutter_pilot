@@ -186,6 +186,9 @@ de:{
   clear:"Auswahl löschen",
   menu:"Menü",
   admin_only:"Konfiguration ist Administratoren vorbehalten.",
+  f_shutter_auto:"Automatik aktiv",
+  f_shutter_auto_hint:"Aus: Dieser Rollladen wird von keiner Automatik mehr gefahren – weder nach Zeit noch nach Helligkeit, Sonnenstand oder Fensterkontakt. Von Hand und über die Knöpfe im Dashboard fährt er weiterhin. Gedacht für einen defekten Rollladen, ohne seine Einstellungen zu verlieren.",
+  dash_shutter_auto_off:"Automatik aus",
   btn_vent:"Lüften",
   f_window_tilt_sensor:"Zusätzlicher Sensor für „gekippt“ (optional)",
   f_window_tilt_sensor_hint:"Nur nötig, wenn dein Fenster zwei getrennte Entitäten hat: eine für „offen“ und eine für „gekippt“. Bei einem Kontakt mit drei Zuständen bleibt dieses Feld leer.",
@@ -360,6 +363,9 @@ en:{
   clear:"Clear selection",
   menu:"Menu",
   admin_only:"Configuration is reserved for administrators.",
+  f_shutter_auto:"Automation active",
+  f_shutter_auto_hint:"Off: this shutter is no longer driven by any automation – not by time, brightness, sun position or window contact. Manual control and the dashboard buttons keep working. Meant for a defective shutter, without losing its settings.",
+  dash_shutter_auto_off:"automation off",
   btn_vent:"Ventilate",
   f_window_tilt_sensor:"Extra sensor for tilted (optional)",
   f_window_tilt_sensor_hint:"Only needed if your window exposes two separate entities: one for open and one for tilted. Leave empty for a single 3-state contact.",
@@ -489,6 +495,9 @@ fr:{
   clear:"Effacer",
   menu:"Menu",
   admin_only:"La configuration est réservée aux administrateurs.",
+  f_shutter_auto:"Automatisme actif",
+  f_shutter_auto_hint:"Désactivé : ce volet n'est plus commandé par aucun automatisme – ni par l'heure, la luminosité, la position du soleil ou le contact de fenêtre. La commande manuelle et les boutons du tableau de bord restent actifs. Prévu pour un volet défectueux, sans perdre ses réglages.",
+  dash_shutter_auto_off:"automatisme désactivé",
   btn_vent:"Aérer",
   f_window_tilt_sensor:"Capteur supplémentaire basculé (optionnel)",
   f_window_tilt_sensor_hint:"Nécessaire uniquement si votre fenêtre expose deux entités distinctes.",
@@ -604,6 +613,9 @@ es:{
   clear:"Borrar",
   menu:"Menú",
   admin_only:"La configuración está reservada a los administradores.",
+  f_shutter_auto:"Automatización activa",
+  f_shutter_auto_hint:"Desactivado: esta persiana ya no se mueve por ninguna automatización – ni por hora, luminosidad, posición del sol o contacto de ventana. El manejo manual y los botones del panel siguen funcionando. Pensado para una persiana averiada, sin perder su configuración.",
+  dash_shutter_auto_off:"automatización desactivada",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional inclinada (opcional)",
   f_window_tilt_sensor_hint:"Solo necesario si tu ventana expone dos entidades separadas.",
@@ -719,6 +731,9 @@ it:{
   clear:"Cancella",
   menu:"Menu",
   admin_only:"La configurazione è riservata agli amministratori.",
+  f_shutter_auto:"Automazione attiva",
+  f_shutter_auto_hint:"Disattivata: questa tapparella non viene più mossa da alcuna automazione – né per orario, luminosità, posizione del sole o contatto finestra. Il comando manuale e i pulsanti della dashboard restano attivi. Pensato per una tapparella guasta, senza perderne le impostazioni.",
+  dash_shutter_auto_off:"automazione disattivata",
   btn_vent:"Aerare",
   f_window_tilt_sensor:"Sensore aggiuntivo ribaltata (opzionale)",
   f_window_tilt_sensor_hint:"Serve solo se la finestra espone due entità separate.",
@@ -834,6 +849,9 @@ nl:{
   clear:"Wissen",
   menu:"Menu",
   admin_only:"Configuratie is voorbehouden aan beheerders.",
+  f_shutter_auto:"Automatisering actief",
+  f_shutter_auto_hint:"Uit: dit rolluik wordt door geen enkele automatisering meer bediend – niet op tijd, lichtsterkte, zonnestand of raamcontact. Handmatig en via de knoppen op het dashboard blijft het werken. Bedoeld voor een defect rolluik, zonder de instellingen te verliezen.",
+  dash_shutter_auto_off:"automatisering uit",
   btn_vent:"Ventileren",
   f_window_tilt_sensor:"Extra sensor voor gekanteld (optioneel)",
   f_window_tilt_sensor_hint:"Alleen nodig als je raam twee aparte entiteiten heeft.",
@@ -950,6 +968,9 @@ da:{
   clear:"Ryd",
   menu:"Menu",
   admin_only:"Konfiguration er forbeholdt administratorer.",
+  f_shutter_auto:"Automatik aktiv",
+  f_shutter_auto_hint:"Fra: denne rullejalousi køres ikke længere af nogen automatik – hverken efter tid, lysstyrke, solens position eller vindueskontakt. Manuelt og via knapperne på dashboardet kører den fortsat. Beregnet til en defekt rullejalousi, uden at miste indstillingerne.",
+  dash_shutter_auto_off:"automatik fra",
   btn_vent:"Udluft",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Kun nødvendigt hvis dit vindue har to separate enheder.",
@@ -1066,6 +1087,9 @@ sv:{
   clear:"Rensa",
   menu:"Meny",
   admin_only:"Konfiguration är förbehållen administratörer.",
+  f_shutter_auto:"Automatik aktiv",
+  f_shutter_auto_hint:"Av: denna persienn styrs inte längre av någon automatik – varken efter tid, ljusstyrka, solens läge eller fönsterkontakt. Manuellt och via knapparna på instrumentpanelen fungerar den fortfarande. Avsedd för en trasig persienn, utan att förlora inställningarna.",
+  dash_shutter_auto_off:"automatik av",
   btn_vent:"Vädra",
   f_window_tilt_sensor:"Extra sensor för vädringsläge (valfri)",
   f_window_tilt_sensor_hint:"Behövs bara om fönstret har två separata entiteter.",
@@ -1182,6 +1206,9 @@ pl:{
   clear:"Wyczyść",
   menu:"Menu",
   admin_only:"Konfiguracja jest zastrzeżona dla administratorów.",
+  f_shutter_auto:"Automatyka aktywna",
+  f_shutter_auto_hint:"Wyłączone: ta roleta nie jest już sterowana przez żadną automatykę – ani według czasu, jasności, położenia słońca, ani kontaktronu okiennego. Ręcznie i przyciskami na pulpicie nadal działa. Przeznaczone dla uszkodzonej rolety, bez utraty jej ustawień.",
+  dash_shutter_auto_off:"automatyka wyłączona",
   btn_vent:"Wietrzenie",
   f_window_tilt_sensor:"Dodatkowy czujnik uchylenia (opcjonalnie)",
   f_window_tilt_sensor_hint:"Potrzebne tylko, gdy okno udostępnia dwie osobne encje.",
@@ -1298,6 +1325,9 @@ pt:{
   clear:"Limpar",
   menu:"Menu",
   admin_only:"A configuração é reservada aos administradores.",
+  f_shutter_auto:"Automação ativa",
+  f_shutter_auto_hint:"Desligado: esta persiana já não é movida por nenhuma automação – nem por hora, luminosidade, posição do sol ou contacto de janela. O comando manual e os botões do painel continuam a funcionar. Pensado para uma persiana avariada, sem perder as suas definições.",
+  dash_shutter_auto_off:"automação desligada",
   btn_vent:"Ventilar",
   f_window_tilt_sensor:"Sensor adicional basculante (opcional)",
   f_window_tilt_sensor_hint:"Só é necessário se a janela tiver duas entidades separadas.",
@@ -1414,6 +1444,9 @@ nb:{
   clear:"Tøm",
   menu:"Meny",
   admin_only:"Konfigurasjon er forbeholdt administratorer.",
+  f_shutter_auto:"Automatikk aktiv",
+  f_shutter_auto_hint:"Av: denne persiennen kjøres ikke lenger av noen automatikk – verken etter tid, lysstyrke, solposisjon eller vinduskontakt. Manuelt og via knappene på dashbordet virker den fortsatt. Ment for en defekt persienn, uten å miste innstillingene.",
+  dash_shutter_auto_off:"automatikk av",
   btn_vent:"Lufte",
   f_window_tilt_sensor:"Ekstra sensor for vippet (valgfri)",
   f_window_tilt_sensor_hint:"Bare nødvendig hvis vinduet har to separate enheter.",
@@ -1567,6 +1600,8 @@ class ShutterPilotPanel extends PanelBase {
     .auto-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider)}
     .auto-row .lbl{font-size:14px;color:var(--txt)}
     .srow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--divider)}
+    .srow.auto-off .nm{opacity:.55}
+    .auto-off-ic{--mdc-icon-size:17px;margin-left:6px;color:var(--txt2);flex-shrink:0}
     .srow:last-child{border-bottom:none}
     .srow .nm-wrap{display:flex;align-items:center;min-width:0;flex:1;gap:0}
     .srow .role-icons{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0}
@@ -1771,6 +1806,15 @@ class ShutterPilotPanel extends PanelBase {
   }
 
   /** Pfeil(e) je nach Zuordnung Hoch/Runter für diesen Bereich. */
+  /* Automatik am einzelnen Rollladen: Der Schalter ist die lebende Wahrheit,
+     der gespeicherte Wert gilt, solange es ihn noch nicht gibt. Sonst sucht
+     man im Dashboard vergeblich, warum ein Rollladen stehen bleibt. */
+  _shutterAutoOff(s){
+    const eid=(s.shutter_auto_entity_id||"").trim();
+    const st=eid?this.hass?.states?.[eid]:null;
+    if(st&&(st.state==="on"||st.state==="off"))return st.state==="off";
+    return s.automation_enabled===false;
+  }
   _dashShutterRole(s,areaId){
     const up=(s.area_up_id||"")===areaId;
     const down=(s.area_down_id||"")===areaId;
@@ -2155,7 +2199,8 @@ class ShutterPilotPanel extends PanelBase {
       ${area.sun_protect_enabled?this._renderSunProtectInfo(area,d):""}
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
-          return html`<div class="srow"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span></span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
+          const autoOff=this._shutterAutoOff(s);
+          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></div>`;})}</div>
       <div class="actions">
         <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
@@ -2458,6 +2503,9 @@ class ShutterPilotPanel extends PanelBase {
       ${this._section("mdi:window-shutter","sec_shutter")}
       ${ep("cover_entity_id",T("f_cover"),["cover"],null)}
       ${f("name",T("f_name"))}
+      <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
+        @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_shutter_auto")}</label>
+        <div class="hint">${T("f_shutter_auto_hint")}</div></div>
 
       ${this._section("mdi:map-marker","sec_areas","sec_areas_sub")}
       ${areaSel("area_up_id",T("f_area_up"))}

@@ -28,7 +28,10 @@ from .const import (
     CONF_AREAS,
     CONF_AREA_ID,
     CONF_AREA_AUTO_ENTITY_ID,
+    CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_SHUTTER_AUTOMATION_ENABLED,
+    CONF_SHUTTER_AUTO_ENTITY_ID,
     CONF_VERIFY_AFTER,
     CONF_VERIFY_ENABLED,
     CONF_VERIFY_RETRIES,
@@ -552,6 +555,39 @@ async def _ws_delete_area(hass: HomeAssistant, connection: websocket_api.ActiveC
     connection.send_result(msg["id"], {"ok": True})
 
 
+def _apply_shutter_automation_state(
+    hass: HomeAssistant, entry: ConfigEntry, shutter: dict
+) -> None:
+    """Keep the per-shutter automation switch in step with the saved value.
+
+    The checkbox in the panel writes into the options, the switch entity is
+    what the automation actually reads. Without this the two would drift apart
+    after a reload, because the switch restores its own last state.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover:
+        return
+    enabled = bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True))
+
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if isinstance(data, dict):
+        data.setdefault("shutter_automation", {})[cover] = enabled
+
+    switch_id = str(shutter.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip()
+    if not switch_id:
+        return
+    state = hass.states.get(switch_id)
+    if state is not None and (str(state.state).lower() in ("on", "true", "1")) == enabled:
+        return
+    hass.async_create_task(
+        hass.services.async_call(
+            "switch",
+            "turn_on" if enabled else "turn_off",
+            {"entity_id": switch_id},
+        )
+    )
+
+
 # -- save_shutter (create / update) -------------------------------------------
 
 @websocket_api.require_admin
@@ -576,6 +612,7 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
     else:
         shutters.append(shutter_data)
     _update_entry_options(hass, entry, opts)
+    _apply_shutter_automation_state(hass, entry, shutter_data)
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 

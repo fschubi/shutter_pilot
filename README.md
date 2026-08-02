@@ -137,8 +137,23 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 |--------|-------------|
 | `switch.shutter_pilot_system` | Master switch for all automation |
 | `switch.shutter_pilot_auto_<area>` | Automation per area |
+| `switch.shutter_pilot_auto_<shutter>` | Automation per shutter |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
+
+## Switching automation off
+
+Automation can be paused on three levels, independently of each other:
+
+| Level | Effect |
+|-------|--------|
+| **Master switch** | the whole integration stops driving |
+| **Area** | only this area pauses |
+| **Shutter** | exactly this shutter stays put, the rest of its area keeps going |
+
+The shutter level is meant for a shutter that must not move for a while – a broken drive waiting for a spare part. The **Automation active** checkbox sits at the top of the shutter form; on the dashboard a disabled shutter gets an icon, so nobody has to guess why it stays put.
+
+Note that only **automation** is switched off. Manual control keeps working – the dashboard buttons, the `open_group`/`close_group` services and the cover entity itself. Otherwise you could not even test the shutter after repairing it.
 
 ## Event
 

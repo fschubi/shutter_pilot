@@ -30,6 +30,7 @@ from .helpers import (
     get_sun_angles,
     get_tilt_for_role,
     is_auto_enabled,
+    is_shutter_automation_enabled,
     is_cover_sun_protected,
     register_minute_callback,
     resolve_shading_config,
@@ -190,6 +191,13 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 in_down = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
                 in_up = str(shutter.get(CONF_AREA_UP_ID) or "").strip() == area_id
                 if not in_down and not in_up:
+                    continue
+
+                # Automation switched off at this shutter: neither shade nor
+                # release it. The sun protection flag keeps its value, so a
+                # shutter that was shaded before is released properly once the
+                # automation is switched back on.
+                if not is_shutter_automation_enabled(hass, entry, shutter):
                     continue
 
                 # A room may have windows facing different ways and watching

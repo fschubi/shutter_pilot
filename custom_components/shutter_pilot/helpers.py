@@ -36,6 +36,8 @@ from .const import (
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
     CONF_POSITION_WHEN_WINDOW_TILTED,
+    CONF_SHUTTER_AUTOMATION_ENABLED,
+    CONF_SHUTTER_AUTO_ENTITY_ID,
     DEFAULT_POSITION_WHEN_WINDOW_TILTED,
     ROLE_VENTILATION,
     SUN_CONDITION_SLOTS,
@@ -134,6 +136,34 @@ def is_auto_enabled(hass: HomeAssistant, entry: ConfigEntry, area: dict) -> bool
         _LOGGER.debug("is_auto_enabled: switch entity %s not found – returning False (fail-safe)", entity_id)
         return False
     return str(state.state).lower() in ("on", "true", "1")
+
+
+def is_shutter_automation_enabled(
+    hass: HomeAssistant, entry: ConfigEntry, shutter: dict
+) -> bool:
+    """True if automated driving is allowed for this single shutter.
+
+    Third level below master switch and area switch. Unlike those two this one
+    fails *open*: an unknown state must not stop a shutter, because the usual
+    case is a shutter that was never switched off at all. Manual paths
+    (services, dashboard buttons) never ask this.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    domain_data = hass.data.get(DOMAIN)
+    if isinstance(domain_data, dict):
+        data = domain_data.get(entry.entry_id, {})
+        if isinstance(data, dict) and cover:
+            runtime = data.get("shutter_automation", {})
+            if isinstance(runtime, dict) and cover in runtime:
+                return bool(runtime.get(cover))
+
+    entity_id = str(shutter.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip()
+    if entity_id:
+        state = hass.states.get(entity_id)
+        if state is not None and str(state.state).lower() in ("on", "off", "true", "false", "1", "0"):
+            return str(state.state).lower() in ("on", "true", "1")
+
+    return bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True))
 
 
 def get_elevation_bounds(area: dict) -> tuple[float, float]:

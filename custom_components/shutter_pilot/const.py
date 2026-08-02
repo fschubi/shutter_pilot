@@ -29,6 +29,13 @@ CONF_AREA_AUTO_ENTITY_ID = "auto_entity_id"
 # Shutter config keys
 CONF_COVER_ENTITY_ID = "cover_entity_id"
 CONF_NAME = "name"
+# Per-shutter automation enable. Third level below the master switch and the
+# per-area switch: a defective shutter stays put while the rest of its area
+# keeps running, and its configuration survives. A missing value means "on" –
+# otherwise every existing installation would stand still after an update.
+# Manual actions (services, dashboard buttons) are not affected.
+CONF_SHUTTER_AUTOMATION_ENABLED = "automation_enabled"
+CONF_SHUTTER_AUTO_ENTITY_ID = "shutter_auto_entity_id"
 CONF_WINDOW_ENTITY_ID = "window_entity_id"
 CONF_WINDOW_OPEN_STATE = "window_open_state"
 CONF_WINDOW_TILTED_STATE = "window_tilted_state"

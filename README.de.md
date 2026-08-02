@@ -137,8 +137,23 @@ Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dash
 |---------|-------------|
 | `switch.shutter_pilot_system` | Master-Schalter für die gesamte Automatik |
 | `switch.shutter_pilot_auto_<bereich>` | Automatik pro Bereich |
+| `switch.shutter_pilot_auto_<rollladen>` | Automatik pro Rollladen |
 | `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
+
+## Automatik abschalten
+
+Die Automatik lässt sich auf drei Ebenen anhalten, jede für sich:
+
+| Ebene | Wirkung |
+|-------|---------|
+| **Hauptschalter** | die gesamte Integration fährt nichts mehr |
+| **Bereich** | nur dieser Bereich pausiert |
+| **Rollladen** | genau dieser Rollladen bleibt stehen, der Rest des Bereichs fährt weiter |
+
+Die Rollladen-Ebene ist für den Fall gedacht, dass ein Rollladen vorübergehend nicht fahren darf – ein defekter Antrieb, der auf ein Ersatzteil wartet. Der Haken **Automatik aktiv** sitzt im Rollladenformular ganz oben; im Dashboard bekommt ein abgeschalteter Rollladen ein Symbol, damit man nicht rätselt, warum er stehen bleibt.
+
+Wichtig: Abgeschaltet ist nur die **Automatik**. Von Hand fährt der Rollladen weiter – über die Knöpfe im Dashboard, die Dienste `open_group`/`close_group` und ganz normal über die Cover-Entität. Sonst könnte man ihn nach der Reparatur nicht einmal prüfen.
 
 ## Event
 

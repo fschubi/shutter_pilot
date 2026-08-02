@@ -17,7 +17,12 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_NAME,
     CONF_AREA_AUTO_ENTITY_ID,
+    CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_NAME,
+    CONF_SHUTTERS,
+    CONF_SHUTTER_AUTOMATION_ENABLED,
+    CONF_SHUTTER_AUTO_ENTITY_ID,
 )
 
 # Zustände, die keine Nutzerentscheidung sind: Die Entität war beim letzten
@@ -76,6 +81,27 @@ async def async_setup_entry(
                 entry=entry,
                 area_id=area_id,
                 name=f"Auto {name}",
+            )
+        )
+
+    shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        shutters = []
+    for index, shutter in enumerate(shutters):
+        if not isinstance(shutter, dict):
+            continue
+        cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+        if not cover:
+            continue
+        name = str(shutter.get(CONF_NAME) or "").strip() or cover.split(".")[-1]
+        entities.append(
+            ShutterPilotShutterAutomationSwitch(
+                hass=hass,
+                entry=entry,
+                index=index,
+                cover_entity_id=cover,
+                name=f"Auto {name}",
+                configured_on=bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True)),
             )
         )
 
@@ -201,3 +227,90 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
         auto_state = data.setdefault("auto_modes", {})
         auto_state[self._area_id] = self._attr_is_on
         self.async_write_ha_state()
+
+
+class ShutterPilotShutterAutomationSwitch(RestoreEntity, SwitchEntity):
+    """Switch to enable/disable automation for a single shutter.
+
+    For a shutter that must not move for a while – a defective one waiting for
+    a spare part, for instance. Manual actions stay available, so the shutter
+    can still be driven by hand to test it.
+    """
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        index: int,
+        cover_entity_id: str,
+        name: str,
+        configured_on: bool = True,
+    ) -> None:
+        self._hass = hass
+        self._entry = entry
+        self._index = index
+        self._cover_entity_id = cover_entity_id
+        self._configured_on = configured_on
+        self._attr_name = f"Shutter Pilot {name}"
+        # The cover entity id keeps the switch stable when a shutter is
+        # renamed or moved in the list; the index only says where to write
+        # the entity id back.
+        slug = cover_entity_id.replace(".", "_")
+        self._attr_unique_id = f"{entry.entry_id}_auto_shutter_{slug}"
+        self._attr_is_on = True
+        self._attr_extra_state_attributes = {ATTR_ENTRY_ID: entry.entry_id}
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        # A shutter added with the checkbox already unticked has no stored
+        # state yet – then the configured value decides, not the default "on".
+        if last_state is None:
+            self._attr_is_on = self._configured_on
+        else:
+            self._attr_is_on = _restored_is_on(last_state, self._entry.entry_id)
+        self._publish()
+
+        opts = deepcopy(dict(self._entry.options or {}))
+        shutters = opts.get(CONF_SHUTTERS, [])
+        if isinstance(shutters, list):
+            changed = False
+            for s in shutters:
+                if not isinstance(s, dict):
+                    continue
+                if str(s.get(CONF_COVER_ENTITY_ID) or "").strip() != self._cover_entity_id:
+                    continue
+                if not str(s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip():
+                    s[CONF_SHUTTER_AUTO_ENTITY_ID] = self.entity_id
+                    changed = True
+            if changed:
+                opts[CONF_SHUTTERS] = shutters
+                self._hass.config_entries.async_update_entry(self._entry, options=opts)
+
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self._attr_is_on)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._set_state(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._set_state(False)
+
+    def _set_state(self, value: bool) -> None:
+        self._attr_is_on = bool(value)
+        self._publish()
+        self.async_write_ha_state()
+
+    def _publish(self) -> None:
+        """Mirror the state into runtime data, keyed by cover entity id."""
+        data = self._hass.data.setdefault(DOMAIN, {}).setdefault(
+            self._entry.entry_id,
+            {},
+        )
+        state = data.setdefault("shutter_automation", {})
+        state[self._cover_entity_id] = self._attr_is_on

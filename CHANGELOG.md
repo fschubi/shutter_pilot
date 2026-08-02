@@ -4,6 +4,13 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.5.0]
+
+Aus dem Feld-Feedback von Linos aus dem Forum.
+
+### Neu
+- **Automatik pro Rollladen abschaltbar.** Bisher ließ sich die Automatik nur global oder für einen ganzen Bereich anhalten. Jetzt gibt es eine dritte Ebene: Der Haken **Automatik aktiv** im Rollladenformular nimmt genau einen Rollladen aus allen automatischen Fahrten – Zeit, Helligkeit, Sonnenstand und Fensterkontakt. Gedacht für einen defekten Antrieb, der auf ein Ersatzteil wartet: Der Rollladen bleibt stehen, seine Einstellungen bleiben erhalten, und der Rest des Bereichs fährt weiter. Von Hand fährt er unverändert – über die Knöpfe im Dashboard, die Dienste und die Cover-Entität. Je Rollladen entsteht dafür ein Schalter `switch.shutter_pilot_auto_<rollladen>`, der sich auch in eigenen Automationen verwenden lässt. Im Dashboard kennzeichnet ein Symbol die abgeschalteten Rollläden.
+
 ## [2.4.2]
 
 ### Geändert

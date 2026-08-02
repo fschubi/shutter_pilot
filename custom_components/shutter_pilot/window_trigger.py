@@ -19,7 +19,12 @@ from .const import (
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_POSITION_CLOSED,
 )
-from .helpers import get_cover_current_position, is_system_enabled, set_cover_position
+from .helpers import (
+    get_cover_current_position,
+    is_shutter_automation_enabled,
+    is_system_enabled,
+    set_cover_position,
+)
 from .window_helper import (
     get_tilt_entity_id,
     get_window_state,
@@ -125,6 +130,14 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         for shutter in window_to_shutters.get(entity_id, []):
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
+                continue
+            # Automation off at this shutter: do not react to the window at
+            # all. Also drop a pending catch-up drive, otherwise it would fire
+            # the moment the automation is switched back on.
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                data.get("drive_after_close_pending", {}).pop(cover_entity, None)
+                trigger_actions.pop(cover_entity, None)
+                trigger_heights.pop(cover_entity, None)
                 continue
             pos_closed = shutter.get(CONF_POSITION_CLOSED, 0)
 

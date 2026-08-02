@@ -415,3 +415,60 @@ Update wie gewohnt über HACS, danach einmal hart neu laden (Strg/Cmd+Shift+R).
 Ein fehlendes oder hängendes Wetter-Backend blockiert die Beschattung übrigens nie – der letzte bekannte Wert bleibt stehen. Das war mir wichtig, weil eine Rollladensteuerung nicht ausfallen darf, nur weil ein Wetterdienst zickt.
 
 Weiteres Feedback gerne! 🙂
+
+
+---
+
+# ANTWORTBEITRAG AN @Linos (Feld-Feedback, Version 2.5.0)
+
+Hallo @Linos,
+
+danke für das ausführliche Feedback – genau so etwas bringt das Projekt weiter. Ich gehe deine Punkte der Reihe nach durch, ehrlich sortiert nach „geht schon", „kommt jetzt" und „notiert, aber noch kein Termin".
+
+## Beschattung: deine erste Vermutung stimmt
+
+Der **Bereich** legt den Standard fest, der **einzelne Rollladen** darf ihn überschreiben. Für deinen Erker also:
+
+- Bereich Esszimmer: Azimut 90–280 (oder was insgesamt passt)
+- Rollladen Ost: Haken **Eigene Ausrichtung**, 90–200
+- Rollladen Süd: 130–240
+- Rollladen West: 170–280
+
+Die Kompass-Knöpfe (Nord/Ost/Süd/West) sind nur eine **Schnellwahl**, die die beiden Winkelfelder füllt – keine Mehrfachauswahl. Dass die vier Knöpfe nebeneinander wie eine Mehrfachauswahl aussehen, ist ein Fehler von mir in der Gestaltung, den ich noch anfasse.
+
+## Ost + Süd an einem Aktor
+
+Das geht heute schon, ganz ohne neues Feature: Deine beiden Bereiche überlappen sich (Ost 90–200, Süd 130–240), zusammen ergibt das den durchgehenden Bereich **90–240**. Genau den trägst du an dem Rollladen ein. Ein zweiter, getrennter Winkelbereich wäre nur nötig, wenn zwei Richtungen *ohne* Überlappung an einem Aktor hängen – etwa Ost und West ohne Süd. Falls du so einen Fall hast, sag Bescheid, dann baue ich es.
+
+## Zurück-Button in der App
+
+Ist seit **2.4.1** drin. Auf schmalen Bildschirmen steht links neben dem Titel jetzt das gewohnte Menü-Symbol, das die Seitenleiste aufklappt. Dein Screenshot ist noch von 2.3.0.
+
+## Automatik pro Rollladen – kommt mit 2.5.0
+
+Dein Fall mit dem defekten Einlauftrichter hat mich überzeugt: Es gibt jetzt eine dritte Ebene unter Hauptschalter und Bereich. Im Rollladenformular steht ganz oben **Automatik aktiv**. Ist der Haken weg, wird dieser Rollladen von keiner Automatik mehr gefahren – nicht nach Zeit, nicht nach Helligkeit, nicht nach Sonnenstand und auch nicht über den Fensterkontakt. Der Rest des Bereichs fährt normal weiter, und die Einstellungen des Rollladens bleiben erhalten.
+
+**Von Hand fährt er weiter** – über die Knöpfe im Dashboard, die Dienste und die Cover-Entität. Sonst könntest du nach der Reparatur nicht einmal prüfen, ob er wieder läuft.
+
+Dazu entsteht je Rollladen ein Schalter `switch.shutter_pilot_auto_<name>`, den du auch in eigenen Automationen verwenden kannst. Im Dashboard bekommt ein abgeschalteter Rollladen ein Symbol, damit man nicht rätselt, warum einer stehen bleibt.
+
+## Nachholfunktion: kein Loop
+
+Da läuft nichts im Kreis. Die Integration merkt sich die geplante Fahrt und **der Fensterkontakt löst aus**, sobald das Fenster zugeht – rein ereignisgetrieben, ein Neustart kann also keinen Loop killen.
+
+Was ich dazusagen muss: Die gemerkte Fahrt liegt derzeit nur im Arbeitsspeicher. Startet Home Assistant neu, während ein Fenster offen steht, ist sie weg, und der Rollladen fährt erst bei der nächsten geplanten Fahrt. Das gehört persistent gespeichert, steht auf der Liste.
+
+## Fahrverzögerung: dein Verdacht stimmt
+
+Die Verzögerung wirkt heute **nur innerhalb eines Bereichs**. Mehrere Bereiche, die zur selben Uhrzeit dran sind, starten gleichzeitig – bei deinen fünf Bereichen gehen also fünf Befehle im selben Moment raus. Bei Funk (HmIP, 433 MHz) ist das genau das Rezept fürs Verschlucken. Ein globaler Mindestabstand zwischen zwei Fahrbefehlen ist notiert; die Stelle im Code, an der das gehört, ist zum Glück eine einzige.
+
+## Der Rest – notiert, ohne Termin
+
+- **Sonnenstand als zusätzliche Grenze im Helligkeitsmodus.** Dein Gewitter-Beispiel ist überzeugend: „schließen frühestens ab Sonnenuntergang minus 60 Minuten" fehlt heute wirklich. Es gibt sonnenrelative Grenzen bislang nur im Sonnenmodus.
+- **Ständiges Hoch und Runter.** Teilweise ist vorgesorgt: getrennte Schwellen für hoch und runter, Hysterese je Bedingung, und pro Phase wird nur einmal in dieselbe Richtung gefahren. Was fehlt, ist eine Zeitbedingung im Sinne von „erst nach 60 Minuten anhaltend". Vor allem das Auffahren aus der Beschattung reagiert heute sofort, wenn eine Wolke durchzieht.
+- **Profile/Label für Schatten und Lüften.** Verstehe ich, und die Richtung finde ich richtig. Es ist aber ein Eingriff in die Stelle, an der die gesamte Beschattung hängt, plus Migration bestehender Konfigurationen. Bevor ich das anfasse, würde ich als Zwischenschritt einen Knopf „Einstellungen von Rollladen … übernehmen" bauen – das nimmt den Großteil der Tipparbeit, ohne das Datenmodell umzubauen.
+- **Lüften mit Bedingungen.** Lüften ist heute rein manuell. Ein Automatikzweig mit Anwesenheit, Höchsttemperatur und Innentemperatur wäre ein eigenes Vorhaben, kein Nebenbei-Feature.
+
+Ich verspreche dafür bewusst kein Datum. Lieber weniger ankündigen und liefern.
+
+Nochmal danke – das war das nützlichste Feedback seit dem Start, gerade weil es aus dem echten Betrieb kommt.

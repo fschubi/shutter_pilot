@@ -37,7 +37,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (232 Tests)
+tests/               pytest-Suite (243 Tests)
 ```
 
 ## Funktionsumfang
@@ -111,7 +111,7 @@ Wiederholungen.
 
 | Art | Entität |
 | --- | --- |
-| Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich ein Auto-Schalter |
+| Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter |
 | Sensor | je Bereich „nächste Fahrt"; Vorhersage-Temperatur und -Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
 | Binärsensor | je Bereich „Sonnenschutz aktiv" |
 
@@ -162,7 +162,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 232 Tests, ~2 s
+.venv/bin/pytest            # 243 Tests, ~3 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -188,7 +188,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.4.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.5.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -242,3 +242,44 @@ Rechte – jeder Nicht-Admin konnte konfigurieren.
 **Nächste Schritte:** Antwort von frenck abwarten. Falls er auf
 `require_admin=True` besteht, umstellen und im Forum ankündigen, dass das Panel
 für Nicht-Admins verschwindet.
+
+### 2026-08-02 – 2.5.0: Automatik pro Rollladen (Feedback von Linos)
+
+Ausführliches Feld-Feedback von **Linos** im Forum, zehn Punkte. Alle gegen den
+Code geprüft, einer umgesetzt, der Rest bewusst zurückgestellt.
+
+**Umgesetzt:** Dritte Ebene unter Hauptschalter und Bereich. `automation_enabled`
+je Rollladen, Schalter `switch.shutter_pilot_auto_<name>`, Prüfung über
+`is_shutter_automation_enabled()` an den vier automatisierten Fahrpfaden
+(Scheduler, Helligkeit, Beschattung, Fenstertrigger). Anlass: defekter Antrieb,
+der nicht fahren darf, ohne seine Konfiguration zu verlieren.
+
+Zwei Dinge, die man dabei wissen muss:
+
+- **Nicht in `set_cover_position()` prüfen.** Dort laufen auch die Dienste und
+  die Dashboard-Knöpfe durch. Manuell muss ein abgeschalteter Rollladen fahren –
+  sonst kann man ihn nach der Reparatur nicht prüfen.
+- **Rangfolge:** Laufzeitwert (`data["shutter_automation"]`) → Schalter-Entität →
+  gespeicherter Wert. Der Config-Wert ist nur der Startwert; sobald der Schalter
+  existiert, entscheidet er, sonst würde ein Umlegen in HA beim nächsten Reload
+  verlorengehen. `_apply_shutter_automation_state()` hält beide beim Speichern
+  im Panel gleich. Anders als bei Bereich und Hauptschalter gilt hier
+  **fail open**: ein toter Schalter legt keinen Rollladen still.
+
+**Geprüft und zurückgestellt** (Analyse nicht neu erarbeiten):
+
+| Punkt | Ist-Zustand |
+| --- | --- |
+| Sonnengrenze im Helligkeitsmodus | nur Uhrzeitfenster (`_area_window`); sonnenrelativ gibt es nur im Sonnenmodus (`clamp_to_bounds`) |
+| Flattern bei Wolken | Hysterese über Werte und Phasensperren, aber **keine** Zeitbedingung; `_release_sun_protect()` fährt sofort auf |
+| Fahrverzögerung global | wirkt nur je Bereich, jeder Bereich ist ein eigener Task → gleichzeitige Bursts. Choke-Point wäre `set_cover_position()` |
+| Nachhol-Pending | `drive_after_close_pending` nur im RAM, `position_store.py` wäre der Ablageort |
+| Profile/Label | bräuchte dritte Stufe in `resolve_shading_config()` + Migration. Zwischenschritt: Kopierknopf im Formular |
+| Lüften mit Bedingungen | rein manuell, kein Automatikpfad; Bedingungs-Slots wären wiederverwendbar |
+| Zweiter Azimutbereich | ein Bereich je Rollladen, Wrap-around unterstützt. Nötig nur bei getrennten Richtungen an einem Aktor |
+
+**Fallstrick, einmal reingefallen:** In `__init__.py` stehen die
+WebSocket-Dekoratoren direkt über der Funktion. Eine neue Hilfsfunktion
+dazwischen zu setzen hängt die Dekoratoren an die falsche Funktion – das
+Setup bricht dann mit `'function' object has no attribute '_ws_command'` ab.
+Die Testsuite fängt das ab, aber nur, weil sie den echten Setup fährt.
