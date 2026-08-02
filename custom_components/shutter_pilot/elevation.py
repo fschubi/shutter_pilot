@@ -32,7 +32,7 @@ from .helpers import (
     is_auto_enabled,
     is_cover_sun_protected,
     register_minute_callback,
-    resolve_sun_geometry,
+    resolve_shading_config,
     season_allows_shading,
     set_cover_position,
     set_cover_sun_protected,
@@ -175,9 +175,9 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not is_auto_enabled(hass, entry, area):
                 continue
 
-            # Conditions and season apply to the whole area; only the geometry
-            # can differ per window.
-            conditions_ok = sun_extra_conditions_met(hass, area, data)
+            # Season applies to the whole area. Geometry and the extra
+            # conditions may differ per window, so both are resolved inside
+            # the shutter loop below.
             season_ok = season_allows_shading(area)
 
             to_shade: list[dict] = []
@@ -192,10 +192,12 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 if not in_down and not in_up:
                     continue
 
-                # A room may have windows facing different ways, so each
-                # shutter is judged with its own geometry.
-                geo = resolve_sun_geometry(area, shutter)
+                # A room may have windows facing different ways and watching
+                # different sensors, so each shutter is judged with its own
+                # merged config – area values apply where nothing is set.
+                geo = resolve_shading_config(area, shutter)
                 geometry_ok = sun_protect_conditions_met(elev, azim, geo)
+                conditions_ok = sun_extra_conditions_met(hass, geo, data, cover)
                 should_protect = geometry_ok and conditions_ok and season_ok
                 was_active = is_cover_sun_protected(data, cover)
 

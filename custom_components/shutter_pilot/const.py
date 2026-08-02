@@ -150,6 +150,31 @@ def sun_condition_keys(slot: str) -> tuple[str, str, str, str]:
     )
 
 
+# Earliest and latest clock time for the sun mode. The moment computed from
+# sunrise/sunset plus offset is clamped into this window, so "drive by sun
+# elevation, but not before 07:30 and not after 09:00" becomes possible.
+# Weekend values fall back to the weekday ones, like time_we_up does.
+CONF_AREA_SUN_EARLIEST_UP = "sun_earliest_up"
+CONF_AREA_SUN_LATEST_UP = "sun_latest_up"
+CONF_AREA_SUN_EARLIEST_DOWN = "sun_earliest_down"
+CONF_AREA_SUN_LATEST_DOWN = "sun_latest_down"
+CONF_AREA_SUN_WE_EARLIEST_UP = "sun_we_earliest_up"
+CONF_AREA_SUN_WE_LATEST_UP = "sun_we_latest_up"
+CONF_AREA_SUN_WE_EARLIEST_DOWN = "sun_we_earliest_down"
+CONF_AREA_SUN_WE_LATEST_DOWN = "sun_we_latest_down"
+
+# Verify that a cover actually reached the requested position. Radio-driven
+# shutters lose commands, and without this the integration would keep working
+# with a position the cover never reached.
+CONF_VERIFY_ENABLED = "verify_enabled"
+CONF_VERIFY_AFTER = "verify_after"
+CONF_VERIFY_TOLERANCE = "verify_tolerance"
+CONF_VERIFY_RETRIES = "verify_retries"
+DEFAULT_VERIFY_AFTER = 45
+DEFAULT_VERIFY_TOLERANCE = 8
+DEFAULT_VERIFY_RETRIES = 1
+EVENT_COVER_FAILED = "shutter_pilot_cover_failed"
+
 # Per-area shading season, as month numbers 1-12. Empty means all year.
 # Ranges may wrap across the turn of the year (e.g. 10 -> 3 for winter).
 CONF_AREA_SEASON_FROM = "season_from"

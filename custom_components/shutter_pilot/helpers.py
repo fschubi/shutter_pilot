@@ -288,12 +288,18 @@ def _condition_slot_met(
 
 
 def sun_extra_conditions_met(
-    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    data: dict[str, Any],
+    cover_entity_id: str | None = None,
 ) -> bool:
-    """True when every configured extra condition for shading is satisfied."""
+    """True when every configured extra condition for shading is satisfied.
+
+    Pass the cover id when evaluating a merged per-shutter config, so each
+    window keeps its own hysteresis state.
+    """
     area_id = str(area.get(CONF_AREA_ID) or "")
-    all_memory = data.setdefault("sun_cond_state", {})
-    memory = all_memory.setdefault(area_id, {})
+    memory = condition_memory(data, area_id, cover_entity_id)
     for slot in SUN_CONDITION_SLOTS:
         if not _condition_slot_met(hass, area, slot, memory):
             return False
@@ -314,8 +320,9 @@ def close_condition_met(
     if not str(area.get(entity_key) or "").strip():
         return False
     area_id = str(area.get(CONF_AREA_ID) or "")
-    memory = data.setdefault("sun_cond_state", {}).setdefault(area_id, {})
-    return _condition_slot_met(hass, area, CLOSE_CONDITION_SLOT, memory)
+    return _condition_slot_met(
+        hass, area, CLOSE_CONDITION_SLOT, condition_memory(data, area_id)
+    )
 
 
 def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> bool:
@@ -368,6 +375,56 @@ def resolve_sun_geometry(
     return merged
 
 
+def resolve_shading_config(
+    area: dict[str, Any], shutter: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Merge area and shutter shading settings into one config dict.
+
+    Geometry follows the existing all-or-nothing override switch. The extra
+    conditions fall back **per slot**: a slot with an entity set on the shutter
+    replaces that slot completely, an empty one keeps the area's value.
+
+    That way the default lives in the area and only the exception sits on the
+    window – a brightness sensor per window, while the weather condition stays
+    configured once for the whole area.
+    """
+    merged = resolve_sun_geometry(area, shutter)
+    if not shutter:
+        return merged
+
+    overridden: list[str] = []
+    for slot in SUN_CONDITION_SLOTS:
+        entity_key, on_key, off_key, states_key = sun_condition_keys(slot)
+        if not str(shutter.get(entity_key) or "").strip():
+            continue
+        if merged is area:
+            merged = dict(area)
+        for key in (entity_key, on_key, off_key, states_key):
+            merged[key] = shutter.get(key)
+        overridden.append(slot)
+
+    if overridden:
+        _LOGGER.debug(
+            "Shutter %s overrides condition slots %s",
+            shutter.get(CONF_COVER_ENTITY_ID),
+            ", ".join(overridden),
+        )
+    return merged
+
+
+def condition_memory(
+    data: dict[str, Any], area_id: str, cover_entity_id: str | None = None
+) -> dict[str, bool]:
+    """Hysteresis memory for one area, or for one cover inside it.
+
+    Two windows of the same area can watch different sensors, so they must not
+    share a hysteresis state – otherwise one window's cloud would release the
+    other one's shading.
+    """
+    key = f"{area_id}|{cover_entity_id}" if cover_entity_id else area_id
+    return data.setdefault("sun_cond_state", {}).setdefault(key, {})
+
+
 def is_cover_sun_protected(data: dict[str, Any], cover_entity_id: str) -> bool:
     """True if shading currently holds this specific cover."""
     covers = data.get("sun_protect_covers")
@@ -391,7 +448,7 @@ def get_sun_condition_status(
     """Per-slot status of the extra shading conditions, for the dashboard."""
     out: list[dict[str, Any]] = []
     for slot in SUN_CONDITION_SLOTS:
-        entity_key, on_key, _ = sun_condition_keys(slot)
+        entity_key, on_key, _off_key, states_key = sun_condition_keys(slot)
         entity_id = str(area.get(entity_key) or "").strip()
         if not entity_id:
             continue
@@ -402,6 +459,7 @@ def get_sun_condition_status(
                 "entity_id": entity_id,
                 "state": state.state if state else None,
                 "on_above": area.get(on_key),
+                "states": area.get(states_key),
                 "available": state is not None
                 and state.state not in ("unknown", "unavailable"),
             }
@@ -877,6 +935,12 @@ async def set_cover_position(
                 "source": source or SOURCE_AUTOMATION,
             },
         )
+
+        # Check later whether the cover really got there. Imported lazily
+        # because cover_verify needs helpers itself.
+        from .cover_verify import schedule_verification
+
+        schedule_verification(hass, entry, entity_id, float(position), reason)
     except Exception as e:
         _LOGGER.warning("Failed to set %s: %s", entity_id, e)
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})

@@ -20,6 +20,14 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_MODE,
     CONF_AREA_RANDOM_OFFSET,
+    CONF_AREA_SUN_EARLIEST_DOWN,
+    CONF_AREA_SUN_EARLIEST_UP,
+    CONF_AREA_SUN_LATEST_DOWN,
+    CONF_AREA_SUN_LATEST_UP,
+    CONF_AREA_SUN_WE_EARLIEST_DOWN,
+    CONF_AREA_SUN_WE_EARLIEST_UP,
+    CONF_AREA_SUN_WE_LATEST_DOWN,
+    CONF_AREA_SUN_WE_LATEST_UP,
     CONF_AREA_SUNRISE_OFFSET,
     CONF_AREA_SUNSET_OFFSET,
     CONF_AREA_TIME_DOWN,
@@ -139,10 +147,46 @@ def _shift_time(base: time, minutes: int) -> time:
     return time(total // 60, total % 60)
 
 
+def _bound(
+    hass: HomeAssistant | None, area: dict, now: datetime, weekday_key: str, we_key: str
+) -> time | None:
+    """Read a clock bound, weekend value falling back to the weekday one."""
+    raw = None
+    if is_weekend_schedule(hass, area, now):
+        raw = area.get(we_key)
+    if raw is None or str(raw).strip() == "":
+        raw = area.get(weekday_key)
+    if raw is None or str(raw).strip() == "":
+        return None
+    parsed = parse_time(raw, None)
+    return parsed if str(raw).strip() else None
+
+
+def clamp_to_bounds(
+    moment: datetime,
+    earliest: time | None,
+    latest: time | None,
+) -> datetime:
+    """Pull a computed moment into the configured clock window.
+
+    Lets an area drive by sun elevation while still guaranteeing "not before
+    07:30 and not after 09:00".
+    """
+    if earliest is not None and moment.time() < earliest:
+        return moment.replace(
+            hour=earliest.hour, minute=earliest.minute, second=0, microsecond=0
+        )
+    if latest is not None and moment.time() > latest:
+        return moment.replace(
+            hour=latest.hour, minute=latest.minute, second=0, microsecond=0
+        )
+    return moment
+
+
 def get_sun_mode_triggers(
     hass: HomeAssistant, area: dict, now: datetime
 ) -> tuple[datetime | None, datetime | None]:
-    """Return (up, down) datetimes for a sun-mode area, jitter included."""
+    """Return (up, down) datetimes for a sun-mode area, jitter and bounds included."""
     sun_state = hass.states.get("sun.sun")
     if not sun_state:
         return None, None
@@ -165,10 +209,17 @@ def get_sun_mode_triggers(
     off_up += get_random_offset(area, day, DIRECTION_UP)
     off_down += get_random_offset(area, day, DIRECTION_DOWN)
 
-    return (
+    trigger_up = clamp_to_bounds(
         today_sr + timedelta(minutes=off_up),
-        today_ss + timedelta(minutes=off_down),
+        _bound(hass, area, now_local, CONF_AREA_SUN_EARLIEST_UP, CONF_AREA_SUN_WE_EARLIEST_UP),
+        _bound(hass, area, now_local, CONF_AREA_SUN_LATEST_UP, CONF_AREA_SUN_WE_LATEST_UP),
     )
+    trigger_down = clamp_to_bounds(
+        today_ss + timedelta(minutes=off_down),
+        _bound(hass, area, now_local, CONF_AREA_SUN_EARLIEST_DOWN, CONF_AREA_SUN_WE_EARLIEST_DOWN),
+        _bound(hass, area, now_local, CONF_AREA_SUN_LATEST_DOWN, CONF_AREA_SUN_WE_LATEST_DOWN),
+    )
+    return trigger_up, trigger_down
 
 
 def get_next_action(

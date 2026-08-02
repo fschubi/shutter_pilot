@@ -35,6 +35,7 @@ from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
+from .cover_verify import cancel_all as cancel_all_verifications
 from .weather_data import setup_weather
 from .services import async_setup_services
 from .cover_tracker import (
@@ -247,6 +248,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     except Exception:
                         pass
                 data[key] = []
+
+            cancel_all_verifications(data)
 
             ticker = data.pop("_minute_ticker_unsub", None)
             if ticker:
