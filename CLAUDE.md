@@ -228,10 +228,16 @@ Rechte – jeder Nicht-Admin konnte konfigurieren.
   Entwicklers, dass es sichtbar bleibt. Stattdessen richtet sich das Panel nach
   `hass.user.is_admin`. Am PR ist das offen begründet, mit dem Angebot
   umzustellen, falls frenck darauf besteht.
-- PR-Status: hacs-bot stellt den PR nach jedem „ready for review" innerhalb von
-  Sekunden auf Draft zurück, solange frencks „Changes requested" offen steht.
-  Das kann nur er auflösen. **Nicht weiter am Draft-Status drehen** – der Bot
-  bittet Einreicher ohnehin, nicht auf dem PR zu kommentieren.
+- PR-Status: hacs-bot stellte den PR nach jedem „ready for review" binnen
+  Sekunden auf Draft zurück – Grund war **nicht** das offene Review, sondern ein
+  veralteter Branch („Your branch seems out of date"). Der Fork-Branch
+  `add-shutter-pilot-v2` muss vor jedem „ready for review" mit `hacs:master`
+  aktuell sein. Frenck hat das am 2026-08-02 selbst erledigt (Merge `6380e7f`)
+  und den PR wieder freigegeben; seither ist er in der Queue, alle Checks grün.
+- **Nicht am PR herumdrehen.** Der Bot bittet Einreicher ausdrücklich, nicht zu
+  kommentieren, keinen zweiten PR zu öffnen und den Base-Branch nur auf
+  Aufforderung zu mergen. Der Kommentar zur `require_admin`-Abweichung war die
+  Ausnahme, weil frenck um Release und Re-Request gebeten hatte.
 
 **Nächste Schritte:** Antwort von frenck abwarten. Falls er auf
 `require_admin=True` besteht, umstellen und im Forum ankündigen, dass das Panel
