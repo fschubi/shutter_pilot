@@ -29,7 +29,14 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_VERIFY_AFTER,
+    CONF_VERIFY_ENABLED,
+    CONF_VERIFY_RETRIES,
+    CONF_VERIFY_TOLERANCE,
     CONF_WEATHER_ENTITY,
+    DEFAULT_VERIFY_AFTER,
+    DEFAULT_VERIFY_RETRIES,
+    DEFAULT_VERIFY_TOLERANCE,
 )
 from .window_trigger import setup_window_triggers
 from .brightness import setup_brightness_listener
@@ -399,7 +406,16 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     connection.send_result(msg["id"], {
         "areas": areas_out,
         "shutters": shutters_out,
-        "settings": {CONF_WEATHER_ENTITY: entry.options.get(CONF_WEATHER_ENTITY, "")},
+        "settings": {
+            k: entry.options.get(k, d)
+            for k, d in (
+                (CONF_WEATHER_ENTITY, ""),
+                (CONF_VERIFY_ENABLED, False),
+                (CONF_VERIFY_AFTER, DEFAULT_VERIFY_AFTER),
+                (CONF_VERIFY_TOLERANCE, DEFAULT_VERIFY_TOLERANCE),
+                (CONF_VERIFY_RETRIES, DEFAULT_VERIFY_RETRIES),
+            )
+        },
         "weather": dict(data.get("weather") or {}),
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
         "master_enabled": bool(master_enabled),

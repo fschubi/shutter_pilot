@@ -60,6 +60,27 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  f_bound_none:"keine Grenze – zum Festlegen tippen",
+  f_bounds_title:"Frühestens / spätestens",
+  f_bounds_hint:"Klemmt den aus dem Sonnenstand berechneten Zeitpunkt in ein Uhrzeitfenster. Beispiel: nach Sonnenstand fahren, aber nie vor 7:30 und nie nach 9:00. Leer heisst keine Grenze.",
+  f_bounds_we_hint:"Wochenende – leer bedeutet, dass der Wochentagswert gilt.",
+  f_earliest_up:"Hoch frühestens",
+  f_latest_up:"Hoch spätestens",
+  f_earliest_down:"Runter frühestens",
+  f_latest_down:"Runter spätestens",
+  f_we_earliest_up:"WE Hoch frühestens",
+  f_we_latest_up:"WE Hoch spätestens",
+  f_we_earliest_down:"WE Runter frühestens",
+  f_we_latest_down:"WE Runter spätestens",
+  f_shutter_cond_hint:"Eigene Bedingungen nur für dieses Fenster, etwa ein Helligkeitssensor direkt am Fenster oder die Raumtemperatur. Leer lassen heisst: die Bedingung des Bereichs gilt.",
+  sec_verify:"Fahrten überprüfen",
+  sec_verify_sub:"für Rollläden, die Befehle verlieren",
+  f_verify_hint:"Prüft nach jeder automatischen Fahrt, ob die Position tatsächlich erreicht wurde, und wiederholt den Befehl sonst. Sinnvoll bei Funk-Rollläden, bei denen gelegentlich ein Befehl verlorengeht.",
+  f_verify_enabled:"Fahrten überprüfen",
+  f_verify_after:"Prüfen nach",
+  f_verify_tolerance:"Erlaubte Abweichung",
+  f_verify_retries:"Wiederholungen",
+  f_verify_event_hint:"Schlägt es endgültig fehl, wird der gespeicherte Wert korrigiert und das Ereignis shutter_pilot_cover_failed gefeuert.",
   tab_settings:"Einstellungen",
   sec_weather:"Wetter",
   sec_weather_sub:"Grundlage für Beschattungsbedingungen",
@@ -211,6 +232,27 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
 en:{
+  f_bound_none:"no limit – tap to set",
+  f_bounds_title:"Earliest / latest",
+  f_bounds_hint:"Clamps the moment computed from the sun position into a clock window. For example: drive by sun position, but never before 07:30 and never after 09:00. Empty means no limit.",
+  f_bounds_we_hint:"Weekend – empty means the weekday value applies.",
+  f_earliest_up:"Up earliest",
+  f_latest_up:"Up latest",
+  f_earliest_down:"Down earliest",
+  f_latest_down:"Down latest",
+  f_we_earliest_up:"WE up earliest",
+  f_we_latest_up:"WE up latest",
+  f_we_earliest_down:"WE down earliest",
+  f_we_latest_down:"WE down latest",
+  f_shutter_cond_hint:"Conditions just for this window, e.g. a brightness sensor right at the window or the room temperature. Leave empty to use the area's condition.",
+  sec_verify:"Verify drives",
+  sec_verify_sub:"for shutters that lose commands",
+  f_verify_hint:"Checks after each automated drive whether the position was actually reached, and repeats the command otherwise. Useful for radio-driven shutters that occasionally drop a command.",
+  f_verify_enabled:"Verify drives",
+  f_verify_after:"Check after",
+  f_verify_tolerance:"Allowed deviation",
+  f_verify_retries:"Retries",
+  f_verify_event_hint:"On final failure the stored value is corrected and the event shutter_pilot_cover_failed is fired.",
   tab_settings:"Settings",
   sec_weather:"Weather",
   sec_weather_sub:"basis for shading conditions",
@@ -1699,14 +1741,25 @@ class ShutterPilotPanel extends LitElement {
     if(!Number.isFinite(h)||!Number.isFinite(mi)||h>23||mi>59)return null;
     return String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0");
   }
-  _timeField(obj,key,label,fallback="07:00"){
+  _timeField(obj,key,label,fallback="07:00",allowEmpty=false){
+    // Zeitklammern dürfen leer bleiben – leer heisst "keine Grenze".
+    if(allowEmpty&&!this._normalizeTime(obj[key])){
+      return html`<div class="field"><label>${label}</label>
+        <div class="picked trigger" @click=${()=>{obj[key]=fallback;this.requestUpdate();}}>
+          <span class="picked-val">${this.t("f_bound_none")}</span>
+          <span class="chev">+</span></div></div>`;
+    }
     const cur=this._normalizeTime(obj[key])||fallback;
+    const clear=allowEmpty?html`<button class="spin-btn" title="${this.t("clear")}"
+      @click=${()=>{obj[key]="";this.requestUpdate();}}>×</button>`:"";
     // Überall ausser in der macOS-App: nativer Zeit-Picker, auf dem Handy
     // also weiterhin das gewohnte Scrollrad.
     if(!NATIVE_PICKERS_BROKEN){
       return html`<div class="field"><label>${label}</label>
-        <input type="time" .value=${cur}
-          @change=${e=>{const v=this._normalizeTime(e.target.value);if(v)obj[key]=v;}}></div>`;
+        <div class="time-row">
+          <input type="time" .value=${cur}
+            @change=${e=>{const v=this._normalizeTime(e.target.value);if(v)obj[key]=v;}}>
+          ${clear}</div></div>`;
     }
     // macOS-App: eigenes Steuerelement. Nur <button> und <input type="text">,
     // beides funktioniert dort zuverlässig. Tippen bleibt möglich, ist aber
@@ -1731,6 +1784,7 @@ class ShutterPilotPanel extends LitElement {
         ${spin(h,()=>set(h-1,mi),()=>set(h+1,mi),n=>set(n,mi),23)}
         <span class="time-sep">:</span>
         ${spin(mi,()=>set(h,mi-1),()=>set(h,mi+1),n=>set(h,n),59)}
+        ${clear}
       </div></div>`;
   }
   /* Entitätsauswahl: Suchfeld mit Trefferliste, auf allen Plattformen gleich.
@@ -1925,6 +1979,26 @@ class ShutterPilotPanel extends LitElement {
           <div class="v">${w.updated?new Date(w.updated).toLocaleString():"–"}</div>
         </div>
         <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
+
+      ${this._section("mdi:check-circle-outline","sec_verify","sec_verify_sub")}
+      <div class="hint">${T("f_verify_hint")}</div>
+      <div class="field"><label><input type="checkbox" .checked=${!!s.verify_enabled}
+        @change=${e=>{s.verify_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_verify_enabled")}</label></div>
+      ${s.verify_enabled?html`
+        <div class="field"><label>${T("f_verify_after")}</label><div class="slider-row">
+          <input type="range" min="5" max="180" step="5" .value=${s.verify_after??45}
+            @input=${e=>{s.verify_after=Number(e.target.value);this.requestUpdate();}}>
+          <span class="slider-val">${s.verify_after??45}s</span></div></div>
+        <div class="field"><label>${T("f_verify_tolerance")}</label><div class="slider-row">
+          <input type="range" min="1" max="30" .value=${s.verify_tolerance??8}
+            @input=${e=>{s.verify_tolerance=Number(e.target.value);this.requestUpdate();}}>
+          <span class="slider-val">${s.verify_tolerance??8}%</span></div></div>
+        <div class="field"><label>${T("f_verify_retries")}</label><div class="slider-row">
+          <input type="range" min="0" max="5" .value=${s.verify_retries??1}
+            @input=${e=>{s.verify_retries=Number(e.target.value);this.requestUpdate();}}>
+          <span class="slider-val">${s.verify_retries??1}</span></div></div>
+        <div class="hint">${T("f_verify_event_hint")}</div>`:""}
+
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveSettings()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
       </div></div>`;
@@ -2113,6 +2187,8 @@ class ShutterPilotPanel extends LitElement {
        Wert steht im Objekt, gerendert werden muss dafür nichts. */
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""} @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const tm=(k,lbl)=>this._timeField(a,k,lbl);
+    // Klammern dürfen leer bleiben, deshalb allowEmpty.
+    const bd=(k,lbl,dflt)=>this._timeField(a,k,lbl,dflt,true);
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
@@ -2131,7 +2207,13 @@ class ShutterPilotPanel extends LitElement {
 
       ${this._section(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m)}
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
-        m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}`:
+        m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}
+          <div class="hint" style="margin-top:10px"><b>${T("f_bounds_title")}</b><br>${T("f_bounds_hint")}</div>
+          ${bd("sun_earliest_up",T("f_earliest_up"),"07:30")}${bd("sun_latest_up",T("f_latest_up"),"09:00")}
+          ${bd("sun_earliest_down",T("f_earliest_down"),"17:00")}${bd("sun_latest_down",T("f_latest_down"),"22:30")}
+          <div class="hint">${T("f_bounds_we_hint")}</div>
+          ${bd("sun_we_earliest_up",T("f_we_earliest_up"),"08:00")}${bd("sun_we_latest_up",T("f_we_latest_up"),"09:00")}
+          ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
@@ -2270,6 +2352,8 @@ class ShutterPilotPanel extends LitElement {
       <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
         @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
         <div class="hint">${T("f_geo_override_hint")}</div></div>
+      <div class="hint">${T("f_shutter_cond_hint")}</div>
+      ${this._renderConditionSlots(s,ep,f)}
       ${s.sun_geometry_override?html`
         ${pctRange("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}
         ${pctRange("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}

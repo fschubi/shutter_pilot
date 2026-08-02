@@ -231,6 +231,58 @@ Each area can be limited to certain months, e.g. April to September. Ranges may 
 
 A temperature condition usually makes this unnecessary: if the winter forecast stays below the threshold, no shading happens anyway.
 
+### Sensors per window instead of per area
+
+Conditions can live on the **area** and on the **individual shutter**. The rule is simple:
+
+> The area provides the default. Whatever is set on the shutter wins for that window.
+
+The fallback works **per condition**, not all or nothing. A typical setup:
+
+- **Area:** condition 1 = forecast high above 24 °C, applies to every window
+- **South window:** condition 2 = brightness sensor at the south window
+- **West window:** condition 2 = brightness sensor at the west window
+
+Both windows inherit the temperature condition while keeping their own brightness sensor. A room temperature can be set per shutter the same way.
+
+Each window keeps its own hysteresis, so a cloud in front of one window does not release the shading of another.
+
+## Drive by sun position, but not too early
+
+In sun mode the computed moment can be clamped into a clock window:
+
+| Setting | Effect |
+|---|---|
+| Up earliest 07:30 | In summer the sun rises at 5 a.m. – the shutters still wait until 07:30 |
+| Up latest 09:00 | In winter daylight comes late – the shutter opens at 09:00 at the latest |
+
+Weekends have their own values. Left empty, the weekday values apply. Empty fields generally mean no limit.
+
+## Verifying drives
+
+Radio-driven shutters occasionally drop a command. Without a check nobody notices, and the integration keeps working with a position the shutter never reached.
+
+The **Settings** tab therefore offers verification. After each automated drive, the position is checked after a configurable delay and the command repeated if needed.
+
+On final failure the stored value is corrected and `shutter_pilot_cover_failed` is fired — with `entity_id`, `requested`, `actual` and `reason`:
+
+```yaml
+automation:
+  - alias: Shutter not responding
+    trigger:
+      - platform: event
+        event_type: shutter_pilot_cover_failed
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            {{ trigger.event.data.entity_id }} is at
+            {{ trigger.event.data.actual }}% instead of
+            {{ trigger.event.data.requested }}%
+```
+
+Shutters that only report open/closed without a position are skipped automatically.
+
 ## Rooms with windows facing several directions
 
 Elevation and compass direction normally apply to the whole area. If one window faces a different way than the others in the same room, enable **Own orientation** on that shutter and set its elevation and azimuth there.

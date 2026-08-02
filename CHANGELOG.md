@@ -4,6 +4,20 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.4.0]
+
+Umsetzung der Architekturdiskussion aus dem Forum.
+
+### Neu
+- **Bedingungen pro Rollladen, mit Rückfall auf den Bereich.** Jeder Rollladen kann eigene Bedingungen bekommen – etwa einen Helligkeitssensor direkt am Fenster oder die Temperatur des jeweiligen Raums. Bleibt ein Feld leer, gilt weiterhin der Wert des Bereichs. Der Rückfall wirkt **je Bedingung**: Man kann den Sensor pro Fenster setzen und die Wetterbedingung trotzdem einmal zentral im Bereich pflegen. Damit steht der Standard im Bereich und nur die Ausnahme am Fenster.
+- **Früheste und späteste Uhrzeit im Sonnenmodus.** Der aus dem Sonnenstand berechnete Zeitpunkt lässt sich in ein Uhrzeitfenster klemmen: „nach Sonnenstand fahren, aber frühestens 7:30 und spätestens 9:00". Mit eigenen Wochenendwerten, die wie gewohnt auf die Wochentagswerte zurückfallen, wenn sie leer bleiben. Wirkt auch auf den Sensor „nächste Fahrt".
+- **Fahrten werden überprüft.** Optional prüft Shutter Pilot nach jeder automatischen Fahrt, ob die Position tatsächlich erreicht wurde, und wiederholt den Befehl sonst. Einzustellen im Tab **Einstellungen** mit Wartezeit, erlaubter Abweichung und Anzahl der Wiederholungen. Rollläden, die keine Position melden, werden übersprungen.
+
+### Behoben
+- **Gescheiterte Fahrten wurden als erfolgreich gespeichert.** Nach dem Befehl wurde die Zielposition als Tatsache abgelegt. Bei Funk-Rollläden geht gelegentlich ein Befehl verloren, und die Integration rechnete danach dauerhaft mit einer nie erreichten Position weiter – etwa beim Überspringen eines automatischen Hochfahrens. Bei aktiver Überprüfung wird der gespeicherte Wert jetzt korrigiert und das Ereignis `shutter_pilot_cover_failed` gefeuert.
+- **Hysterese wurde zwischen Rollläden geteilt.** Der Hysterese-Zustand hing am Bereich. Mit Bedingungen pro Fenster hätte eine Wolke vor dem einen Fenster die Beschattung des anderen aufgehoben. Der Zustand wird jetzt pro Rollladen geführt.
+- `get_sun_condition_status` entpackte drei Werte aus einem Vierer-Tupel und wäre beim ersten Aufruf abgestürzt.
+
 ## [2.3.0]
 
 Umsetzung der Rückmeldungen aus dem zweiten Forum.

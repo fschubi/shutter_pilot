@@ -231,6 +231,58 @@ Pro Bereich lässt sich einstellen, in welchen Monaten überhaupt beschattet wir
 
 Meist erübrigt sich das durch eine Temperaturbedingung: Wenn die Vorhersage im Winter ohnehin unter der Schwelle bleibt, wird gar nicht erst beschattet.
 
+### Sensoren pro Fenster statt pro Bereich
+
+Bedingungen lassen sich sowohl im **Bereich** als auch am **einzelnen Rollladen** hinterlegen. Die Regel ist einfach:
+
+> Der Bereich liefert den Standard. Was am Rollladen gesetzt ist, gilt für dieses Fenster.
+
+Der Rückfall wirkt **je Bedingung**, nicht alles oder nichts. Typischer Aufbau:
+
+- **Bereich:** Bedingung 1 = Vorhersage Höchsttemperatur ab 24 °C. Gilt für alle Fenster.
+- **Südfenster:** Bedingung 2 = Helligkeitssensor am Südfenster.
+- **Westfenster:** Bedingung 2 = Helligkeitssensor am Westfenster.
+
+Beide Fenster erben die Temperaturbedingung und haben trotzdem ihren eigenen Helligkeitssensor. Genauso lässt sich eine Raumtemperatur pro Rollladen hinterlegen.
+
+Jedes Fenster führt seine Hysterese getrennt – eine Wolke vor dem einen Fenster hebt die Beschattung des anderen nicht auf.
+
+## Nach Sonnenstand fahren, aber nicht zu früh
+
+Im Sonnenmodus lässt sich der berechnete Zeitpunkt in ein Uhrzeitfenster klemmen:
+
+| Einstellung | Wirkung |
+|---|---|
+| Hoch frühestens 07:30 | Im Sommer geht die Sonne um 5 Uhr auf – gefahren wird trotzdem erst um 7:30 |
+| Hoch spätestens 09:00 | Im Winter wird es erst spät hell – spätestens um 9 Uhr geht der Rollladen hoch |
+
+Für das Wochenende gibt es eigene Werte. Bleiben die leer, gelten die Wochentagswerte. Leere Felder bedeuten generell: keine Grenze.
+
+## Fahrten überprüfen
+
+Funk-Rollläden verlieren gelegentlich einen Befehl. Ohne Kontrolle merkt das niemand, und die Integration rechnet danach mit einer Position weiter, die der Rollladen nie erreicht hat.
+
+Im Tab **Einstellungen** lässt sich deshalb die Überprüfung aktivieren. Nach jeder automatischen Fahrt wird nach einer einstellbaren Wartezeit geprüft, ob die Position innerhalb der Toleranz erreicht wurde, und der Befehl sonst wiederholt.
+
+Schlägt es endgültig fehl, wird der gespeicherte Wert korrigiert und das Ereignis `shutter_pilot_cover_failed` gefeuert – mit `entity_id`, `requested`, `actual` und `reason`. Damit lässt sich eine Benachrichtigung bauen:
+
+```yaml
+automation:
+  - alias: Rollladen reagiert nicht
+    trigger:
+      - platform: event
+        event_type: shutter_pilot_cover_failed
+    action:
+      - service: notify.mobile_app
+        data:
+          message: >
+            {{ trigger.event.data.entity_id }} steht auf
+            {{ trigger.event.data.actual }}% statt
+            {{ trigger.event.data.requested }}%
+```
+
+Rollläden, die nur auf und zu kennen und keine Position melden, werden automatisch übersprungen.
+
 ## Räume mit Fenstern in mehreren Himmelsrichtungen
 
 Höhenwinkel und Himmelsrichtung gelten normalerweise für den ganzen Bereich. Zeigt ein Fenster in eine andere Richtung als die übrigen im selben Raum, aktivierst du beim betreffenden Rollladen **Eigene Ausrichtung** und stellst dort Höhenwinkel und Azimut ein.
