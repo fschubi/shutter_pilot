@@ -326,6 +326,17 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Frost protection
+
+In frost a fully closed shutter can freeze to the frame. Leaving a gap prevents that:
+
+1. In the **area**, under *Frost protection*, set a condition — the obvious choice is the **Forecast low** sensor Shutter Pilot provides itself once a weather entity is configured
+2. On the relevant **shutters**, set a frost position, e.g. 10 %
+
+Unlike every other condition this one compares **downwards**: frost protection kicks in *below* the first value and stays on until the second is exceeded. The hysteresis keeps it from toggling around freezing point.
+
+Frost protection wins over partial closing — protection beats comfort. Both apply in time, sun and brightness mode. A shutter without a frost position still closes fully, even when the area's condition is met.
+
 ## Support me
 
 Shutter Pilot is built in my spare time and is — and stays — free and open source. If it makes your day a little easier and you'd like to say thanks, I'd appreciate a coffee:

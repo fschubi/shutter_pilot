@@ -22,13 +22,17 @@ from .const import (
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
     CLOSE_CONDITION_SLOT,
+    FROST_CONDITION_SLOT,
+    INVERTED_BY_DEFAULT_SLOTS,
     CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SEASON_FROM,
     CONF_AREA_SEASON_TO,
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_POSITION_CLOSED_ALT,
+    CONF_POSITION_CLOSED_FROST,
     ROLE_CLOSED_ALT,
+    ROLE_CLOSED_FROST,
     CONF_AREA_UP_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
@@ -41,6 +45,7 @@ from .const import (
     DEFAULT_POSITION_WHEN_WINDOW_TILTED,
     ROLE_VENTILATION,
     SUN_CONDITION_SLOTS,
+    sun_condition_invert_key,
     sun_condition_keys,
     CONF_TILT_CLOSED,
     CONF_TILT_ENABLED,
@@ -306,6 +311,19 @@ def _condition_slot_met(
         off_below = float(area.get(off_key))
     except (TypeError, ValueError):
         off_below = on_above
+
+    # Frost protection asks "colder than", everything else "warmer / brighter
+    # than". Inverting mirrors the hysteresis too, otherwise the release
+    # threshold would sit on the wrong side of the switch-on point.
+    if area.get(
+        sun_condition_invert_key(slot), slot in INVERTED_BY_DEFAULT_SLOTS
+    ):
+        if off_below < on_above:
+            off_below = on_above
+        met = value <= (off_below if memory.get(slot) else on_above)
+        memory[slot] = met
+        return met
+
     if off_below > on_above:
         off_below = on_above
 
@@ -346,13 +364,39 @@ def close_condition_met(
     who has not set it up – unlike the shading conditions, where an unset
     condition must not block.
     """
-    entity_key = sun_condition_keys(CLOSE_CONDITION_SLOT)[0]
-    if not str(area.get(entity_key) or "").strip():
+    return _own_slot_met(hass, area, data, CLOSE_CONDITION_SLOT)
+
+
+def frost_condition_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when the area's frost condition applies.
+
+    Same evaluation as the shading conditions, own slot, and fail closed like
+    close_condition_met: without a configured entity nothing changes.
+    """
+    return _own_slot_met(hass, area, data, FROST_CONDITION_SLOT)
+
+
+def _own_slot_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any], slot: str
+) -> bool:
+    """Evaluate a single named condition slot, unset meaning "does not apply".
+
+    The shading conditions fail open – a dead sensor must never keep the
+    shutters up. Here the safe answer is the opposite one: an unreadable sensor
+    must not leave every shutter standing part way open all night.
+    """
+    entity_key = sun_condition_keys(slot)[0]
+    entity_id = str(area.get(entity_key) or "").strip()
+    if not entity_id:
+        return False
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        _LOGGER.debug("Condition %s: %s unavailable – treated as not met", slot, entity_id)
         return False
     area_id = str(area.get(CONF_AREA_ID) or "")
-    return _condition_slot_met(
-        hass, area, CLOSE_CONDITION_SLOT, condition_memory(data, area_id)
-    )
+    return _condition_slot_met(hass, area, slot, condition_memory(data, area_id))
 
 
 def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> bool:
@@ -525,12 +569,13 @@ _ROLE_POSITION_KEYS = {
         DEFAULT_POSITION_WHEN_WINDOW_TILTED,
     ),
     ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
+    ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
 }
 
 
-def has_alt_close_position(shutter: dict[str, Any]) -> bool:
-    """True if this shutter defines a partial closing position."""
-    raw = shutter.get(CONF_POSITION_CLOSED_ALT)
+def _has_partial_close_position(shutter: dict[str, Any], key: str) -> bool:
+    """True if this shutter defines a usable partial closing position."""
+    raw = shutter.get(key)
     if raw is None or str(raw).strip() == "":
         return False
     try:
@@ -539,12 +584,43 @@ def has_alt_close_position(shutter: dict[str, Any]) -> bool:
         return False
     return True
 
+
+def has_alt_close_position(shutter: dict[str, Any]) -> bool:
+    """True if this shutter defines a partial closing position."""
+    return _has_partial_close_position(shutter, CONF_POSITION_CLOSED_ALT)
+
+
+def has_frost_close_position(shutter: dict[str, Any]) -> bool:
+    """True if this shutter defines a frost-protection closing position."""
+    return _has_partial_close_position(shutter, CONF_POSITION_CLOSED_FROST)
+
+
+def resolve_close_role(
+    hass: HomeAssistant,
+    area: dict[str, Any] | None,
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> str:
+    """Pick how far this shutter closes: fully, partially, or frost-safe.
+
+    Shared by the scheduler and the brightness mode so both close the same way.
+    Frost wins over the mild-evening position: protection beats comfort.
+    """
+    if area is None:
+        return ROLE_CLOSED
+    if has_frost_close_position(shutter) and frost_condition_met(hass, area, data):
+        return ROLE_CLOSED_FROST
+    if has_alt_close_position(shutter) and close_condition_met(hass, area, data):
+        return ROLE_CLOSED_ALT
+    return ROLE_CLOSED
+
 _ROLE_TILT_KEYS = {
     ROLE_OPEN: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
     ROLE_CLOSED: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     ROLE_SUN_PROTECT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_VENTILATION: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_CLOSED_ALT: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
+    ROLE_CLOSED_FROST: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
 }
 
 

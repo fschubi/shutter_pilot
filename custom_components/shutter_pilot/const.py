@@ -79,6 +79,8 @@ ROLE_SUN_PROTECT = "sun_protect"
 ROLE_VENTILATION = "ventilation"
 # Partial close, used when the area's close condition is met.
 ROLE_CLOSED_ALT = "closed_alt"
+# Partial close against frost. Wins over closed_alt: protection beats comfort.
+ROLE_CLOSED_FROST = "closed_frost"
 
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
@@ -128,7 +130,7 @@ CONF_AREA_AZIMUTH_MAX = "azimuth_max"
 DEFAULT_AREA_AZIMUTH_MIN = 90.0
 DEFAULT_AREA_AZIMUTH_MAX = 270.0
 
-# Up to two extra conditions that must hold before shading kicks in.
+# Up to four extra conditions that must hold before shading kicks in.
 # One mechanism covers radiation, brightness and temperature:
 #   binary_sensor -> "on" satisfies the condition (hysteresis lives in the
 #                    sensor itself, which is how most such helpers work)
@@ -141,9 +143,19 @@ CONF_SUN_COND_OFF_BELOW = "sun_cond_{slot}_off_below"
 # Allowed states for a text condition, e.g. a weather entity or a scrape
 # sensor reporting "sunny" / "bewölkt". Stored as a list of strings.
 CONF_SUN_COND_STATES = "sun_cond_{slot}_states"
+# Flips the numeric comparison: satisfied *below* on_above, released above
+# off_below. Frost protection needs "colder than", every other user of this
+# mechanism asks "warmer / brighter than". Kept out of sun_condition_keys()
+# so the three places that unpack that tuple stay untouched.
+CONF_SUN_COND_INVERT = "sun_cond_{slot}_invert"
 
 # Slot used for the alternative closing position. Same evaluation, own name.
 CLOSE_CONDITION_SLOT = "close"
+# Frost protection: do not close all the way, so the slats cannot freeze shut.
+FROST_CONDITION_SLOT = "frost"
+# Slots that ask "below" rather than "above" unless told otherwise. Frost is
+# always about falling temperatures, so users should not have to say so.
+INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT,)
 
 # Standard weather conditions in Home Assistant, offered as checkboxes.
 WEATHER_CONDITIONS = (
@@ -161,6 +173,11 @@ def sun_condition_keys(slot: str) -> tuple[str, str, str, str]:
         CONF_SUN_COND_OFF_BELOW.format(slot=slot),
         CONF_SUN_COND_STATES.format(slot=slot),
     )
+
+
+def sun_condition_invert_key(slot: str) -> str:
+    """Return the "compare downwards" option key for a slot."""
+    return CONF_SUN_COND_INVERT.format(slot=slot)
 
 
 # Earliest and latest clock time for the sun mode. The moment computed from
@@ -203,6 +220,11 @@ CONF_SUN_GEOMETRY_OVERRIDE = "sun_geometry_override"
 # Alternative closing position per shutter, used when the area's close
 # condition is met. Empty means the normal closed position applies.
 CONF_POSITION_CLOSED_ALT = "position_closed_alt"
+
+# Closing position per shutter while the area's frost condition holds. Leaving
+# a gap keeps the slats from freezing to the sill. Empty means no frost
+# protection for this shutter, even when the area's condition is met.
+CONF_POSITION_CLOSED_FROST = "position_closed_frost"
 
 # Per-area workday sensor. When set, "on" = weekday schedule, "off" = weekend
 # schedule. Replaces the hard-coded Saturday/Sunday check (holidays, shift work).

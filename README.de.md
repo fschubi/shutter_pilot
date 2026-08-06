@@ -326,6 +326,17 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Frostschutz
+
+Bei Frost kann ein ganz geschlossener Rollladen am Rahmen festfrieren. Damit das nicht passiert, bleibt ein Spalt offen:
+
+1. Im **Bereich** unter *Frostschutz* eine Bedingung hinterlegen – naheliegend ist der Sensor **Vorhersage Tiefsttemperatur**, den Shutter Pilot selbst bereitstellt, sobald eine Wetter-Entität eingetragen ist
+2. Bei den betreffenden **Rollläden** eine Frostposition setzen, z. B. 10 %
+
+Anders als bei allen übrigen Bedingungen wird hier **nach unten** verglichen: Der Frostschutz greift *unter* dem ersten Wert und bleibt aktiv, bis der zweite überschritten ist. Die Hysterese verhindert, dass er um den Gefrierpunkt herum ständig ein- und ausschaltet.
+
+Frostschutz gewinnt gegen das abweichende Schließen – Schutz geht vor Komfort. Beides wirkt im Zeit-, Sonnen- und Helligkeitsmodus. Ein Rollladen ohne gesetzte Frostposition schließt unverändert ganz, selbst wenn die Bedingung des Bereichs erfüllt ist.
+
 ## Unterstützt mich
 
 Shutter Pilot entsteht in meiner Freizeit und ist und bleibt kostenlos und quelloffen. Wenn dir die Integration den Alltag erleichtert und du dich erkenntlich zeigen möchtest, freue ich mich über einen Kaffee:

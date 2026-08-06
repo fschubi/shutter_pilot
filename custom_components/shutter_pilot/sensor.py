@@ -52,6 +52,7 @@ async def async_setup_entry(
     # around as permanently unknown entities.
     if str(entry.options.get(CONF_WEATHER_ENTITY) or "").strip():
         entities.append(ShutterPilotForecastTempSensor(entry))
+        entities.append(ShutterPilotForecastTempMinSensor(entry))
         entities.append(ShutterPilotForecastConditionSensor(entry))
 
     if entities:
@@ -112,6 +113,23 @@ class ShutterPilotForecastTempSensor(_ForecastSensorBase):
     @property
     def native_value(self) -> float | None:
         return self._weather().get("temp_max")
+
+
+class ShutterPilotForecastTempMinSensor(_ForecastSensorBase):
+    """Today's forecast low – the natural input for frost protection."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_icon = "mdi:thermometer-low"
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        super().__init__(entry)
+        self._attr_unique_id = f"{entry.entry_id}_forecast_temp_min"
+        self._attr_name = "Shutter Pilot Vorhersage Tiefsttemperatur"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._weather().get("temp_min")
 
 
 class ShutterPilotForecastConditionSensor(_ForecastSensorBase):

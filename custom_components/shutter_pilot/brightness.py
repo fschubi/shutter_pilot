@@ -49,6 +49,7 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     is_sun_protect_active,
+    resolve_close_role,
     set_cover_position,
     should_skip_automated_up,
     sun_protect_area_ids_from_options,
@@ -204,8 +205,12 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                         continue
                     if not is_shutter_automation_enabled(hass, entry, shutter):
                         continue
-                    pos = get_position_for_role(shutter, ROLE_CLOSED)
-                    tilt = get_tilt_for_role(shutter, ROLE_CLOSED)
+                    # Same decision as the scheduler: a shutter that must not
+                    # freeze shut, or only close part way on a mild evening,
+                    # has to behave that way here too.
+                    close_role = resolve_close_role(hass, area, shutter, data)
+                    pos = get_position_for_role(shutter, close_role)
+                    tilt = get_tilt_for_role(shutter, close_role)
                     drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
                     if drive_after and is_window_open_or_tilted(hass, shutter):
                         data.setdefault("drive_after_close_pending", {})[cover_entity] = {

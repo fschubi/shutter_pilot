@@ -27,8 +27,7 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
-    close_condition_met,
-    has_alt_close_position,
+    resolve_close_role,
     clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
@@ -99,13 +98,6 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         driven_covers: list[str] = []
         area_cfg = areas_by_id.get(area_id)
         role = ROLE_OPEN if direction_up else ROLE_CLOSED
-        # Some shutters should only close part way on hot evenings, to keep
-        # ventilating. The area decides when, the shutter decides how far.
-        alt_close = (
-            not direction_up
-            and area_cfg is not None
-            and close_condition_met(hass, area_cfg, data)
-        )
         for shutter in shutter_list:
             cover = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover:
@@ -113,12 +105,16 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             if not is_shutter_automation_enabled(hass, entry, shutter):
                 _LOGGER.info("%s: %s übersprungen (Automatik am Rollladen aus)", direction, cover)
                 continue
+            # Some shutters should only close part way – against frost, or on a
+            # mild evening. The area decides when, the shutter decides how far.
             shutter_role = role
-            if alt_close and has_alt_close_position(shutter):
-                shutter_role = ROLE_CLOSED_ALT
-                _LOGGER.info(
-                    "%s: %s closes only part way (condition met)", direction, cover
-                )
+            if not direction_up:
+                shutter_role = resolve_close_role(hass, area_cfg, shutter, data)
+                if shutter_role != ROLE_CLOSED:
+                    _LOGGER.info(
+                        "%s: %s closes only part way (%s)",
+                        direction, cover, shutter_role,
+                    )
             position = get_position_for_role(shutter, shutter_role)
             tilt = get_tilt_for_role(shutter, shutter_role)
             drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
