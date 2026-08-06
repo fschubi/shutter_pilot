@@ -19,14 +19,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 from copy import deepcopy
 
 from .const import (
     DOMAIN,
+    AREA_MODE_SUN,
     CONF_SHUTTERS,
     CONF_AREAS,
     CONF_AREA_ID,
+    CONF_AREA_MODE,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
@@ -53,6 +56,7 @@ from .cover_tracker import (
     setup_cover_position_tracker,
 )
 from .position_store import get_position_store
+from .schedule_times import get_sun_mode_trigger_details
 from .helpers import apply_covers_driven_from_persisted, get_sun_protect_status_for_areas
 
 _LOGGER = logging.getLogger(__name__)
@@ -363,6 +367,43 @@ async def _reload_entry_delayed(hass: HomeAssistant, entry_id: str) -> None:
     await hass.config_entries.async_reload(entry_id)
 
 
+def _sun_area_triggers(hass: HomeAssistant, areas: list) -> dict:
+    """Compute the real drive times for every sun-mode area.
+
+    The panel used to show the raw sunrise, which ignored the clock bounds and
+    the presence jitter – it cannot compute either. Areas without a result are
+    left out so an older panel simply falls back to its own display.
+    """
+    triggers: dict[str, dict] = {}
+    now = dt_util.now()
+    for area in areas:
+        if not isinstance(area, dict):
+            continue
+        if str(area.get(CONF_AREA_MODE) or "") != AREA_MODE_SUN:
+            continue
+        area_id = str(area.get(CONF_AREA_ID) or "")
+        if not area_id:
+            continue
+        try:
+            details = get_sun_mode_trigger_details(hass, area, now)
+        except Exception:  # pragma: no cover - get_status must never go blank
+            _LOGGER.exception("Could not compute sun triggers for area %s", area_id)
+            continue
+        if details.get("up") is None or details.get("down") is None:
+            continue
+        triggers[area_id] = {
+            "up": details["up"].isoformat(),
+            "up_bound": details.get("up_bound"),
+            "up_bound_time": details.get("up_bound_time"),
+            "up_jitter": details.get("up_jitter", 0),
+            "down": details["down"].isoformat(),
+            "down_bound": details.get("down_bound"),
+            "down_bound_time": details.get("down_bound_time"),
+            "down_jitter": details.get("down_jitter", 0),
+        }
+    return triggers
+
+
 # -- get_status ---------------------------------------------------------------
 
 @websocket_api.websocket_command({vol.Required("type"): "shutter_pilot/get_status"})
@@ -381,6 +422,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 "sun_protect_status": {},
                 "settings": {},
                 "weather": {},
+                "area_triggers": {},
                 "version": PANEL_ASSET_VERSION,
             },
         )
@@ -432,6 +474,9 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
         "master_enabled": bool(master_enabled),
         "sun_protect_status": sun_protect_status,
         "sun": sun_info,
+        "area_triggers": _sun_area_triggers(
+            hass, raw_areas if isinstance(raw_areas, list) else []
+        ),
         "version": PANEL_ASSET_VERSION,
     })
 

@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  sun_bound_earliest:"frühestens",sun_bound_latest:"spätestens",sun_jitter:"Präsenz",
   sun_elevation:"Aktuelle Elevation",sun_offset:"Offset",
   dash_shutter_role_up:"Nur Hochfahren über diesen Bereich",
   dash_shutter_role_down:"Nur Runterfahren über diesen Bereich",
@@ -435,6 +436,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  sun_bound_earliest:"no earlier than",sun_bound_latest:"no later than",sun_jitter:"Presence",
   sun_elevation:"Current elevation",sun_offset:"Offset",
   dash_shutter_role_up:"Up drives only via this area",
   dash_shutter_role_down:"Down drives only via this area",
@@ -557,6 +559,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  sun_bound_earliest:"au plus tôt",sun_bound_latest:"au plus tard",sun_jitter:"Présence",
   sun_elevation:"Élévation actuelle",sun_offset:"Décalage",
   dash_shutter_role_up:"Montée seulement via cette zone",
   dash_shutter_role_down:"Descente seulement via cette zone",
@@ -675,6 +678,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  sun_bound_earliest:"no antes de",sun_bound_latest:"no después de",sun_jitter:"Presencia",
   sun_elevation:"Elevación actual",sun_offset:"Desfase",
   dash_shutter_role_up:"Solo subida por esta zona",
   dash_shutter_role_down:"Solo bajada por esta zona",
@@ -793,6 +797,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  sun_bound_earliest:"non prima delle",sun_bound_latest:"non oltre le",sun_jitter:"Presenza",
   sun_elevation:"Elevazione attuale",sun_offset:"Offset",
   dash_shutter_role_up:"Solo apertura da questa zona",
   dash_shutter_role_down:"Solo chiusura da questa zona",
@@ -912,6 +917,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  sun_bound_earliest:"niet vóór",sun_bound_latest:"niet later dan",sun_jitter:"Aanwezigheid",
   sun_elevation:"Huidige elevatie",sun_offset:"Offset",
   dash_shutter_role_up:"Alleen omhoog via deze zone",
   dash_shutter_role_down:"Alleen omlaag via deze zone",
@@ -1031,6 +1037,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
   sun_elevation:"Aktuel elevation",sun_offset:"Offset",
   dash_shutter_role_up:"Kun op via dette område",
   dash_shutter_role_down:"Kun ned via dette område",
@@ -1150,6 +1157,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  sun_bound_earliest:"tidigast",sun_bound_latest:"senast",sun_jitter:"Närvaro",
   sun_elevation:"Aktuell elevation",sun_offset:"Offset",
   dash_shutter_role_up:"Endast upp via detta område",
   dash_shutter_role_down:"Endast ner via detta område",
@@ -1269,6 +1277,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  sun_bound_earliest:"nie wcześniej niż",sun_bound_latest:"nie później niż",sun_jitter:"Obecność",
   sun_elevation:"Aktualna elewacja",sun_offset:"Offset",
   dash_shutter_role_up:"Tylko w górę przez tę strefę",
   dash_shutter_role_down:"Tylko w dół przez tę strefę",
@@ -1388,6 +1397,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  sun_bound_earliest:"não antes das",sun_bound_latest:"não depois das",sun_jitter:"Presença",
   sun_elevation:"Elevação atual",sun_offset:"Offset",
   dash_shutter_role_up:"Só subir por esta zona",
   dash_shutter_role_down:"Só descer por esta zona",
@@ -1507,6 +1517,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
   sun_elevation:"Gjeldende elevasjon",sun_offset:"Offset",
   dash_shutter_role_up:"Bare opp via dette området",
   dash_shutter_role_down:"Bare ned via dette området",
@@ -2267,15 +2278,29 @@ class ShutterPilotPanel extends PanelBase {
       try{return new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(e){return "–";}
     };
     const elev=sun.elevation!=null?sun.elevation.toFixed(1)+"°":"–";
+    /* Die tatsächliche Fahrzeit rechnet das Backend: Zeitklammern und der
+       Präsenz-Jitter sind hier nicht nachbaubar. Fehlt sie (altes Backend,
+       keine sun.sun), bleibt es beim bisherigen Verhalten. */
+    const tr=(d.area_triggers||{})[area.id||""]||null;
+    const bound=(kind,at)=>{
+      if(!kind)return "";
+      const lbl=kind==="earliest"?this.t("sun_bound_earliest"):this.t("sun_bound_latest");
+      return html`<span class="sun-off">· ${lbl} ${at}</span>`;
+    };
+    const jitter=(min)=>min?html`<span class="sun-off">· ${this.t("sun_jitter")}: ${min>0?"+":""}${min} min</span>`:"";
+    const triggerUp=tr&&tr.up?fmtRaw(tr.up):(offUp?fmtTime(sun.next_rising,offUp):fmtRaw(sun.next_rising));
+    const triggerDown=tr&&tr.down?fmtRaw(tr.down):(offDown?fmtTime(sun.next_setting,offDown):fmtRaw(sun.next_setting));
     return html`<div class="sun-info">
       <div class="sun-row"><ha-icon icon="mdi:weather-sunset-up"></ha-icon>
         <span>${this.t("sun_next_rise")}: <b>${fmtRaw(sun.next_rising)}</b></span>
-        ${offUp?html`<span class="sun-off">(${this.t("sun_offset")}: ${offUp>0?"+":""}${offUp} min → ${this.t("sun_trigger_up")} <b>${fmtTime(sun.next_rising,offUp)}</b>)</span>`:
-          html`<span class="sun-off">(${this.t("sun_trigger_up")} <b>${fmtRaw(sun.next_rising)}</b>)</span>`}</div>
+        ${offUp?html`<span class="sun-off">(${this.t("sun_offset")}: ${offUp>0?"+":""}${offUp} min → ${this.t("sun_trigger_up")} <b>${triggerUp}</b>)</span>`:
+          html`<span class="sun-off">(${this.t("sun_trigger_up")} <b>${triggerUp}</b>)</span>`}
+        ${tr?bound(tr.up_bound,tr.up_bound_time):""} ${tr?jitter(tr.up_jitter):""}</div>
       <div class="sun-row"><ha-icon icon="mdi:weather-sunset-down"></ha-icon>
         <span>${this.t("sun_next_set")}: <b>${fmtRaw(sun.next_setting)}</b></span>
-        ${offDown?html`<span class="sun-off">(${this.t("sun_offset")}: ${offDown>0?"+":""}${offDown} min → ${this.t("sun_trigger_down")} <b>${fmtTime(sun.next_setting,offDown)}</b>)</span>`:
-          html`<span class="sun-off">(${this.t("sun_trigger_down")} <b>${fmtRaw(sun.next_setting)}</b>)</span>`}</div>
+        ${offDown?html`<span class="sun-off">(${this.t("sun_offset")}: ${offDown>0?"+":""}${offDown} min → ${this.t("sun_trigger_down")} <b>${triggerDown}</b>)</span>`:
+          html`<span class="sun-off">(${this.t("sun_trigger_down")} <b>${triggerDown}</b>)</span>`}
+        ${tr?bound(tr.down_bound,tr.down_bound_time):""} ${tr?jitter(tr.down_jitter):""}</div>
       <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
         <span>${this.t("sun_elevation")}: <b>${elev}</b></span></div>
     </div>`;

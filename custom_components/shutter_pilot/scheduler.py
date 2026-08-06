@@ -318,7 +318,10 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     )
                     _run_up(area, trigger="sun-minute")
 
-            # DOWN once per day: after sunset+offset on that calendar day
+            # DOWN once per day: after sunset+offset on that calendar day.
+            # get_sun_mode_triggers() returns local time, so comparing its date
+            # against the local date is sound – with a UTC value a late trigger
+            # would fall on tomorrow's date here and never run.
             if fired_sun_down.get(area_id) != today:
                 if (
                     trigger_down.date() == today

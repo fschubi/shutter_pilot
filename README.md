@@ -283,6 +283,8 @@ In sun mode the computed moment can be clamped into a clock window:
 
 Weekends have their own values. Left empty, the weekday values apply. Empty fields generally mean no limit.
 
+All times are local time — the timezone from your Home Assistant settings. The dashboard shows next to each drive time why it differs from the sun time: "· no earlier than 07:30" when a bound applies, or "· Presence: +4 min" with presence simulation enabled.
+
 ## Verifying drives
 
 Radio-driven shutters occasionally drop a command. Without a check nobody notices, and the integration keeps working with a position the shutter never reached.

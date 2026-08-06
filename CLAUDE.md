@@ -188,7 +188,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.5.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.5.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -290,3 +290,50 @@ WebSocket-Dekoratoren direkt über der Funktion. Eine neue Hilfsfunktion
 dazwischen zu setzen hängt die Dekoratoren an die falsche Funktion – das
 Setup bricht dann mit `'function' object has no attribute '_ws_command'` ab.
 Die Testsuite fängt das ab, aber nur, weil sie den echten Setup fährt.
+
+### 2026-08-06 – 2.5.2: Zeitzone im Sonnenmodus (Meldung von Xerenas)
+
+Zwei Meldungen aus dem Forum, beide bestätigt und reproduziert.
+
+**Der Bug:** `schedule_times.py` parste die `sun.sun`-Attribute (HA schreibt sie
+mit `+00:00`), konvertierte aber nie nach lokal. `clamp_to_bounds()` verglich
+danach `moment.time()` – die **UTC**-Wanduhr – gegen die lokal gemeinte Schranke
+und schrieb sie per `moment.replace(hour=…)` in der UTC-Zone zurück. Aus
+„Runter frühestens 21:00" wurde 21:00 UTC = 23:00 Berlin. Genau die gemeldete
+Fahrt. Im Winter 1 h, im Sommer 2 h; nur Bereiche mit Zeitklammer betroffen.
+
+Behoben mit **einer** Stelle: `_local_sun_time()` legt `dt_util.as_local()` um
+das Parsen. `clamp_to_bounds`, `infer_today_sun_time` und die beiden
+Datumsvergleiche in `scheduler.py` (281, 324) werden dadurch von selbst richtig
+– bewusst kein zweites Sicherheitsnetz, der Vertrag steht stattdessen im
+Docstring von `get_sun_mode_triggers` („returns local time") und als Kommentar
+an scheduler.py:322.
+
+**Warum die 246 Tests grün blieben:** `tests/test_sun_bounds.py` injizierte die
+Sonnenzeiten mit `+02:00` statt `+00:00`, und die Assertions lasen `up.hour`
+roh – eine UTC-Zeit mit den richtigen Ziffern besteht so einen Test. Dazu ist
+die Test-Zeitzone `US/Pacific` (aus pytest-homeassistant-custom-component),
+nicht UTC. Jetzt: Autouse-Fixture auf `Europe/Berlin`, `_set_sun` rechnet nach
+UTC um wie das echte HA, und `_hm()` vergleicht in Ortszeit. Gegenprobe
+gemacht: ohne den Fix fallen 14 der 22 Tests um.
+
+**Anzeigefehler (Bug A), separater Ursprung:** `_renderSunInfo` rendert die rohe
+`next_rising` plus Offset. Zeitklammern und Jitter fehlten – und das Panel
+*kann* sie nicht rechnen: `get_random_offset` seedet Pythons Mersenne Twister,
+in JS nicht nachbaubar, dazu Workday-Sensor und Wochenend-Rückfall. Deshalb
+Backend als einzige Wahrheitsquelle: neue `get_sun_mode_trigger_details()`
+liefert Zeit **plus Begründung**, `_ws_get_status` schickt sie als
+`area_triggers`, das Panel fällt bei fehlendem Wert wörtlich aufs alte
+Verhalten zurück (altes Backend, kein `sun.sun`). `clamp_to_bounds` und
+`get_sun_mode_triggers` bleiben als unveränderte Hüllen stehen, damit kein
+Aufrufer und kein Test bricht.
+
+Zwei Dinge fürs nächste Mal:
+
+- **Kein freezegun in WebSocket-Tests.** `freezer.move_to()` in die
+  Vergangenheit lässt das Auth-Token als abgelaufen gelten, der Client bekommt
+  `auth_invalid`. In `tests/test_ws_status.py` werden die Sonnenzeiten
+  stattdessen relativ zum heutigen Tag gebaut.
+- Die neun kleineren Sprachen im Panel haben **52 fehlende i18n-Schlüssel**
+  (Rückfall auf Englisch). Bestand, nicht aus dieser Änderung – aber einmal
+  aufräumen wäre fällig.

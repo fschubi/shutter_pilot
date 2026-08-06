@@ -283,6 +283,8 @@ Im Sonnenmodus lässt sich der berechnete Zeitpunkt in ein Uhrzeitfenster klemme
 
 Für das Wochenende gibt es eigene Werte. Bleiben die leer, gelten die Wochentagswerte. Leere Felder bedeuten generell: keine Grenze.
 
+Alle Uhrzeiten sind Ortszeit – die Zeitzone aus den Home-Assistant-Einstellungen. Im Dashboard steht neben der Fahrzeit, warum sie von der Sonnenzeit abweicht: „· frühestens 07:30", wenn die Klammer greift, oder „· Präsenz: +4 min" bei aktiver Präsenzsimulation.
+
 ## Fahrten überprüfen
 
 Funk-Rollläden verlieren gelegentlich einen Befehl. Ohne Kontrolle merkt das niemand, und die Integration rechnet danach mit einer Position weiter, die der Rollladen nie erreicht hat.

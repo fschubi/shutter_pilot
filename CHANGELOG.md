@@ -4,6 +4,19 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.5.2]
+
+Zwei Meldungen von Xerenas aus dem Forum – beide bestätigt.
+
+### Behoben
+- **Fahrten im Sonnenstand-Modus kamen ein bis zwei Stunden zu spät.** Wer „Runter frühestens 21:00" eingestellt hatte, bei dem fuhr der Rollladen im Sommer erst um 23:00. Home Assistant liefert die Sonnenzeiten in Weltzeit (UTC); Shutter Pilot rechnete sie nicht in die Ortszeit um und legte die eingestellte Uhrzeit deshalb auf die falsche Zeitleiste – aus 21:00 Ortszeit wurde 21:00 UTC. Im Winter war der Versatz eine Stunde, im Sommer zwei. Betroffen war jeder Bereich im Sonnenstand-Modus mit einer Zeitklammer („frühestens" oder „spätestens"); ohne Klammer war alles korrekt. Das gilt auch für den Sensor „nächste Fahrt". **Nach dem Update fahren betroffene Bereiche wieder zur eingestellten Zeit** – ohne Zutun.
+- **Ein später Sonnenuntergang konnte die Abendfahrt ganz ausfallen lassen.** Derselbe Ursprung: Lag die berechnete Zeit in Weltzeit schon hinter Mitternacht, ordnete Shutter Pilot sie dem falschen Kalendertag zu und fuhr an diesem Tag gar nicht. Betraf vor allem Zeitzonen westlich von Greenwich.
+
+### Geändert
+- **Das Dashboard zeigt jetzt die tatsächliche Fahrzeit.** Bisher stand dort die rohe Sonnenzeit: bei Sonnenaufgang 06:07 und „Hoch frühestens 07:30" hieß es weiterhin „Hoch-Fahrt um 06:07". Zeitklammern und die Streuung der Präsenzsimulation flossen nicht ein – das Panel konnte beides gar nicht berechnen. Die Zeit kommt jetzt aus der Integration selbst und stimmt mit dem überein, was wirklich passiert. Zusätzlich steht daneben, **warum** sie abweicht: „· frühestens 07:30" oder „· Präsenz: +4 min". Die reinen Sonnenauf- und -untergangszeiten stehen unverändert daneben, damit der Unterschied sichtbar bleibt.
+
+> **Nach dem Update den Browser hart neu laden** (Strg+F5 bzw. Cmd+Shift+R), sonst zeigt die Seitenleiste weiter das alte Panel.
+
 ## [2.5.1]
 
 ### Geändert
