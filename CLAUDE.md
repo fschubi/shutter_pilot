@@ -26,6 +26,7 @@ custom_components/shutter_pilot/
   scheduler.py       Zeit- und Sonnenmodus: Fahrten planen und auslösen
   brightness.py      Helligkeitsmodus mit erlaubten Zeitfenstern
   elevation.py       Beschattung: Elevation, Azimut, Bedingungen, pro Rollladen
+  ventilation.py     Automatisches Lüften nach Bedingungen
   schedule_times.py  Zeitmathematik: Wochenende, Jitter, Zeitklammern
   window_trigger.py  Reaktion auf Fensterkontakte
   window_helper.py   Fensterzustand und Aussperrschutz
@@ -37,7 +38,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (246 Tests)
+tests/               pytest-Suite (313 Tests)
 ```
 
 ## Funktionsumfang
@@ -62,9 +63,10 @@ zu N Minuten; der Wert ist pro Tag stabil, nicht pro Fahrt.
 ### Rollläden
 
 Je Rollladen: Positionen für offen, geschlossen und Sonnenschutz, optional eine
-**abweichende Schließposition** für laue Abende, optional **Lamellenwinkel**
-(Raffstore). Fenstersensor mit Aussperrschutz, dazu optional ein zweiter
-Kontakt, wenn „gekippt" als eigene Entität gemeldet wird.
+**abweichende Schließposition** für laue Abende und eine **Frostposition**,
+optional **Lamellenwinkel** (Raffstore). Fenstersensor mit Aussperrschutz, dazu
+optional ein zweiter Kontakt, wenn „gekippt" als eigene Entität gemeldet wird,
+und eine **Entprellung** (0–30 s), bevor auf „geschlossen" reagiert wird.
 
 ### Beschattung
 
@@ -73,7 +75,9 @@ Aktiv, wenn **alle** Bedingungen zugleich gelten:
 1. Sonnenhöhe im konfigurierten Bereich (min/max)
 2. Sonne steht vor den Fenstern (Azimut, Kompass-Schnellwahl)
 3. bis zu **vier Zusatzbedingungen** – Binärsensor, Zahlenwert mit Ein-/
-   Ausschaltschwelle oder Textzustand (Wetterlage)
+   Ausschaltschwelle oder Textzustand (Wetterlage). Dieselbe Mechanik trägt die
+   eigenen Slots `close`, `frost` und `vent_a`/`vent_b` – die sind aber **fail
+   closed**, ein toter Sensor löst dort nichts aus.
 4. Datum liegt im konfigurierten **Beschattungszeitraum** (Jahreswechsel möglich)
 
 Geometrie und Bedingungen lassen sich **pro Rollladen** überschreiben. Der
@@ -102,17 +106,22 @@ Wiederholungen.
 - **Positionsspeicher**: letzte Positionen überleben den Neustart; beim Start
   wird korrigiert, wenn die Cover-Integration falsch wiederhergestellt hat.
 - **Wetter**: eigene Tagesvorhersage über `weather.get_forecasts`, ausgegeben
-  als zwei Sensoren (Höchsttemperatur, Wetterlage) – direkt als Bedingung nutzbar.
+  als drei Sensoren (Höchst-, Tiefsttemperatur, Wetterlage) – direkt als
+  Bedingung nutzbar.
+- **Frostschutz**: eigener Bedingungs-Slot, der **nach unten** vergleicht, plus
+  Rolle `closed_frost`. Gewinnt gegen die abweichende Schließposition.
+- **Automatisches Lüften**: eigener Bedingungs-Slot je Bereich. Rangfolge
+  Fensterkontakt > Beschattung > Lüften; zurück auf die vorherige Position.
 - **Licht-Folgeaktion** je Bereich beim Runterfahren.
 - **Minutentakt**: ein einziger `async_track_time_change` versorgt Scheduler,
-  Wetter und Beschattung – nicht pro Modul einen eigenen Timer anlegen.
+  Wetter, Beschattung und Lüften – nicht pro Modul einen eigenen Timer anlegen.
 
 ### Entitäten, Dienste, Events
 
 | Art | Entität |
 | --- | --- |
 | Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter |
-| Sensor | je Bereich „nächste Fahrt"; Vorhersage-Temperatur und -Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
+| Sensor | je Bereich „nächste Fahrt"; Vorhersage Höchst-/Tiefsttemperatur und Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
 | Binärsensor | je Bereich „Sonnenschutz aktiv" |
 
 Dienste: `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`.
@@ -162,7 +171,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 246 Tests, ~3 s
+.venv/bin/pytest            # 313 Tests, ~4 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -188,7 +197,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.5.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.6.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -291,7 +300,7 @@ dazwischen zu setzen hängt die Dekoratoren an die falsche Funktion – das
 Setup bricht dann mit `'function' object has no attribute '_ws_command'` ab.
 Die Testsuite fängt das ab, aber nur, weil sie den echten Setup fährt.
 
-### 2026-08-06 – 2.5.2: Zeitzone im Sonnenmodus (Meldung von Xerenas)
+### 2026-08-06 – 2.6.0, Teil 1: Zeitzone im Sonnenmodus (Meldung von Xerenas)
 
 Zwei Meldungen aus dem Forum, beide bestätigt und reproduziert.
 
@@ -337,3 +346,68 @@ Zwei Dinge fürs nächste Mal:
 - Die neun kleineren Sprachen im Panel haben **52 fehlende i18n-Schlüssel**
   (Rückfall auf Englisch). Bestand, nicht aus dieser Änderung – aber einmal
   aufräumen wäre fällig.
+
+### 2026-08-06 – 2.6.0, Teil 2: drei Features aus dem Forum
+
+Alles in einem Release; ein separates 2.5.2 wurde bewusst nicht getaggt.
+
+**Entprellung des Fensterkontakts (Xerenas).** Beim Drehen des Griffs von
+gekippt auf offen läuft der Kontakt kurz durch „geschlossen". Darin steckten
+**zwei** Fehler, und nur einer war der gemeldete:
+
+1. Timing – der `closed`-Zweig fuhr sofort zurück. Jetzt Wartezeit je Rollladen
+   (0–30 s, Default 5), Muster `cover_verify`: ein Task je Cover, Abbruch beim
+   nächsten Fensterereignis. **Bei 0 s bleibt der Pfad synchron** (kein Task,
+   kein await) – sonst änderte sich die Reihenfolge für Bestandsnutzer.
+2. Der Offen-Zweig prüfte nur „ist der Rollladen zu?" und übersah einen
+   laufenden Zyklus. Nach zu → gekippt (50 %) → offen scheiterte die Prüfung,
+   der Zweig brach ab und warf die Rückfahrhöhe weg. **Ohne diesen zweiten Fix
+   wäre das Symptom auch mit perfekter Entprellung geblieben.**
+
+Beim Abbrechen **nicht** von `cover_verify` abschreiben: dessen `finally` popt
+ohne Identitätsprüfung und entfernt den Eintrag eines schon nachgerückten
+Tasks. Hier vergleicht das `finally` mit `asyncio.current_task()`.
+`cover_verify.py:186-188` hat den Fehler weiterhin – offen.
+
+**Frostschutz (Linos).** Rolle `closed_frost` analog `closed_alt`. Die
+Bedingungen kannten nur „über Schwelle"; die neue Invert-Kennung spiegelt
+Vergleich *und* Hysterese. Der Frost-Slot steht in `INVERTED_BY_DEFAULT_SLOTS`,
+niemand soll ankreuzen müssen, dass Frost mit „kälter" zu tun hat. Die Kennung
+liegt in `sun_condition_invert_key()`, **nicht** als fünftes Tupelelement in
+`sun_condition_keys()` – das wird an drei Stellen entpackt.
+
+Dabei zwei Altlasten mitgenommen: `resolve_close_role()` wird jetzt von
+Scheduler **und** Helligkeit benutzt (die abweichende Schließposition wirkte im
+Helligkeitsmodus nie), und die eigenen Bedingungs-Slots sind **fail closed** bei
+totem Sensor. Beschattung bleibt fail open – dort ist die sichere Antwort die
+umgekehrte.
+
+**Lüften mit Bedingungen (Linos).** Neues `ventilation.py` am gemeinsamen
+Minutentakt. Zurück geht es auf die **vorherige** Position (`vent_heights`, wie
+`trigger_heights`), nicht auf „offen" – sonst stünde der Rollladen nach einer
+Nachtlüftung oben. Rangfolge festgeschrieben: Fensterkontakt > Beschattung >
+Lüften.
+
+**Aus dem Plan verworfen:** der Lüften-Knopf im Dashboard sollte auf den Dienst
+umgestellt werden. Die Karte listet `area_up_id` **oder** `area_down_id`, der
+Dienst filtert nur `area_down_id` – bei getrennten Bereichen hätte der Knopf
+danach stillschweigend Rollläden ausgelassen.
+
+**Testfallen, die Zeit gekostet haben:**
+
+- `patch("...modul.asyncio.sleep")` patcht das **globale** Modul. Ein Mock, der
+  sofort zurückkehrt (wie in `test_cover_verify`), geht gut; ein *blockierender*
+  legt ganz HA lahm. In `test_window_debounce` wird nur die passende Wartezeit
+  gegated, der Rest geht an den echten `sleep`.
+- `hass.async_block_till_done()` wartet auch auf einen gerade erzeugten,
+  gegateten Task – dafür gibt es dort `_window_bounce()` mit `sleep(0)`-Runden.
+- Denselben Zustand nochmal setzen feuert **kein** Event.
+- Ein reiner `async_mock_service` lässt die Cover-Position stehen; der
+  Startup-Restore hält die Fahrt für verschluckt und wiederholt sie viermal.
+  Dessen `STARTUP_RESTORE_DELAY_SEC = 5` hat die Suite von 4 auf 25 Sekunden
+  gebracht, bis er in `test_ventilation` abgekürzt wurde.
+- **Kein freezegun in WebSocket-Tests**: Zeit zurückdrehen macht das Auth-Token
+  ungültig, der Client bekommt `auth_invalid`.
+
+**Offen:** die neun kleineren Panel-Sprachen haben 52 fehlende i18n-Schlüssel
+(Rückfall auf Englisch). Bestand, einmal aufräumen wäre fällig.
