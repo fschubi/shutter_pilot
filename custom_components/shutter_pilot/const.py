@@ -151,6 +151,12 @@ CONF_SUN_COND_INVERT = "sun_cond_{slot}_invert"
 
 # Slot used for the alternative closing position. Same evaluation, own name.
 CLOSE_CONDITION_SLOT = "close"
+
+# Automatic ventilation: drive to the ventilation position while every
+# configured condition holds, and back to where the shutter stood before once
+# one drops out. Two slots cover the asked-for case (a switch AND a value).
+CONF_AREA_VENT_ENABLED = "vent_enabled"
+VENT_CONDITION_SLOTS = ("vent_a", "vent_b")
 # Frost protection: do not close all the way, so the slats cannot freeze shut.
 FROST_CONDITION_SLOT = "frost"
 # Slots that ask "below" rather than "above" unless told otherwise. Frost is

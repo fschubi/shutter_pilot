@@ -326,6 +326,25 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Automatisch lüften
+
+Lüften war bisher nur von Hand möglich – über den Knopf im Dashboard oder den Dienst. Im **Bereich** lässt sich unter *Automatisches Lüften* jetzt festlegen, wann es von selbst passieren soll:
+
+1. **Automatisch lüften** aktivieren
+2. Bis zu zwei Bedingungen angeben, die **beide** erfüllt sein müssen – etwa ein Anwesenheitssensor auf „an" und eine Raumtemperatur über 24 °C
+
+Sind alle Bedingungen erfüllt, fahren die Rollläden des Bereichs auf ihre **Lüftungsposition** (dieselbe wie bei gekipptem Fenster). Fällt eine Bedingung weg, fahren sie dorthin zurück, wo sie vorher standen – nicht auf „offen", was nachts falsch wäre.
+
+Die Rangfolge, falls mehreres zugleich zutrifft:
+
+| Vorrang | Grund |
+|---|---|
+| 1. Fensterkontakt | reagiert darauf, was jemand tatsächlich am Fenster getan hat |
+| 2. Beschattung | Hitze geht vor |
+| 3. Automatisches Lüften | fährt nur Rollläden an, die sonst stillstehen |
+
+Ohne eingetragene Bedingung passiert nichts. Hauptschalter, Bereichs- und Rollladenautomatik gelten wie überall; wird der Bereich abgeschaltet, während gelüftet wird, fährt der Rollladen noch zurück, statt halb offen stehen zu bleiben.
+
 ## Frostschutz
 
 Bei Frost kann ein ganz geschlossener Rollladen am Rahmen festfrieren. Damit das nicht passiert, bleibt ein Spalt offen:

@@ -48,6 +48,7 @@ from .window_trigger import cancel_all_window_close, setup_window_triggers
 from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
+from .ventilation import setup_ventilation
 from .cover_verify import cancel_all as cancel_all_verifications
 from .weather_data import setup_weather
 from .services import async_setup_services
@@ -189,6 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
+        await setup_ventilation(hass, entry)
         await setup_weather(hass, entry)
         _setup_minute_ticker(hass, entry)
         hass.async_create_task(async_restore_positions_on_startup(hass, entry))
@@ -244,6 +246,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await setup_brightness_listener(hass, entry)
     await setup_schedulers(hass, entry)
     await setup_elevation_listener(hass, entry)
+    await setup_ventilation(hass, entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

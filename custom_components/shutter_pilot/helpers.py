@@ -45,6 +45,7 @@ from .const import (
     DEFAULT_POSITION_WHEN_WINDOW_TILTED,
     ROLE_VENTILATION,
     SUN_CONDITION_SLOTS,
+    VENT_CONDITION_SLOTS,
     sun_condition_invert_key,
     sun_condition_keys,
     CONF_TILT_CLOSED,
@@ -376,6 +377,26 @@ def frost_condition_met(
     close_condition_met: without a configured entity nothing changes.
     """
     return _own_slot_met(hass, area, data, FROST_CONDITION_SLOT)
+
+
+def vent_conditions_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when every configured ventilation condition holds.
+
+    All conditions are ANDed, which is what was asked for ("switch on AND
+    warmer than 24"). Fail closed like the other own slots: with nothing
+    configured this never triggers, so nobody gets surprise movements.
+    """
+    configured = False
+    for slot in VENT_CONDITION_SLOTS:
+        entity_key = sun_condition_keys(slot)[0]
+        if not str(area.get(entity_key) or "").strip():
+            continue
+        configured = True
+        if not _own_slot_met(hass, area, data, slot):
+            return False
+    return configured
 
 
 def _own_slot_met(

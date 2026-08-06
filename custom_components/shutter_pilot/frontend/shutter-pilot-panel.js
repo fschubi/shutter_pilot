@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  sec_vent:"Automatisches Lüften",sec_vent_sub:"Auf die Lüftungsposition fahren, wenn Bedingungen erfüllt sind",f_vent_enabled:"Automatisch lüften",f_vent_hint:"Sind alle Bedingungen erfüllt, fahren die Rollläden des Bereichs auf ihre Lüftungsposition und danach wieder zurück. Ein offenes Fenster und der Sonnenschutz haben Vorrang.",f_vent_cond:"Bedingung",
   sec_frost:"Frostschutz",sec_frost_sub:"Nicht ganz schliessen, wenn Frost droht",f_frost_cond:"Bedingung (optional)",f_frost_cond_hint:"Ist diese Bedingung erfüllt, schliessen Rollläden mit hinterlegter Frostposition nur so weit. So frieren die Lamellen nicht am Rahmen fest. Gewinnt gegen das abweichende Schliessen.",f_pos_closed_frost:"Frostschutz-Position hinterlegen",f_pos_closed_frost_hint:"Ein Spalt bleibt offen, damit der Rollladen nicht festfriert.",f_pos_closed_frost_val:"Position bei Frost",f_sun_cond_on_below:"Einschalten unter",f_sun_cond_off_above:"Ausschalten über",f_sun_cond_num_inv_hint:"Der Frostschutz greift unterhalb des ersten Werts und bleibt aktiv, bis der zweite überschritten wird.",
   sun_bound_earliest:"frühestens",sun_bound_latest:"spätestens",sun_jitter:"Präsenz",
   sun_elevation:"Aktuelle Elevation",sun_offset:"Offset",
@@ -438,6 +439,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  sec_vent:"Automatic ventilation",sec_vent_sub:"Drive to the ventilation position when conditions hold",f_vent_enabled:"Ventilate automatically",f_vent_hint:"While every condition holds, the shutters of this area move to their ventilation position and back afterwards. An open window and sun protection take precedence.",f_vent_cond:"Condition",
   sec_frost:"Frost protection",sec_frost_sub:"Do not close fully when frost is likely",f_frost_cond:"Condition (optional)",f_frost_cond_hint:"When this condition holds, shutters with a frost position only close that far, so the slats cannot freeze to the frame. Wins over partial closing.",f_pos_closed_frost:"Set a frost-protection position",f_pos_closed_frost_hint:"Leaves a gap so the shutter cannot freeze shut.",f_pos_closed_frost_val:"Position during frost",f_sun_cond_on_below:"Switch on below",f_sun_cond_off_above:"Switch off above",f_sun_cond_num_inv_hint:"Frost protection kicks in below the first value and stays on until the second is exceeded.",
   sun_bound_earliest:"no earlier than",sun_bound_latest:"no later than",sun_jitter:"Presence",
   sun_elevation:"Current elevation",sun_offset:"Offset",
@@ -563,6 +565,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  sec_vent:"Aération automatique",sec_vent_sub:"Aller en position d’aération si les conditions sont remplies",f_vent_enabled:"Aérer automatiquement",f_vent_hint:"Tant que toutes les conditions sont remplies, les volets vont en position d’aération puis reviennent. Une fenêtre ouverte et la protection solaire sont prioritaires.",f_vent_cond:"Condition",
   sec_frost:"Protection antigel",sec_frost_sub:"Ne pas fermer complètement en cas de gel",f_frost_cond:"Condition (optionnel)",f_frost_cond_hint:"Si cette condition est remplie, les volets avec une position antigel ne se ferment que jusque-là. Prioritaire sur la fermeture partielle.",f_pos_closed_frost:"Définir une position antigel",f_pos_closed_frost_hint:"Laisse un jeu pour éviter le gel.",f_pos_closed_frost_val:"Position en cas de gel",f_sun_cond_on_below:"Activer en dessous de",f_sun_cond_off_above:"Désactiver au-dessus de",f_sun_cond_num_inv_hint:"La protection s’active sous la première valeur et reste active jusqu’au dépassement de la seconde.",
   sun_bound_earliest:"au plus tôt",sun_bound_latest:"au plus tard",sun_jitter:"Présence",
   sun_elevation:"Élévation actuelle",sun_offset:"Décalage",
@@ -684,6 +687,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  sec_vent:"Ventilación automática",sec_vent_sub:"Ir a la posición de ventilación si se cumplen las condiciones",f_vent_enabled:"Ventilar automáticamente",f_vent_hint:"Mientras se cumplan todas las condiciones, las persianas van a su posición de ventilación y luego vuelven. Una ventana abierta y la protección solar tienen prioridad.",f_vent_cond:"Condición",
   sec_frost:"Protección antihielo",sec_frost_sub:"No cerrar del todo si hay riesgo de helada",f_frost_cond:"Condición (opcional)",f_frost_cond_hint:"Si se cumple, las persianas con posición antihielo solo cierran hasta ahí. Tiene prioridad sobre el cierre parcial.",f_pos_closed_frost:"Definir posición antihielo",f_pos_closed_frost_hint:"Deja una holgura para que no se congele.",f_pos_closed_frost_val:"Posición con helada",f_sun_cond_on_below:"Activar por debajo de",f_sun_cond_off_above:"Desactivar por encima de",f_sun_cond_num_inv_hint:"La protección se activa por debajo del primer valor y sigue activa hasta superar el segundo.",
   sun_bound_earliest:"no antes de",sun_bound_latest:"no después de",sun_jitter:"Presencia",
   sun_elevation:"Elevación actual",sun_offset:"Desfase",
@@ -805,6 +809,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  sec_vent:"Ventilazione automatica",sec_vent_sub:"Vai in posizione di ventilazione se le condizioni sono soddisfatte",f_vent_enabled:"Ventila automaticamente",f_vent_hint:"Finché tutte le condizioni sono soddisfatte, le tapparelle vanno in posizione di ventilazione e poi tornano. Una finestra aperta e la protezione solare hanno la precedenza.",f_vent_cond:"Condizione",
   sec_frost:"Protezione antigelo",sec_frost_sub:"Non chiudere del tutto in caso di gelo",f_frost_cond:"Condizione (opzionale)",f_frost_cond_hint:"Se la condizione è soddisfatta, le tapparelle con posizione antigelo si chiudono solo fin lì. Prevale sulla chiusura parziale.",f_pos_closed_frost:"Imposta una posizione antigelo",f_pos_closed_frost_hint:"Lascia una fessura per evitare il congelamento.",f_pos_closed_frost_val:"Posizione con gelo",f_sun_cond_on_below:"Attiva sotto",f_sun_cond_off_above:"Disattiva sopra",f_sun_cond_num_inv_hint:"La protezione si attiva sotto il primo valore e resta attiva finché non si supera il secondo.",
   sun_bound_earliest:"non prima delle",sun_bound_latest:"non oltre le",sun_jitter:"Presenza",
   sun_elevation:"Elevazione attuale",sun_offset:"Offset",
@@ -927,6 +932,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  sec_vent:"Automatisch ventileren",sec_vent_sub:"Naar de ventilatiestand als de voorwaarden gelden",f_vent_enabled:"Automatisch ventileren",f_vent_hint:"Zolang alle voorwaarden gelden gaan de rolluiken naar hun ventilatiestand en daarna terug. Een open raam en zonwering gaan voor.",f_vent_cond:"Voorwaarde",
   sec_frost:"Vorstbeveiliging",sec_frost_sub:"Niet volledig sluiten bij kans op vorst",f_frost_cond:"Voorwaarde (optioneel)",f_frost_cond_hint:"Als deze voorwaarde geldt, sluiten rolluiken met een vorstpositie slechts tot daar. Gaat voor op gedeeltelijk sluiten.",f_pos_closed_frost:"Vorstpositie instellen",f_pos_closed_frost_hint:"Laat een kier zodat het rolluik niet vastvriest.",f_pos_closed_frost_val:"Positie bij vorst",f_sun_cond_on_below:"Inschakelen onder",f_sun_cond_off_above:"Uitschakelen boven",f_sun_cond_num_inv_hint:"De beveiliging treedt in werking onder de eerste waarde en blijft actief tot de tweede wordt overschreden.",
   sun_bound_earliest:"niet vóór",sun_bound_latest:"niet later dan",sun_jitter:"Aanwezigheid",
   sun_elevation:"Huidige elevatie",sun_offset:"Offset",
@@ -1049,6 +1055,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  sec_vent:"Automatisk udluftning",sec_vent_sub:"Kør til udluftningsposition når betingelserne er opfyldt",f_vent_enabled:"Udluft automatisk",f_vent_hint:"Så længe alle betingelser er opfyldt, kører rullegardinerne til udluftningsposition og tilbage igen. Et åbent vindue og solafskærmning har forrang.",f_vent_cond:"Betingelse",
   sec_frost:"Frostbeskyttelse",sec_frost_sub:"Luk ikke helt, når der er risiko for frost",f_frost_cond:"Betingelse (valgfri)",f_frost_cond_hint:"Når betingelsen er opfyldt, lukker rullegardiner med en frostposition kun så langt. Vinder over delvis lukning.",f_pos_closed_frost:"Angiv frostposition",f_pos_closed_frost_hint:"Efterlader en sprække, så rullegardinet ikke fryser fast.",f_pos_closed_frost_val:"Position ved frost",f_sun_cond_on_below:"Tænd under",f_sun_cond_off_above:"Sluk over",f_sun_cond_num_inv_hint:"Beskyttelsen aktiveres under den første værdi og forbliver aktiv, indtil den anden overskrides.",
   sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
   sun_elevation:"Aktuel elevation",sun_offset:"Offset",
@@ -1171,6 +1178,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  sec_vent:"Automatisk vädring",sec_vent_sub:"Kör till vädringsläget när villkoren gäller",f_vent_enabled:"Vädra automatiskt",f_vent_hint:"Så länge alla villkor gäller går jalusierna till vädringsläget och tillbaka igen. Ett öppet fönster och solskyddet går före.",f_vent_cond:"Villkor",
   sec_frost:"Frostskydd",sec_frost_sub:"Stäng inte helt när frost hotar",f_frost_cond:"Villkor (valfritt)",f_frost_cond_hint:"När villkoret gäller stänger jalusier med frostposition bara så långt. Går före delvis stängning.",f_pos_closed_frost:"Ange frostposition",f_pos_closed_frost_hint:"Lämnar en springa så att jalusin inte fryser fast.",f_pos_closed_frost_val:"Position vid frost",f_sun_cond_on_below:"Slå på under",f_sun_cond_off_above:"Slå av över",f_sun_cond_num_inv_hint:"Skyddet aktiveras under det första värdet och är kvar tills det andra överskrids.",
   sun_bound_earliest:"tidigast",sun_bound_latest:"senast",sun_jitter:"Närvaro",
   sun_elevation:"Aktuell elevation",sun_offset:"Offset",
@@ -1293,6 +1301,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  sec_vent:"Automatyczne wietrzenie",sec_vent_sub:"Jazda do pozycji wietrzenia, gdy warunki są spełnione",f_vent_enabled:"Wietrz automatycznie",f_vent_hint:"Dopóki wszystkie warunki są spełnione, rolety jadą do pozycji wietrzenia, a potem wracają. Otwarte okno i ochrona przeciwsłoneczna mają pierwszeństwo.",f_vent_cond:"Warunek",
   sec_frost:"Ochrona przed mrozem",sec_frost_sub:"Nie zamykaj całkowicie przy mrozie",f_frost_cond:"Warunek (opcjonalnie)",f_frost_cond_hint:"Gdy warunek jest spełniony, rolety z pozycją mrozową zamykają się tylko do niej. Ma pierwszeństwo przed zamknięciem częściowym.",f_pos_closed_frost:"Ustaw pozycję mrozową",f_pos_closed_frost_hint:"Zostawia szczelinę, aby roleta nie przymarzła.",f_pos_closed_frost_val:"Pozycja przy mrozie",f_sun_cond_on_below:"Włącz poniżej",f_sun_cond_off_above:"Wyłącz powyżej",f_sun_cond_num_inv_hint:"Ochrona włącza się poniżej pierwszej wartości i działa, dopóki nie zostanie przekroczona druga.",
   sun_bound_earliest:"nie wcześniej niż",sun_bound_latest:"nie później niż",sun_jitter:"Obecność",
   sun_elevation:"Aktualna elewacja",sun_offset:"Offset",
@@ -1415,6 +1424,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  sec_vent:"Ventilação automática",sec_vent_sub:"Ir para a posição de ventilação quando as condições se verificam",f_vent_enabled:"Ventilar automaticamente",f_vent_hint:"Enquanto todas as condições se verificarem, os estores vão para a posição de ventilação e depois voltam. Uma janela aberta e a proteção solar têm prioridade.",f_vent_cond:"Condição",
   sec_frost:"Proteção contra gelo",sec_frost_sub:"Não fechar totalmente com risco de gelo",f_frost_cond:"Condição (opcional)",f_frost_cond_hint:"Se a condição se verificar, os estores com posição de gelo fecham apenas até aí. Tem prioridade sobre o fecho parcial.",f_pos_closed_frost:"Definir posição de gelo",f_pos_closed_frost_hint:"Deixa uma folga para o estore não congelar.",f_pos_closed_frost_val:"Posição com gelo",f_sun_cond_on_below:"Ligar abaixo de",f_sun_cond_off_above:"Desligar acima de",f_sun_cond_num_inv_hint:"A proteção actua abaixo do primeiro valor e mantém-se até o segundo ser ultrapassado.",
   sun_bound_earliest:"não antes das",sun_bound_latest:"não depois das",sun_jitter:"Presença",
   sun_elevation:"Elevação atual",sun_offset:"Offset",
@@ -1537,6 +1547,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  sec_vent:"Automatisk lufting",sec_vent_sub:"Kjør til luftestilling når betingelsene er oppfylt",f_vent_enabled:"Luft automatisk",f_vent_hint:"Så lenge alle betingelser er oppfylt, kjører rullegardinene til luftestillingen og tilbake igjen. Et åpent vindu og solskjermingen går foran.",f_vent_cond:"Betingelse",
   sec_frost:"Frostbeskyttelse",sec_frost_sub:"Ikke lukk helt når det er fare for frost",f_frost_cond:"Betingelse (valgfri)",f_frost_cond_hint:"Når betingelsen gjelder, lukker rullegardiner med frostposisjon bare så langt. Går foran delvis lukking.",f_pos_closed_frost:"Angi frostposisjon",f_pos_closed_frost_hint:"Lar det stå en glipe så rullegardinen ikke fryser fast.",f_pos_closed_frost_val:"Posisjon ved frost",f_sun_cond_on_below:"Slå på under",f_sun_cond_off_above:"Slå av over",f_sun_cond_num_inv_hint:"Beskyttelsen aktiveres under den første verdien og er aktiv til den andre overskrides.",
   sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
   sun_elevation:"Gjeldende elevasjon",sun_offset:"Offset",
@@ -2382,7 +2393,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -2501,6 +2512,17 @@ class ShutterPilotPanel extends PanelBase {
       <div class="hint">${T("f_frost_cond_hint")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
       ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,f,true):""}
+
+      ${this._section("mdi:air-filter","sec_vent","sec_vent_sub")}
+      <div class="field"><label><input type="checkbox" .checked=${!!a.vent_enabled}
+        @change=${e=>{a.vent_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_vent_enabled")}</label>
+        <div class="hint">${T("f_vent_hint")}</div></div>
+      ${a.vent_enabled?html`
+        ${ep("sun_cond_vent_a_entity",T("f_vent_cond")+" 1",["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${a.sun_cond_vent_a_entity?this._renderCondDetail(a,"vent_a",a.sun_cond_vent_a_entity,f):""}
+        ${a.sun_cond_vent_a_entity?html`
+          ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",["binary_sensor","sensor","weather"],HINTS.condition)}
+          ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
 
       ${this._section("mdi:lightbulb-outline","sec_light","sec_light_sub")}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}

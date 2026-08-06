@@ -326,6 +326,25 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Automatic ventilation
+
+Ventilating used to be manual only — the dashboard button or the service. In the **area**, under *Automatic ventilation*, you can now say when it should happen by itself:
+
+1. Enable **Ventilate automatically**
+2. Name up to two conditions that **both** have to hold — e.g. a presence sensor "on" and a room temperature above 24 °C
+
+While all conditions hold, the area's shutters move to their **ventilation position** (the same one used for a tilted window). When one drops out they move back to where they stood before — not to "open", which would be wrong at night.
+
+Ranking when several things apply at once:
+
+| Priority | Reason |
+|---|---|
+| 1. Window contact | reacts to what somebody physically did at the window |
+| 2. Shading | heat comes first |
+| 3. Automatic ventilation | only touches shutters that are otherwise sitting still |
+
+With no condition configured nothing happens. Master, area and per-shutter switches apply as everywhere; switching the area off mid-ventilation still drives the shutter back rather than leaving it part way open.
+
 ## Frost protection
 
 In frost a fully closed shutter can freeze to the frame. Leaving a gap prevents that:
