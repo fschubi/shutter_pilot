@@ -109,6 +109,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 - **Positions-Slider** – Offen-, Geschlossen- und Sonnenschutz-Positionen (0-100%)
 - **Aussperrschutz** – Mindest-Position bei offener Tür (verhindert Aussperren)
 - **Nachholfunktion** – holt einen verpassten Schließbefehl nach wenn das Fenster noch offen war
+- **Verzögerung beim Schließen** – wie lange „geschlossen" anhalten muss, bevor der Rollladen zurückfährt (0–30 s, Standard 5 s). Beim Drehen des Griffs von „gekippt" auf „offen" läuft der Kontakt kurz durch „geschlossen"; ohne Wartezeit fährt der Rollladen sofort zurück und die Offen-Position wird nie erreicht. `0` schaltet die Wartezeit ab
 
 ### Dashboard
 

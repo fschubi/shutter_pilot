@@ -49,6 +49,12 @@ CONF_POSITION_WHEN_WINDOW_OPEN = "position_when_window_open"
 CONF_POSITION_WHEN_WINDOW_TILTED = "position_when_window_tilted"
 CONF_LOCK_PROTECTION = "lock_protection"
 CONF_MIN_POSITION_WHEN_OPEN = "min_position_when_open"
+# Turning the handle from "tilted" to "open" drags the contact through
+# "closed" for a moment. Without a wait the shutter drives back right away and
+# never reaches the open position. Seconds, 0 disables the wait.
+CONF_WINDOW_CLOSE_DEBOUNCE = "window_close_debounce"
+DEFAULT_WINDOW_CLOSE_DEBOUNCE = 5
+MAX_WINDOW_CLOSE_DEBOUNCE = 30
 CONF_AREA_UP_ID = "area_up_id"
 CONF_AREA_DOWN_ID = "area_down_id"
 CONF_POSITION_OPEN = "position_open"

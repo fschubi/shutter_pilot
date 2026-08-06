@@ -44,7 +44,7 @@ from .const import (
     DEFAULT_VERIFY_RETRIES,
     DEFAULT_VERIFY_TOLERANCE,
 )
-from .window_trigger import setup_window_triggers
+from .window_trigger import cancel_all_window_close, setup_window_triggers
 from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
@@ -264,6 +264,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data[key] = []
 
             cancel_all_verifications(data)
+            cancel_all_window_close(data)
 
             ticker = data.pop("_minute_ticker_unsub", None)
             if ticker:

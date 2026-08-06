@@ -278,6 +278,7 @@ de:{
   f_pos_open:"Position Offen",f_pos_closed:"Position Geschlossen",f_pos_sun:"Sonnenschutz-Position",
   f_drive_after:"Nachholen wenn Fenster offen",
   f_drive_after_hint:"Wenn die Schließzeit erreicht wird aber das Fenster noch offen ist, wird die Fahrt nachgeholt sobald das Fenster geschlossen wird.",
+  f_win_debounce:"Verzögerung beim Schließen (Sek.)",f_win_debounce_hint:"Beim Drehen des Griffs von „gekippt“ auf „offen“ meldet der Kontakt kurz „geschlossen“. So lange muss „geschlossen“ anhalten, bevor der Rollladen zurückfährt. 0 = sofort reagieren.",
   pick_entity:"Entität auswählen…",
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
 },
@@ -456,6 +457,7 @@ en:{
   f_pos_open:"Position Open",f_pos_closed:"Position Closed",f_pos_sun:"Sun protection position",
   f_drive_after:"Catch up when window open",
   f_drive_after_hint:"When close time is reached but the window is still open, the drive will be executed as soon as the window is closed.",
+  f_win_debounce:"Close delay (sec.)",f_win_debounce_hint:"Turning the handle from tilted to open makes the contact report \"closed\" for a moment. This is how long \"closed\" has to hold before the shutter drives back. 0 = react immediately.",
   pick_entity:"Select entity…",
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
@@ -576,6 +578,7 @@ fr:{
   f_area_up:"Zone (Montée)",f_area_down:"Zone (Descente)",
   f_pos_open:"Position Ouvert",f_pos_closed:"Position Fermé",f_pos_sun:"Position protection solaire",
   f_drive_after:"Rattraper si fenêtre ouverte",f_drive_after_hint:"La commande sera exécutée dès que la fenêtre sera fermée.",
+  f_win_debounce:"Délai à la fermeture (sec.)",f_win_debounce_hint:"Durée pendant laquelle « fermé » doit se maintenir avant le retour du volet. 0 = immédiat.",
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
@@ -695,6 +698,7 @@ es:{
   f_area_up:"Zona (Subida)",f_area_down:"Zona (Bajada)",
   f_pos_open:"Posición Abierta",f_pos_closed:"Posición Cerrada",f_pos_sun:"Posición protección solar",
   f_drive_after:"Recuperar si ventana abierta",f_drive_after_hint:"Se ejecutará cuando la ventana se cierre.",
+  f_win_debounce:"Retardo al cerrar (seg.)",f_win_debounce_hint:"Tiempo que debe mantenerse «cerrado» antes de que la persiana vuelva. 0 = inmediato.",
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
@@ -814,6 +818,7 @@ it:{
   f_area_up:"Zona (Su)",f_area_down:"Zona (Giù)",
   f_pos_open:"Posizione Aperta",f_pos_closed:"Posizione Chiusa",f_pos_sun:"Posizione protezione solare",
   f_drive_after:"Recupera se finestra aperta",f_drive_after_hint:"Verrà eseguito alla chiusura della finestra.",
+  f_win_debounce:"Ritardo alla chiusura (sec.)",f_win_debounce_hint:"Per quanto tempo deve permanere «chiuso» prima che la tapparella torni indietro. 0 = subito.",
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
@@ -934,6 +939,7 @@ nl:{
   f_area_up:"Zone (Omhoog)",f_area_down:"Zone (Omlaag)",
   f_pos_open:"Positie Open",f_pos_closed:"Positie Gesloten",f_pos_sun:"Zonweringpositie",
   f_drive_after:"Inhalen als raam open",f_drive_after_hint:"Als de sluitingstijd bereikt wordt maar het raam nog open is, wordt de actie uitgevoerd zodra het raam gesloten wordt.",
+  f_win_debounce:"Vertraging bij sluiten (sec.)",f_win_debounce_hint:"Hoe lang «gesloten» moet aanhouden voordat het rolluik terugkeert. 0 = direct.",
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
@@ -1054,6 +1060,7 @@ da:{
   f_area_up:"Område (Op)",f_area_down:"Område (Ned)",
   f_pos_open:"Position Åben",f_pos_closed:"Position Lukket",f_pos_sun:"Solbeskyttelsesposition",
   f_drive_after:"Indhent hvis vindue åbent",f_drive_after_hint:"Handlingen udføres, så snart vinduet lukkes.",
+  f_win_debounce:"Forsinkelse ved lukning (sek.)",f_win_debounce_hint:"Hvor længe «lukket» skal holde, før rullegardinet kører tilbage. 0 = med det samme.",
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
@@ -1174,6 +1181,7 @@ sv:{
   f_area_up:"Område (Upp)",f_area_down:"Område (Ner)",
   f_pos_open:"Position Öppen",f_pos_closed:"Position Stängd",f_pos_sun:"Solskyddsposition",
   f_drive_after:"Hämta om fönster öppet",f_drive_after_hint:"Åtgärden utförs så snart fönstret stängs.",
+  f_win_debounce:"Fördröjning vid stängning (sek.)",f_win_debounce_hint:"Hur länge «stängt» måste hålla innan jalusin åker tillbaka. 0 = direkt.",
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
@@ -1294,6 +1302,7 @@ pl:{
   f_area_up:"Strefa (W górę)",f_area_down:"Strefa (W dół)",
   f_pos_open:"Pozycja Otwarta",f_pos_closed:"Pozycja Zamknięta",f_pos_sun:"Pozycja osłony słonecznej",
   f_drive_after:"Nadrobić gdy okno otwarte",f_drive_after_hint:"Akcja zostanie wykonana po zamknięciu okna.",
+  f_win_debounce:"Opóźnienie przy zamykaniu (sek.)",f_win_debounce_hint:"Jak długo musi utrzymać się stan „zamknięte”, zanim roleta wróci. 0 = natychmiast.",
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
@@ -1414,6 +1423,7 @@ pt:{
   f_area_up:"Zona (Subir)",f_area_down:"Zona (Descer)",
   f_pos_open:"Posição Aberta",f_pos_closed:"Posição Fechada",f_pos_sun:"Posição proteção solar",
   f_drive_after:"Recuperar se janela aberta",f_drive_after_hint:"A ação será executada assim que a janela for fechada.",
+  f_win_debounce:"Atraso ao fechar (seg.)",f_win_debounce_hint:"Quanto tempo «fechado» tem de se manter antes de o estore recuar. 0 = imediato.",
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
@@ -1534,6 +1544,7 @@ nb:{
   f_area_up:"Område (Opp)",f_area_down:"Område (Ned)",
   f_pos_open:"Posisjon Åpen",f_pos_closed:"Posisjon Lukket",f_pos_sun:"Solbeskyttelsesposisjon",
   f_drive_after:"Ta igjen hvis vindu åpent",f_drive_after_hint:"Handlingen utføres så snart vinduet lukkes.",
+  f_win_debounce:"Forsinkelse ved lukking (sek.)",f_win_debounce_hint:"Hvor lenge «lukket» må holde før rullegardinen kjører tilbake. 0 = umiddelbart.",
   pick_entity:"Velg entitet…",confirm_del_area:"Slette område \"{id}\"?",confirm_del_shutter:"Slette persienne?",
 },
 };
@@ -2486,7 +2497,7 @@ class ShutterPilotPanel extends PanelBase {
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -2510,7 +2521,7 @@ class ShutterPilotPanel extends PanelBase {
                   <div class="k">${T("col_window")}</div><div class="v">${s.window_entity_id||"–"}</div>
                 </div>
                 <div class="row-actions">
-                  <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn edit" @click=${()=>{this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
                   <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button>
                 </div>
               </div>`;})}
@@ -2526,7 +2537,7 @@ class ShutterPilotPanel extends PanelBase {
                 <td>${s.window_entity_id||"–"}</td>
                 <td>${this._shutterAutoSwitch(s)}</td>
                 <td style="text-align:right">
-                  <button class="btn edit" @click=${()=>{this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn edit" @click=${()=>{this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
                   <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
           </table></div></div>
         `}`;
@@ -2601,6 +2612,8 @@ class ShutterPilotPanel extends PanelBase {
       ${s.lock_protection?pct("min_position_when_open",T("f_min_pos")):""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
         <div class="hint">${T("f_drive_after_hint")}</div></div>
+      ${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
+      <div class="hint">${T("f_win_debounce_hint")}</div>
 
       ${this._section("mdi:blinds-horizontal","sec_slats","sec_slats_sub")}
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>

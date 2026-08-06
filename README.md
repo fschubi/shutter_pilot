@@ -109,6 +109,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 - **Position sliders** – open, closed, and sun protection positions (0-100%)
 - **Lock protection** – minimum position when a door is open (prevents lockout)
 - **Drive after close** – catches up a missed close command when the window was still open
+- **Close delay** – how long "closed" has to hold before the shutter drives back (0–30 s, default 5 s). Turning the handle from tilted to open drags the contact through "closed"; without a wait the shutter drives back immediately and never reaches the open position. `0` disables the wait
 
 ### Dashboard
 

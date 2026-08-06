@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -13,11 +14,14 @@ from .const import (
     DOMAIN,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
+    CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_TILTED_STATE,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_POSITION_CLOSED,
+    DEFAULT_WINDOW_CLOSE_DEBOUNCE,
+    MAX_WINDOW_CLOSE_DEBOUNCE,
 )
 from .helpers import (
     get_cover_current_position,
@@ -43,6 +47,36 @@ def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool
     except (TypeError, ValueError):
         pos_closed = 0.0
     return current_position <= (pos_closed + _CLOSED_TOLERANCE_PCT)
+
+
+def _debounce_seconds(shutter: dict) -> int:
+    """How long "closed" has to hold before we act on it."""
+    try:
+        value = int(shutter.get(CONF_WINDOW_CLOSE_DEBOUNCE, DEFAULT_WINDOW_CLOSE_DEBOUNCE))
+    except (TypeError, ValueError):
+        return DEFAULT_WINDOW_CLOSE_DEBOUNCE
+    return max(0, min(MAX_WINDOW_CLOSE_DEBOUNCE, value))
+
+
+def cancel_window_close(data: dict[str, Any], entity_id: str) -> None:
+    """Drop a pending close reaction, e.g. because the window opened again."""
+    tasks = data.get("_window_close_tasks")
+    if not isinstance(tasks, dict):
+        return
+    task = tasks.pop(entity_id, None)
+    if task is not None and not task.done():
+        task.cancel()
+
+
+def cancel_all_window_close(data: dict[str, Any]) -> None:
+    """Drop every pending close reaction, for unload and reload."""
+    tasks = data.get("_window_close_tasks")
+    if not isinstance(tasks, dict):
+        return
+    for task in list(tasks.values()):
+        if not task.done():
+            task.cancel()
+    tasks.clear()
 
 
 def _has_tilt_state(shutter: dict) -> bool:
@@ -78,10 +112,13 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     if not data:
         return
 
-    # Cancel previous listeners
+    # Cancel previous listeners. Pending close reactions have to go too: this
+    # runs on every save in the panel, and a surviving timer would drive with
+    # the shutter configuration it captured before the change.
     for unsub in data.get("_window_unsubs", []):
         unsub()
     data["_window_unsubs"] = []
+    cancel_all_window_close(data)
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
@@ -114,6 +151,74 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         _watch(get_tilt_entity_id(shutter), shutter)
 
     @callback
+    def _apply_window_closed(shutter: dict, cover_entity: str, pos_closed: Any) -> None:
+        """React to a window that stayed closed: catch up, or restore."""
+        pending = data.get("drive_after_close_pending", {})
+        pending_entry = pending.pop(cover_entity, None)
+        if pending_entry is not None:
+            target_pos = pending_entry.get("position", pos_closed)
+            reason = pending_entry.get("reason", "Drive after close")
+            hass.async_create_task(
+                set_cover_position(
+                    hass,
+                    entry,
+                    cover_entity,
+                    target_pos,
+                    reason,
+                    tilt_position=pending_entry.get("tilt"),
+                )
+            )
+            _LOGGER.info(
+                "Fenster geschlossen – Drive-after-close: %s -> %d%%",
+                cover_entity, int(target_pos),
+            )
+            return
+
+        # Restore only if this window cycle actually triggered a movement.
+        if trigger_actions.get(cover_entity) == "triggered":
+            restore_pos = trigger_heights.get(cover_entity)
+            if restore_pos is None:
+                restore_pos = last_positions.get(cover_entity, pos_closed)
+            hass.async_create_task(
+                set_cover_position(
+                    hass,
+                    entry,
+                    cover_entity,
+                    restore_pos,
+                    "Window closed – restore",
+                )
+            )
+        trigger_actions.pop(cover_entity, None)
+        trigger_heights.pop(cover_entity, None)
+
+    async def _delayed_close(
+        shutter: dict, cover_entity: str, pos_closed: Any, delay: int
+    ) -> None:
+        """Wait out a short "closed" blip before reacting to it."""
+        try:
+            await asyncio.sleep(delay)
+            # Re-read instead of trusting the cancel: cancelling only takes
+            # effect on the next loop pass, and a state can change without an
+            # event ever reaching us.
+            if get_window_state(hass, shutter) != "closed":
+                return
+            if not is_system_enabled(hass, entry):
+                return
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                return
+            _apply_window_closed(shutter, cover_entity, pos_closed)
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # pragma: no cover - one window must not break others
+            _LOGGER.exception("Delayed window close failed for %s", cover_entity)
+        finally:
+            tasks = data.get("_window_close_tasks")
+            # Only drop our own entry – a newer task may already have replaced
+            # us in the dict while this one was being cancelled.
+            if isinstance(tasks, dict) and tasks.get(cover_entity) is asyncio.current_task():
+                tasks.pop(cover_entity, None)
+
+    @callback
     def _on_window_state_change(event) -> None:
         if not is_system_enabled(hass, entry):
             return
@@ -135,6 +240,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             # all. Also drop a pending catch-up drive, otherwise it would fire
             # the moment the automation is switched back on.
             if not is_shutter_automation_enabled(hass, entry, shutter):
+                cancel_window_close(data, cover_entity)
                 data.get("drive_after_close_pending", {}).pop(cover_entity, None)
                 trigger_actions.pop(cover_entity, None)
                 trigger_heights.pop(cover_entity, None)
@@ -144,27 +250,39 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             # Use window_helper for consistent binary_sensor + sensor support
             window_state = get_window_state(hass, shutter)
 
+            if window_state != "closed":
+                # The handle passes through "closed" on its way from tilted to
+                # open. Drop the planned drive back before anything else can
+                # act on it.
+                cancel_window_close(data, cover_entity)
+
             target_pos = _get_target_position_for_window_state(shutter, window_state)
 
             if window_state in ("open", "tilted") and target_pos is not None:
                 # Window open or tilted -> only drive to target if the cover is (nearly) closed.
                 # Rationale: During daytime (cover already opened by automation), opening a window/door
                 # must NOT force the cover into a "ventilation" position.
+                cycle_active = trigger_actions.get(cover_entity) == "triggered"
                 current_pos = get_cover_current_position(hass, cover_entity)
                 if current_pos is None:
                     # Fail-safe: if we can't read current position, do nothing.
                     trigger_actions.pop(cover_entity, None)
                     trigger_heights.pop(cover_entity, None)
                     continue
-                if not _is_cover_effectively_closed(shutter, current_pos):
+                if not cycle_active and not _is_cover_effectively_closed(
+                    shutter, current_pos
+                ):
                     # Not in "closed" state -> no window-trigger cycle active.
                     # Clear stale cycle markers so a later "closed" event cannot restore/close.
                     trigger_actions.pop(cover_entity, None)
                     trigger_heights.pop(cover_entity, None)
                     continue
 
-                saved = current_pos
-                trigger_heights[cover_entity] = saved
+                if not cycle_active:
+                    # Remember the height only when the cycle starts. Going
+                    # from tilted to open would otherwise make the ventilation
+                    # position the height we restore to later.
+                    trigger_heights[cover_entity] = current_pos
                 trigger_actions[cover_entity] = "triggered"
                 if window_state == "tilted":
                     reason = "Window tilted"
@@ -176,44 +294,20 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     set_cover_position(hass, entry, cover_entity, target_pos, reason)
                 )
             elif window_state == "closed":
-                # Window closed -> restore saved position OR execute drive_after_close
-                # Prüfe drive_after_close: war Schließen geplant?
-                pending = data.get("drive_after_close_pending", {})
-                pending_entry = pending.pop(cover_entity, None)
-                if pending_entry is not None:
-                    target_pos = pending_entry.get("position", pos_closed)
-                    reason = pending_entry.get("reason", "Drive after close")
-                    hass.async_create_task(
-                        set_cover_position(
-                            hass,
-                            entry,
-                            cover_entity,
-                            target_pos,
-                            reason,
-                            tilt_position=pending_entry.get("tilt"),
-                        )
-                    )
-                    _LOGGER.info(
-                        "Fenster geschlossen – Drive-after-close: %s -> %d%%",
-                        cover_entity, int(target_pos),
-                    )
+                # Window closed -> restore saved position OR execute drive_after_close,
+                # but only once "closed" has held for the configured time.
+                delay = _debounce_seconds(shutter)
+                if delay <= 0:
+                    # No task, no await: exactly the order of events we had
+                    # before the debounce existed.
+                    _apply_window_closed(shutter, cover_entity, pos_closed)
                 else:
-                    # Restore only if this window cycle actually triggered a movement.
-                    if trigger_actions.get(cover_entity) == "triggered":
-                        restore_pos = trigger_heights.get(cover_entity)
-                        if restore_pos is None:
-                            restore_pos = last_positions.get(cover_entity, pos_closed)
+                    cancel_window_close(data, cover_entity)
+                    data.setdefault("_window_close_tasks", {})[cover_entity] = (
                         hass.async_create_task(
-                            set_cover_position(
-                                hass,
-                                entry,
-                                cover_entity,
-                                restore_pos,
-                                "Window closed – restore",
-                            )
+                            _delayed_close(shutter, cover_entity, pos_closed, delay)
                         )
-                    trigger_actions.pop(cover_entity, None)
-                    trigger_heights.pop(cover_entity, None)
+                    )
 
     for window_id in window_to_shutters:
         unsub = async_track_state_change_event(
