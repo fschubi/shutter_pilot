@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Literal
 
 from homeassistant.core import HomeAssistant, callback
@@ -31,6 +31,7 @@ class ShutterPositionStore:
         self._entry_id = entry_id
         self._store = Store(hass, STORAGE_VERSION, _storage_key(entry_id))
         self._covers: dict[str, dict[str, Any]] | None = None
+        self._pending: dict[str, dict[str, Any]] = {}
 
     async def async_load(self) -> dict[str, dict[str, Any]]:
         """Load all cover records from disk."""
@@ -39,16 +40,77 @@ class ShutterPositionStore:
         raw = await self._store.async_load()
         if not isinstance(raw, dict):
             self._covers = {}
+            self._pending = {}
         else:
             covers = raw.get("covers")
             self._covers = covers if isinstance(covers, dict) else {}
+            pending = raw.get("pending")
+            self._pending = pending if isinstance(pending, dict) else {}
         return self._covers
 
     async def async_save(self) -> None:
         """Persist current in-memory covers to disk."""
         if self._covers is None:
             return
-        await self._store.async_save({"covers": self._covers})
+        await self._store.async_save(
+            {"covers": self._covers, "pending": self._pending}
+        )
+
+    async def async_set_pending(
+        self, cover_entity_id: str, position: float, tilt: float | None, reason: str
+    ) -> None:
+        """Remember a drive that waits for the window to close.
+
+        Only the plain values are persisted, never the shutter configuration
+        that came with it – that is reloaded from the options anyway, and a
+        stale copy on disk would be the more dangerous of the two.
+        """
+        await self.async_load()
+        self._pending[cover_entity_id] = {
+            "position": float(position),
+            "tilt": None if tilt is None else float(tilt),
+            "reason": str(reason),
+            "saved": datetime.now().astimezone().isoformat(),
+        }
+        await self.async_save()
+
+    async def async_clear_pending(self, cover_entity_id: str) -> None:
+        """Drop a remembered drive, because it ran or is no longer wanted."""
+        await self.async_load()
+        if self._pending.pop(cover_entity_id, None) is not None:
+            await self.async_save()
+
+    async def async_get_pending(self, max_age_hours: float) -> dict[str, dict[str, Any]]:
+        """Return remembered drives that are still worth running.
+
+        A catch-up from days ago says nothing about what the shutters should do
+        now, so anything older is dropped instead of surprising someone with a
+        movement after a long absence.
+        """
+        await self.async_load()
+        cutoff = datetime.now().astimezone() - timedelta(hours=max_age_hours)
+        fresh: dict[str, dict[str, Any]] = {}
+        dropped = False
+        for cover, rec in list(self._pending.items()):
+            if not isinstance(rec, dict):
+                dropped = True
+                continue
+            try:
+                saved = datetime.fromisoformat(str(rec.get("saved")))
+            except (TypeError, ValueError):
+                dropped = True
+                continue
+            if saved < cutoff:
+                _LOGGER.info(
+                    "Discarding stale catch-up drive for %s (saved %s)", cover, saved
+                )
+                dropped = True
+                continue
+            fresh[cover] = rec
+        if dropped:
+            self._pending = fresh
+            await self.async_save()
+        return dict(fresh)
 
     async def async_set_position(
         self,

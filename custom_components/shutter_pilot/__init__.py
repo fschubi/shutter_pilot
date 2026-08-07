@@ -60,7 +60,11 @@ from .cover_tracker import (
 )
 from .position_store import get_position_store
 from .schedule_times import get_sun_mode_trigger_details
-from .helpers import apply_covers_driven_from_persisted, get_sun_protect_status_for_areas
+from .helpers import (
+    apply_covers_driven_from_persisted,
+    get_sun_protect_status_for_areas,
+    restore_drive_after_close,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,6 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         store = get_position_store(hass, entry.entry_id)
         await store.async_load()
         apply_covers_driven_from_persisted(hass, entry, shutters, store)
+        await restore_drive_after_close(hass, entry, hass.data[DOMAIN][entry.entry_id])
         await setup_cover_position_tracker(hass, entry)
         await setup_window_triggers(hass, entry)
         await setup_brightness_listener(hass, entry)

@@ -27,6 +27,7 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
+    remember_drive_after_close,
     resolve_close_role,
     clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
@@ -119,12 +120,10 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             tilt = get_tilt_for_role(shutter, shutter_role)
             drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
             if apply_lock_protection and drive_after and is_window_open_or_tilted(hass, shutter):
-                data["drive_after_close_pending"][cover] = {
-                    "position": position,
-                    "tilt": tilt,
-                    "reason": direction,
-                    "shutter": shutter,
-                }
+                remember_drive_after_close(
+                    hass, entry, data, cover,
+                    position=position, tilt=tilt, reason=direction, shutter=shutter,
+                )
                 _LOGGER.info(
                     "%s: %s Fenster offen – Fahrt wird nach Schließen ausgeführt (drive_after_close)",
                     direction, cover,

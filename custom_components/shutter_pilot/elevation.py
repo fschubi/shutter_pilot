@@ -37,6 +37,7 @@ from .helpers import (
     is_shutter_automation_enabled,
     is_cover_sun_protected,
     register_minute_callback,
+    remember_drive_after_close,
     resolve_shading_config,
     season_allows_shading,
     set_cover_position,
@@ -110,12 +111,10 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if shutter.get(CONF_DRIVE_AFTER_CLOSE, False) and is_window_open_or_tilted(
                 hass, shutter
             ):
-                data.setdefault("drive_after_close_pending", {})[cover_entity] = {
-                    "position": pos,
-                    "tilt": tilt,
-                    "reason": "Sun protect",
-                    "shutter": shutter,
-                }
+                remember_drive_after_close(
+                    hass, entry, data, cover_entity,
+                    position=pos, tilt=tilt, reason="Sun protect", shutter=shutter,
+                )
                 continue
             pos = get_effective_close_position(hass, shutter, pos)
             e_min, e_max = get_elevation_bounds(area)

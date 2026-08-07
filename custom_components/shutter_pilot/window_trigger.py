@@ -24,6 +24,7 @@ from .const import (
     MAX_WINDOW_CLOSE_DEBOUNCE,
 )
 from .helpers import (
+    forget_drive_after_close,
     get_tracked_position,
     is_shutter_automation_enabled,
     is_system_enabled,
@@ -153,8 +154,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     @callback
     def _apply_window_closed(shutter: dict, cover_entity: str, pos_closed: Any) -> None:
         """React to a window that stayed closed: catch up, or restore."""
-        pending = data.get("drive_after_close_pending", {})
-        pending_entry = pending.pop(cover_entity, None)
+        pending_entry = forget_drive_after_close(hass, entry, data, cover_entity)
         if pending_entry is not None:
             target_pos = pending_entry.get("position", pos_closed)
             reason = pending_entry.get("reason", "Drive after close")
@@ -241,7 +241,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             # the moment the automation is switched back on.
             if not is_shutter_automation_enabled(hass, entry, shutter):
                 cancel_window_close(data, cover_entity)
-                data.get("drive_after_close_pending", {}).pop(cover_entity, None)
+                forget_drive_after_close(hass, entry, data, cover_entity)
                 trigger_actions.pop(cover_entity, None)
                 trigger_heights.pop(cover_entity, None)
                 continue

@@ -802,6 +802,84 @@ def should_skip_full_open_preserving_sun_protect(
     return True
 
 
+# A catch-up older than this says nothing about what should happen now.
+PENDING_MAX_AGE_HOURS = 24.0
+
+
+def remember_drive_after_close(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    cover_entity_id: str,
+    *,
+    position: float,
+    tilt: float | None,
+    reason: str,
+    shutter: dict[str, Any],
+) -> None:
+    """Note a drive that waits for the window, in memory and on disk.
+
+    The shutter config stays in memory only – on disk it would go stale while
+    the options move on.
+    """
+    data.setdefault("drive_after_close_pending", {})[cover_entity_id] = {
+        "position": position,
+        "tilt": tilt,
+        "reason": reason,
+        "shutter": shutter,
+    }
+    store = get_position_store(hass, entry.entry_id)
+    hass.async_create_task(
+        store.async_set_pending(cover_entity_id, position, tilt, reason)
+    )
+
+
+def forget_drive_after_close(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    cover_entity_id: str,
+) -> dict[str, Any] | None:
+    """Take a pending drive out of memory and off disk."""
+    entry_data = data.get("drive_after_close_pending", {}).pop(cover_entity_id, None)
+    store = get_position_store(hass, entry.entry_id)
+    hass.async_create_task(store.async_clear_pending(cover_entity_id))
+    return entry_data
+
+
+async def restore_drive_after_close(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict[str, Any]
+) -> None:
+    """Bring remembered catch-up drives back after a restart.
+
+    Only covers that still exist in the configuration are restored; the shutter
+    dict is taken from the current options, never from the stored copy.
+    """
+    store = get_position_store(hass, entry.entry_id)
+    saved = await store.async_get_pending(PENDING_MAX_AGE_HOURS)
+    if not saved:
+        return
+    shutters = {
+        str(sh.get(CONF_COVER_ENTITY_ID) or ""): sh
+        for sh in data.get("shutters", [])
+        if isinstance(sh, dict)
+    }
+    pending = data.setdefault("drive_after_close_pending", {})
+    for cover, rec in saved.items():
+        shutter = shutters.get(cover)
+        if shutter is None:
+            await store.async_clear_pending(cover)
+            continue
+        pending[cover] = {
+            "position": rec.get("position"),
+            "tilt": rec.get("tilt"),
+            "reason": rec.get("reason", "Drive after close"),
+            "shutter": shutter,
+        }
+    if pending:
+        _LOGGER.info("Restored %d pending catch-up drive(s)", len(pending))
+
+
 def get_tracked_position(
     hass: HomeAssistant, shutter: dict[str, Any], cover_entity_id: str
 ) -> float | None:

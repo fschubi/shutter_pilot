@@ -52,6 +52,7 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     is_sun_protect_active,
+    remember_drive_after_close,
     resolve_close_role,
     set_cover_position,
     should_skip_automated_up,
@@ -268,12 +269,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     tilt = get_tilt_for_role(shutter, close_role)
                     drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
                     if drive_after and is_window_open_or_tilted(hass, shutter):
-                        data.setdefault("drive_after_close_pending", {})[cover_entity] = {
-                            "position": pos,
-                            "tilt": tilt,
-                            "reason": "Brightness down",
-                            "shutter": shutter,
-                        }
+                        remember_drive_after_close(
+                            hass, entry, data, cover_entity,
+                            position=pos, tilt=tilt,
+                            reason="Brightness down", shutter=shutter,
+                        )
                         continue
                     pos = get_effective_close_position(hass, shutter, pos)
                     down_covers.append(cover_entity)
