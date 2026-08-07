@@ -4,6 +4,22 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.6.1]
+
+Zwei Fehlerberichte von GitHub und drei kleine Verbesserungen aus dem Forum.
+
+### Behoben
+- **Rollladen fuhr im Minutentakt zwischen offen und Sonnenschutz hin und her.** Betroffen waren Rollläden, die zum Hochfahren einen **anderen Bereich** benutzen als zum Runterfahren – also genau das Muster „morgens raumweise, abends alle zusammen". Die Beschattung wurde vom Runter-Bereich gesetzt, aber vom Hoch-Bereich wieder aufgehoben; unterschieden sich deren Bedingungen, Beschattungszeiträume oder Ausrichtungen, hoben sich beide jede Minute gegenseitig auf. Der Bereich, mit dem ein Rollladen schließt, entscheidet jetzt allein über seine Beschattung. (GitHub #4)
+- **Eigener Rollladenname wurde im Dashboard nicht angezeigt.** Dort stand der Name der Cover-Entität, auch wenn im Formular ein eigener eingetragen war. Der eigene Name gewinnt jetzt – so wie im Tab Rollläden schon immer. (GitHub #3)
+- **Fahrtkontrolle konnte eine laufende Prüfung aus den Augen verlieren.** Wurde eine Fahrt durch eine neue ersetzt, räumte die abgebrochene Prüfung anschließend den Eintrag der neuen weg. Die neue Prüfung lief dann bis zum Ende durch, auch über einen Reload hinweg.
+
+### Neu
+- **Rollläden lassen sich im Dashboard einzeln bedienen.** In jeder Bereichskarte hat jede Rollladenzeile jetzt eigene Knöpfe für hoch, stop und runter. Die Knöpfe für den ganzen Bereich bleiben unverändert darunter.
+
+### Geändert
+- **Hinweis beim Frostschutz**, welcher Sensor sich als Bedingung anbietet – der Name „Vorhersage Tiefsttemperatur" war schwer zu finden, wenn man nach „forecast" gesucht hat.
+- **README**: eigener Abschnitt, wie sich die Beschattung allein über Helligkeitssensoren steuern lässt, ohne Höhenwinkel und Himmelsrichtung. Das ging schon immer, war aber nirgends beschrieben.
+
 ## [2.6.0]
 
 Aus dem Forum: zwei bestätigte Fehlermeldungen von Xerenas und drei Anregungen von Xerenas und Linos.

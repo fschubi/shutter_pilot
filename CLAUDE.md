@@ -38,7 +38,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (313 Tests)
+tests/               pytest-Suite (320 Tests)
 ```
 
 ## Funktionsumfang
@@ -171,7 +171,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 313 Tests, ~4 s
+.venv/bin/pytest            # 320 Tests, ~5 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -197,7 +197,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.6.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.6.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -411,3 +411,29 @@ danach stillschweigend Rollläden ausgelassen.
 
 **Offen:** die neun kleineren Panel-Sprachen haben 52 fehlende i18n-Schlüssel
 (Rückfall auf Englisch). Bestand, einmal aufräumen wäre fällig.
+
+### 2026-08-07 – 2.6.1: zwei GitHub-Issues
+
+**Beschattung pendelte im Minutentakt (#4).** Mit *einem* Bereich war alles
+stabil – der Fehler brauchte einen Rollladen, dessen Hoch- und Runter-Bereich
+verschieden sind. `elevation.py` setzte die Beschattung im `in_down`-Zweig und
+gab sie im `in_up`-Zweig frei, jeweils mit der Konfiguration *dieses* Bereichs.
+Widersprachen sich Bedingungen, Saison oder Geometrie, beschattete der eine und
+der andere gab sofort frei: 50, 100, 50, 100.
+
+Umbau: `_evaluate()` läuft jetzt über die **Rollläden** statt über die Bereiche,
+und der Runter-Bereich entscheidet allein; Fahrten werden danach je Bereich
+gebündelt. Dabei mitgenommen: ein Rollladen, dessen Runter-Bereich keine
+Beschattung (mehr) hat, bekommt sein Flag gelöscht – sonst blockierte der
+Aggregatwert `sun_protect_active` dauerhaft das automatische Hochfahren. Im
+Repro stand er auf `True`, während `sun_protect_covers` leer war.
+
+**Namensanzeige (#3):** `friendly_name||s.name` im Dashboard – umgedreht. Der
+Rollläden-Tab machte es schon richtig.
+
+**`cover_verify` finally** hat jetzt die Identitätsprüfung, die `window_trigger`
+seit 2.6.0 hat. Der Nebenbefund von damals ist damit erledigt.
+
+**Wieder in dieselbe Testfalle getappt:** `patch("...cover_verify.asyncio.sleep")`
+patcht das globale Modul – ein *blockierender* Mock legt auch das `sleep(0)` im
+Test selbst lahm. Es muss immer nur die eine passende Wartezeit gegated werden.

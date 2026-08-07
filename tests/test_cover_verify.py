@@ -18,6 +18,7 @@ from custom_components.shutter_pilot.const import (
     CONF_VERIFY_ENABLED,
     CONF_VERIFY_RETRIES,
     CONF_VERIFY_TOLERANCE,
+    DEFAULT_VERIFY_AFTER,
     DOMAIN,
     EVENT_COVER_FAILED,
 )
@@ -200,3 +201,50 @@ class TestTaskHandling:
         assert data["_verify_tasks"] == {}
         await hass.async_block_till_done()
         assert task.cancelled()
+
+
+class TestTaskBookkeeping:
+    """Ein abgebrochener Task darf den Eintrag seines Nachfolgers nicht löschen.
+
+    `schedule_verification` popt vor dem Neuanlegen; die Abbruchbehandlung des
+    alten Tasks läuft aber erst im nächsten Loop-Durchlauf. Ohne
+    Identitätsprüfung im `finally` räumte sie danach den *neuen* Eintrag weg –
+    ein späteres Cancel fand den laufenden Task dann nicht mehr.
+    """
+
+    async def test_replacing_a_check_keeps_the_new_task(self, hass):
+        import asyncio
+
+        entry = _entry(hass)
+        _set_cover(hass, 30)
+        data = hass.data[DOMAIN][entry.entry_id]
+
+        # Nur die Wartezeit der Prüfung anhalten: `cover_verify.asyncio` *ist*
+        # das globale Modul, ein pauschaler Patch legt auch den Test lahm.
+        gate = asyncio.Event()
+        real_sleep = asyncio.sleep
+
+        async def _gated(seconds, *args, **kwargs):
+            if seconds == DEFAULT_VERIFY_AFTER:
+                await gate.wait()
+                return None
+            return await real_sleep(seconds, *args, **kwargs)
+
+        with patch.object(asyncio, "sleep", _gated):
+            cover_verify.schedule_verification(hass, entry, COVER, 30, "erste")
+            first = data["_verify_tasks"][COVER]
+            cover_verify.schedule_verification(hass, entry, COVER, 60, "zweite")
+            second = data["_verify_tasks"][COVER]
+            assert first is not second
+
+            # Dem abgebrochenen ersten Task Gelegenheit geben, sein finally zu
+            # durchlaufen.
+            for _ in range(5):
+                await asyncio.sleep(0)
+
+            assert data["_verify_tasks"].get(COVER) is second, "Nachfolger überlebt"
+
+            cover_verify.cancel_all(data)
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert second.cancelled() or second.done()

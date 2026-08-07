@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  f_frost_cond_sensor:"Tipp: Bei hinterlegter Wetter-Entität stellt Shutter Pilot dafür den Sensor „Shutter Pilot Vorhersage Tiefsttemperatur\" bereit.",
   sec_vent:"Automatisches Lüften",sec_vent_sub:"Auf die Lüftungsposition fahren, wenn Bedingungen erfüllt sind",f_vent_enabled:"Automatisch lüften",f_vent_hint:"Sind alle Bedingungen erfüllt, fahren die Rollläden des Bereichs auf ihre Lüftungsposition und danach wieder zurück. Ein offenes Fenster und der Sonnenschutz haben Vorrang.",f_vent_cond:"Bedingung",
   sec_frost:"Frostschutz",sec_frost_sub:"Nicht ganz schliessen, wenn Frost droht",f_frost_cond:"Bedingung (optional)",f_frost_cond_hint:"Ist diese Bedingung erfüllt, schliessen Rollläden mit hinterlegter Frostposition nur so weit. So frieren die Lamellen nicht am Rahmen fest. Gewinnt gegen das abweichende Schliessen.",f_pos_closed_frost:"Frostschutz-Position hinterlegen",f_pos_closed_frost_hint:"Ein Spalt bleibt offen, damit der Rollladen nicht festfriert.",f_pos_closed_frost_val:"Position bei Frost",f_sun_cond_on_below:"Einschalten unter",f_sun_cond_off_above:"Ausschalten über",f_sun_cond_num_inv_hint:"Der Frostschutz greift unterhalb des ersten Werts und bleibt aktiv, bis der zweite überschritten wird.",
   sun_bound_earliest:"frühestens",sun_bound_latest:"spätestens",sun_jitter:"Präsenz",
@@ -439,6 +440,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  f_frost_cond_sensor:"Tip: with a weather entity configured, Shutter Pilot provides the sensor \"Shutter Pilot Vorhersage Tiefsttemperatur\" for exactly this.",
   sec_vent:"Automatic ventilation",sec_vent_sub:"Drive to the ventilation position when conditions hold",f_vent_enabled:"Ventilate automatically",f_vent_hint:"While every condition holds, the shutters of this area move to their ventilation position and back afterwards. An open window and sun protection take precedence.",f_vent_cond:"Condition",
   sec_frost:"Frost protection",sec_frost_sub:"Do not close fully when frost is likely",f_frost_cond:"Condition (optional)",f_frost_cond_hint:"When this condition holds, shutters with a frost position only close that far, so the slats cannot freeze to the frame. Wins over partial closing.",f_pos_closed_frost:"Set a frost-protection position",f_pos_closed_frost_hint:"Leaves a gap so the shutter cannot freeze shut.",f_pos_closed_frost_val:"Position during frost",f_sun_cond_on_below:"Switch on below",f_sun_cond_off_above:"Switch off above",f_sun_cond_num_inv_hint:"Frost protection kicks in below the first value and stays on until the second is exceeded.",
   sun_bound_earliest:"no earlier than",sun_bound_latest:"no later than",sun_jitter:"Presence",
@@ -565,6 +567,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  f_frost_cond_sensor:"Astuce : avec une entité météo configurée, Shutter Pilot fournit le capteur « Shutter Pilot Vorhersage Tiefsttemperatur ».",
   sec_vent:"Aération automatique",sec_vent_sub:"Aller en position d’aération si les conditions sont remplies",f_vent_enabled:"Aérer automatiquement",f_vent_hint:"Tant que toutes les conditions sont remplies, les volets vont en position d’aération puis reviennent. Une fenêtre ouverte et la protection solaire sont prioritaires.",f_vent_cond:"Condition",
   sec_frost:"Protection antigel",sec_frost_sub:"Ne pas fermer complètement en cas de gel",f_frost_cond:"Condition (optionnel)",f_frost_cond_hint:"Si cette condition est remplie, les volets avec une position antigel ne se ferment que jusque-là. Prioritaire sur la fermeture partielle.",f_pos_closed_frost:"Définir une position antigel",f_pos_closed_frost_hint:"Laisse un jeu pour éviter le gel.",f_pos_closed_frost_val:"Position en cas de gel",f_sun_cond_on_below:"Activer en dessous de",f_sun_cond_off_above:"Désactiver au-dessus de",f_sun_cond_num_inv_hint:"La protection s’active sous la première valeur et reste active jusqu’au dépassement de la seconde.",
   sun_bound_earliest:"au plus tôt",sun_bound_latest:"au plus tard",sun_jitter:"Présence",
@@ -687,6 +690,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  f_frost_cond_sensor:"Consejo: con una entidad meteorológica configurada, Shutter Pilot ofrece el sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilación automática",sec_vent_sub:"Ir a la posición de ventilación si se cumplen las condiciones",f_vent_enabled:"Ventilar automáticamente",f_vent_hint:"Mientras se cumplan todas las condiciones, las persianas van a su posición de ventilación y luego vuelven. Una ventana abierta y la protección solar tienen prioridad.",f_vent_cond:"Condición",
   sec_frost:"Protección antihielo",sec_frost_sub:"No cerrar del todo si hay riesgo de helada",f_frost_cond:"Condición (opcional)",f_frost_cond_hint:"Si se cumple, las persianas con posición antihielo solo cierran hasta ahí. Tiene prioridad sobre el cierre parcial.",f_pos_closed_frost:"Definir posición antihielo",f_pos_closed_frost_hint:"Deja una holgura para que no se congele.",f_pos_closed_frost_val:"Posición con helada",f_sun_cond_on_below:"Activar por debajo de",f_sun_cond_off_above:"Desactivar por encima de",f_sun_cond_num_inv_hint:"La protección se activa por debajo del primer valor y sigue activa hasta superar el segundo.",
   sun_bound_earliest:"no antes de",sun_bound_latest:"no después de",sun_jitter:"Presencia",
@@ -809,6 +813,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  f_frost_cond_sensor:"Suggerimento: con un\u2019entità meteo configurata, Shutter Pilot fornisce il sensore «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilazione automatica",sec_vent_sub:"Vai in posizione di ventilazione se le condizioni sono soddisfatte",f_vent_enabled:"Ventila automaticamente",f_vent_hint:"Finché tutte le condizioni sono soddisfatte, le tapparelle vanno in posizione di ventilazione e poi tornano. Una finestra aperta e la protezione solare hanno la precedenza.",f_vent_cond:"Condizione",
   sec_frost:"Protezione antigelo",sec_frost_sub:"Non chiudere del tutto in caso di gelo",f_frost_cond:"Condizione (opzionale)",f_frost_cond_hint:"Se la condizione è soddisfatta, le tapparelle con posizione antigelo si chiudono solo fin lì. Prevale sulla chiusura parziale.",f_pos_closed_frost:"Imposta una posizione antigelo",f_pos_closed_frost_hint:"Lascia una fessura per evitare il congelamento.",f_pos_closed_frost_val:"Posizione con gelo",f_sun_cond_on_below:"Attiva sotto",f_sun_cond_off_above:"Disattiva sopra",f_sun_cond_num_inv_hint:"La protezione si attiva sotto il primo valore e resta attiva finché non si supera il secondo.",
   sun_bound_earliest:"non prima delle",sun_bound_latest:"non oltre le",sun_jitter:"Presenza",
@@ -932,6 +937,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  f_frost_cond_sensor:"Tip: met een weer-entiteit ingesteld levert Shutter Pilot de sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisch ventileren",sec_vent_sub:"Naar de ventilatiestand als de voorwaarden gelden",f_vent_enabled:"Automatisch ventileren",f_vent_hint:"Zolang alle voorwaarden gelden gaan de rolluiken naar hun ventilatiestand en daarna terug. Een open raam en zonwering gaan voor.",f_vent_cond:"Voorwaarde",
   sec_frost:"Vorstbeveiliging",sec_frost_sub:"Niet volledig sluiten bij kans op vorst",f_frost_cond:"Voorwaarde (optioneel)",f_frost_cond_hint:"Als deze voorwaarde geldt, sluiten rolluiken met een vorstpositie slechts tot daar. Gaat voor op gedeeltelijk sluiten.",f_pos_closed_frost:"Vorstpositie instellen",f_pos_closed_frost_hint:"Laat een kier zodat het rolluik niet vastvriest.",f_pos_closed_frost_val:"Positie bij vorst",f_sun_cond_on_below:"Inschakelen onder",f_sun_cond_off_above:"Uitschakelen boven",f_sun_cond_num_inv_hint:"De beveiliging treedt in werking onder de eerste waarde en blijft actief tot de tweede wordt overschreden.",
   sun_bound_earliest:"niet vóór",sun_bound_latest:"niet later dan",sun_jitter:"Aanwezigheid",
@@ -1055,6 +1061,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  f_frost_cond_sensor:"Tip: med en vejr-entitet angivet leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk udluftning",sec_vent_sub:"Kør til udluftningsposition når betingelserne er opfyldt",f_vent_enabled:"Udluft automatisk",f_vent_hint:"Så længe alle betingelser er opfyldt, kører rullegardinerne til udluftningsposition og tilbage igen. Et åbent vindue og solafskærmning har forrang.",f_vent_cond:"Betingelse",
   sec_frost:"Frostbeskyttelse",sec_frost_sub:"Luk ikke helt, når der er risiko for frost",f_frost_cond:"Betingelse (valgfri)",f_frost_cond_hint:"Når betingelsen er opfyldt, lukker rullegardiner med en frostposition kun så langt. Vinder over delvis lukning.",f_pos_closed_frost:"Angiv frostposition",f_pos_closed_frost_hint:"Efterlader en sprække, så rullegardinet ikke fryser fast.",f_pos_closed_frost_val:"Position ved frost",f_sun_cond_on_below:"Tænd under",f_sun_cond_off_above:"Sluk over",f_sun_cond_num_inv_hint:"Beskyttelsen aktiveres under den første værdi og forbliver aktiv, indtil den anden overskrides.",
   sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
@@ -1178,6 +1185,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  f_frost_cond_sensor:"Tips: med en väderentitet angiven ger Shutter Pilot sensorn «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk vädring",sec_vent_sub:"Kör till vädringsläget när villkoren gäller",f_vent_enabled:"Vädra automatiskt",f_vent_hint:"Så länge alla villkor gäller går jalusierna till vädringsläget och tillbaka igen. Ett öppet fönster och solskyddet går före.",f_vent_cond:"Villkor",
   sec_frost:"Frostskydd",sec_frost_sub:"Stäng inte helt när frost hotar",f_frost_cond:"Villkor (valfritt)",f_frost_cond_hint:"När villkoret gäller stänger jalusier med frostposition bara så långt. Går före delvis stängning.",f_pos_closed_frost:"Ange frostposition",f_pos_closed_frost_hint:"Lämnar en springa så att jalusin inte fryser fast.",f_pos_closed_frost_val:"Position vid frost",f_sun_cond_on_below:"Slå på under",f_sun_cond_off_above:"Slå av över",f_sun_cond_num_inv_hint:"Skyddet aktiveras under det första värdet och är kvar tills det andra överskrids.",
   sun_bound_earliest:"tidigast",sun_bound_latest:"senast",sun_jitter:"Närvaro",
@@ -1301,6 +1309,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  f_frost_cond_sensor:"Wskazówka: po wskazaniu encji pogodowej Shutter Pilot udostępnia czujnik „Shutter Pilot Vorhersage Tiefsttemperatur\".",
   sec_vent:"Automatyczne wietrzenie",sec_vent_sub:"Jazda do pozycji wietrzenia, gdy warunki są spełnione",f_vent_enabled:"Wietrz automatycznie",f_vent_hint:"Dopóki wszystkie warunki są spełnione, rolety jadą do pozycji wietrzenia, a potem wracają. Otwarte okno i ochrona przeciwsłoneczna mają pierwszeństwo.",f_vent_cond:"Warunek",
   sec_frost:"Ochrona przed mrozem",sec_frost_sub:"Nie zamykaj całkowicie przy mrozie",f_frost_cond:"Warunek (opcjonalnie)",f_frost_cond_hint:"Gdy warunek jest spełniony, rolety z pozycją mrozową zamykają się tylko do niej. Ma pierwszeństwo przed zamknięciem częściowym.",f_pos_closed_frost:"Ustaw pozycję mrozową",f_pos_closed_frost_hint:"Zostawia szczelinę, aby roleta nie przymarzła.",f_pos_closed_frost_val:"Pozycja przy mrozie",f_sun_cond_on_below:"Włącz poniżej",f_sun_cond_off_above:"Wyłącz powyżej",f_sun_cond_num_inv_hint:"Ochrona włącza się poniżej pierwszej wartości i działa, dopóki nie zostanie przekroczona druga.",
   sun_bound_earliest:"nie wcześniej niż",sun_bound_latest:"nie później niż",sun_jitter:"Obecność",
@@ -1424,6 +1433,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  f_frost_cond_sensor:"Dica: com uma entidade meteorológica definida, o Shutter Pilot fornece o sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilação automática",sec_vent_sub:"Ir para a posição de ventilação quando as condições se verificam",f_vent_enabled:"Ventilar automaticamente",f_vent_hint:"Enquanto todas as condições se verificarem, os estores vão para a posição de ventilação e depois voltam. Uma janela aberta e a proteção solar têm prioridade.",f_vent_cond:"Condição",
   sec_frost:"Proteção contra gelo",sec_frost_sub:"Não fechar totalmente com risco de gelo",f_frost_cond:"Condição (opcional)",f_frost_cond_hint:"Se a condição se verificar, os estores com posição de gelo fecham apenas até aí. Tem prioridade sobre o fecho parcial.",f_pos_closed_frost:"Definir posição de gelo",f_pos_closed_frost_hint:"Deixa uma folga para o estore não congelar.",f_pos_closed_frost_val:"Posição com gelo",f_sun_cond_on_below:"Ligar abaixo de",f_sun_cond_off_above:"Desligar acima de",f_sun_cond_num_inv_hint:"A proteção actua abaixo do primeiro valor e mantém-se até o segundo ser ultrapassado.",
   sun_bound_earliest:"não antes das",sun_bound_latest:"não depois das",sun_jitter:"Presença",
@@ -1547,6 +1557,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  f_frost_cond_sensor:"Tips: med en vær-entitet angitt leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk lufting",sec_vent_sub:"Kjør til luftestilling når betingelsene er oppfylt",f_vent_enabled:"Luft automatisk",f_vent_hint:"Så lenge alle betingelser er oppfylt, kjører rullegardinene til luftestillingen og tilbake igjen. Et åpent vindu og solskjermingen går foran.",f_vent_cond:"Betingelse",
   sec_frost:"Frostbeskyttelse",sec_frost_sub:"Ikke lukk helt når det er fare for frost",f_frost_cond:"Betingelse (valgfri)",f_frost_cond_hint:"Når betingelsen gjelder, lukker rullegardiner med frostposisjon bare så langt. Går foran delvis lukking.",f_pos_closed_frost:"Angi frostposisjon",f_pos_closed_frost_hint:"Lar det stå en glipe så rullegardinen ikke fryser fast.",f_pos_closed_frost_val:"Posisjon ved frost",f_sun_cond_on_below:"Slå på under",f_sun_cond_off_above:"Slå av over",f_sun_cond_num_inv_hint:"Beskyttelsen aktiveres under den første verdien og er aktiv til den andre overskrides.",
   sun_bound_earliest:"tidligst",sun_bound_latest:"senest",sun_jitter:"Tilstedeværelse",
@@ -1654,6 +1665,12 @@ class ShutterPilotPanel extends PanelBase {
     .srow .role-icons ha-icon{--mdc-icon-size:18px;color:var(--sp)}
     .srow .nm{font-size:14px;color:var(--txt);flex:1;min-width:0}
     .srow .pos{font-size:13px;color:var(--txt2);min-width:50px;text-align:right}
+    .srow-btns{display:inline-flex;gap:4px;flex-shrink:0}
+    .rbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:1px solid var(--divider);border-radius:8px;background:var(--card2,transparent);color:var(--txt2);cursor:pointer}
+    .rbtn ha-icon{--mdc-icon-size:17px}
+    .rbtn:hover{background:var(--sp);border-color:var(--sp);color:#fff}
+    .rbtn.up:hover{background:var(--ok,#2e7d32);border-color:var(--ok,#2e7d32)}
+    .rbtn.down:hover{background:var(--err,#c62828);border-color:var(--err,#c62828)}
     .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
     .btn{border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;transition:opacity .2s;display:inline-flex;align-items:center;gap:6px}
     .btn:hover{opacity:.85}
@@ -2265,7 +2282,7 @@ class ShutterPilotPanel extends PanelBase {
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           const autoOff=this._shutterAutoOff(s);
-          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${st?.attributes?.friendly_name||s.name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span></span></div>`;})}</div>
+          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${s.name||st?.attributes?.friendly_name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span>${this._rowButtons(s)}</span></div>`;})}</div>
       <div class="actions">
         <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
@@ -2510,6 +2527,7 @@ class ShutterPilotPanel extends PanelBase {
 
       ${this._section("mdi:snowflake-alert","sec_frost","sec_frost_sub")}
       <div class="hint">${T("f_frost_cond_hint")}</div>
+      <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
       ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,f,true):""}
 
@@ -2680,6 +2698,17 @@ class ShutterPilotPanel extends PanelBase {
   }
   async _toggleAuto(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
   async _toggleMaster(on){try{await this.hass.callWS({type:"shutter_pilot/set_master_enabled",enabled:on});await this._load();}catch(e){console.warn(e);}}
+  /* Einzelbedienung je Rollladen. Bewusst dieselben Dienste wie die
+     Bereichsknöpfe – nur die Auswahl ist eine andere. */
+  _rowButtons(shutter){
+    if(!shutter?.cover_entity_id)return "";
+    const act=a=>this._coverAction([shutter],a);
+    return html`<span class="srow-btns">
+      <button class="rbtn up" title="${this.t("btn_up")}" @click=${()=>act("open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon></button>
+      <button class="rbtn stop" title="${this.t("btn_stop")}" @click=${()=>act("stop")}><ha-icon icon="mdi:stop"></ha-icon></button>
+      <button class="rbtn down" title="${this.t("btn_down")}" @click=${()=>act("close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon></button>
+    </span>`;
+  }
   _coverAction(shutters,action){
     const eids=shutters.map(s=>s.cover_entity_id).filter(Boolean);
     if(!eids.length)return;

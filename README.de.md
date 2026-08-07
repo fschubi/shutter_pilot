@@ -326,6 +326,19 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Beschattung allein über Helligkeitssensoren
+
+Wer rund ums Haus Helligkeitssensoren verteilt hat, braucht Höhenwinkel und Himmelsrichtung nicht – der Sensor weiß bereits, ob die Sonne aufs Fenster scheint. Dafür ist keine eigene Betriebsart nötig:
+
+1. Im **Bereich** den Sonnenschutz aktivieren
+2. **Himmelsrichtung ausschalten** (Haken raus) – dann wird der Azimut nicht geprüft
+3. **Höhenwinkel auf 0 bis 90** stellen – damit gilt er, solange die Sonne überhaupt steht
+4. Den Helligkeitssensor als **Zusatzbedingung** eintragen, mit Ein- und Ausschaltschwelle
+
+Damit entscheidet allein die Helligkeit. Die zwei Schwellen sind hier wichtiger als sonst: Sie verhindern, dass eine durchziehende Wolke die Beschattung sofort wieder aufhebt.
+
+Weil die Bedingungen **pro Rollladen** überschrieben werden können, bekommt jedes Fenster seinen eigenen Sensor, während der Rest der Einstellungen im Bereich stehen bleibt.
+
 ## Automatisch lüften
 
 Lüften war bisher nur von Hand möglich – über den Knopf im Dashboard oder den Dienst. Im **Bereich** lässt sich unter *Automatisches Lüften* jetzt festlegen, wann es von selbst passieren soll:

@@ -326,6 +326,19 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Shading from brightness sensors alone
+
+With brightness sensors around the house, elevation and compass direction are not needed — the sensor already knows whether the sun hits the window. No separate mode required:
+
+1. Enable sun protection in the **area**
+2. **Turn the compass direction off** — the azimuth is then not checked
+3. Set the **elevation range to 0–90**, so it holds whenever the sun is up at all
+4. Add the brightness sensor as an **extra condition**, with a switch-on and a switch-off threshold
+
+Brightness alone then decides. The two thresholds matter more here than elsewhere: they keep a passing cloud from releasing the shading right away.
+
+Because conditions can be overridden **per shutter**, each window gets its own sensor while the rest of the settings stay in the area.
+
 ## Automatic ventilation
 
 Ventilating used to be manual only — the dashboard button or the service. In the **area**, under *Automatic ventilation*, you can now say when it should happen by itself:

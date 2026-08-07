@@ -169,91 +169,96 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
         if elev is None:
             return
 
-        for area in protect_areas:
-            area_id = str(area.get(CONF_AREA_ID) or "").strip()
-            if not area_id:
+        protect_by_id = {
+            str(a.get(CONF_AREA_ID) or "").strip(): a
+            for a in protect_areas
+            if str(a.get(CONF_AREA_ID) or "").strip()
+        }
+        to_shade: dict[str, list[dict]] = {}
+        to_release: dict[str, list[tuple[dict, str]]] = {}
+
+        for shutter in shutters:
+            cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+            if not cover:
                 continue
+
+            # The area a shutter closes with owns its shading, and it alone
+            # decides. Judging the release by the *up* area instead let two
+            # areas contradict each other: one shaded, the other released, and
+            # the shutter travelled back and forth every minute.
+            area_id = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip()
+            area = protect_by_id.get(area_id)
+            if area is None:
+                # No shading here – but a leftover flag would keep blocking
+                # automated opening through the area aggregate.
+                set_cover_sun_protected(data, cover, False)
+                continue
+
             if not is_auto_enabled(hass, entry, area):
                 continue
+            # Automation switched off at this shutter: neither shade nor
+            # release it. The sun protection flag keeps its value, so a
+            # shutter that was shaded before is released properly once the
+            # automation is switched back on.
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                continue
 
-            # Season applies to the whole area. Geometry and the extra
-            # conditions may differ per window, so both are resolved inside
-            # the shutter loop below.
+            # A room may have windows facing different ways and watching
+            # different sensors, so each shutter is judged with its own
+            # merged config – area values apply where nothing is set.
+            geo = resolve_shading_config(area, shutter)
+            geometry_ok = sun_protect_conditions_met(elev, azim, geo)
+            conditions_ok = sun_extra_conditions_met(hass, geo, data, cover)
             season_ok = season_allows_shading(area)
+            should_protect = geometry_ok and conditions_ok and season_ok
+            was_active = is_cover_sun_protected(data, cover)
 
-            to_shade: list[dict] = []
-            to_release: list[tuple[dict, str]] = []
-
-            for shutter in shutters:
-                cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
-                if not cover:
-                    continue
-                in_down = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
-                in_up = str(shutter.get(CONF_AREA_UP_ID) or "").strip() == area_id
-                if not in_down and not in_up:
-                    continue
-
-                # Automation switched off at this shutter: neither shade nor
-                # release it. The sun protection flag keeps its value, so a
-                # shutter that was shaded before is released properly once the
-                # automation is switched back on.
-                if not is_shutter_automation_enabled(hass, entry, shutter):
-                    continue
-
-                # A room may have windows facing different ways and watching
-                # different sensors, so each shutter is judged with its own
-                # merged config – area values apply where nothing is set.
-                geo = resolve_shading_config(area, shutter)
-                geometry_ok = sun_protect_conditions_met(elev, azim, geo)
-                conditions_ok = sun_extra_conditions_met(hass, geo, data, cover)
-                should_protect = geometry_ok and conditions_ok and season_ok
-                was_active = is_cover_sun_protected(data, cover)
-
-                if should_protect:
-                    if not was_active and in_down:
-                        to_shade.append(shutter)
-                        set_cover_sun_protected(data, cover, True)
-                    continue
-
+            if should_protect:
                 if not was_active:
-                    continue
+                    to_shade.setdefault(area_id, []).append(shutter)
+                    set_cover_sun_protected(data, cover, True)
+                continue
 
-                e_min, e_max = get_elevation_bounds(geo)
-                if elev < e_min:
-                    # Below the range the shutters belong to the evening
-                    # schedule, not to shading. Drop the flag, do not drive.
-                    set_cover_sun_protected(data, cover, False)
-                    _LOGGER.debug(
-                        "[sun-protect] %s: elev=%.1f below %.1f – off, no drive",
-                        cover, elev, e_min,
-                    )
-                    continue
+            if not was_active:
+                continue
 
-                set_cover_sun_protected(data, cover, False)
-                if not in_up:
-                    continue
-                if elev > e_max:
-                    reason = "sun above range"
-                elif not geometry_ok:
-                    a_min, a_max = get_azimuth_bounds(geo)
-                    reason = f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
-                elif not season_ok:
-                    reason = "outside shading season"
-                else:
-                    # Geometry still fits, so a condition dropped out – clouds
-                    # moved in or it cooled down. Let the light back in.
-                    reason = "shading condition no longer met"
-                to_release.append((shutter, reason))
+            e_min, e_max = get_elevation_bounds(geo)
+            set_cover_sun_protected(data, cover, False)
+            if elev < e_min:
+                # Below the range the shutters belong to the evening
+                # schedule, not to shading. Drop the flag, do not drive.
+                _LOGGER.debug(
+                    "[sun-protect] %s: elev=%.1f below %.1f – off, no drive",
+                    cover, elev, e_min,
+                )
+                continue
 
-            if to_shade:
-                await _drive_sun_protect(area, elev, azim, to_shade)
-            for reason in {r for _, r in to_release}:
-                targets = [s for s, r in to_release if r == reason]
-                await _release_sun_protect(area, reason, targets)
+            if elev > e_max:
+                reason = "sun above range"
+            elif not geometry_ok:
+                a_min, a_max = get_azimuth_bounds(geo)
+                reason = f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
+            elif not season_ok:
+                reason = "outside shading season"
+            else:
+                # Geometry still fits, so a condition dropped out – clouds
+                # moved in or it cooled down. Let the light back in.
+                reason = "shading condition no longer met"
+            to_release.setdefault(area_id, []).append((shutter, reason))
 
-            # Area flag stays as the aggregate so brightness, the binary
-            # sensor, diagnostics and the panel keep working unchanged.
-            covers = data.get("sun_protect_covers", set())
+        for area_id, targets in to_shade.items():
+            await _drive_sun_protect(protect_by_id[area_id], elev, azim, targets)
+        for area_id, entries in to_release.items():
+            area = protect_by_id[area_id]
+            for reason in {r for _, r in entries}:
+                await _release_sun_protect(
+                    area, reason, [s for s, r in entries if r == reason]
+                )
+
+        # Area flag stays as the aggregate so brightness, the binary sensor,
+        # diagnostics and the panel keep working unchanged.
+        covers = data.get("sun_protect_covers", set())
+        for area_id in protect_by_id:
             any_active = any(
                 str(s.get(CONF_COVER_ENTITY_ID) or "") in covers
                 for s in shutters

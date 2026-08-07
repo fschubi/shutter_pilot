@@ -184,5 +184,8 @@ async def _verify(
         _LOGGER.exception("Verification for %s failed unexpectedly", entity_id)
     finally:
         tasks = hass.data.get(DOMAIN, {}).get(entry.entry_id, {}).get("_verify_tasks")
-        if isinstance(tasks, dict):
+        # Only drop our own entry. A cancelled task runs this on a later loop
+        # pass, by which time a newer drive may already have registered its
+        # check – popping blindly would hide that one from cancel_all().
+        if isinstance(tasks, dict) and tasks.get(entity_id) is asyncio.current_task():
             tasks.pop(entity_id, None)
