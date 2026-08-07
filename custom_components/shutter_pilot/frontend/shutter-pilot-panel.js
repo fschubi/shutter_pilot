@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  f_sunbound_title:"Zusätzliche Sonnengrenzen",f_sunbound_hint:"Verhindert Fahrten am helllichten Tag, etwa wenn ein Gewitter die Helligkeit einbrechen lässt. Leer = keine Grenze.",f_b_down_sunset:"Runter frühestens X Min. vor Sonnenuntergang",f_b_up_sunrise:"Hoch frühestens X Min. vor Sonnenaufgang",
   f_shade_hold:"Beschattung halten (Min.)",f_shade_hold_hint:"Zieht eine Wolke durch, endet die Bedingung sofort und der Rollladen fährt auf. So lange bleibt die Beschattung trotzdem stehen. 0 = sofort auffahren.",
   sec_drive:"Fahrbefehle",sec_drive_sub:"Abstand zwischen zwei Befehlen",f_min_gap:"Mindestabstand zwischen Fahrbefehlen",f_min_gap_hint:"Funk-Empfänger (433 MHz, HmIP) verschlucken Befehle, die gleichzeitig ankommen. Die Verzögerung im Bereich hilft dort nicht: jeder Bereich fährt für sich. Hier wird jeder Fahrbefehl gedrosselt – automatisch wie von Hand. 0 = aus.",f_min_gap_off:"aus",
   f_frost_cond_sensor:"Tipp: Bei hinterlegter Wetter-Entität stellt Shutter Pilot dafür den Sensor „Shutter Pilot Vorhersage Tiefsttemperatur\" bereit.",
@@ -442,6 +443,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  f_sunbound_title:"Extra sun bounds",f_sunbound_hint:"Prevents movements in broad daylight, e.g. when a thunderstorm drops the brightness. Empty = no bound.",f_b_down_sunset:"Down no earlier than X min. before sunset",f_b_up_sunrise:"Up no earlier than X min. before sunrise",
   f_shade_hold:"Hold shading (min.)",f_shade_hold_hint:"A passing cloud ends the condition at once and the shutter opens. This keeps the shading up for that long anyway. 0 = open immediately.",
   sec_drive:"Drive commands",sec_drive_sub:"Spacing between two commands",f_min_gap:"Minimum gap between drive commands",f_min_gap_hint:"Radio receivers (433 MHz, HmIP) swallow commands that arrive together. The per-area delay does not help: each area drives on its own. This throttles every drive command, automated or manual. 0 = off.",f_min_gap_off:"off",
   f_frost_cond_sensor:"Tip: with a weather entity configured, Shutter Pilot provides the sensor \"Shutter Pilot Vorhersage Tiefsttemperatur\" for exactly this.",
@@ -571,6 +573,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  f_sunbound_title:"Limites solaires supplémentaires",f_sunbound_hint:"Empêche les mouvements en plein jour, par ex. lors d’un orage. Vide = aucune limite.",f_b_down_sunset:"Descente au plus tôt X min. avant le coucher",f_b_up_sunrise:"Montée au plus tôt X min. avant le lever",
   f_shade_hold:"Maintenir l’ombrage (min.)",f_shade_hold_hint:"Un nuage met fin à la condition immédiatement. L’ombrage est malgré tout maintenu pendant cette durée. 0 = ouvrir tout de suite.",
   sec_drive:"Commandes",sec_drive_sub:"Espacement entre deux commandes",f_min_gap:"Écart minimal entre commandes",f_min_gap_hint:"Les récepteurs radio ignorent les commandes simultanées. Le délai par zone n’y suffit pas. Ici chaque commande est espacée. 0 = désactivé.",f_min_gap_off:"désactivé",
   f_frost_cond_sensor:"Astuce : avec une entité météo configurée, Shutter Pilot fournit le capteur « Shutter Pilot Vorhersage Tiefsttemperatur ».",
@@ -696,6 +699,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  f_sunbound_title:"Límites solares adicionales",f_sunbound_hint:"Evita movimientos a plena luz del día, p. ej. con una tormenta. Vacío = sin límite.",f_b_down_sunset:"Bajar como pronto X min. antes del ocaso",f_b_up_sunrise:"Subir como pronto X min. antes del amanecer",
   f_shade_hold:"Mantener sombreado (min.)",f_shade_hold_hint:"Una nube termina la condición al instante. El sombreado se mantiene igualmente ese tiempo. 0 = abrir enseguida.",
   sec_drive:"Órdenes de marcha",sec_drive_sub:"Separación entre dos órdenes",f_min_gap:"Separación mínima entre órdenes",f_min_gap_hint:"Los receptores de radio pierden órdenes que llegan a la vez. El retardo por área no basta. Aquí se espacia cada orden. 0 = desactivado.",f_min_gap_off:"desactivado",
   f_frost_cond_sensor:"Consejo: con una entidad meteorológica configurada, Shutter Pilot ofrece el sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -821,6 +825,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  f_sunbound_title:"Limiti solari aggiuntivi",f_sunbound_hint:"Evita movimenti in pieno giorno, ad es. durante un temporale. Vuoto = nessun limite.",f_b_down_sunset:"Giù non prima di X min. dal tramonto",f_b_up_sunrise:"Su non prima di X min. dall’alba",
   f_shade_hold:"Mantieni ombreggiatura (min.)",f_shade_hold_hint:"Una nuvola interrompe subito la condizione. L’ombreggiatura resta comunque per questo tempo. 0 = apri subito.",
   sec_drive:"Comandi di marcia",sec_drive_sub:"Distanza tra due comandi",f_min_gap:"Distanza minima tra i comandi",f_min_gap_hint:"I ricevitori radio perdono i comandi che arrivano insieme. Il ritardo per area non basta. Qui ogni comando viene distanziato. 0 = disattivato.",f_min_gap_off:"disattivato",
   f_frost_cond_sensor:"Suggerimento: con un\u2019entità meteo configurata, Shutter Pilot fornisce il sensore «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -947,6 +952,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  f_sunbound_title:"Extra zonnegrenzen",f_sunbound_hint:"Voorkomt bewegingen op klaarlichte dag, bijv. bij onweer. Leeg = geen grens.",f_b_down_sunset:"Omlaag niet eerder dan X min. voor zonsondergang",f_b_up_sunrise:"Omhoog niet eerder dan X min. voor zonsopgang",
   f_shade_hold:"Zonwering vasthouden (min.)",f_shade_hold_hint:"Een wolk beëindigt de voorwaarde meteen. De zonwering blijft toch zo lang staan. 0 = direct openen.",
   sec_drive:"Rijcommando’s",sec_drive_sub:"Afstand tussen twee commando’s",f_min_gap:"Minimale afstand tussen commando’s",f_min_gap_hint:"Radio-ontvangers missen commando’s die tegelijk aankomen. De vertraging per gebied helpt daar niet. Hier wordt elk commando gespreid. 0 = uit.",f_min_gap_off:"uit",
   f_frost_cond_sensor:"Tip: met een weer-entiteit ingesteld levert Shutter Pilot de sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1073,6 +1079,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  f_sunbound_title:"Ekstra solgrænser",f_sunbound_hint:"Forhindrer kørsel ved højlys dag, f.eks. ved tordenvejr. Tom = ingen grænse.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Op tidligst X min. før solopgang",
   f_shade_hold:"Fasthold afskærmning (min.)",f_shade_hold_hint:"En sky afslutter betingelsen med det samme. Afskærmningen bliver alligevel stående så længe. 0 = åbn straks.",
   sec_drive:"Kørselskommandoer",sec_drive_sub:"Afstand mellem to kommandoer",f_min_gap:"Mindste afstand mellem kommandoer",f_min_gap_hint:"Radiomodtagere taber kommandoer, der ankommer samtidig. Forsinkelsen pr. område hjælper ikke. Her spredes hver kommando. 0 = fra.",f_min_gap_off:"fra",
   f_frost_cond_sensor:"Tip: med en vejr-entitet angivet leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1199,6 +1206,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  f_sunbound_title:"Extra solgränser",f_sunbound_hint:"Förhindrar körningar mitt på dagen, t.ex. vid åska. Tomt = ingen gräns.",f_b_down_sunset:"Ner tidigast X min. före solnedgång",f_b_up_sunrise:"Upp tidigast X min. före soluppgång",
   f_shade_hold:"Behåll solskydd (min.)",f_shade_hold_hint:"Ett moln avslutar villkoret direkt. Solskyddet står kvar så länge ändå. 0 = öppna genast.",
   sec_drive:"Körkommandon",sec_drive_sub:"Avstånd mellan två kommandon",f_min_gap:"Minsta avstånd mellan kommandon",f_min_gap_hint:"Radiomottagare tappar kommandon som kommer samtidigt. Fördröjningen per område räcker inte. Här sprids varje kommando ut. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en väderentitet angiven ger Shutter Pilot sensorn «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1325,6 +1333,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  f_sunbound_title:"Dodatkowe granice słoneczne",f_sunbound_hint:"Zapobiega jazdom w biały dzień, np. podczas burzy. Puste = bez granicy.",f_b_down_sunset:"W dół nie wcześniej niż X min. przed zachodem",f_b_up_sunrise:"W górę nie wcześniej niż X min. przed wschodem",
   f_shade_hold:"Utrzymuj zacienienie (min.)",f_shade_hold_hint:"Chmura natychmiast kończy warunek. Zacienienie mimo to pozostaje przez ten czas. 0 = otwórz od razu.",
   sec_drive:"Polecenia jazdy",sec_drive_sub:"Odstęp między dwoma poleceniami",f_min_gap:"Minimalny odstęp między poleceniami",f_min_gap_hint:"Odbiorniki radiowe gubią polecenia docierające jednocześnie. Opóźnienie w obszarze nie wystarcza. Tutaj każde polecenie jest rozdzielane. 0 = wyłączone.",f_min_gap_off:"wyłączone",
   f_frost_cond_sensor:"Wskazówka: po wskazaniu encji pogodowej Shutter Pilot udostępnia czujnik „Shutter Pilot Vorhersage Tiefsttemperatur\".",
@@ -1451,6 +1460,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  f_sunbound_title:"Limites solares adicionais",f_sunbound_hint:"Evita movimentos em pleno dia, p. ex. durante uma trovoada. Vazio = sem limite.",f_b_down_sunset:"Descer no mínimo X min. antes do pôr do sol",f_b_up_sunrise:"Subir no mínimo X min. antes do nascer do sol",
   f_shade_hold:"Manter sombreamento (min.)",f_shade_hold_hint:"Uma nuvem termina a condição de imediato. O sombreamento fica na mesma durante esse tempo. 0 = abrir logo.",
   sec_drive:"Comandos de marcha",sec_drive_sub:"Espaçamento entre dois comandos",f_min_gap:"Intervalo mínimo entre comandos",f_min_gap_hint:"Os recetores de rádio perdem comandos que chegam ao mesmo tempo. O atraso por área não chega. Aqui cada comando é espaçado. 0 = desligado.",f_min_gap_off:"desligado",
   f_frost_cond_sensor:"Dica: com uma entidade meteorológica definida, o Shutter Pilot fornece o sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1577,6 +1587,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  f_sunbound_title:"Ekstra solgrenser",f_sunbound_hint:"Hindrer kjøring midt på dagen, f.eks. ved tordenvær. Tom = ingen grense.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Opp tidligst X min. før soloppgang",
   f_shade_hold:"Behold solskjerming (min.)",f_shade_hold_hint:"En sky avslutter betingelsen med en gang. Solskjermingen blir likevel stående så lenge. 0 = åpne straks.",
   sec_drive:"Kjørekommandoer",sec_drive_sub:"Avstand mellom to kommandoer",f_min_gap:"Minste avstand mellom kommandoer",f_min_gap_hint:"Radiomottakere mister kommandoer som kommer samtidig. Forsinkelsen per område hjelper ikke. Her spres hver kommando. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en vær-entitet angitt leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -2480,6 +2491,10 @@ class ShutterPilotPanel extends PanelBase {
        reißt damit die Cursorposition bzw. den nativen Zeit-Dialog weg. Der
        Wert steht im Objekt, gerendert werden muss dafür nichts. */
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${a[k]??""} @input=${e=>{a[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
+    /* Zahl, die auch leer bleiben darf: Number("") wäre 0 – und 0 ist hier
+       eine gültige Schranke ("ab Sonnenuntergang"), nicht "aus". */
+    const numOpt=(k,lbl)=>html`<div class="field"><label>${lbl}</label><input type="number" .value=${a[k]??""}
+      @input=${e=>{const v=e.target.value.trim();a[k]=v===""?"":Number(v);}}></div>`;
     const tm=(k,lbl)=>this._timeField(a,k,lbl);
     // Klammern dürfen leer bleiben, deshalb allowEmpty.
     const bd=(k,lbl,dflt)=>this._timeField(a,k,lbl,dflt,true);
@@ -2510,7 +2525,10 @@ class ShutterPilotPanel extends PanelBase {
           ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
-          ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}`}
+          ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}
+          <div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>
+          ${numOpt("b_down_after_sunset",T("f_b_down_sunset"))}
+          ${numOpt("b_up_before_sunrise",T("f_b_up_sunrise"))}`}
 
       ${this._section("mdi:calendar-check","sec_calendar")}
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}

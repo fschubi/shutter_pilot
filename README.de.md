@@ -334,6 +334,21 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Helligkeitsmodus mit Sonnengrenze
+
+Ein Gewitter am Nachmittag drückt die Helligkeit unter die Schwelle – und die Rollläden schließen am helllichten Tag. Uhrzeitfenster helfen dagegen nur begrenzt, denn der Sonnenuntergang wandert übers Jahr um Stunden.
+
+Im Helligkeitsmodus gibt es deshalb zwei zusätzliche Grenzen:
+
+| Einstellung | Wirkung |
+|---|---|
+| Runter frühestens X Min. vor Sonnenuntergang | Vor dieser Zeit wird nicht geschlossen, egal wie dunkel es wird |
+| Hoch frühestens X Min. vor Sonnenaufgang | Vor dieser Zeit wird nicht geöffnet |
+
+Beispiel: Sonnenuntergang 21:10 und „60" bedeutet, dass frühestens ab 20:10 geschlossen wird. Beide Grenzen gelten **zusätzlich** zu den Uhrzeitfenstern – die engere gewinnt.
+
+Leer heißt: keine Grenze. Der Wert `0` ist etwas anderes als leer – er bedeutet „genau ab Sonnenuntergang".
+
 ## Ständiges Hoch und Runter bei Wolken
 
 Gegen Rauschen am Sensor ist vorgesorgt: getrennte Schwellen für Ein und Aus, eine Hysterese je Bedingung, und pro Phase wird nur einmal in dieselbe Richtung gefahren. Eine durchziehende Wolke ist aber kein Rauschen – sie beendet die Bedingung wirklich, und der Rollladen fuhr sofort auf.

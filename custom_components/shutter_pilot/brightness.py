@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -17,6 +18,8 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_MODE,
     AREA_MODE_BRIGHTNESS,
+    CONF_AREA_B_DOWN_AFTER_SUNSET,
+    CONF_AREA_B_UP_BEFORE_SUNRISE,
     CONF_AREA_BRIGHTNESS_SENSOR,
     CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
     CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
@@ -56,17 +59,69 @@ from .helpers import (
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 from .group_actions import run_group_light_action
-from .schedule_times import is_weekend_schedule, parse_time
+from .schedule_times import (
+    _local_sun_time,
+    infer_today_sun_time,
+    is_weekend_schedule,
+    parse_time,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 _parse_time = parse_time
 
 
+def _sun_bound_ok(
+    hass: HomeAssistant | None, area: dict, now: datetime, direction: str
+) -> bool:
+    """True unless a sun-relative bound still blocks this direction.
+
+    The clock windows cannot express "not before sunset minus 60 minutes",
+    because sunset moves through the year. Without it a thunderstorm in the
+    afternoon pushed the lux below the threshold and closed the shutters in
+    broad daylight.
+    """
+    if hass is None:
+        return True
+    key = (
+        CONF_AREA_B_DOWN_AFTER_SUNSET
+        if direction == "down"
+        else CONF_AREA_B_UP_BEFORE_SUNRISE
+    )
+    raw = area.get(key)
+    if raw is None or str(raw).strip() == "":
+        return True
+    try:
+        offset = int(raw)
+    except (TypeError, ValueError):
+        return True
+
+    sun_state = hass.states.get("sun.sun")
+    if sun_state is None:
+        # No sun data – never block, same fail-open rule as everywhere else.
+        return True
+    attrs = sun_state.attributes or {}
+    now_local = dt_util.as_local(now)
+    event = _local_sun_time(
+        attrs.get("next_setting" if direction == "down" else "next_rising")
+    )
+    today = infer_today_sun_time(event, now_local)
+    if today is None:
+        return True
+
+    if direction == "down":
+        # "Not before sunset minus N minutes".
+        return now_local >= today - timedelta(minutes=offset)
+    # "Not before sunrise minus N minutes".
+    return now_local >= today - timedelta(minutes=offset)
+
+
 def _area_window(
     area: dict, now: datetime, direction: str, hass: HomeAssistant | None = None
 ) -> bool:
     """True if `now` lies inside the allowed window. direction: 'up' or 'down'."""
+    if not _sun_bound_ok(hass, area, now, direction):
+        return False
     is_we = is_weekend_schedule(hass, area, now)
     if direction == "up":
         f_key = CONF_AREA_WE_UP_FROM if is_we else CONF_AREA_W_UP_FROM

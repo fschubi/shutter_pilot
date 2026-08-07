@@ -112,6 +112,14 @@ CONF_AREA_WE_UP_TO = "we_up_to"
 CONF_AREA_WE_DOWN_FROM = "we_down_from"
 CONF_AREA_WE_DOWN_TO = "we_down_to"
 
+# Extra sun-relative bounds on top of the clock windows above. A thunderstorm
+# in the afternoon drives the lux below the threshold, and without this the
+# shutters closed in broad daylight. "No earlier than sunset minus 60 minutes"
+# is what the clock windows cannot express, because sunset moves all year.
+# Offsets are in minutes; None/empty means the bound does not apply.
+CONF_AREA_B_DOWN_AFTER_SUNSET = "b_down_after_sunset"
+CONF_AREA_B_UP_BEFORE_SUNRISE = "b_up_before_sunrise"
+
 # Per-area sun protection (elevation range: active when min <= elev <= max)
 CONF_AREA_SUN_PROTECT_ENABLED = "sun_protect_enabled"
 CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max

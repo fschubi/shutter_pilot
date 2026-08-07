@@ -334,6 +334,21 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Brightness mode with a sun bound
+
+A thunderstorm in the afternoon pushes the lux below the threshold — and the shutters close in broad daylight. Clock windows only help so far, because sunset moves by hours through the year.
+
+Brightness mode therefore offers two extra bounds:
+
+| Setting | Effect |
+|---|---|
+| Down no earlier than X min. before sunset | Nothing closes before then, however dark it gets |
+| Up no earlier than X min. before sunrise | Nothing opens before then |
+
+Example: sunset at 21:10 with "60" means closing starts at 20:10 at the earliest. Both bounds apply **on top of** the clock windows — the tighter one wins.
+
+Empty means no bound. The value `0` is not the same as empty — it means "exactly at sunset".
+
 ## Chasing clouds up and down
 
 Sensor noise is already handled: separate on and off thresholds, hysteresis per condition, and only one movement per direction and phase. A drifting cloud is not noise though — it genuinely ends the condition, and the shutter opened right away.
