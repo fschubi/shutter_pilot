@@ -38,7 +38,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (367 Tests)
+tests/               pytest-Suite (374 Tests)
 ```
 
 ## Funktionsumfang
@@ -143,7 +143,8 @@ Rollläden · Einstellungen. Besonderheiten, die man kennen muss:
   Bedienknöpfen. Das ist Bequemlichkeit – die Grenze liegt auf dem Server.
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
-  `t()` fällt sonst auf Englisch zurück.
+  `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
+  (je 258 Schlüssel) – das gilt es zu halten.
 
 ### WebSocket-API
 
@@ -171,7 +172,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 367 Tests, ~6 s
+.venv/bin/pytest            # 374 Tests, ~6 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -197,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.7.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.7.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -491,3 +492,34 @@ lahm. Immer nur die eine passende Wartezeit gaten.
 Zwischenschritt) und ein zweiter Azimutbereich je Rollladen (nur nötig, wenn ein
 Aktor zwei Richtungen bedient). Sowie die 52 fehlenden i18n-Schlüssel in den
 neun kleineren Panel-Sprachen – Bestand, Rückfall auf Englisch.
+
+### 2026-08-07 – 2.7.1: die drei Restpunkte
+
+**Der Mindestabstand galt nicht für die Dashboard-Knöpfe.** Beim Durchsehen der
+offenen Punkte aufgefallen – ein Mangel an einem Feature, das Stunden vorher
+rausging. `_coverAction` schickte **einen** Dienstaufruf mit allen entity_ids;
+Home Assistant fächert das gleichzeitig auf. Der Knopf, den Linos drückt, war
+also genau der Burst, gegen den die Einstellung gebaut ist.
+
+Bewusst **nicht** übers Backend gelöst: Die Knöpfe rufen `cover`-Dienste direkt
+auf, und dabei prüft HA die Rechte je Entität. Ein eigener WebSocket-Befehl
+hätte diese Prüfung verloren – das Panel ist absichtlich auch für Nicht-Admins
+sichtbar. Also wird im Frontend ein zweites Mal gestaffelt. Zwei Stellen für
+dieselbe Regel, aber die Alternative wäre ein Loch in der Rechteprüfung.
+Gestaffelt wird auch „Stop": ein verschluckter Stopp lässt den Rollladen bis
+zum Anschlag laufen, ein um Sekunden späterer nicht.
+
+**52 i18n-Schlüssel × 9 Sprachen.** Alle elf Sprachen stehen jetzt bei 258
+Schlüsseln. Ein Prüfskript dafür ist trivial und lohnt sich vor jedem Release:
+Schlüsselmengen aller Sprachen gegen `de` vergleichen.
+
+**Sensornamen übersetzbar.** Fallstrick: `Entity._name_internal` nimmt
+`_attr_name`, **sobald es gesetzt ist** – der Übersetzungsschlüssel wird dann nie
+nachgeschlagen. Es braucht also beides: `_attr_name` weg *und*
+`_attr_has_entity_name = True`. Bestehende Entitäts-IDs bleiben, weil die
+Registry sie über die `unique_id` hält; ein Test hält das fest, damit ein
+künftiges Umbenennen nicht unbemerkt Automationen bricht.
+
+`ShutterPilotNextActionSensor` bleibt absichtlich bei `_attr_name`: Der Name
+enthält den vom Nutzer vergebenen Bereichsnamen, den keine Übersetzungsdatei
+kennen kann.

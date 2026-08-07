@@ -60,9 +60,15 @@ async def async_setup_entry(
 
 
 class _ForecastSensorBase(SensorEntity):
-    """Shared plumbing for the forecast sensors."""
+    """Shared plumbing for the forecast sensors.
 
-    _attr_has_entity_name = False
+    The names come from the translation files. Home Assistant only looks them
+    up when has_entity_name is set *and* no _attr_name is present – setting a
+    name short-circuits the lookup, which is why these sensors used to be
+    German for everyone.
+    """
+
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -108,7 +114,7 @@ class ShutterPilotForecastTempSensor(_ForecastSensorBase):
     def __init__(self, entry: ConfigEntry) -> None:
         super().__init__(entry)
         self._attr_unique_id = f"{entry.entry_id}_forecast_temp_max"
-        self._attr_name = "Shutter Pilot Vorhersage Höchsttemperatur"
+        self._attr_translation_key = "forecast_temp_max"
 
     @property
     def native_value(self) -> float | None:
@@ -125,7 +131,7 @@ class ShutterPilotForecastTempMinSensor(_ForecastSensorBase):
     def __init__(self, entry: ConfigEntry) -> None:
         super().__init__(entry)
         self._attr_unique_id = f"{entry.entry_id}_forecast_temp_min"
-        self._attr_name = "Shutter Pilot Vorhersage Tiefsttemperatur"
+        self._attr_translation_key = "forecast_temp_min"
 
     @property
     def native_value(self) -> float | None:
@@ -140,7 +146,7 @@ class ShutterPilotForecastConditionSensor(_ForecastSensorBase):
     def __init__(self, entry: ConfigEntry) -> None:
         super().__init__(entry)
         self._attr_unique_id = f"{entry.entry_id}_forecast_condition"
-        self._attr_name = "Shutter Pilot Vorhersage Wetterlage"
+        self._attr_translation_key = "forecast_condition"
 
     @property
     def native_value(self) -> str | None:

@@ -4,6 +4,17 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.7.1]
+
+Nacharbeit zu 2.7.0.
+
+### Behoben
+- **Der Mindestabstand galt nicht für die Knöpfe im Dashboard.** Die Drosselung sitzt im Backend, die Knöpfe riefen die Cover-Dienste aber direkt auf – und zwar mit **einem** Aufruf für alle Rollläden eines Bereichs, den Home Assistant dann gleichzeitig ausführt. Ausgerechnet der Knopf, den man drückt, erzeugte also genau den Funk-Burst, gegen den die Einstellung gebaut ist. Die Knöpfe staffeln jetzt ebenfalls. Sie rufen weiterhin direkt die Cover-Dienste auf, damit Home Assistant die Rechte je Entität selbst prüft.
+
+### Geändert
+- **Das Panel ist in allen elf Sprachen vollständig.** In den neun kleineren Sprachen fehlten 52 Texte und erschienen auf Englisch – darunter ganze Abschnitte: Zeitklammern im Sonnenstand-Modus, Fahrtkontrolle, Wetter, Beschattungszeitraum, abweichendes Schließen, eigene Ausrichtung je Rollladen sowie die Sonnenschutz-Anzeige auf dem Dashboard.
+- **Die Vorhersagesensoren heißen jetzt in der Sprache der Oberfläche.** Sie waren hart deutsch, auch für englische Nutzer – daran war im Forum jemand gescheitert, der nach „forecast" gesucht hatte. **Bestehende Entitäts-IDs ändern sich nicht**, Automationen laufen unverändert weiter; auf Deutsch bleibt auch der angezeigte Name derselbe.
+
 ## [2.7.0]
 
 Zwei Fehlerberichte von GitHub und der gesammelte Rest aus dem Forum – die Liste ist damit abgearbeitet. Danke an vitals5, Vorhand, Viktor, MartyBr, charly166, Smons und Linos.

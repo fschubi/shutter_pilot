@@ -52,5 +52,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "forecast_temp_max": {
+        "name": "Shutter Pilot forecast high temperature"
+      },
+      "forecast_temp_min": {
+        "name": "Shutter Pilot forecast low temperature"
+      },
+      "forecast_condition": {
+        "name": "Shutter Pilot forecast condition"
+      }
+    }
   }
 }
