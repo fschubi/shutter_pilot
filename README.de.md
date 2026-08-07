@@ -286,6 +286,14 @@ Für das Wochenende gibt es eigene Werte. Bleiben die leer, gelten die Wochentag
 
 Alle Uhrzeiten sind Ortszeit – die Zeitzone aus den Home-Assistant-Einstellungen. Im Dashboard steht neben der Fahrzeit, warum sie von der Sonnenzeit abweicht: „· frühestens 07:30", wenn die Klammer greift, oder „· Präsenz: +4 min" bei aktiver Präsenzsimulation.
 
+## Mindestabstand zwischen Fahrbefehlen
+
+Funk-Empfänger – 433 MHz, HmIP und Verwandte – verschlucken Befehle, die im selben Moment ankommen. Die **Verzögerung im Bereich** hilft dagegen nur teilweise: Sie staffelt die Rollläden *eines* Bereichs, aber jeder Bereich fährt in einem eigenen Vorgang. Fahren abends zwei Bereiche gleichzeitig los, treffen die Befehle trotzdem zusammen.
+
+Im Tab **Einstellungen** gibt es deshalb einen **Mindestabstand zwischen Fahrbefehlen** (0–10 s). Er wirkt an der einen Stelle, durch die *jede* Fahrt läuft – automatisch wie von Hand – und staffelt sie über alle Bereiche hinweg. Gedrosselt heißt dabei gewartet, nicht weggelassen: Jeder Rollladen bekommt seinen Befehl, nur eben nacheinander.
+
+`0` schaltet die Drosselung ab; das ist das Verhalten vor Version 2.7.0.
+
 ## Fahrten überprüfen
 
 Funk-Rollläden verlieren gelegentlich einen Befehl. Ohne Kontrolle merkt das niemand, und die Integration rechnet danach mit einer Position weiter, die der Rollladen nie erreicht hat.

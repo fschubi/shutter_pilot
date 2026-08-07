@@ -39,7 +39,9 @@ from .const import (
     CONF_VERIFY_ENABLED,
     CONF_VERIFY_RETRIES,
     CONF_VERIFY_TOLERANCE,
+    CONF_MIN_DRIVE_GAP,
     CONF_WEATHER_ENTITY,
+    DEFAULT_MIN_DRIVE_GAP,
     DEFAULT_VERIFY_AFTER,
     DEFAULT_VERIFY_RETRIES,
     DEFAULT_VERIFY_TOLERANCE,
@@ -471,6 +473,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 (CONF_VERIFY_AFTER, DEFAULT_VERIFY_AFTER),
                 (CONF_VERIFY_TOLERANCE, DEFAULT_VERIFY_TOLERANCE),
                 (CONF_VERIFY_RETRIES, DEFAULT_VERIFY_RETRIES),
+                (CONF_MIN_DRIVE_GAP, DEFAULT_MIN_DRIVE_GAP),
             )
         },
         "weather": dict(data.get("weather") or {}),

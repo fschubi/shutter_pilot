@@ -286,6 +286,14 @@ Weekends have their own values. Left empty, the weekday values apply. Empty fiel
 
 All times are local time — the timezone from your Home Assistant settings. The dashboard shows next to each drive time why it differs from the sun time: "· no earlier than 07:30" when a bound applies, or "· Presence: +4 min" with presence simulation enabled.
 
+## Minimum gap between drive commands
+
+Radio receivers — 433 MHz, HmIP and relatives — swallow commands that arrive at the same moment. The **per-area delay** only helps so far: it staggers the shutters *within* one area, but every area drives in its own task. When two areas start at the same time in the evening, their commands still collide.
+
+The **Settings** tab therefore offers a **minimum gap between drive commands** (0–10 s). It applies at the single place every drive passes through — automated or manual — and spaces them out across all areas. Throttling here means waiting, not dropping: every shutter still gets its command, just one after another.
+
+`0` disables the throttle; that is the behaviour before version 2.7.0.
+
 ## Verifying drives
 
 Radio-driven shutters occasionally drop a command. Without a check nobody notices, and the integration keeps working with a position the shutter never reached.

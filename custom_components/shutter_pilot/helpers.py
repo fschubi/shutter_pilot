@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import datetime
@@ -36,6 +37,9 @@ from .const import (
     CONF_AREA_UP_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_MIN_DRIVE_GAP,
+    DEFAULT_MIN_DRIVE_GAP,
+    MAX_MIN_DRIVE_GAP,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
@@ -1015,6 +1019,40 @@ def get_sun_angles(hass: HomeAssistant) -> tuple[float | None, float | None]:
     return _num("elevation"), _num("azimuth")
 
 
+async def _respect_min_drive_gap(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Hold back a drive command until the configured global gap has passed.
+
+    Radio protocols swallow commands that arrive together, and the per-area
+    delay cannot prevent that: every area drives in its own task. This is the
+    one place every automated *and* manual drive passes through, so the spacing
+    belongs here. The lock is held across the wait, which is what serialises
+    concurrent callers into a queue instead of letting them all through at once.
+    """
+    try:
+        gap = float(entry.options.get(CONF_MIN_DRIVE_GAP, DEFAULT_MIN_DRIVE_GAP) or 0)
+    except (TypeError, ValueError):
+        return
+    if gap <= 0:
+        return
+    gap = min(gap, MAX_MIN_DRIVE_GAP)
+
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not isinstance(data, dict):
+        return
+    lock = data.get("_drive_lock")
+    if not isinstance(lock, asyncio.Lock):
+        lock = data["_drive_lock"] = asyncio.Lock()
+
+    async with lock:
+        last = data.get("_last_drive_ts")
+        if last is not None:
+            wait = gap - (time.monotonic() - last)
+            if wait > 0:
+                _LOGGER.debug("Throttling drive by %.1fs (global gap)", wait)
+                await asyncio.sleep(wait)
+        data["_last_drive_ts"] = time.monotonic()
+
+
 async def set_cover_position(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -1029,6 +1067,7 @@ async def set_cover_position(
     """Set cover position (and optionally slat angle) and persist the result."""
     mark_automation_pending(hass, entry, entity_id)
     try:
+        await _respect_min_drive_gap(hass, entry)
         await hass.services.async_call(
             "cover",
             "set_cover_position",

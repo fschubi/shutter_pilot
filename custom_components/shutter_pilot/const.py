@@ -211,6 +211,14 @@ DEFAULT_VERIFY_TOLERANCE = 8
 DEFAULT_VERIFY_RETRIES = 1
 EVENT_COVER_FAILED = "shutter_pilot_cover_failed"
 
+# Global minimum distance between two drive commands, in seconds. The per-area
+# delay cannot cover this: every area drives in its own task, so two areas still
+# fire at the same moment – and radio protocols (433 MHz, HmIP) swallow commands
+# that collide. 0 disables the throttle and is the previous behaviour.
+CONF_MIN_DRIVE_GAP = "min_drive_gap"
+DEFAULT_MIN_DRIVE_GAP = 0.0
+MAX_MIN_DRIVE_GAP = 10.0
+
 # Per-area shading season, as month numbers 1-12. Empty means all year.
 # Ranges may wrap across the turn of the year (e.g. 10 -> 3 for winter).
 CONF_AREA_SEASON_FROM = "season_from"
