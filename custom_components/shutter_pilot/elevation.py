@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,10 @@ from .const import (
     DOMAIN,
     CONF_AREAS,
     CONF_AREA_ID,
+    CONF_AREA_SHADE_HOLD,
     CONF_AREA_SUN_PROTECT_ENABLED,
+    DEFAULT_AREA_SHADE_HOLD,
+    MAX_AREA_SHADE_HOLD,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_AREA_DOWN_ID,
@@ -69,6 +73,17 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
     if not protect_areas:
         register_minute_callback(data, "elevation", None)
         return
+
+    # Wie lange die Beschattung nach dem Wegfall der Bedingung noch gehalten
+    # wird, je Cover als Zeitstempel des ersten "nicht mehr nötig".
+    release_since: dict[str, float] = data.setdefault("_shade_release_since", {})
+
+    def _hold_seconds(area: dict) -> float:
+        try:
+            minutes = float(area.get(CONF_AREA_SHADE_HOLD, DEFAULT_AREA_SHADE_HOLD) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+        return max(0.0, min(minutes, MAX_AREA_SHADE_HOLD)) * 60.0
 
     def _delay_for(area: dict) -> int:
         try:
@@ -214,6 +229,9 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             was_active = is_cover_sun_protected(data, cover)
 
             if should_protect:
+                # Die Wolke ist weitergezogen – die Haltezeit beginnt bei der
+                # nächsten Unterbrechung von vorn.
+                release_since.pop(cover, None)
                 if not was_active:
                     to_shade.setdefault(area_id, []).append(shutter)
                     set_cover_sun_protected(data, cover, True)
@@ -223,15 +241,33 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 continue
 
             e_min, e_max = get_elevation_bounds(geo)
-            set_cover_sun_protected(data, cover, False)
             if elev < e_min:
                 # Below the range the shutters belong to the evening
-                # schedule, not to shading. Drop the flag, do not drive.
+                # schedule, not to shading. Drop the flag, do not drive, and
+                # do not wait out a hold time – the day is simply over.
+                set_cover_sun_protected(data, cover, False)
+                release_since.pop(cover, None)
                 _LOGGER.debug(
                     "[sun-protect] %s: elev=%.1f below %.1f – off, no drive",
                     cover, elev, e_min,
                 )
                 continue
+
+            # A cloud drifting past ends the condition outright. Keep the
+            # shading up for the configured time before giving in, otherwise
+            # the shutters chase every gap in the clouds.
+            hold = _hold_seconds(area)
+            if hold > 0:
+                first_seen = release_since.setdefault(cover, time.monotonic())
+                waited = time.monotonic() - first_seen
+                if waited < hold:
+                    _LOGGER.debug(
+                        "[sun-protect] %s: no longer needed – holding (%.0f/%.0f s)",
+                        cover, waited, hold,
+                    )
+                    continue
+            release_since.pop(cover, None)
+            set_cover_sun_protected(data, cover, False)
 
             if elev > e_max:
                 reason = "sun above range"

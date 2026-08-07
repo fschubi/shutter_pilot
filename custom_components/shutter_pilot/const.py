@@ -219,6 +219,14 @@ CONF_MIN_DRIVE_GAP = "min_drive_gap"
 DEFAULT_MIN_DRIVE_GAP = 0.0
 MAX_MIN_DRIVE_GAP = 10.0
 
+# How long shading is held after it is no longer needed, in minutes. Values and
+# hysteresis already stop the shading from chattering on sensor noise, but a
+# cloud drifting past ends the condition outright – and the shutters went up
+# straight away. 0 keeps the immediate release.
+CONF_AREA_SHADE_HOLD = "shade_hold"
+DEFAULT_AREA_SHADE_HOLD = 0
+MAX_AREA_SHADE_HOLD = 120
+
 # Per-area shading season, as month numbers 1-12. Empty means all year.
 # Ranges may wrap across the turn of the year (e.g. 10 -> 3 for winter).
 CONF_AREA_SEASON_FROM = "season_from"

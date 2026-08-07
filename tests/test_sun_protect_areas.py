@@ -277,3 +277,79 @@ class TestStaleFlag:
         await _ticks(hass, data)
 
         assert not is_cover_sun_protected(data, COVER)
+
+
+class TestShadeHold:
+    """Haltezeit gegen ständiges Hoch und Runter bei Wolken."""
+
+    async def _shaded(self, hass, hold_minutes):
+        from custom_components.shutter_pilot.const import CONF_AREA_SHADE_HOLD
+
+        area = _with_condition(_area("gruppe"), 500)
+        area[CONF_AREA_SHADE_HOLD] = hold_minutes
+        hass.states.async_set(RADIATION, 800)
+        entry, data = await _setup(
+            hass, [area], [_shutter(up_id="gruppe", down_id="gruppe")]
+        )
+        await _ticks(hass, data)
+        return entry, data
+
+    async def test_without_hold_a_cloud_opens_immediately(self, hass, cover_calls):
+        """Bisheriges Verhalten – bleibt der Standard."""
+        _entry, data = await self._shaded(hass, 0)
+        assert _positions(cover_calls) == [50]
+
+        hass.states.async_set(RADIATION, 100)
+        await _ticks(hass, data)
+        assert _positions(cover_calls) == [50, 100]
+
+    async def test_hold_keeps_the_shading_up(self, hass, cover_calls):
+        _entry, data = await self._shaded(hass, 60)
+        assert _positions(cover_calls) == [50]
+
+        hass.states.async_set(RADIATION, 100)  # Wolke
+        await _ticks(hass, data, count=5)
+        assert _positions(cover_calls) == [50], "keine Fahrt während der Haltezeit"
+        assert is_cover_sun_protected(data, COVER), "gilt weiter als beschattet"
+
+    async def test_sun_returning_resets_the_clock(self, hass, cover_calls):
+        _entry, data = await self._shaded(hass, 60)
+        hass.states.async_set(RADIATION, 100)
+        await _ticks(hass, data)
+        assert COVER in data["_shade_release_since"]
+
+        hass.states.async_set(RADIATION, 800)  # Wolke weitergezogen
+        await _ticks(hass, data)
+        assert COVER not in data["_shade_release_since"], "Uhr zurückgesetzt"
+        assert _positions(cover_calls) == [50], "keine zusätzliche Fahrt"
+
+    async def test_release_after_the_hold_has_passed(self, hass, cover_calls):
+        import time
+
+        _entry, data = await self._shaded(hass, 60)
+        hass.states.async_set(RADIATION, 100)
+        await _ticks(hass, data)
+        assert _positions(cover_calls) == [50]
+
+        # Die Haltezeit in die Vergangenheit legen, statt eine Stunde zu warten.
+        data["_shade_release_since"][COVER] = time.monotonic() - 3601
+        await _ticks(hass, data)
+        assert _positions(cover_calls) == [50, 100]
+        assert not is_cover_sun_protected(data, COVER)
+
+    async def test_end_of_day_is_not_delayed(self, hass, cover_calls):
+        """Sinkt die Sonne unter den Bereich, ist der Tag vorbei – kein Warten."""
+        _entry, data = await self._shaded(hass, 60)
+        hass.states.async_set(
+            "sun.sun",
+            "above_horizon",
+            {
+                "elevation": -5.0,
+                "azimuth": 284.0,
+                "next_rising": "2026-08-04T04:00:00+00:00",
+                "next_setting": "2026-08-03T19:00:00+00:00",
+            },
+        )
+        await _ticks(hass, data)
+        assert not is_cover_sun_protected(data, COVER)
+        assert COVER not in data["_shade_release_since"]

@@ -334,6 +334,19 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Chasing clouds up and down
+
+Sensor noise is already handled: separate on and off thresholds, hysteresis per condition, and only one movement per direction and phase. A drifting cloud is not noise though — it genuinely ends the condition, and the shutter opened right away.
+
+The area therefore offers **Hold shading** (0–120 minutes). The shading stays up for that long even once the condition no longer holds. If the sun returns before then, the clock starts over next time.
+
+Two things stay immediate on purpose:
+
+- **Shading itself.** When the sun hits the window, the shutter should not wait an hour first.
+- **The end of the day.** Once the sun drops below the configured elevation, shading is over and the normal evening schedule takes it from there, without delay.
+
+`0` keeps the previous behaviour.
+
 ## Shading from brightness sensors alone
 
 With brightness sensors around the house, elevation and compass direction are not needed — the sensor already knows whether the sun hits the window. No separate mode required:

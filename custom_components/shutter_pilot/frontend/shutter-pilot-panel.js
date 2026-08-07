@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  f_shade_hold:"Beschattung halten (Min.)",f_shade_hold_hint:"Zieht eine Wolke durch, endet die Bedingung sofort und der Rollladen fährt auf. So lange bleibt die Beschattung trotzdem stehen. 0 = sofort auffahren.",
   sec_drive:"Fahrbefehle",sec_drive_sub:"Abstand zwischen zwei Befehlen",f_min_gap:"Mindestabstand zwischen Fahrbefehlen",f_min_gap_hint:"Funk-Empfänger (433 MHz, HmIP) verschlucken Befehle, die gleichzeitig ankommen. Die Verzögerung im Bereich hilft dort nicht: jeder Bereich fährt für sich. Hier wird jeder Fahrbefehl gedrosselt – automatisch wie von Hand. 0 = aus.",f_min_gap_off:"aus",
   f_frost_cond_sensor:"Tipp: Bei hinterlegter Wetter-Entität stellt Shutter Pilot dafür den Sensor „Shutter Pilot Vorhersage Tiefsttemperatur\" bereit.",
   sec_vent:"Automatisches Lüften",sec_vent_sub:"Auf die Lüftungsposition fahren, wenn Bedingungen erfüllt sind",f_vent_enabled:"Automatisch lüften",f_vent_hint:"Sind alle Bedingungen erfüllt, fahren die Rollläden des Bereichs auf ihre Lüftungsposition und danach wieder zurück. Ein offenes Fenster und der Sonnenschutz haben Vorrang.",f_vent_cond:"Bedingung",
@@ -441,6 +442,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  f_shade_hold:"Hold shading (min.)",f_shade_hold_hint:"A passing cloud ends the condition at once and the shutter opens. This keeps the shading up for that long anyway. 0 = open immediately.",
   sec_drive:"Drive commands",sec_drive_sub:"Spacing between two commands",f_min_gap:"Minimum gap between drive commands",f_min_gap_hint:"Radio receivers (433 MHz, HmIP) swallow commands that arrive together. The per-area delay does not help: each area drives on its own. This throttles every drive command, automated or manual. 0 = off.",f_min_gap_off:"off",
   f_frost_cond_sensor:"Tip: with a weather entity configured, Shutter Pilot provides the sensor \"Shutter Pilot Vorhersage Tiefsttemperatur\" for exactly this.",
   sec_vent:"Automatic ventilation",sec_vent_sub:"Drive to the ventilation position when conditions hold",f_vent_enabled:"Ventilate automatically",f_vent_hint:"While every condition holds, the shutters of this area move to their ventilation position and back afterwards. An open window and sun protection take precedence.",f_vent_cond:"Condition",
@@ -569,6 +571,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  f_shade_hold:"Maintenir l’ombrage (min.)",f_shade_hold_hint:"Un nuage met fin à la condition immédiatement. L’ombrage est malgré tout maintenu pendant cette durée. 0 = ouvrir tout de suite.",
   sec_drive:"Commandes",sec_drive_sub:"Espacement entre deux commandes",f_min_gap:"Écart minimal entre commandes",f_min_gap_hint:"Les récepteurs radio ignorent les commandes simultanées. Le délai par zone n’y suffit pas. Ici chaque commande est espacée. 0 = désactivé.",f_min_gap_off:"désactivé",
   f_frost_cond_sensor:"Astuce : avec une entité météo configurée, Shutter Pilot fournit le capteur « Shutter Pilot Vorhersage Tiefsttemperatur ».",
   sec_vent:"Aération automatique",sec_vent_sub:"Aller en position d’aération si les conditions sont remplies",f_vent_enabled:"Aérer automatiquement",f_vent_hint:"Tant que toutes les conditions sont remplies, les volets vont en position d’aération puis reviennent. Une fenêtre ouverte et la protection solaire sont prioritaires.",f_vent_cond:"Condition",
@@ -693,6 +696,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  f_shade_hold:"Mantener sombreado (min.)",f_shade_hold_hint:"Una nube termina la condición al instante. El sombreado se mantiene igualmente ese tiempo. 0 = abrir enseguida.",
   sec_drive:"Órdenes de marcha",sec_drive_sub:"Separación entre dos órdenes",f_min_gap:"Separación mínima entre órdenes",f_min_gap_hint:"Los receptores de radio pierden órdenes que llegan a la vez. El retardo por área no basta. Aquí se espacia cada orden. 0 = desactivado.",f_min_gap_off:"desactivado",
   f_frost_cond_sensor:"Consejo: con una entidad meteorológica configurada, Shutter Pilot ofrece el sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilación automática",sec_vent_sub:"Ir a la posición de ventilación si se cumplen las condiciones",f_vent_enabled:"Ventilar automáticamente",f_vent_hint:"Mientras se cumplan todas las condiciones, las persianas van a su posición de ventilación y luego vuelven. Una ventana abierta y la protección solar tienen prioridad.",f_vent_cond:"Condición",
@@ -817,6 +821,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  f_shade_hold:"Mantieni ombreggiatura (min.)",f_shade_hold_hint:"Una nuvola interrompe subito la condizione. L’ombreggiatura resta comunque per questo tempo. 0 = apri subito.",
   sec_drive:"Comandi di marcia",sec_drive_sub:"Distanza tra due comandi",f_min_gap:"Distanza minima tra i comandi",f_min_gap_hint:"I ricevitori radio perdono i comandi che arrivano insieme. Il ritardo per area non basta. Qui ogni comando viene distanziato. 0 = disattivato.",f_min_gap_off:"disattivato",
   f_frost_cond_sensor:"Suggerimento: con un\u2019entità meteo configurata, Shutter Pilot fornisce il sensore «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilazione automatica",sec_vent_sub:"Vai in posizione di ventilazione se le condizioni sono soddisfatte",f_vent_enabled:"Ventila automaticamente",f_vent_hint:"Finché tutte le condizioni sono soddisfatte, le tapparelle vanno in posizione di ventilazione e poi tornano. Una finestra aperta e la protezione solare hanno la precedenza.",f_vent_cond:"Condizione",
@@ -942,6 +947,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  f_shade_hold:"Zonwering vasthouden (min.)",f_shade_hold_hint:"Een wolk beëindigt de voorwaarde meteen. De zonwering blijft toch zo lang staan. 0 = direct openen.",
   sec_drive:"Rijcommando’s",sec_drive_sub:"Afstand tussen twee commando’s",f_min_gap:"Minimale afstand tussen commando’s",f_min_gap_hint:"Radio-ontvangers missen commando’s die tegelijk aankomen. De vertraging per gebied helpt daar niet. Hier wordt elk commando gespreid. 0 = uit.",f_min_gap_off:"uit",
   f_frost_cond_sensor:"Tip: met een weer-entiteit ingesteld levert Shutter Pilot de sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisch ventileren",sec_vent_sub:"Naar de ventilatiestand als de voorwaarden gelden",f_vent_enabled:"Automatisch ventileren",f_vent_hint:"Zolang alle voorwaarden gelden gaan de rolluiken naar hun ventilatiestand en daarna terug. Een open raam en zonwering gaan voor.",f_vent_cond:"Voorwaarde",
@@ -1067,6 +1073,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  f_shade_hold:"Fasthold afskærmning (min.)",f_shade_hold_hint:"En sky afslutter betingelsen med det samme. Afskærmningen bliver alligevel stående så længe. 0 = åbn straks.",
   sec_drive:"Kørselskommandoer",sec_drive_sub:"Afstand mellem to kommandoer",f_min_gap:"Mindste afstand mellem kommandoer",f_min_gap_hint:"Radiomodtagere taber kommandoer, der ankommer samtidig. Forsinkelsen pr. område hjælper ikke. Her spredes hver kommando. 0 = fra.",f_min_gap_off:"fra",
   f_frost_cond_sensor:"Tip: med en vejr-entitet angivet leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk udluftning",sec_vent_sub:"Kør til udluftningsposition når betingelserne er opfyldt",f_vent_enabled:"Udluft automatisk",f_vent_hint:"Så længe alle betingelser er opfyldt, kører rullegardinerne til udluftningsposition og tilbage igen. Et åbent vindue og solafskærmning har forrang.",f_vent_cond:"Betingelse",
@@ -1192,6 +1199,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  f_shade_hold:"Behåll solskydd (min.)",f_shade_hold_hint:"Ett moln avslutar villkoret direkt. Solskyddet står kvar så länge ändå. 0 = öppna genast.",
   sec_drive:"Körkommandon",sec_drive_sub:"Avstånd mellan två kommandon",f_min_gap:"Minsta avstånd mellan kommandon",f_min_gap_hint:"Radiomottagare tappar kommandon som kommer samtidigt. Fördröjningen per område räcker inte. Här sprids varje kommando ut. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en väderentitet angiven ger Shutter Pilot sensorn «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk vädring",sec_vent_sub:"Kör till vädringsläget när villkoren gäller",f_vent_enabled:"Vädra automatiskt",f_vent_hint:"Så länge alla villkor gäller går jalusierna till vädringsläget och tillbaka igen. Ett öppet fönster och solskyddet går före.",f_vent_cond:"Villkor",
@@ -1317,6 +1325,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  f_shade_hold:"Utrzymuj zacienienie (min.)",f_shade_hold_hint:"Chmura natychmiast kończy warunek. Zacienienie mimo to pozostaje przez ten czas. 0 = otwórz od razu.",
   sec_drive:"Polecenia jazdy",sec_drive_sub:"Odstęp między dwoma poleceniami",f_min_gap:"Minimalny odstęp między poleceniami",f_min_gap_hint:"Odbiorniki radiowe gubią polecenia docierające jednocześnie. Opóźnienie w obszarze nie wystarcza. Tutaj każde polecenie jest rozdzielane. 0 = wyłączone.",f_min_gap_off:"wyłączone",
   f_frost_cond_sensor:"Wskazówka: po wskazaniu encji pogodowej Shutter Pilot udostępnia czujnik „Shutter Pilot Vorhersage Tiefsttemperatur\".",
   sec_vent:"Automatyczne wietrzenie",sec_vent_sub:"Jazda do pozycji wietrzenia, gdy warunki są spełnione",f_vent_enabled:"Wietrz automatycznie",f_vent_hint:"Dopóki wszystkie warunki są spełnione, rolety jadą do pozycji wietrzenia, a potem wracają. Otwarte okno i ochrona przeciwsłoneczna mają pierwszeństwo.",f_vent_cond:"Warunek",
@@ -1442,6 +1451,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  f_shade_hold:"Manter sombreamento (min.)",f_shade_hold_hint:"Uma nuvem termina a condição de imediato. O sombreamento fica na mesma durante esse tempo. 0 = abrir logo.",
   sec_drive:"Comandos de marcha",sec_drive_sub:"Espaçamento entre dois comandos",f_min_gap:"Intervalo mínimo entre comandos",f_min_gap_hint:"Os recetores de rádio perdem comandos que chegam ao mesmo tempo. O atraso por área não chega. Aqui cada comando é espaçado. 0 = desligado.",f_min_gap_off:"desligado",
   f_frost_cond_sensor:"Dica: com uma entidade meteorológica definida, o Shutter Pilot fornece o sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Ventilação automática",sec_vent_sub:"Ir para a posição de ventilação quando as condições se verificam",f_vent_enabled:"Ventilar automaticamente",f_vent_hint:"Enquanto todas as condições se verificarem, os estores vão para a posição de ventilação e depois voltam. Uma janela aberta e a proteção solar têm prioridade.",f_vent_cond:"Condição",
@@ -1567,6 +1577,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  f_shade_hold:"Behold solskjerming (min.)",f_shade_hold_hint:"En sky avslutter betingelsen med en gang. Solskjermingen blir likevel stående så lenge. 0 = åpne straks.",
   sec_drive:"Kjørekommandoer",sec_drive_sub:"Avstand mellom to kommandoer",f_min_gap:"Minste avstand mellom kommandoer",f_min_gap_hint:"Radiomottakere mister kommandoer som kommer samtidig. Forsinkelsen per område hjelper ikke. Her spres hver kommando. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en vær-entitet angitt leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
   sec_vent:"Automatisk lufting",sec_vent_sub:"Kjør til luftestilling når betingelsene er oppfylt",f_vent_enabled:"Luft automatisk",f_vent_hint:"Så lenge alle betingelser er oppfylt, kjører rullegardinene til luftestillingen og tilbake igjen. Et åpent vindu og solskjermingen går foran.",f_vent_cond:"Betingelse",
@@ -2428,7 +2439,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:15,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -2515,6 +2526,8 @@ class ShutterPilotPanel extends PanelBase {
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
       ${a.sun_protect_enabled?html`
         ${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
+        ${rng("shade_hold",T("f_shade_hold"),0,120,5," min")}
+        <div class="hint">${T("f_shade_hold_hint")}</div>
         <div class="field"><label><input type="checkbox" .checked=${!!a.azimuth_enabled} @change=${e=>{a.azimuth_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_azimuth")}</label>
           <div class="hint">${T("f_azimuth_hint")}</div></div>
         ${a.azimuth_enabled?html`

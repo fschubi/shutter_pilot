@@ -334,6 +334,19 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Ständiges Hoch und Runter bei Wolken
+
+Gegen Rauschen am Sensor ist vorgesorgt: getrennte Schwellen für Ein und Aus, eine Hysterese je Bedingung, und pro Phase wird nur einmal in dieselbe Richtung gefahren. Eine durchziehende Wolke ist aber kein Rauschen – sie beendet die Bedingung wirklich, und der Rollladen fuhr sofort auf.
+
+Dafür gibt es im Bereich **Beschattung halten** (0–120 Minuten). So lange bleibt die Beschattung stehen, auch wenn die Bedingung nicht mehr gilt. Kommt die Sonne vorher zurück, beginnt die Zeit beim nächsten Mal von vorn.
+
+Zwei Dinge bleiben bewusst sofort:
+
+- **Das Beschatten selbst.** Wenn die Sonne aufs Fenster trifft, soll der Rollladen nicht erst eine Stunde warten.
+- **Das Ende des Tages.** Sinkt die Sonne unter den eingestellten Höhenwinkel, ist die Beschattung vorbei – dann übernimmt der normale Abendplan ohne Verzögerung.
+
+`0` behält das bisherige Verhalten.
+
 ## Beschattung allein über Helligkeitssensoren
 
 Wer rund ums Haus Helligkeitssensoren verteilt hat, braucht Höhenwinkel und Himmelsrichtung nicht – der Sensor weiß bereits, ob die Sonne aufs Fenster scheint. Dafür ist keine eigene Betriebsart nötig:
