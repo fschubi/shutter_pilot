@@ -35,6 +35,7 @@ from .const import (
     ROLE_CLOSED_ALT,
     ROLE_CLOSED_FROST,
     CONF_AREA_UP_ID,
+    CONF_BLIND_DRIVE,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
     CONF_MIN_DRIVE_GAP,
@@ -799,6 +800,25 @@ def should_skip_full_open_preserving_sun_protect(
     if abs(cur - pos_sp) > 10.0:
         return False
     return True
+
+
+def get_tracked_position(
+    hass: HomeAssistant, shutter: dict[str, Any], cover_entity_id: str
+) -> float | None:
+    """The position to reason with: what the cover reports, else what we sent.
+
+    A one-way radio cover never answers. Without a fallback every check that
+    needs a position simply gives up, which silently disables the window
+    trigger and automatic ventilation for those covers. In blind mode we trust
+    our own bookkeeping instead – it is what we commanded, which is as close to
+    the truth as such a cover ever gets.
+    """
+    live = get_cover_current_position(hass, cover_entity_id)
+    if live is not None:
+        return live
+    if not bool(shutter.get(CONF_BLIND_DRIVE, False)):
+        return None
+    return _persisted_position(hass, cover_entity_id)
 
 
 def _persisted_position(hass: HomeAssistant, cover_entity_id: str) -> float | None:

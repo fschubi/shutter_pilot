@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  f_blind_drive:"Antrieb meldet keine Position (blind fahren)",f_blind_drive_hint:"Für einseitigen Funk wie Somfy RTS. Shutter Pilot rechnet dann mit der zuletzt gesendeten Position, statt aufzugeben – nur so funktionieren Fenstertrigger und automatisches Lüften auch bei solchen Antrieben.",
   f_copy_from:"Einstellungen übernehmen von",f_copy_pick:"– Rollladen wählen –",f_copy_btn:"Übernehmen",f_copy_hint:"Kopiert Positionen, Lamellen, Beschattung, Bedingungen und Fenster-Einstellungen. Cover-Entität, Name, Bereiche und Fenstersensoren bleiben unverändert.",
   f_sunbound_title:"Zusätzliche Sonnengrenzen",f_sunbound_hint:"Verhindert Fahrten am helllichten Tag, etwa wenn ein Gewitter die Helligkeit einbrechen lässt. Leer = keine Grenze.",f_b_down_sunset:"Runter frühestens X Min. vor Sonnenuntergang",f_b_up_sunrise:"Hoch frühestens X Min. vor Sonnenaufgang",
   f_shade_hold:"Beschattung halten (Min.)",f_shade_hold_hint:"Zieht eine Wolke durch, endet die Bedingung sofort und der Rollladen fährt auf. So lange bleibt die Beschattung trotzdem stehen. 0 = sofort auffahren.",
@@ -444,6 +445,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  f_blind_drive:"Drive reports no position (blind)",f_blind_drive_hint:"For one-way radio such as Somfy RTS. Shutter Pilot then reasons with the position it last sent instead of giving up – that is what makes window triggers and automatic ventilation work with such drives.",
   f_copy_from:"Copy settings from",f_copy_pick:"– choose a shutter –",f_copy_btn:"Apply",f_copy_hint:"Copies positions, slats, shading, conditions and window settings. Cover entity, name, areas and window sensors are left alone.",
   f_sunbound_title:"Extra sun bounds",f_sunbound_hint:"Prevents movements in broad daylight, e.g. when a thunderstorm drops the brightness. Empty = no bound.",f_b_down_sunset:"Down no earlier than X min. before sunset",f_b_up_sunrise:"Up no earlier than X min. before sunrise",
   f_shade_hold:"Hold shading (min.)",f_shade_hold_hint:"A passing cloud ends the condition at once and the shutter opens. This keeps the shading up for that long anyway. 0 = open immediately.",
@@ -575,6 +577,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  f_blind_drive:"Le moteur ne renvoie pas de position (à l’aveugle)",f_blind_drive_hint:"Pour la radio unidirectionnelle comme Somfy RTS. Shutter Pilot utilise alors la dernière position envoyée.",
   f_copy_from:"Reprendre les réglages de",f_copy_pick:"– choisir un volet –",f_copy_btn:"Appliquer",f_copy_hint:"Copie positions, lamelles, ombrage, conditions et réglages de fenêtre. Entité, nom, zones et capteurs restent inchangés.",
   f_sunbound_title:"Limites solaires supplémentaires",f_sunbound_hint:"Empêche les mouvements en plein jour, par ex. lors d’un orage. Vide = aucune limite.",f_b_down_sunset:"Descente au plus tôt X min. avant le coucher",f_b_up_sunrise:"Montée au plus tôt X min. avant le lever",
   f_shade_hold:"Maintenir l’ombrage (min.)",f_shade_hold_hint:"Un nuage met fin à la condition immédiatement. L’ombrage est malgré tout maintenu pendant cette durée. 0 = ouvrir tout de suite.",
@@ -702,6 +705,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  f_blind_drive:"El motor no informa posición (a ciegas)",f_blind_drive_hint:"Para radio unidireccional como Somfy RTS. Shutter Pilot usa entonces la última posición enviada.",
   f_copy_from:"Copiar ajustes de",f_copy_pick:"– elegir persiana –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posiciones, lamas, sombreado, condiciones y ajustes de ventana. Entidad, nombre, áreas y sensores no cambian.",
   f_sunbound_title:"Límites solares adicionales",f_sunbound_hint:"Evita movimientos a plena luz del día, p. ej. con una tormenta. Vacío = sin límite.",f_b_down_sunset:"Bajar como pronto X min. antes del ocaso",f_b_up_sunrise:"Subir como pronto X min. antes del amanecer",
   f_shade_hold:"Mantener sombreado (min.)",f_shade_hold_hint:"Una nube termina la condición al instante. El sombreado se mantiene igualmente ese tiempo. 0 = abrir enseguida.",
@@ -829,6 +833,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  f_blind_drive:"Il motore non riporta la posizione (alla cieca)",f_blind_drive_hint:"Per radio unidirezionale come Somfy RTS. Shutter Pilot usa allora l’ultima posizione inviata.",
   f_copy_from:"Copia impostazioni da",f_copy_pick:"– scegli tapparella –",f_copy_btn:"Applica",f_copy_hint:"Copia posizioni, lamelle, ombreggiatura, condizioni e impostazioni finestra. Entità, nome, aree e sensori restano invariati.",
   f_sunbound_title:"Limiti solari aggiuntivi",f_sunbound_hint:"Evita movimenti in pieno giorno, ad es. durante un temporale. Vuoto = nessun limite.",f_b_down_sunset:"Giù non prima di X min. dal tramonto",f_b_up_sunrise:"Su non prima di X min. dall’alba",
   f_shade_hold:"Mantieni ombreggiatura (min.)",f_shade_hold_hint:"Una nuvola interrompe subito la condizione. L’ombreggiatura resta comunque per questo tempo. 0 = apri subito.",
@@ -957,6 +962,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  f_blind_drive:"Motor meldt geen positie (blind)",f_blind_drive_hint:"Voor eenrichtingsradio zoals Somfy RTS. Shutter Pilot rekent dan met de laatst verzonden positie.",
   f_copy_from:"Instellingen overnemen van",f_copy_pick:"– rolluik kiezen –",f_copy_btn:"Toepassen",f_copy_hint:"Kopieert posities, lamellen, zonwering, voorwaarden en raaminstellingen. Entiteit, naam, gebieden en sensoren blijven ongewijzigd.",
   f_sunbound_title:"Extra zonnegrenzen",f_sunbound_hint:"Voorkomt bewegingen op klaarlichte dag, bijv. bij onweer. Leeg = geen grens.",f_b_down_sunset:"Omlaag niet eerder dan X min. voor zonsondergang",f_b_up_sunrise:"Omhoog niet eerder dan X min. voor zonsopgang",
   f_shade_hold:"Zonwering vasthouden (min.)",f_shade_hold_hint:"Een wolk beëindigt de voorwaarde meteen. De zonwering blijft toch zo lang staan. 0 = direct openen.",
@@ -1085,6 +1091,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  f_blind_drive:"Motoren melder ingen position (blind)",f_blind_drive_hint:"Til envejsradio som Somfy RTS. Shutter Pilot regner så med den sidst sendte position.",
   f_copy_from:"Kopiér indstillinger fra",f_copy_pick:"– vælg rullegardin –",f_copy_btn:"Anvend",f_copy_hint:"Kopierer positioner, lameller, afskærmning, betingelser og vinduesindstillinger. Entitet, navn, områder og sensorer ændres ikke.",
   f_sunbound_title:"Ekstra solgrænser",f_sunbound_hint:"Forhindrer kørsel ved højlys dag, f.eks. ved tordenvejr. Tom = ingen grænse.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Op tidligst X min. før solopgang",
   f_shade_hold:"Fasthold afskærmning (min.)",f_shade_hold_hint:"En sky afslutter betingelsen med det samme. Afskærmningen bliver alligevel stående så længe. 0 = åbn straks.",
@@ -1213,6 +1220,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  f_blind_drive:"Motorn rapporterar ingen position (blint)",f_blind_drive_hint:"För envägsradio som Somfy RTS. Shutter Pilot räknar då med den senast skickade positionen.",
   f_copy_from:"Kopiera inställningar från",f_copy_pick:"– välj jalusi –",f_copy_btn:"Använd",f_copy_hint:"Kopierar positioner, lameller, solskydd, villkor och fönsterinställningar. Entitet, namn, områden och sensorer lämnas orörda.",
   f_sunbound_title:"Extra solgränser",f_sunbound_hint:"Förhindrar körningar mitt på dagen, t.ex. vid åska. Tomt = ingen gräns.",f_b_down_sunset:"Ner tidigast X min. före solnedgång",f_b_up_sunrise:"Upp tidigast X min. före soluppgång",
   f_shade_hold:"Behåll solskydd (min.)",f_shade_hold_hint:"Ett moln avslutar villkoret direkt. Solskyddet står kvar så länge ändå. 0 = öppna genast.",
@@ -1341,6 +1349,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  f_blind_drive:"Napęd nie zgłasza pozycji (na ślepo)",f_blind_drive_hint:"Dla radia jednokierunkowego jak Somfy RTS. Shutter Pilot używa wtedy ostatnio wysłanej pozycji.",
   f_copy_from:"Skopiuj ustawienia z",f_copy_pick:"– wybierz roletę –",f_copy_btn:"Zastosuj",f_copy_hint:"Kopiuje pozycje, lamele, zacienienie, warunki i ustawienia okna. Encja, nazwa, obszary i czujniki pozostają bez zmian.",
   f_sunbound_title:"Dodatkowe granice słoneczne",f_sunbound_hint:"Zapobiega jazdom w biały dzień, np. podczas burzy. Puste = bez granicy.",f_b_down_sunset:"W dół nie wcześniej niż X min. przed zachodem",f_b_up_sunrise:"W górę nie wcześniej niż X min. przed wschodem",
   f_shade_hold:"Utrzymuj zacienienie (min.)",f_shade_hold_hint:"Chmura natychmiast kończy warunek. Zacienienie mimo to pozostaje przez ten czas. 0 = otwórz od razu.",
@@ -1469,6 +1478,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  f_blind_drive:"O motor não reporta posição (às cegas)",f_blind_drive_hint:"Para rádio unidirecional como Somfy RTS. O Shutter Pilot usa então a última posição enviada.",
   f_copy_from:"Copiar definições de",f_copy_pick:"– escolher estore –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posições, lâminas, sombreamento, condições e definições de janela. Entidade, nome, áreas e sensores ficam iguais.",
   f_sunbound_title:"Limites solares adicionais",f_sunbound_hint:"Evita movimentos em pleno dia, p. ex. durante uma trovoada. Vazio = sem limite.",f_b_down_sunset:"Descer no mínimo X min. antes do pôr do sol",f_b_up_sunrise:"Subir no mínimo X min. antes do nascer do sol",
   f_shade_hold:"Manter sombreamento (min.)",f_shade_hold_hint:"Uma nuvem termina a condição de imediato. O sombreamento fica na mesma durante esse tempo. 0 = abrir logo.",
@@ -1597,6 +1607,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  f_blind_drive:"Motoren melder ingen posisjon (blindt)",f_blind_drive_hint:"For enveisradio som Somfy RTS. Shutter Pilot regner da med sist sendte posisjon.",
   f_copy_from:"Kopier innstillinger fra",f_copy_pick:"– velg rullegardin –",f_copy_btn:"Bruk",f_copy_hint:"Kopierer posisjoner, lameller, solskjerming, betingelser og vindusinnstillinger. Entitet, navn, områder og sensorer endres ikke.",
   f_sunbound_title:"Ekstra solgrenser",f_sunbound_hint:"Hindrer kjøring midt på dagen, f.eks. ved tordenvær. Tom = ingen grense.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Opp tidligst X min. før soloppgang",
   f_shade_hold:"Behold solskjerming (min.)",f_shade_hold_hint:"En sky avslutter betingelsen med en gang. Solskjermingen blir likevel stående så lenge. 0 = åpne straks.",
@@ -2618,7 +2629,7 @@ class ShutterPilotPanel extends PanelBase {
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,blind_drive:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -2778,6 +2789,9 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_drive_after_hint")}</div></div>
       ${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
       <div class="hint">${T("f_win_debounce_hint")}</div>
+      <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
+        @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
+        <div class="hint">${T("f_blind_drive_hint")}</div></div>
 
       ${this._section("mdi:blinds-horizontal","sec_slats","sec_slats_sub")}
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>

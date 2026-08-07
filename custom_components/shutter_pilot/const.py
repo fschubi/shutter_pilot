@@ -47,6 +47,12 @@ CONF_WINDOW_TILTED_ENTITY_STATE = "window_tilted_entity_state"
 DEFAULT_WINDOW_TILTED_ENTITY_STATE = "on"
 CONF_POSITION_WHEN_WINDOW_OPEN = "position_when_window_open"
 CONF_POSITION_WHEN_WINDOW_TILTED = "position_when_window_tilted"
+# One-way radio covers (Somfy RTS and relatives) never report a position.
+# In blind mode Shutter Pilot reasons with the position it last sent instead,
+# so window triggers and ventilation work there too – they would otherwise
+# bail out the moment they cannot read the cover.
+CONF_BLIND_DRIVE = "blind_drive"
+
 CONF_LOCK_PROTECTION = "lock_protection"
 CONF_MIN_POSITION_WHEN_OPEN = "min_position_when_open"
 # Turning the handle from "tilted" to "open" drags the contact through

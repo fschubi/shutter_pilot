@@ -109,6 +109,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 - **Positions-Slider** – Offen-, Geschlossen- und Sonnenschutz-Positionen (0-100%)
 - **Aussperrschutz** – Mindest-Position bei offener Tür (verhindert Aussperren)
 - **Nachholfunktion** – holt einen verpassten Schließbefehl nach wenn das Fenster noch offen war
+- **Antrieb meldet keine Position (blind fahren)** – für einseitigen Funk wie Somfy RTS. Solche Antriebe antworten nicht, und jede Prüfung, die eine Position braucht, gab bisher auf – damit waren Fenstertrigger und automatisches Lüften für sie stillschweigend abgeschaltet. Mit dem Haken rechnet Shutter Pilot stattdessen mit der Position, die es zuletzt gesendet hat. Die Fahrtkontrolle überspringt solche Rollläden ohnehin, weil es nichts zu prüfen gibt
 - **Verzögerung beim Schließen** – wie lange „geschlossen" anhalten muss, bevor der Rollladen zurückfährt (0–30 s, Standard 5 s). Beim Drehen des Griffs von „gekippt" auf „offen" läuft der Kontakt kurz durch „geschlossen"; ohne Wartezeit fährt der Rollladen sofort zurück und die Offen-Position wird nie erreicht. `0` schaltet die Wartezeit ab
 
 ### Dashboard

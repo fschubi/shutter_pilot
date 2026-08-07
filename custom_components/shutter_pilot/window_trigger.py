@@ -24,7 +24,7 @@ from .const import (
     MAX_WINDOW_CLOSE_DEBOUNCE,
 )
 from .helpers import (
-    get_cover_current_position,
+    get_tracked_position,
     is_shutter_automation_enabled,
     is_system_enabled,
     set_cover_position,
@@ -263,7 +263,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 # Rationale: During daytime (cover already opened by automation), opening a window/door
                 # must NOT force the cover into a "ventilation" position.
                 cycle_active = trigger_actions.get(cover_entity) == "triggered"
-                current_pos = get_cover_current_position(hass, cover_entity)
+                current_pos = get_tracked_position(hass, shutter, cover_entity)
                 if current_pos is None:
                     # Fail-safe: if we can't read current position, do nothing.
                     trigger_actions.pop(cover_entity, None)
