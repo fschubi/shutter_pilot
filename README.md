@@ -272,6 +272,8 @@ The fallback works **per condition**, not all or nothing. A typical setup:
 
 Both windows inherit the temperature condition while keeping their own brightness sensor. A room temperature can be set per shutter the same way.
 
+For a **text condition** — the weather situation, say — the form offers the states as buttons. With a `weather.*` entity those are Home Assistant's 15 standard conditions. An ordinary sensor only ever reports its *current* state, so the others can be typed in by hand there instead of waiting for the next rain.
+
 Each window keeps its own hysteresis, so a cloud in front of one window does not release the shading of another.
 
 ## Drive by sun position, but not too early

@@ -272,6 +272,8 @@ Der Rückfall wirkt **je Bedingung**, nicht alles oder nichts. Typischer Aufbau:
 
 Beide Fenster erben die Temperaturbedingung und haben trotzdem ihren eigenen Helligkeitssensor. Genauso lässt sich eine Raumtemperatur pro Rollladen hinterlegen.
 
+Bei einer **Textbedingung** – etwa der Wetterlage – bietet das Formular die Zustände als Knöpfe an. Bei einer `weather.*`-Entität sind das die 15 Standardlagen von Home Assistant. Ein gewöhnlicher Sensor meldet dagegen immer nur seinen *aktuellen* Zustand; dort lassen sich die übrigen darum von Hand eintragen, statt auf den nächsten Regen zu warten.
+
 Jedes Fenster führt seine Hysterese getrennt – eine Wolke vor dem einen Fenster hebt die Beschattung des anderen nicht auf.
 
 ## Nach Sonnenstand fahren, aber nicht zu früh
