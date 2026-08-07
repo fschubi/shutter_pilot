@@ -38,7 +38,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (320 Tests)
+tests/               pytest-Suite (367 Tests)
 ```
 
 ## Funktionsumfang
@@ -171,7 +171,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 320 Tests, ~5 s
+.venv/bin/pytest            # 367 Tests, ~6 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -197,7 +197,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.6.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.7.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -412,7 +412,7 @@ danach stillschweigend Rollläden ausgelassen.
 **Offen:** die neun kleineren Panel-Sprachen haben 52 fehlende i18n-Schlüssel
 (Rückfall auf Englisch). Bestand, einmal aufräumen wäre fällig.
 
-### 2026-08-07 – 2.6.1: zwei GitHub-Issues
+### 2026-08-07 – 2.7.0, Teil 1: zwei GitHub-Issues
 
 **Beschattung pendelte im Minutentakt (#4).** Mit *einem* Bereich war alles
 stabil – der Fehler brauchte einen Rollladen, dessen Hoch- und Runter-Bereich
@@ -437,3 +437,57 @@ seit 2.6.0 hat. Der Nebenbefund von damals ist damit erledigt.
 **Wieder in dieselbe Testfalle getappt:** `patch("...cover_verify.asyncio.sleep")`
 patcht das globale Modul – ein *blockierender* Mock legt auch das `sleep(0)` im
 Test selbst lahm. Es muss immer nur die eine passende Wartezeit gegated werden.
+
+### 2026-08-07 – 2.7.0, Teil 2: die Restliste abgearbeitet
+
+Alles, was aus Forum und GitHub noch offen war, in einem Zug. Ein separates
+2.6.1 wurde nicht getaggt – die Fixes stecken in 2.7.0.
+
+**Globaler Mindestabstand (Linos' Schlüsselfunktion).** `drive_delay` staffelt
+nur *innerhalb* eines Bereichs, und jeder Bereich ist ein eigener Task. Der
+Choke-Point ist `set_cover_position()` – die eine Stelle, durch die jede Fahrt
+läuft. Ein `asyncio.Lock` im Runtime-Dict serialisiert gleichzeitige Aufrufer zu
+einer Warteschlange; der Lock wird **über den Schlaf gehalten**, sonst wären
+alle gleichzeitig durch. Gedeckelt auf 10 s, damit ein Tippfehler die
+Integration nicht anhält.
+
+**Beschattung halten.** Nur die *Freigabe* wird verzögert. Das Beschatten sofort
+zu lassen ist wichtig (sonst steht man eine Stunde in der Sonne), und das Ende
+des Tages – `elev < e_min` – ebenfalls, sonst hängt die Beschattung in den
+Abendplan hinein. Während der Haltezeit gilt der Rollladen **weiter als
+beschattet**, sonst fährt der Scheduler in die Lücke.
+
+**Sonnengrenzen im Helligkeitsmodus.** `_area_window` prüft zusätzlich eine
+Sonnenschranke. Gerechnet wird mit `_local_sun_time`/`infer_today_sun_time` aus
+`schedule_times` – genau die Umrechnung, deren Fehlen in 2.6.0 zwei Stunden
+Versatz erzeugt hat. Im Panel brauchen die beiden Felder einen eigenen Helfer:
+`Number("")` wäre `0`, und `0` ist hier eine gültige Schranke, kein „aus".
+
+**Kopierknopf** statt Profile/Label – der vereinbarte Zwischenschritt, ohne
+Eingriff ins Datenmodell. **Ausschlussliste statt Erlaubnisliste**, damit ein
+künftiges Feld nicht stillschweigend vom Kopieren ausgenommen bleibt. Listen
+werden kopiert, nicht geteilt.
+
+**Blind fahren (Viktor).** Sein Vorschlag war, die Positionsprüfung abzuschalten
+– das wäre schlechter: dann fährt die Lüftung auch bei richtig stehendem
+Rollladen, und der Fenstertrigger verliert die Rückfahrhöhe. `get_tracked_position()`
+fällt stattdessen auf die eigene Buchführung zurück. Die übrige Logik bleibt in
+Kraft.
+
+**Nachhol-Fahrt persistent.** Nur Position, Winkel, Grund und Zeitstempel gehen
+auf die Platte; das Shutter-Dict wird beim Start frisch aus den Optionen
+zugeordnet – eine veraltete Kopie wäre die gefährlichere der beiden. Nach 24 h
+verworfen.
+
+**Bugs:** Das Pendeln (#4) brauchte *getrennte* Hoch-/Runter-Bereiche; mit einem
+Bereich war nichts nachzustellen. Merke: bei Berichten über Sonnenschutz immer
+zuerst fragen, ob die beiden Bereiche verschieden sind.
+
+**Testfalle, zum zweiten Mal:** `patch("...modul.asyncio.sleep")` trifft das
+globale Modul. Ein *blockierender* Mock legt auch das `sleep(0)` im Test selbst
+lahm. Immer nur die eine passende Wartezeit gaten.
+
+**Offen geblieben, bewusst:** Profile/Label (der Kopierknopf ist der
+Zwischenschritt) und ein zweiter Azimutbereich je Rollladen (nur nötig, wenn ein
+Aktor zwei Richtungen bedient). Sowie die 52 fehlenden i18n-Schlüssel in den
+neun kleineren Panel-Sprachen – Bestand, Rückfall auf Englisch.

@@ -4,21 +4,29 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
-## [2.6.1]
+## [2.7.0]
 
-Zwei Fehlerberichte von GitHub und drei kleine Verbesserungen aus dem Forum.
+Zwei Fehlerberichte von GitHub und der gesammelte Rest aus dem Forum – die Liste ist damit abgearbeitet. Danke an vitals5, Vorhand, Viktor, MartyBr, charly166, Smons und Linos.
 
 ### Behoben
 - **Rollladen fuhr im Minutentakt zwischen offen und Sonnenschutz hin und her.** Betroffen waren Rollläden, die zum Hochfahren einen **anderen Bereich** benutzen als zum Runterfahren – also genau das Muster „morgens raumweise, abends alle zusammen". Die Beschattung wurde vom Runter-Bereich gesetzt, aber vom Hoch-Bereich wieder aufgehoben; unterschieden sich deren Bedingungen, Beschattungszeiträume oder Ausrichtungen, hoben sich beide jede Minute gegenseitig auf. Der Bereich, mit dem ein Rollladen schließt, entscheidet jetzt allein über seine Beschattung. (GitHub #4)
 - **Eigener Rollladenname wurde im Dashboard nicht angezeigt.** Dort stand der Name der Cover-Entität, auch wenn im Formular ein eigener eingetragen war. Der eigene Name gewinnt jetzt – so wie im Tab Rollläden schon immer. (GitHub #3)
-- **Fahrtkontrolle konnte eine laufende Prüfung aus den Augen verlieren.** Wurde eine Fahrt durch eine neue ersetzt, räumte die abgebrochene Prüfung anschließend den Eintrag der neuen weg. Die neue Prüfung lief dann bis zum Ende durch, auch über einen Reload hinweg.
+- **Nachhol-Fahrten gingen bei einem Neustart verloren.** Stand die Schließzeit an, während das Fenster noch offen war, verschwand der Merker beim nächsten Neustart lautlos und der Rollladen blieb die Nacht über oben. Er wird jetzt gespeichert – und nach 24 Stunden verworfen, weil eine Fahrt von vorgestern nichts mehr darüber sagt, was jetzt gelten soll.
+- **Fahrtkontrolle konnte eine laufende Prüfung aus den Augen verlieren.** Wurde eine Fahrt durch eine neue ersetzt, räumte die abgebrochene Prüfung anschließend den Eintrag der neuen weg.
 
 ### Neu
-- **Rollläden lassen sich im Dashboard einzeln bedienen.** In jeder Bereichskarte hat jede Rollladenzeile jetzt eigene Knöpfe für hoch, stop und runter. Die Knöpfe für den ganzen Bereich bleiben unverändert darunter.
+- **Mindestabstand zwischen Fahrbefehlen** (Einstellungen, 0–10 s). Funk-Empfänger verschlucken Befehle, die gleichzeitig ankommen. Die Verzögerung im Bereich hilft dagegen nicht, weil jeder Bereich für sich fährt. Der neue Abstand wirkt an der einen Stelle, durch die **jede** Fahrt läuft – automatisch wie von Hand – und staffelt sie über alle Bereiche hinweg. Gedrosselt heißt gewartet, nicht weggelassen.
+- **Beschattung halten** (Bereich, 0–120 Min.). Eine durchziehende Wolke beendet die Bedingung wirklich, und der Rollladen fuhr sofort auf. So lange bleibt die Beschattung jetzt stehen. Das Beschatten selbst und das Ende des Tages bleiben bewusst sofort.
+- **Sonnengrenzen im Helligkeitsmodus.** „Runter frühestens X Minuten vor Sonnenuntergang" – damit ein Gewitter am Nachmittag die Rollläden nicht am helllichten Tag schließt. Uhrzeitfenster können das nicht, weil der Sonnenuntergang übers Jahr um Stunden wandert.
+- **Einstellungen von einem anderen Rollladen übernehmen.** Vorlage wählen, übernehmen, fertig. Cover-Entität, Name, Bereiche und Fenstersensoren bleiben unverändert – genau die unterscheiden zwei sonst gleiche Rollläden.
+- **Antrieb ohne Positionsrückmeldung (blind fahren).** Für einseitigen Funk wie Somfy RTS. Solche Antriebe antworten nicht, und jede Prüfung, die eine Position braucht, gab bisher auf – womit Fenstertrigger und automatisches Lüften für sie stillschweigend abgeschaltet waren. Mit dem Haken rechnet Shutter Pilot mit der zuletzt gesendeten Position.
+- **Rollläden lassen sich im Dashboard einzeln bedienen.** Jede Rollladenzeile in der Bereichskarte hat eigene Knöpfe für hoch, stop und runter.
 
 ### Geändert
 - **Hinweis beim Frostschutz**, welcher Sensor sich als Bedingung anbietet – der Name „Vorhersage Tiefsttemperatur" war schwer zu finden, wenn man nach „forecast" gesucht hat.
-- **README**: eigener Abschnitt, wie sich die Beschattung allein über Helligkeitssensoren steuern lässt, ohne Höhenwinkel und Himmelsrichtung. Das ging schon immer, war aber nirgends beschrieben.
+- **README**: neue Abschnitte zur Beschattung allein über Helligkeitssensoren (das ging schon immer, stand aber nirgends), zum Mindestabstand, zu den Sonnengrenzen, zur Haltezeit und zum Kopierknopf.
+
+> **Nach dem Update den Browser hart neu laden** (Strg+F5 bzw. Cmd+Shift+R), sonst zeigt die Seitenleiste weiter das alte Panel.
 
 ## [2.6.0]
 
