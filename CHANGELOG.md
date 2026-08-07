@@ -4,6 +4,11 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.7.2]
+
+### Behoben
+- **Bei einer Textbedingung liess sich praktisch nur ein Zustand auswählen.** Das Formular bot die Zustände als Knöpfe an – bei einer `weather.*`-Entität die 15 Standardlagen von Home Assistant, bei jedem anderen Sensor aber nur den **gerade gemeldeten** Zustand. Wer einen Template- oder Scrape-Sensor für die Wetterlage benutzt, hätte bis zum nächsten Regen warten müssen, um „rainy" anklicken zu können. Dort lässt sich jetzt zusätzlich ein Zustand von Hand eintragen. Bei Wetter-Entitäten ändert sich nichts – dort ist die Liste vollständig bekannt. (GitHub #6)
+
 ## [2.7.1]
 
 Nacharbeit zu 2.7.0.

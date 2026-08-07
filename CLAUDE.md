@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.7.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.7.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -523,3 +523,30 @@ künftiges Umbenennen nicht unbemerkt Automationen bricht.
 `ShutterPilotNextActionSensor` bleibt absichtlich bei `_attr_name`: Der Name
 enthält den vom Nutzer vergebenen Bereichsnamen, den keine Übersetzungsdatei
 kennen kann.
+
+### 2026-08-07 – 2.7.2 und der Stand beim HACS-Store
+
+**Textbedingung (#6).** Der Melder hatte selbst geschlossen, die Sackgasse war
+aber echt: Ohne bekannte Zustandsliste bot das Formular nur den gerade
+gemeldeten Zustand an. Freitextfeld jetzt genau dort – `weather.*` behält seine
+15 Standardlagen ohne Zusatzfeld, Zahlensensoren bleiben numerisch. Eingaben
+werden getrimmt und kleingeschrieben, passend zu `_condition_slot_met()`.
+
+**HACS-PR [hacs/default#9592]: der Blocker ist formal.** Alle Checks grün,
+Branch aktuell, alle acht schreibenden WS-Befehle admin-geschützt, Icons liegen
+korrekt in `custom_components/shutter_pilot/brand/` (icon.png 256², icon@2x.png
+512²). Blockiert wird allein durch frencks `CHANGES_REQUESTED` vom 2026-08-01.
+
+Der entscheidende Fund: **`reviewRequests` ist leer.** frenck bat um
+„re-request review" – das ist eine eigene GitHub-Aktion, kein Kommentar, und sie
+wurde nie ausgelöst. Ohne sie liegt der PR in keiner Warteschlange.
+
+**Das geht nicht per API:** `POST /pulls/9592/requested_reviewers` liefert 404,
+weil das Push-Rechte am Repo verlangt – als PR-Autor aus einem Fork hat man die
+nicht. Nur im Browser über das ↻ neben dem Reviewer. Kein Kommentar, also auch
+kein Verstoss gegen die Bot-Regel.
+
+**Brands ist erledigt, nicht offen:** Die beiden PRs (home-assistant/brands
+#10878, #10007) wurden automatisch geschlossen, weil HA seit 2026.3.0 keine
+Icons für Custom Integrations mehr dort annimmt. Der Ersatzweg – Ordner `brand/`
+in der Integration – ist längst gegangen. Nicht erneut einreichen.
