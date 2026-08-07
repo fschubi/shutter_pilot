@@ -334,6 +334,20 @@ Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu
 
 Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
 
+## Einstellungen von einem anderen Rollladen übernehmen
+
+Wer zehn Fenster gleich konfigurieren will, muss nicht zehnmal dasselbe tippen. Im Rollladenformular steht unter dem Namen eine Auswahl **Einstellungen übernehmen von** – Vorlage wählen, **Übernehmen** klicken, fertig.
+
+Kopiert werden Positionen, Lamellenwinkel, Beschattung mit Geometrie und Bedingungen, Frost- und Lüftungswerte sowie die Fenster-Einstellungen.
+
+Bewusst **nicht** kopiert wird, was einen Rollladen ausmacht:
+
+- Cover-Entität und Name
+- Bereich für Hoch und Runter
+- Fenster- und Kippsensor
+
+Genau diese Felder unterscheiden zwei sonst gleiche Rollläden – würden sie mitkopiert, hätte man hinterher zweimal dasselbe Fenster.
+
 ## Helligkeitsmodus mit Sonnengrenze
 
 Ein Gewitter am Nachmittag drückt die Helligkeit unter die Schwelle – und die Rollläden schließen am helllichten Tag. Uhrzeitfenster helfen dagegen nur begrenzt, denn der Sonnenuntergang wandert übers Jahr um Stunden.

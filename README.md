@@ -334,6 +334,20 @@ To keep certain shutters from closing fully on hot evenings so the room can keep
 
 Only shutters with a partial position deviate; all others close normally.
 
+## Copying settings from another shutter
+
+Configuring ten windows the same way should not mean typing the same thing ten times. The shutter form has a **Copy settings from** picker right below the name — choose a template, click **Apply**, done.
+
+Copied are positions, slat angles, shading with geometry and conditions, frost and ventilation values, and the window settings.
+
+Deliberately **not** copied is what makes a shutter itself:
+
+- cover entity and name
+- area for up and down
+- window and tilt sensor
+
+Those are exactly the fields that tell two otherwise identical shutters apart — copying them would leave you with the same window twice.
+
 ## Brightness mode with a sun bound
 
 A thunderstorm in the afternoon pushes the lux below the threshold — and the shutters close in broad daylight. Clock windows only help so far, because sunset moves by hours through the year.

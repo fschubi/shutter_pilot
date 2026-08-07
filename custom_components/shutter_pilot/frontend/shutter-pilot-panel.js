@@ -258,6 +258,7 @@ de:{
   f_sunrise_off:"Offset Sonnenaufgang (Min.)",f_sunset_off:"Offset Sonnenuntergang (Min.)",
   sun_next_rise:"Nächster Sonnenaufgang",sun_next_set:"Nächster Sonnenuntergang",
   sun_trigger_up:"Hoch-Fahrt um",sun_trigger_down:"Runter-Fahrt um",
+  f_copy_from:"Einstellungen übernehmen von",f_copy_pick:"– Rollladen wählen –",f_copy_btn:"Übernehmen",f_copy_hint:"Kopiert Positionen, Lamellen, Beschattung, Bedingungen und Fenster-Einstellungen. Cover-Entität, Name, Bereiche und Fenstersensoren bleiben unverändert.",
   f_sunbound_title:"Zusätzliche Sonnengrenzen",f_sunbound_hint:"Verhindert Fahrten am helllichten Tag, etwa wenn ein Gewitter die Helligkeit einbrechen lässt. Leer = keine Grenze.",f_b_down_sunset:"Runter frühestens X Min. vor Sonnenuntergang",f_b_up_sunrise:"Hoch frühestens X Min. vor Sonnenaufgang",
   f_shade_hold:"Beschattung halten (Min.)",f_shade_hold_hint:"Zieht eine Wolke durch, endet die Bedingung sofort und der Rollladen fährt auf. So lange bleibt die Beschattung trotzdem stehen. 0 = sofort auffahren.",
   sec_drive:"Fahrbefehle",sec_drive_sub:"Abstand zwischen zwei Befehlen",f_min_gap:"Mindestabstand zwischen Fahrbefehlen",f_min_gap_hint:"Funk-Empfänger (433 MHz, HmIP) verschlucken Befehle, die gleichzeitig ankommen. Die Verzögerung im Bereich hilft dort nicht: jeder Bereich fährt für sich. Hier wird jeder Fahrbefehl gedrosselt – automatisch wie von Hand. 0 = aus.",f_min_gap_off:"aus",
@@ -443,6 +444,7 @@ en:{
   f_sunrise_off:"Sunrise offset (min.)",f_sunset_off:"Sunset offset (min.)",
   sun_next_rise:"Next sunrise",sun_next_set:"Next sunset",
   sun_trigger_up:"Up trigger at",sun_trigger_down:"Down trigger at",
+  f_copy_from:"Copy settings from",f_copy_pick:"– choose a shutter –",f_copy_btn:"Apply",f_copy_hint:"Copies positions, slats, shading, conditions and window settings. Cover entity, name, areas and window sensors are left alone.",
   f_sunbound_title:"Extra sun bounds",f_sunbound_hint:"Prevents movements in broad daylight, e.g. when a thunderstorm drops the brightness. Empty = no bound.",f_b_down_sunset:"Down no earlier than X min. before sunset",f_b_up_sunrise:"Up no earlier than X min. before sunrise",
   f_shade_hold:"Hold shading (min.)",f_shade_hold_hint:"A passing cloud ends the condition at once and the shutter opens. This keeps the shading up for that long anyway. 0 = open immediately.",
   sec_drive:"Drive commands",sec_drive_sub:"Spacing between two commands",f_min_gap:"Minimum gap between drive commands",f_min_gap_hint:"Radio receivers (433 MHz, HmIP) swallow commands that arrive together. The per-area delay does not help: each area drives on its own. This throttles every drive command, automated or manual. 0 = off.",f_min_gap_off:"off",
@@ -573,6 +575,7 @@ fr:{
   f_sunrise_off:"Décalage lever (min.)",f_sunset_off:"Décalage coucher (min.)",
   sun_next_rise:"Prochain lever",sun_next_set:"Prochain coucher",
   sun_trigger_up:"Montée à",sun_trigger_down:"Descente à",
+  f_copy_from:"Reprendre les réglages de",f_copy_pick:"– choisir un volet –",f_copy_btn:"Appliquer",f_copy_hint:"Copie positions, lamelles, ombrage, conditions et réglages de fenêtre. Entité, nom, zones et capteurs restent inchangés.",
   f_sunbound_title:"Limites solaires supplémentaires",f_sunbound_hint:"Empêche les mouvements en plein jour, par ex. lors d’un orage. Vide = aucune limite.",f_b_down_sunset:"Descente au plus tôt X min. avant le coucher",f_b_up_sunrise:"Montée au plus tôt X min. avant le lever",
   f_shade_hold:"Maintenir l’ombrage (min.)",f_shade_hold_hint:"Un nuage met fin à la condition immédiatement. L’ombrage est malgré tout maintenu pendant cette durée. 0 = ouvrir tout de suite.",
   sec_drive:"Commandes",sec_drive_sub:"Espacement entre deux commandes",f_min_gap:"Écart minimal entre commandes",f_min_gap_hint:"Les récepteurs radio ignorent les commandes simultanées. Le délai par zone n’y suffit pas. Ici chaque commande est espacée. 0 = désactivé.",f_min_gap_off:"désactivé",
@@ -699,6 +702,7 @@ es:{
   f_sunrise_off:"Desfase amanecer (min.)",f_sunset_off:"Desfase atardecer (min.)",
   sun_next_rise:"Próximo amanecer",sun_next_set:"Próximo atardecer",
   sun_trigger_up:"Subida a las",sun_trigger_down:"Bajada a las",
+  f_copy_from:"Copiar ajustes de",f_copy_pick:"– elegir persiana –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posiciones, lamas, sombreado, condiciones y ajustes de ventana. Entidad, nombre, áreas y sensores no cambian.",
   f_sunbound_title:"Límites solares adicionales",f_sunbound_hint:"Evita movimientos a plena luz del día, p. ej. con una tormenta. Vacío = sin límite.",f_b_down_sunset:"Bajar como pronto X min. antes del ocaso",f_b_up_sunrise:"Subir como pronto X min. antes del amanecer",
   f_shade_hold:"Mantener sombreado (min.)",f_shade_hold_hint:"Una nube termina la condición al instante. El sombreado se mantiene igualmente ese tiempo. 0 = abrir enseguida.",
   sec_drive:"Órdenes de marcha",sec_drive_sub:"Separación entre dos órdenes",f_min_gap:"Separación mínima entre órdenes",f_min_gap_hint:"Los receptores de radio pierden órdenes que llegan a la vez. El retardo por área no basta. Aquí se espacia cada orden. 0 = desactivado.",f_min_gap_off:"desactivado",
@@ -825,6 +829,7 @@ it:{
   f_sunrise_off:"Offset alba (min.)",f_sunset_off:"Offset tramonto (min.)",
   sun_next_rise:"Prossima alba",sun_next_set:"Prossimo tramonto",
   sun_trigger_up:"Apertura alle",sun_trigger_down:"Chiusura alle",
+  f_copy_from:"Copia impostazioni da",f_copy_pick:"– scegli tapparella –",f_copy_btn:"Applica",f_copy_hint:"Copia posizioni, lamelle, ombreggiatura, condizioni e impostazioni finestra. Entità, nome, aree e sensori restano invariati.",
   f_sunbound_title:"Limiti solari aggiuntivi",f_sunbound_hint:"Evita movimenti in pieno giorno, ad es. durante un temporale. Vuoto = nessun limite.",f_b_down_sunset:"Giù non prima di X min. dal tramonto",f_b_up_sunrise:"Su non prima di X min. dall’alba",
   f_shade_hold:"Mantieni ombreggiatura (min.)",f_shade_hold_hint:"Una nuvola interrompe subito la condizione. L’ombreggiatura resta comunque per questo tempo. 0 = apri subito.",
   sec_drive:"Comandi di marcia",sec_drive_sub:"Distanza tra due comandi",f_min_gap:"Distanza minima tra i comandi",f_min_gap_hint:"I ricevitori radio perdono i comandi che arrivano insieme. Il ritardo per area non basta. Qui ogni comando viene distanziato. 0 = disattivato.",f_min_gap_off:"disattivato",
@@ -952,6 +957,7 @@ nl:{
   f_sunrise_off:"Offset zonsopgang (min.)",f_sunset_off:"Offset zonsondergang (min.)",
   sun_next_rise:"Volgende zonsopgang",sun_next_set:"Volgende zonsondergang",
   sun_trigger_up:"Omhoog om",sun_trigger_down:"Omlaag om",
+  f_copy_from:"Instellingen overnemen van",f_copy_pick:"– rolluik kiezen –",f_copy_btn:"Toepassen",f_copy_hint:"Kopieert posities, lamellen, zonwering, voorwaarden en raaminstellingen. Entiteit, naam, gebieden en sensoren blijven ongewijzigd.",
   f_sunbound_title:"Extra zonnegrenzen",f_sunbound_hint:"Voorkomt bewegingen op klaarlichte dag, bijv. bij onweer. Leeg = geen grens.",f_b_down_sunset:"Omlaag niet eerder dan X min. voor zonsondergang",f_b_up_sunrise:"Omhoog niet eerder dan X min. voor zonsopgang",
   f_shade_hold:"Zonwering vasthouden (min.)",f_shade_hold_hint:"Een wolk beëindigt de voorwaarde meteen. De zonwering blijft toch zo lang staan. 0 = direct openen.",
   sec_drive:"Rijcommando’s",sec_drive_sub:"Afstand tussen twee commando’s",f_min_gap:"Minimale afstand tussen commando’s",f_min_gap_hint:"Radio-ontvangers missen commando’s die tegelijk aankomen. De vertraging per gebied helpt daar niet. Hier wordt elk commando gespreid. 0 = uit.",f_min_gap_off:"uit",
@@ -1079,6 +1085,7 @@ da:{
   f_sunrise_off:"Solopgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Næste solopgang",sun_next_set:"Næste solnedgang",
   sun_trigger_up:"Op kl.",sun_trigger_down:"Ned kl.",
+  f_copy_from:"Kopiér indstillinger fra",f_copy_pick:"– vælg rullegardin –",f_copy_btn:"Anvend",f_copy_hint:"Kopierer positioner, lameller, afskærmning, betingelser og vinduesindstillinger. Entitet, navn, områder og sensorer ændres ikke.",
   f_sunbound_title:"Ekstra solgrænser",f_sunbound_hint:"Forhindrer kørsel ved højlys dag, f.eks. ved tordenvejr. Tom = ingen grænse.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Op tidligst X min. før solopgang",
   f_shade_hold:"Fasthold afskærmning (min.)",f_shade_hold_hint:"En sky afslutter betingelsen med det samme. Afskærmningen bliver alligevel stående så længe. 0 = åbn straks.",
   sec_drive:"Kørselskommandoer",sec_drive_sub:"Afstand mellem to kommandoer",f_min_gap:"Mindste afstand mellem kommandoer",f_min_gap_hint:"Radiomodtagere taber kommandoer, der ankommer samtidig. Forsinkelsen pr. område hjælper ikke. Her spredes hver kommando. 0 = fra.",f_min_gap_off:"fra",
@@ -1206,6 +1213,7 @@ sv:{
   f_sunrise_off:"Soluppgång offset (min.)",f_sunset_off:"Solnedgång offset (min.)",
   sun_next_rise:"Nästa soluppgång",sun_next_set:"Nästa solnedgång",
   sun_trigger_up:"Upp kl.",sun_trigger_down:"Ner kl.",
+  f_copy_from:"Kopiera inställningar från",f_copy_pick:"– välj jalusi –",f_copy_btn:"Använd",f_copy_hint:"Kopierar positioner, lameller, solskydd, villkor och fönsterinställningar. Entitet, namn, områden och sensorer lämnas orörda.",
   f_sunbound_title:"Extra solgränser",f_sunbound_hint:"Förhindrar körningar mitt på dagen, t.ex. vid åska. Tomt = ingen gräns.",f_b_down_sunset:"Ner tidigast X min. före solnedgång",f_b_up_sunrise:"Upp tidigast X min. före soluppgång",
   f_shade_hold:"Behåll solskydd (min.)",f_shade_hold_hint:"Ett moln avslutar villkoret direkt. Solskyddet står kvar så länge ändå. 0 = öppna genast.",
   sec_drive:"Körkommandon",sec_drive_sub:"Avstånd mellan två kommandon",f_min_gap:"Minsta avstånd mellan kommandon",f_min_gap_hint:"Radiomottagare tappar kommandon som kommer samtidigt. Fördröjningen per område räcker inte. Här sprids varje kommando ut. 0 = av.",f_min_gap_off:"av",
@@ -1333,6 +1341,7 @@ pl:{
   f_sunrise_off:"Offset wschodu (min.)",f_sunset_off:"Offset zachodu (min.)",
   sun_next_rise:"Następny wschód",sun_next_set:"Następny zachód",
   sun_trigger_up:"W górę o",sun_trigger_down:"W dół o",
+  f_copy_from:"Skopiuj ustawienia z",f_copy_pick:"– wybierz roletę –",f_copy_btn:"Zastosuj",f_copy_hint:"Kopiuje pozycje, lamele, zacienienie, warunki i ustawienia okna. Encja, nazwa, obszary i czujniki pozostają bez zmian.",
   f_sunbound_title:"Dodatkowe granice słoneczne",f_sunbound_hint:"Zapobiega jazdom w biały dzień, np. podczas burzy. Puste = bez granicy.",f_b_down_sunset:"W dół nie wcześniej niż X min. przed zachodem",f_b_up_sunrise:"W górę nie wcześniej niż X min. przed wschodem",
   f_shade_hold:"Utrzymuj zacienienie (min.)",f_shade_hold_hint:"Chmura natychmiast kończy warunek. Zacienienie mimo to pozostaje przez ten czas. 0 = otwórz od razu.",
   sec_drive:"Polecenia jazdy",sec_drive_sub:"Odstęp między dwoma poleceniami",f_min_gap:"Minimalny odstęp między poleceniami",f_min_gap_hint:"Odbiorniki radiowe gubią polecenia docierające jednocześnie. Opóźnienie w obszarze nie wystarcza. Tutaj każde polecenie jest rozdzielane. 0 = wyłączone.",f_min_gap_off:"wyłączone",
@@ -1460,6 +1469,7 @@ pt:{
   f_sunrise_off:"Offset nascer do sol (min.)",f_sunset_off:"Offset pôr do sol (min.)",
   sun_next_rise:"Próximo nascer do sol",sun_next_set:"Próximo pôr do sol",
   sun_trigger_up:"Subir às",sun_trigger_down:"Descer às",
+  f_copy_from:"Copiar definições de",f_copy_pick:"– escolher estore –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posições, lâminas, sombreamento, condições e definições de janela. Entidade, nome, áreas e sensores ficam iguais.",
   f_sunbound_title:"Limites solares adicionais",f_sunbound_hint:"Evita movimentos em pleno dia, p. ex. durante uma trovoada. Vazio = sem limite.",f_b_down_sunset:"Descer no mínimo X min. antes do pôr do sol",f_b_up_sunrise:"Subir no mínimo X min. antes do nascer do sol",
   f_shade_hold:"Manter sombreamento (min.)",f_shade_hold_hint:"Uma nuvem termina a condição de imediato. O sombreamento fica na mesma durante esse tempo. 0 = abrir logo.",
   sec_drive:"Comandos de marcha",sec_drive_sub:"Espaçamento entre dois comandos",f_min_gap:"Intervalo mínimo entre comandos",f_min_gap_hint:"Os recetores de rádio perdem comandos que chegam ao mesmo tempo. O atraso por área não chega. Aqui cada comando é espaçado. 0 = desligado.",f_min_gap_off:"desligado",
@@ -1587,6 +1597,7 @@ nb:{
   f_sunrise_off:"Soloppgang offset (min.)",f_sunset_off:"Solnedgang offset (min.)",
   sun_next_rise:"Neste soloppgang",sun_next_set:"Neste solnedgang",
   sun_trigger_up:"Opp kl.",sun_trigger_down:"Ned kl.",
+  f_copy_from:"Kopier innstillinger fra",f_copy_pick:"– velg rullegardin –",f_copy_btn:"Bruk",f_copy_hint:"Kopierer posisjoner, lameller, solskjerming, betingelser og vindusinnstillinger. Entitet, navn, områder og sensorer endres ikke.",
   f_sunbound_title:"Ekstra solgrenser",f_sunbound_hint:"Hindrer kjøring midt på dagen, f.eks. ved tordenvær. Tom = ingen grense.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Opp tidligst X min. før soloppgang",
   f_shade_hold:"Behold solskjerming (min.)",f_shade_hold_hint:"En sky avslutter betingelsen med en gang. Solskjermingen blir likevel stående så lenge. 0 = åpne straks.",
   sec_drive:"Kjørekommandoer",sec_drive_sub:"Avstand mellom to kommandoer",f_min_gap:"Minste avstand mellom kommandoer",f_min_gap_hint:"Radiomottakere mister kommandoer som kommer samtidig. Forsinkelsen per område hjelper ikke. Her spres hver kommando. 0 = av.",f_min_gap_off:"av",
@@ -1699,6 +1710,8 @@ class ShutterPilotPanel extends PanelBase {
     .srow .nm{font-size:14px;color:var(--txt);flex:1;min-width:0}
     .srow .pos{font-size:13px;color:var(--txt2);min-width:50px;text-align:right}
     .srow-btns{display:inline-flex;gap:4px;flex-shrink:0}
+    .copy-row{display:flex;gap:8px;align-items:center}
+    .copy-row select{flex:1;min-width:0}
     .rbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:1px solid var(--divider);border-radius:8px;background:var(--card2,transparent);color:var(--txt2);cursor:pointer}
     .rbtn ha-icon{--mdc-icon-size:17px}
     .rbtn:hover{background:var(--sp);border-color:var(--sp);color:#fff}
@@ -2629,7 +2642,7 @@ class ShutterPilotPanel extends PanelBase {
                   <div class="k">${T("col_window")}</div><div class="v">${s.window_entity_id||"–"}</div>
                 </div>
                 <div class="row-actions">
-                  <button class="btn edit" @click=${()=>{this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn edit" @click=${()=>{this._copyFrom="";this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
                   <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button>
                 </div>
               </div>`;})}
@@ -2645,10 +2658,48 @@ class ShutterPilotPanel extends PanelBase {
                 <td>${s.window_entity_id||"–"}</td>
                 <td>${this._shutterAutoSwitch(s)}</td>
                 <td style="text-align:right">
-                  <button class="btn edit" @click=${()=>{this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn edit" @click=${()=>{this._copyFrom="";this._editShutter={window_close_debounce:5,...s,_isNew:false,_index:i};this.requestUpdate();}}><ha-icon icon="mdi:pencil"></ha-icon></button>
                   <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
           </table></div></div>
         `}`;
+  }
+  /* „Einstellungen übernehmen von …" – der kleine Bruder von Profilen.
+     Nimmt die Tipparbeit ab, ohne das Datenmodell umzubauen: kopiert wird
+     alles ausser Identität und Bereichszuordnung, denn genau die unterscheidet
+     zwei sonst gleiche Rollläden. */
+  _renderCopyFrom(d,s){
+    const T=k=>this.t(k);
+    const others=(d.shutters||[]).filter(o=>o.cover_entity_id&&o.cover_entity_id!==s.cover_entity_id);
+    if(!others.length)return "";
+    const pick=this._copyFrom||"";
+    return html`<div class="field"><label>${T("f_copy_from")}</label>
+      <div class="copy-row">
+        <select .value=${pick} @change=${e=>{this._copyFrom=e.target.value;this.requestUpdate();}}>
+          <option value="">${T("f_copy_pick")}</option>
+          ${others.map(o=>html`<option value="${o.cover_entity_id}" ?selected=${pick===o.cover_entity_id}>${o.name||o.cover_entity_id}</option>`)}
+        </select>
+        <button class="btn" ?disabled=${!pick} @click=${()=>this._applyCopyFrom(others)}>
+          <ha-icon icon="mdi:content-copy"></ha-icon>${T("f_copy_btn")}</button>
+      </div>
+      <div class="hint">${T("f_copy_hint")}</div></div>`;
+  }
+  /* Identität und Zuordnung bleiben stehen; alles andere kommt von der Vorlage.
+     Eine Ausschlussliste statt einer Erlaubnisliste, damit ein künftiges Feld
+     nicht stillschweigend vom Kopieren ausgenommen bleibt. */
+  static get COPY_KEEP(){return ["cover_entity_id","name","area_up_id","area_down_id",
+    "window_entity_id","window_tilted_entity_id","shutter_auto_entity_id",
+    "_isNew","_index"];}
+  _applyCopyFrom(others){
+    const src=others.find(o=>o.cover_entity_id===this._copyFrom);
+    if(!src||!this._editShutter)return;
+    const keep=this.constructor.COPY_KEEP;
+    const target=this._editShutter;
+    for(const [k,v] of Object.entries(src)){
+      if(keep.includes(k))continue;
+      target[k]=Array.isArray(v)?[...v]:v;
+    }
+    this._copyFrom="";
+    this.requestUpdate();
   }
   _renderShutterForm(d){
     const s=this._editShutter;const areas=d.areas||[];const T=k=>this.t(k);
@@ -2671,6 +2722,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
         @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_shutter_auto")}</label>
         <div class="hint">${T("f_shutter_auto_hint")}</div></div>
+      ${this._renderCopyFrom(d,s)}
 
       ${this._section("mdi:map-marker","sec_areas","sec_areas_sub")}
       ${areaSel("area_up_id",T("f_area_up"))}
