@@ -4,6 +4,22 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.8.1]
+
+Der Export aus 2.8.0 hat sofort geliefert: MartyBrs Bericht beantwortete seine
+Meldung in einer Zeile, und heinzies Fensterkontakt liess sich damit auf zwei
+Ursachen zurückführen, von denen jede für sich gereicht hätte.
+
+### Behoben
+- **„open" als Fenster-Status traf bei einem `binary_sensor` nie zu.** Das Formular bietet „on", „open", „true" und „offen" zur Auswahl an – ein `binary_sensor` meldet aber ausschliesslich `on` oder `off`. Wer „open" wählte, hatte einen Kontakt konfiguriert, der dauerhaft als geschlossen galt: keine Lüftungsposition, keine Rückfahrt, kein Aussperrschutz, und nirgends ein Hinweis darauf. Die gebräuchlichen Wörter für „offen" und „zu" gelten jetzt als gleichbedeutend, bestehende Einstellungen ändern sich dadurch nicht. Zusätzlich steht **„off"** zur Wahl – für Kontakte, die andersherum melden – und unter dem Feld steht, was die gewählte Entität gerade meldet. (Forum, heinzie)
+- **Der Fensterkontakt erreichte einen beschatteten Rollladen nicht.** Reagiert wurde nur, wenn der Rollladen (nahezu) geschlossen war. Die Beschattung parkt ihn aber auf halber Höhe – weder zu noch offen –, und damit fiel er durch die Prüfung. Wer nachmittags die Terrassentür öffnete, stand vor dem heruntergefahrenen Rollladen. Die Rangfolge lautet Fensterkontakt > Beschattung > Lüften; jetzt gilt sie auch hier. Ein tagsüber offener Rollladen bleibt unverändert in Ruhe. (Forum, heinzie)
+- **Endete die Beschattung bei offenem Fenster, fuhr der Rollladen später wieder herunter.** Die Rückfahrhöhe des Fensterkontakts blieb stehen und wurde beim Schliessen angefahren – auf die Beschattungsposition, Stunden nachdem die Beschattung vorbei war. Die Freigabe räumt sie jetzt mit weg, so wie Zeitplan und Helligkeitsmodus es beim Hochfahren schon tun.
+
+### Geändert
+- **Der Export nennt die Einheit des Sensors.** „559,7" neben der Schwelle „30000" sieht nach „noch nicht hell genug" aus; „559,7 W/m²" neben „30000" zeigt, dass dieser Sensor die Schwelle nie erreichen wird, weil dort Lux-Werte eingetragen sind. Genau dieser Fall steckte in MartyBrs Bericht.
+- **Der Export sagt, wenn eine Entscheidung gar nicht gefahren wird.** Bei ausgeschaltetem Haupt-, Bereichs- oder Rollladenschalter stand dort bisher „Ergebnis: beschatten", ohne dass irgendetwas passieren konnte.
+- **Der Export erklärt die beiden stillen Haken.** Ein ✅ hinter einem Sensor, der `unknown` meldet, heisst nicht „Bedingung erfüllt", sondern „blockiert nicht" – das steht jetzt daneben. Ebenso wird die verkehrt herum gesetzte Schwelle aus 2.8.0 im Bericht benannt, nicht nur im Formular und im Log.
+
 ## [2.8.0]
 
 Zwei Meldungen aus dem Forum (MartyBr, heinzie) liessen sich aus ihren

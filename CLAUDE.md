@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.7.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.8.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -625,3 +625,61 @@ gibt es danach keinen Weg zurück, weil derselbe Zustand die Wiederholung sperrt
 i18n 269/269 Schlüssel in allen elf Sprachen. **Nicht** im Browser geprüft: die
 Panel-Änderungen (Export-Abschnitt, Warnhinweis, neue Feldreihenfolge) – dafür
 bräuchte es eine laufende HA-Instanz mit angelegtem Benutzer.
+
+### 2026-08-08 – 2.8.1: was der Export sofort eingebracht hat
+
+Der Bericht aus 2.8.0 hat gehalten, wofür er gebaut wurde: MartyBrs Export
+beantwortet seine Meldung ohne eine einzige Rückfrage.
+
+**MartyBr ist eine Einstellungssache, keine Codefrage.** Acht seiner zehn
+Rollläden hängen mit Schwellen von 20.000–50.000 an
+`sensor.gw3000a_wifi4133_solarstrahlung`, der 559,7 meldet – Solarstrahlung in
+W/m², nicht Lux. Die Bedingung kann dort nie erfüllt werden. Die beiden
+Rollläden an `sensor.solarstrahlung_lux` (70.914) rechnen dagegen sauber, und
+„Rollo Küche" steht im eigenen Bericht auf „Ergebnis: beschatten". Dazu vier
+Azimut-Bedingungen als Spanne gedacht (40/130, 130/220, 205/320, 355/359) –
+alle vier werden auf „≥ unterer Wert" geklammert, das ist Fund 4 aus 2.8.0.
+Nachgerechnet mit `_condition_slot_met` gegen seine Werte, nicht geschätzt.
+
+**heinzie war zweimal kaputt, jedes Mal ausreichend allein:**
+
+1. **`window_open_state` = `open` an einem `binary_sensor`.** Der bietet nur
+   `on` und `off`. `get_window_state` verglich exakt, also galt der Kontakt
+   dauerhaft als geschlossen – kein Lüften, keine Rückfahrt, kein
+   Aussperrschutz, und **keine einzige Logzeile**. Das Formular bot die vier
+   Wörter an, ohne je nachzusehen, was die gewählte Entität überhaupt melden
+   kann. Jetzt faltet `_canonical_state()` beide Seiten auf `on`/`off`; exakte
+   Treffer bleiben exakt, `tilted`/`2` sind ausdrücklich **keine** Synonyme.
+   Im Formular steht `off` mit zur Wahl (Kontakte, die andersherum melden) und
+   darunter der gerade gemeldete Zustand.
+2. **Der Kontakt erreichte den beschatteten Rollladen nicht.**
+   `_is_cover_effectively_closed` liess nur (nahezu) geschlossene durch – die
+   Beschattung parkt auf halber Höhe, also fiel er durch. Die in dieser Datei
+   festgeschriebene Rangfolge *Fensterkontakt > Beschattung > Lüften* galt
+   damit für `ventilation.py`, aber nicht für den Kontakt selbst.
+
+**Der Nebenbefund, ohne den Fix 2 gefährlich wäre:** `_release_sun_protect()`
+räumte die Rückfahrhöhe des Fensterkontakts nicht weg. Endet die Beschattung
+bei offenem Fenster, fährt der Rollladen sonst beim Schliessen auf die
+Beschattungsposition zurück – Stunden später. Scheduler und Helligkeitsmodus
+rufen dafür längst `clear_stale_window_cycle_after_automated_up()`; die
+Freigabe tat es nicht. Dazu `forget_drive_after_close()`, weil ersteres den
+Merker nur aus dem RAM nimmt und die Platte stehen lässt.
+
+**Am Export nachgezogen**, alles drei aus MartyBrs Bericht heraus gelesen: die
+**Einheit** neben dem Wert (559,7 W/m² neben Schwelle 30000 erklärt sich von
+selbst, 559,7 neben 30000 nicht), ein Hinweis, wenn Haupt-, Bereichs- oder
+Rollladenschalter **aus** steht (dort stand „Ergebnis: beschatten", während
+nichts fahren konnte), und die Erklärung der beiden stillen Haken – `unknown`
+mit ✅ heisst „blockiert nicht", nicht „erfüllt".
+
+**Testfalle, neu:** `tests/test_forum_findings.py` braucht ~14 s Fixture-Setup
+je Test (Startup-Restore plus Fahrtkontrolle). Sechs neue Tests dort kosten
+anderthalb Minuten Suite-Laufzeit – wer dort etwas ergänzt, sollte prüfen, ob
+es nicht in eine Datei mit leichterem Aufbau gehört.
+
+**Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
+`sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht
+`sun_cond_sun_cond_a_entity`, der Slot gilt als unkonfiguriert und
+`_condition_slot_met` gibt **True** zurück – ein fail-open, das wie ein
+bestandener Test aussieht.
