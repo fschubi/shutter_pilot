@@ -250,6 +250,42 @@ def sun_protect_conditions_met(
     return azimuth_in_sun_protect_range(azimuth, area)
 
 
+def _warn_useless_hysteresis(
+    memory: dict[str, Any],
+    slot: str,
+    entity_id: str,
+    on_above: float,
+    off_below: float,
+    inverted: bool,
+) -> None:
+    """Say out loud that the two thresholds are the wrong way round.
+
+    The pair is a switch-on point with a release point below it, not a range.
+    Entering 40 and 130 for an azimuth reads like "between 40° and 130°", but
+    the release point is simply clamped away and the condition degenerates to
+    "azimuth >= 40" – true from morning until night, from the wrong side of the
+    house included. That used to happen without a single line anywhere. Warn
+    once per slot; the evaluation runs every minute.
+    """
+    warned_key = f"{slot}!hysteresis_warned"
+    if memory.get(warned_key):
+        return
+    memory[warned_key] = True
+    _LOGGER.warning(
+        "Shading condition %s (%s): 'release' %.10g lies on the wrong side of "
+        "'shade' %.10g and is ignored – the condition now means '%s %.10g'. "
+        "These two are a switch-on point plus a release point below it, not a "
+        "range. For a range of compass directions use the window direction "
+        "setting instead.",
+        slot,
+        entity_id,
+        off_below,
+        on_above,
+        "<=" if inverted else ">=",
+        on_above,
+    )
+
+
 def _condition_slot_met(
     hass: HomeAssistant,
     area: dict[str, Any],
@@ -325,12 +361,14 @@ def _condition_slot_met(
         sun_condition_invert_key(slot), slot in INVERTED_BY_DEFAULT_SLOTS
     ):
         if off_below < on_above:
+            _warn_useless_hysteresis(memory, slot, entity_id, on_above, off_below, True)
             off_below = on_above
         met = value <= (off_below if memory.get(slot) else on_above)
         memory[slot] = met
         return met
 
     if off_below > on_above:
+        _warn_useless_hysteresis(memory, slot, entity_id, on_above, off_below, False)
         off_below = on_above
 
     if memory.get(slot):

@@ -199,6 +199,15 @@ de:{
   f_sun_cond_on:"Beschatten ab",
   f_sun_cond_off:"Aufheben unter",
   f_sun_cond_num_hint:"„Aufheben unter“ darf niedriger sein als „Beschatten ab“ – der Abstand verhindert Flattern bei durchziehenden Wolken. Leer = gleicher Wert.",
+  f_sun_cond_wrong_way:"Die beiden Werte stehen verkehrt herum. Das ist ein Einschaltpunkt mit einem Aufhebepunkt DARUNTER, kein Bereich von–bis. So wie es dasteht, wird der zweite Wert verworfen und die Bedingung ist praktisch immer erfüllt. Für einen Bereich von Himmelsrichtungen gibt es „Nur bei passender Fensterrichtung“.",
+  f_geo_override_values_hint:"Diese beiden Werte gelten jetzt statt derer des Bereichs – auch wenn du sie nicht anfasst.",
+  sec_export:"Einstellungen exportieren",
+  sec_export_sub:"für Fehlerberichte im Forum",
+  f_export_hint:"Erzeugt einen Bericht mit allen Einstellungen, den aktuellen Sensorwerten und der Beschattungs-Entscheidung von genau jetzt – je Rollladen mit Begründung. Den Text ins Forum stellen, dann muss niemand raten, was eingestellt ist. Enthalten sind nur Shutter Pilots eigene Einstellungen und die Namen der von dir gewählten Entitäten, keine Zugangsdaten und kein Standort.",
+  btn_export:"Bericht erzeugen",
+  btn_export_copy:"Kopieren",
+  btn_export_copied:"Kopiert ✓",
+  btn_export_download:"Herunterladen",
   f_sun_cond_bin_hint:"Binärsensor: beschattet wird, solange er „an“ ist.",
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
@@ -387,6 +396,15 @@ en:{
   f_sun_cond_on:"Shade above",
   f_sun_cond_off:"Release below",
   f_sun_cond_num_hint:"Release below may be lower than Shade above – the gap prevents flapping when clouds pass. Empty = same value.",
+  f_sun_cond_wrong_way:"These two are the wrong way round. This is a switch-on point with a release point BELOW it, not a from–to range. As entered, the second value is discarded and the condition is met practically all the time. For a range of compass directions use “Only when the sun faces this window”.",
+  f_geo_override_values_hint:"These two now apply instead of the area's – whether you touch them or not.",
+  sec_export:"Export settings",
+  sec_export_sub:"for bug reports in the forum",
+  f_export_hint:"Builds a report with every setting, the current sensor readings and the shading decision of this very moment – per shutter, with its reasoning. Paste it into the forum and nobody has to guess what is configured. It contains only Shutter Pilot's own settings and the names of the entities you picked: no credentials, no location.",
+  btn_export:"Build report",
+  btn_export_copy:"Copy",
+  btn_export_copied:"Copied ✓",
+  btn_export_download:"Download",
   f_sun_cond_bin_hint:"Binary sensor: shading runs while it is on.",
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
@@ -480,6 +498,15 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
 },
 fr:{
+  f_sun_cond_wrong_way:"Ces deux valeurs sont inversées. Il s’agit d’un seuil de déclenchement avec un seuil de levée EN DESSOUS, pas d’une plage de–à. Telle quelle, la seconde valeur est ignorée et la condition est remplie pratiquement en permanence. Pour une plage d’orientations, utilisez « Seulement si la fenêtre est bien orientée ».",
+  f_geo_override_values_hint:"Ces deux valeurs remplacent désormais celles de la zone – même si vous n’y touchez pas.",
+  sec_export:"Exporter les réglages",
+  sec_export_sub:"pour les rapports d’erreur du forum",
+  f_export_hint:"Génère un rapport avec tous les réglages, les valeurs actuelles des capteurs et la décision d’ombrage de cet instant précis – volet par volet, avec sa justification. Collez-le sur le forum et personne n’aura à deviner ce qui est configuré. Il ne contient que les réglages propres à Shutter Pilot et les noms des entités que vous avez choisies : aucun identifiant, aucune localisation.",
+  btn_export:"Générer le rapport",
+  btn_export_copy:"Copier",
+  btn_export_copied:"Copié ✓",
+  btn_export_download:"Télécharger",
   tab_settings:"Réglages",
   f_season_all:"toute l'année",
   month_1:"Janvier",
@@ -610,6 +637,15 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
 },
 es:{
+  f_sun_cond_wrong_way:"Estos dos valores están al revés. Es un punto de activación con un punto de liberación POR DEBAJO, no un rango de–a. Tal como está, el segundo valor se descarta y la condición se cumple prácticamente siempre. Para un rango de orientaciones usa «Solo con la orientación adecuada de la ventana».",
+  f_geo_override_values_hint:"Estos dos valores sustituyen ahora a los de la zona, los toques o no.",
+  sec_export:"Exportar ajustes",
+  sec_export_sub:"para informes de fallos en el foro",
+  f_export_hint:"Genera un informe con todos los ajustes, los valores actuales de los sensores y la decisión de sombreado de este mismo momento – por persiana y con su motivo. Pégalo en el foro y nadie tendrá que adivinar qué hay configurado. Solo contiene los ajustes propios de Shutter Pilot y los nombres de las entidades que has elegido: ni credenciales ni ubicación.",
+  btn_export:"Generar informe",
+  btn_export_copy:"Copiar",
+  btn_export_copied:"Copiado ✓",
+  btn_export_download:"Descargar",
   tab_settings:"Ajustes",
   f_season_all:"todo el año",
   month_1:"Enero",
@@ -740,6 +776,15 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
 },
 it:{
+  f_sun_cond_wrong_way:"I due valori sono invertiti. È un punto di attivazione con un punto di rilascio SOTTO di esso, non un intervallo da–a. Così com’è, il secondo valore viene scartato e la condizione risulta soddisfatta praticamente sempre. Per un intervallo di orientamenti usa «Solo con l’orientamento giusto della finestra».",
+  f_geo_override_values_hint:"Questi due valori valgono ora al posto di quelli della zona, che li tocchi o no.",
+  sec_export:"Esporta impostazioni",
+  sec_export_sub:"per le segnalazioni sul forum",
+  f_export_hint:"Crea un rapporto con tutte le impostazioni, i valori attuali dei sensori e la decisione di ombreggiatura di questo preciso momento – per ogni tapparella, con la sua motivazione. Incollalo nel forum e nessuno dovrà indovinare che cosa è configurato. Contiene solo le impostazioni di Shutter Pilot e i nomi delle entità che hai scelto: nessuna credenziale, nessuna posizione.",
+  btn_export:"Crea rapporto",
+  btn_export_copy:"Copia",
+  btn_export_copied:"Copiato ✓",
+  btn_export_download:"Scarica",
   tab_settings:"Impostazioni",
   f_season_all:"tutto l'anno",
   month_1:"Gennaio",
@@ -870,6 +915,15 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
 },
 nl:{
+  f_sun_cond_wrong_way:"Deze twee waarden staan omgekeerd. Dit is een inschakelpunt met een opheffingspunt ERONDER, geen bereik van–tot. Zoals het er nu staat wordt de tweede waarde weggegooid en is de voorwaarde vrijwel altijd vervuld. Voor een bereik van windrichtingen is er «Alleen bij passende raamrichting».",
+  f_geo_override_values_hint:"Deze twee waarden gelden nu in plaats van die van de zone – of je ze nu aanraakt of niet.",
+  sec_export:"Instellingen exporteren",
+  sec_export_sub:"voor foutmeldingen op het forum",
+  f_export_hint:"Maakt een rapport met alle instellingen, de huidige sensorwaarden en de zonweringsbeslissing van precies dit moment – per rolluik, met de reden erbij. Plak het op het forum en niemand hoeft te raden wat er ingesteld is. Het bevat alleen de eigen instellingen van Shutter Pilot en de namen van de entiteiten die je gekozen hebt: geen inloggegevens en geen locatie.",
+  btn_export:"Rapport maken",
+  btn_export_copy:"Kopiëren",
+  btn_export_copied:"Gekopieerd ✓",
+  btn_export_download:"Downloaden",
   tab_settings:"Instellingen",
   f_season_all:"hele jaar",
   month_1:"Januari",
@@ -1001,6 +1055,15 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
 },
 da:{
+  f_sun_cond_wrong_way:"De to værdier står omvendt. Det er et tændpunkt med et ophævelsespunkt UNDER, ikke et interval fra–til. Som det står nu, kasseres den anden værdi, og betingelsen er stort set altid opfyldt. Til et interval af verdenshjørner findes «Kun ved passende vinduesretning».",
+  f_geo_override_values_hint:"Disse to værdier gælder nu i stedet for områdets – uanset om du rører dem.",
+  sec_export:"Eksportér indstillinger",
+  sec_export_sub:"til fejlrapporter i forummet",
+  f_export_hint:"Laver en rapport med alle indstillinger, de aktuelle sensorværdier og afskærmningsbeslutningen fra netop nu – pr. persienne og med begrundelse. Sæt teksten ind i forummet, så behøver ingen at gætte, hvad der er indstillet. Den indeholder kun Shutter Pilots egne indstillinger og navnene på de entiteter, du har valgt: ingen adgangsoplysninger og ingen placering.",
+  btn_export:"Lav rapport",
+  btn_export_copy:"Kopiér",
+  btn_export_copied:"Kopieret ✓",
+  btn_export_download:"Hent",
   tab_settings:"Indstillinger",
   f_season_all:"hele året",
   month_1:"Januar",
@@ -1132,6 +1195,15 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
 },
 sv:{
+  f_sun_cond_wrong_way:"De två värdena står omvänt. Det här är en påslagspunkt med en frigöringspunkt UNDER, inte ett intervall från–till. Som det står nu kastas det andra värdet och villkoret är uppfyllt praktiskt taget hela tiden. För ett intervall av väderstreck finns «Endast vid passande fönsterriktning».",
+  f_geo_override_values_hint:"De här två värdena gäller nu i stället för områdets – vare sig du rör dem eller inte.",
+  sec_export:"Exportera inställningar",
+  sec_export_sub:"för felrapporter i forumet",
+  f_export_hint:"Skapar en rapport med alla inställningar, sensorernas nuvarande värden och solskyddsbeslutet från just nu – per persienn och med motivering. Klistra in texten i forumet, så behöver ingen gissa vad som är inställt. Den innehåller bara Shutter Pilots egna inställningar och namnen på de entiteter du valt: inga inloggningsuppgifter och ingen plats.",
+  btn_export:"Skapa rapport",
+  btn_export_copy:"Kopiera",
+  btn_export_copied:"Kopierat ✓",
+  btn_export_download:"Ladda ner",
   tab_settings:"Inställningar",
   f_season_all:"hela året",
   month_1:"Januari",
@@ -1263,6 +1335,15 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
 },
 pl:{
+  f_sun_cond_wrong_way:"Te dwie wartości są odwrócone. To punkt włączenia z punktem wyłączenia PONIŻEJ niego, a nie zakres od–do. W tej postaci druga wartość jest odrzucana, a warunek jest spełniony praktycznie zawsze. Dla zakresu kierunków świata służy «Tylko przy odpowiednim kierunku okna».",
+  f_geo_override_values_hint:"Te dwie wartości obowiązują teraz zamiast wartości strefy – niezależnie od tego, czy ich dotkniesz.",
+  sec_export:"Eksport ustawień",
+  sec_export_sub:"do zgłoszeń błędów na forum",
+  f_export_hint:"Tworzy raport ze wszystkimi ustawieniami, bieżącymi odczytami czujników i decyzją o zacienieniu z tej właśnie chwili – dla każdej rolety, wraz z uzasadnieniem. Wklej go na forum, a nikt nie będzie musiał zgadywać, co jest ustawione. Zawiera tylko własne ustawienia Shutter Pilota i nazwy wybranych przez Ciebie encji: żadnych danych logowania ani lokalizacji.",
+  btn_export:"Utwórz raport",
+  btn_export_copy:"Kopiuj",
+  btn_export_copied:"Skopiowano ✓",
+  btn_export_download:"Pobierz",
   tab_settings:"Ustawienia",
   f_season_all:"cały rok",
   month_1:"Styczeń",
@@ -1394,6 +1475,15 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
 },
 pt:{
+  f_sun_cond_wrong_way:"Estes dois valores estão trocados. Trata-se de um ponto de activação com um ponto de libertação ABAIXO dele, não de um intervalo de–a. Assim, o segundo valor é descartado e a condição fica praticamente sempre cumprida. Para um intervalo de orientações existe «Apenas com a orientação certa da janela».",
+  f_geo_override_values_hint:"Estes dois valores passam a valer em vez dos da zona – quer lhes toque ou não.",
+  sec_export:"Exportar definições",
+  sec_export_sub:"para relatos de erro no fórum",
+  f_export_hint:"Cria um relatório com todas as definições, os valores actuais dos sensores e a decisão de sombreamento deste preciso momento – por estore e com a respectiva justificação. Cole o texto no fórum e ninguém terá de adivinhar o que está configurado. Contém apenas as definições do próprio Shutter Pilot e os nomes das entidades que escolheu: sem credenciais e sem localização.",
+  btn_export:"Criar relatório",
+  btn_export_copy:"Copiar",
+  btn_export_copied:"Copiado ✓",
+  btn_export_download:"Transferir",
   tab_settings:"Definições",
   f_season_all:"todo o ano",
   month_1:"Janeiro",
@@ -1525,6 +1615,15 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
 },
 nb:{
+  f_sun_cond_wrong_way:"De to verdiene står omvendt. Dette er et påslagspunkt med et opphevingspunkt UNDER, ikke et intervall fra–til. Slik det står nå forkastes den andre verdien, og vilkåret er oppfylt så godt som hele tiden. For et intervall av himmelretninger finnes «Bare ved passende vindusretning».",
+  f_geo_override_values_hint:"Disse to verdiene gjelder nå i stedet for områdets – enten du rører dem eller ikke.",
+  sec_export:"Eksporter innstillinger",
+  sec_export_sub:"til feilrapporter i forumet",
+  f_export_hint:"Lager en rapport med alle innstillinger, sensorenes nåværende verdier og solskjermingsavgjørelsen fra akkurat nå – per rullegardin og med begrunnelse. Lim teksten inn i forumet, så slipper alle å gjette hva som er stilt inn. Den inneholder bare Shutter Pilots egne innstillinger og navnene på entitetene du har valgt: ingen påloggingsdetaljer og ingen posisjon.",
+  btn_export:"Lag rapport",
+  btn_export_copy:"Kopier",
+  btn_export_copied:"Kopiert ✓",
+  btn_export_download:"Last ned",
   tab_settings:"Innstillinger",
   f_season_all:"hele året",
   month_1:"Januar",
@@ -1776,6 +1875,11 @@ class ShutterPilotPanel extends PanelBase {
     .field select{appearance:auto}
     .field input:focus,.field select:focus{outline:none;border-color:var(--sp)}
     .field .hint{font-size:11px;color:var(--txt2);margin-top:2px}
+    .hint.warn{color:var(--err,#c62828);font-weight:600}
+    .export-box{width:100%;min-height:220px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      font-size:11px;line-height:1.45;margin-top:10px;padding:8px;box-sizing:border-box;
+      border:1px solid var(--bd,#3336);border-radius:8px;background:var(--card,#0000000d);
+      color:var(--txt,inherit);resize:vertical;white-space:pre}
     .slider-row{display:flex;align-items:center;gap:12px}
     .slider-row input[type=range]{flex:1;accent-color:var(--sp);height:6px;cursor:pointer}
     .slider-row .slider-val{min-width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--sp)}
@@ -2134,9 +2238,19 @@ class ShutterPilotPanel extends PanelBase {
     if(!useStates){
       /* Frost fragt "kälter als", alles andere "wärmer/heller als" – nur die
          Beschriftung dreht sich, die Schlüssel bleiben dieselben. */
+      /* Die beiden Werte sind ein Einschaltpunkt mit einem Aufhebepunkt
+         darunter, kein Bereich. Wer "40 bis 130" meint, trägt sie verkehrt
+         herum ein – das Backend verwirft den zweiten Wert dann stillschweigend
+         und die Bedingung ist von morgens bis abends erfüllt. */
+      const on=Number(a[`sun_cond_${slot}_on_above`]);
+      const off=Number(a[`sun_cond_${slot}_off_below`]);
+      const wrongWay=Number.isFinite(on)&&Number.isFinite(off)&&
+        a[`sun_cond_${slot}_off_below`]!==""&&a[`sun_cond_${slot}_off_below`]!=null&&
+        (inverted?off<on:off>on);
       return html`
         ${f(`sun_cond_${slot}_on_above`,T(inverted?"f_sun_cond_on_below":"f_sun_cond_on"),"number")}
         ${f(`sun_cond_${slot}_off_below`,T(inverted?"f_sun_cond_off_above":"f_sun_cond_off"),"number")}
+        ${wrongWay?html`<div class="hint warn">⚠️ ${T("f_sun_cond_wrong_way")}</div>`:""}
         <div class="hint">${T(inverted?"f_sun_cond_num_inv_hint":"f_sun_cond_num_hint")}</div>`;
     }
 
