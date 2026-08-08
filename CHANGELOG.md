@@ -4,6 +4,24 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.8.0]
+
+Zwei Meldungen aus dem Forum (MartyBr, heinzie) liessen sich aus ihren
+Screenshots **nicht** beantworten – die Einstellung, auf die es ankam, war nie
+im Bild. Deshalb steht am Anfang dieser Version ein Export, und dahinter fünf
+Fehler, die beim Nachprüfen des Codes zutage kamen.
+
+### Neu
+- **Einstellungen exportieren** (Einstellungen → „Einstellungen exportieren"). Erzeugt einen Bericht mit allen gespeicherten Einstellungen jedes Bereichs und jedes Rollladens, den **aktuellen Sensorwerten** und – das eigentlich Nützliche – der **Beschattungs-Entscheidung von genau jetzt**, je Rollladen mit Begründung Zeile für Zeile: Elevation im Bereich? Richtung? Zeitraum? Welche Bedingung erfüllt, welche nicht? Kopieren oder als `.md` herunterladen und ins Forum stellen. Enthalten sind nur Shutter Pilots eigene Einstellungen und die Namen der gewählten Entitäten – keine Zugangsdaten, kein Standort. Gerechnet wird ausdrücklich gegen eine **Kopie** des Hysterese-Gedächtnisses: eine Frage zu stellen darf die Antwort nicht verändern.
+
+### Behoben
+- **Eine Beschattung, die beim Fahren scheiterte, wurde nie wiederholt.** Der Merker „dieser Rollladen ist beschattet" wurde gesetzt, *bevor* gefahren wurde. Blieb der Fahrbefehl stecken, galt die Beschattung ab der nächsten Minute als erledigt – der Rollladen stand offen in der Sonne, dauerhaft und ohne Fehlermeldung. Der Merker folgt jetzt der Fahrt, statt ihr vorauszugehen.
+- **Ein beschattetes Fenster sperrte das Hochfahren im ganzen Bereich.** Die Beschattung wird seit 2.7.0 je Rollladen geführt, die Sperre fürs automatische Öffnen fragte aber weiter die Bereichs-Summe. Betroffen war jeder andere Rollladen desselben Bereichs, der zufällig nahe seiner Beschattungsposition stand – und nur der, weil genau die Position verglichen wird. Deshalb half es, ihn von Hand ein Stück zu verfahren. (Forum, heinzie)
+- **Die Haltezeit hielt auch das berechtigte Ende der Beschattung auf.** „Beschattung halten" ist für durchziehende Wolken gedacht. Sie lief aber auch, wenn die Sonne aus dem Fenster gewandert, über den Höhenbereich gestiegen oder der Beschattungszeitraum vorbei war – bis zu zwei Stunden dunkel, obwohl nichts davon zurückkommt. Für den Wolkenfall gilt sie unverändert, und sie schreibt ihre Restzeit jetzt sichtbar ins Log.
+- **„Aufheben unter" über „Beschatten ab" wurde stillschweigend verworfen.** Die beiden Werte sind ein Einschaltpunkt mit einem Aufhebepunkt darunter, keine Spanne von–bis. Wer beim Azimut 40 und 130 einträgt und den Bereich 40°–130° meint, bekam die Bedingung „Azimut ≥ 40" – von morgens bis abends erfüllt, aus der falschen Himmelsrichtung inklusive. Das Formular warnt jetzt an Ort und Stelle, und einmal je Bedingung steht es auch im Log. Für eine Spanne von Himmelsrichtungen gibt es „Nur bei passender Fensterrichtung". (Forum, MartyBr)
+- **„Eigene Ausrichtung für diesen Rollladen" verschob die Höhengrenzen, ohne dass man etwas eingab.** Bei einem Bereich, der noch die alte Einzelschwelle trug, warf der Haken sie weg und fiel auf die eingebaute Vorgabe zurück: aus „ab 25°" wurde „zwischen 1° und 4°", also praktisch nie. Die Grenzen des Bereichs bleiben jetzt stehen, bis wirklich eigene Werte gesetzt sind.
+- **Die Felder hinter „Eigene Ausrichtung" standen an der falschen Stelle.** Auf den Haken folgte zuerst der Bedingungsblock und erst dahinter die Höhen- und Richtungsfelder, die der Haken freischaltet. Man hakte an, sah darunter Bedingungen erscheinen, füllte sie aus – und bekam die eigentlichen Felder nie zu Gesicht. Sie stehen jetzt direkt darunter, mit dem Hinweis, dass ab dann sie statt der Bereichswerte gelten.
+
 ## [2.7.2]
 
 ### Behoben

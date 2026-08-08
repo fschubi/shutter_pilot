@@ -550,3 +550,78 @@ kein Verstoss gegen die Bot-Regel.
 #10878, #10007) wurden automatisch geschlossen, weil HA seit 2026.3.0 keine
 Icons für Custom Integrations mehr dort annimmt. Der Ersatzweg – Ordner `brand/`
 in der Integration – ist längst gegangen. Nicht erneut einreichen.
+
+### 2026-08-08 – 2.8.0: zwei Forum-Meldungen, die niemand beantworten konnte
+
+MartyBr und heinzie haben je einen Fall gemeldet, beide mit Screenshots. Der
+erste Schritt war, MartyBrs Konfiguration exakt gegen die echten Helfer
+nachzurechnen (`resolve_shading_config`, `sun_protect_conditions_met`,
+`sun_extra_conditions_met`, `season_allows_shading`) mit den Werten aus seinem
+zweiten Screenshot: Elevation 25,54° in [2°, 70°] ✓, Richtungsprüfung aus ✓,
+Bedingung 1 32.898 ≥ 30.000 ✓, Bedingung 2 96,8 ≥ 40 ✓, ganzjährig ✓.
+
+**Die Konfiguration hätte beschatten müssen.** Der Grund lag also in einer
+Einstellung, die auf keinem Bild war. Genau das ist der Anlass für den Export –
+und der Anlass, ihn nicht als Datei-Dump zu bauen, sondern mit der
+Entscheidung: `export.py` rechnet je Rollladen die reale Beschattungsprüfung
+durch und schreibt jede Teilprüfung mit ihrem Ergebnis hin. Eine Zeile
+beantwortet damit, was vorher drei Screenshots offen liessen.
+
+**Zwei Eigenheiten, die den Aufbau bestimmt haben:**
+
+1. **Der Export darf nichts anfassen.** `_condition_slot_met()` schreibt beim
+   Auswerten die Hysterese mit, und `condition_memory()` legt den Eintrag beim
+   ersten Zugriff überhaupt erst an. Ein Bericht, der das täte, würde den
+   Zustand verschieben, den er dokumentieren soll – gemessen würde dann etwas,
+   das der Messvorgang selbst erzeugt hat. Deshalb `_memory_copy()`: liest ohne
+   `setdefault`, gibt eine Kopie zurück. Ein Test hält das fest.
+2. **Alle gespeicherten Schlüssel, nicht eine Auswahl.** Der Wert, auf den es
+   ankommt, ist immer der, den niemand fotografiert hat. `False` zählt dabei als
+   gesetzt – eine ausgeschaltete Option ist eine Entscheidung.
+
+**Die fünf Funde beim Nachprüfen** (alle mit Test, siehe
+`tests/test_forum_findings.py`):
+
+1. **Merker vor der Fahrt.** `set_cover_sun_protected(..., True)` lief, während
+   die Fahrt erst eingereiht war – und `set_cover_position()` schluckt
+   Ausnahmen. Eine gescheiterte Fahrt galt ab der nächsten Minute als erledigt
+   und wurde **nie** wiederholt. `set_cover_position()` gibt jetzt zurück, ob es
+   geklappt hat; `_drive_sun_protect()` liefert die Cover, die wirklich unter
+   Beschattung stehen. Wartende Nachhol-Fahrten zählen ausdrücklich dazu, sonst
+   würde die Merkdatei jede Minute neu geschrieben.
+2. **`should_skip_full_open_preserving_sun_protect` fragte den Bereich.** Seit
+   2.7.0 (GitHub #4) wird die Beschattung je Cover geführt; diese eine Stelle
+   nicht. Sie ist zugleich die **einzige** im ganzen Code, deren Verhalten von
+   der Position abhängt (`abs(cur - pos_sp) <= 10`) – und damit die einzige
+   Erklärung für heinzies vierten Punkt: von Hand verfahren, dann fährt er
+   hoch. Der Bereichs-Vorabcheck in `brightness.py` fiel mit weg; er hielt den
+   ganzen Raum an, sobald ein Fenster beschattet war.
+3. **Haltezeit auch für den Sonnenuntergang.** Die Reihenfolge im Code
+   entschied: erst warten, dann den Grund bestimmen. Jetzt umgekehrt – die
+   Haltezeit gilt nur noch, wenn eine *Bedingung* weggefallen ist. Sonne über
+   den Bereich gestiegen, aus dem Fenster gewandert oder Saisonende sind keine
+   Wolke, sie kommen innerhalb der Haltezeit nicht zurück. Zusammen mit Fund 2
+   war das ein doppelter Riegel: nicht freigeben *und* das Hochfahren sperren.
+4. **`off_below > on_above` wurde geklammert.** MartyBrs 40 / 130 beim Azimut
+   ist als Spanne gemeint; das Paar ist aber Einschaltpunkt plus Aufhebepunkt
+   darunter. Übrig blieb „Azimut ≥ 40". Warnung jetzt im Formular und einmal je
+   Bedingung im Log, mit dem Verweis auf „Nur bei passender Fensterrichtung".
+5. **`resolve_sun_geometry` warf die alte Einzelschwelle weg**, sobald der Haken
+   „Eigene Ausrichtung" gesetzt war – auch ohne eigene Werte. Aus „ab 25°" wurde
+   der eingebaute Vorgabewert, also [1°, 4°]. Verworfen wird sie jetzt nur, wenn
+   der Rollladen wirklich eigene Elevationswerte trägt.
+
+Dazu die Anordnung im Formular: die Felder, die der Haken freischaltet, standen
+**hinter** dem Bedingungsblock. In MartyBrs Screenshot ist genau das zu sehen –
+Haken gesetzt, darunter sofort Bedingungen. Jetzt stehen sie direkt unter dem
+Haken.
+
+**Lehre:** Wenn ein Merker sagt „erledigt", muss er von der Handlung gesetzt
+werden, nicht von der Absicht. Die Funde 1 und 3 sind beide diese Klasse: ein
+Zustand, der vorauseilt (Fund 1) oder nachhängt (Fund 3), und in beiden Fällen
+gibt es danach keinen Weg zurück, weil derselbe Zustand die Wiederholung sperrt.
+
+**Verifiziert:** `pytest` 387 Tests grün (13 neue), `node --check` fürs Panel,
+i18n 269/269 Schlüssel in allen elf Sprachen. **Nicht** im Browser geprüft: die
+Panel-Änderungen (Export-Abschnitt, Warnhinweis, neue Feldreihenfolge) – dafür
+bräuchte es eine laufende HA-Instanz mit angelegtem Benutzer.
