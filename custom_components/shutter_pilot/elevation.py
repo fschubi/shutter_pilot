@@ -94,12 +94,18 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
 
     async def _drive_sun_protect(
         area: dict, elev: float, azim: float | None, targets: list[dict]
-    ) -> int:
-        """Drive the given shutters to their sun protection position."""
+    ) -> list[str]:
+        """Drive the given shutters to their sun protection position.
+
+        Returns the covers that are now under shading – driven, or waiting for
+        their window to close. A cover whose drive failed is deliberately not
+        in there, so the next minute tries again instead of believing a shutter
+        is shaded that never moved.
+        """
         area_id = str(area.get(CONF_AREA_ID) or "").strip()
         if not area_id:
-            return 0
-        moved = 0
+            return []
+        shaded: list[str] = []
         delay = _delay_for(area)
         idx = 0
         for shutter in targets:
@@ -115,6 +121,10 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                     hass, entry, data, cover_entity,
                     position=pos, tilt=tilt, reason="Sun protect", shutter=shutter,
                 )
+                # The drive is registered and runs once the window closes, so
+                # this cover counts as shaded – re-queueing it every minute
+                # would rewrite the pending record on disk each time.
+                shaded.append(cover_entity)
                 continue
             pos = get_effective_close_position(hass, shutter, pos)
             e_min, e_max = get_elevation_bounds(area)
@@ -130,7 +140,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             )
             if idx > 0 and delay > 0:
                 await asyncio.sleep(delay)
-            await set_cover_position(
+            ok = await set_cover_position(
                 hass,
                 entry,
                 cover_entity,
@@ -140,8 +150,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 area_id=area_id,
             )
             idx += 1
-            moved += 1
-        return moved
+            if ok:
+                shaded.append(cover_entity)
+            else:
+                _LOGGER.warning(
+                    "[sun-protect] %s: drive failed – shading not marked active, "
+                    "retrying on the next tick",
+                    cover_entity,
+                )
+        return shaded
 
     async def _release_sun_protect(
         area: dict, reason: str, targets: list[dict]
@@ -232,8 +249,8 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 # nächsten Unterbrechung von vorn.
                 release_since.pop(cover, None)
                 if not was_active:
+                    # Der Merker wird erst gesetzt, wenn die Fahrt durch ist.
                     to_shade.setdefault(area_id, []).append(shutter)
-                    set_cover_sun_protected(data, cover, True)
                 continue
 
             if not was_active:
@@ -282,7 +299,10 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             to_release.setdefault(area_id, []).append((shutter, reason))
 
         for area_id, targets in to_shade.items():
-            await _drive_sun_protect(protect_by_id[area_id], elev, azim, targets)
+            for cover in await _drive_sun_protect(
+                protect_by_id[area_id], elev, azim, targets
+            ):
+                set_cover_sun_protected(data, cover, True)
         for area_id, entries in to_release.items():
             area = protect_by_id[area_id]
             for reason in {r for _, r in entries}:

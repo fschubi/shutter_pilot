@@ -1161,8 +1161,13 @@ async def set_cover_position(
     source: str | None = None,
     tilt_position: float | None = None,
     area_id: str | None = None,
-) -> None:
-    """Set cover position (and optionally slat angle) and persist the result."""
+) -> bool:
+    """Set cover position (and optionally slat angle) and persist the result.
+
+    Returns whether the drive went through. Callers that record a state after
+    driving need to know – a failure used to be a log line only, so shading
+    could mark itself active for a shutter that never moved.
+    """
     mark_automation_pending(hass, entry, entity_id)
     try:
         await _respect_min_drive_gap(hass, entry)
@@ -1205,6 +1210,7 @@ async def set_cover_position(
         from .cover_verify import schedule_verification
 
         schedule_verification(hass, entry, entity_id, float(position), reason)
+        return True
     except Exception as e:
         _LOGGER.warning("Failed to set %s: %s", entity_id, e)
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
@@ -1212,6 +1218,7 @@ async def set_cover_position(
             data.setdefault("pending_automation_covers", set()).discard(entity_id)
             recent = data.setdefault("recent_automation_covers", {})
             recent.pop(entity_id, None)
+        return False
 
 
 async def _set_cover_tilt(
