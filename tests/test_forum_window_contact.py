@@ -220,3 +220,59 @@ class TestShadedShutterYieldsToTheWindow:
         await hass.async_block_till_done()
 
         assert cover_calls == []
+
+
+# --- heinzies Konfiguration aus der Diagnose-Datei, unveraendert -------------
+
+
+class TestHeinziesSetup:
+    """`cover.buro`: beschattet auf 80 %, Kontakt „open" an einem binary_sensor.
+
+    Beide Fehler treffen hier zusammen. Der Test faehrt seine Werte 1:1, damit
+    die Antwort im Forum belegt ist und nicht geschaetzt.
+    """
+
+    def _buero(self) -> dict:
+        return _shutter(
+            **{
+                CONF_NAME: "Buero",
+                CONF_COVER_ENTITY_ID: COVER,
+                CONF_WINDOW_ENTITY_ID: WINDOW,
+                CONF_WINDOW_OPEN_STATE: "open",   # er hat „open" gewaehlt
+                CONF_WINDOW_TILTED_STATE: "none",
+                CONF_POSITION_WHEN_WINDOW_OPEN: 97,
+                CONF_POSITION_WHEN_WINDOW_TILTED: 98,
+                CONF_WINDOW_CLOSE_DEBOUNCE: 0,
+            }
+        )
+
+    async def test_the_whole_cycle_runs(self, hass, cover_calls):
+        hass.states.async_set(
+            COVER, "open", {"current_position": 80, "supported_features": 15}
+        )
+        hass.states.async_set(WINDOW, "off")
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={CONF_AREAS: [AREA], CONF_SHUTTERS: [self._buero()]},
+        )
+        config_entry.add_to_hass(hass)
+        with patch(
+            "custom_components.shutter_pilot._async_register_panel", return_value=None
+        ):
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+        data = hass.data[DOMAIN][config_entry.entry_id]
+        set_cover_sun_protected(data, COVER, True)
+
+        hass.states.async_set(WINDOW, "on")
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            COVER, "open", {"current_position": 98, "supported_features": 15}
+        )
+        hass.states.async_set(WINDOW, "off")
+        await hass.async_block_till_done()
+
+        # 98, nicht 97: ohne Kipp-Zustand gilt die Kipp-Position fuer beides.
+        # Danach zurueck auf die Beschattungsposition, von der er kam.
+        assert [c.data["position"] for c in cover_calls] == [98, 80]
