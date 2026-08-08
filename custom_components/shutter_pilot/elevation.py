@@ -269,22 +269,13 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 )
                 continue
 
-            # A cloud drifting past ends the condition outright. Keep the
-            # shading up for the configured time before giving in, otherwise
-            # the shutters chase every gap in the clouds.
-            hold = _hold_seconds(area)
-            if hold > 0:
-                first_seen = release_since.setdefault(cover, time.monotonic())
-                waited = time.monotonic() - first_seen
-                if waited < hold:
-                    _LOGGER.debug(
-                        "[sun-protect] %s: no longer needed – holding (%.0f/%.0f s)",
-                        cover, waited, hold,
-                    )
-                    continue
-            release_since.pop(cover, None)
-            set_cover_sun_protected(data, cover, False)
-
+            # Why shading ended decides whether the hold time applies at all.
+            # It exists for a cloud drifting past. The sun leaving the window,
+            # climbing out of the range or the season ending are none of those:
+            # they do not come back within the hold, so waiting them out only
+            # leaves the room dark for up to two hours – and, because this
+            # shutter then still counts as shaded, blocks the scheduled opening
+            # on top of it.
             if elev > e_max:
                 reason = "sun above range"
             elif not geometry_ok:
@@ -294,8 +285,23 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 reason = "outside shading season"
             else:
                 # Geometry still fits, so a condition dropped out – clouds
-                # moved in or it cooled down. Let the light back in.
+                # moved in or it cooled down. This is the case the hold time
+                # was built for: do not chase every gap in the clouds.
                 reason = "shading condition no longer met"
+                hold = _hold_seconds(area)
+                if hold > 0:
+                    first_seen = release_since.setdefault(cover, time.monotonic())
+                    waited = time.monotonic() - first_seen
+                    if waited < hold:
+                        _LOGGER.info(
+                            "[sun-protect] %s: condition gone – holding shading "
+                            "for another %.0f s (of %.0f s)",
+                            cover, hold - waited, hold,
+                        )
+                        continue
+
+            release_since.pop(cover, None)
+            set_cover_sun_protected(data, cover, False)
             to_release.setdefault(area_id, []).append((shutter, reason))
 
         for area_id, targets in to_shade.items():
