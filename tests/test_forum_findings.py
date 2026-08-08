@@ -15,6 +15,7 @@ from pytest_homeassistant_custom_component.common import (
     async_mock_service,
 )
 
+from custom_components.shutter_pilot import cover_tracker
 from custom_components.shutter_pilot.const import (
     CONF_AREA_DOWN_ID,
     CONF_AREA_ELEVATION_MAX,
@@ -200,8 +201,13 @@ async def sun_entry(hass, drives):
         domain=DOMAIN, title="Shutter Pilot", options=SUN_OPTIONS
     )
     config_entry.add_to_hass(hass)
+    # Ohne echte Cover-Integration bleibt die Position stehen; der
+    # Startup-Restore hält die Fahrt für verschluckt und wartet seine vollen
+    # Wartezeiten ab. Das kostete 14 s Aufbau je Test in dieser Datei.
     with patch(
         "custom_components.shutter_pilot._async_register_panel", return_value=None
+    ), patch.object(cover_tracker, "STARTUP_RESTORE_DELAY_SEC", 0), patch.object(
+        cover_tracker, "STARTUP_RESTORE_RETRY_SEC", 0
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -333,3 +339,84 @@ def deepcopy_options(options: dict) -> dict:
     from copy import deepcopy
 
     return deepcopy(options)
+
+
+# --- Nachtrag 08.08.2026, zweite Runde ---------------------------------------
+
+
+class TestExportReadsTheWayTheReportWasMeant:
+    """Was MartyBrs Export offenliess, obwohl alles darin stand."""
+
+    async def test_unit_stands_next_to_the_value(self, hass, sun_entry):
+        """Fünfstellige Lux-Schwellen an einem Sensor in W/m².
+
+        Nebeneinander sehen 559,7 und 30000 nach „noch nicht hell genug" aus.
+        Erst die Einheit sagt, dass dieser Sensor die Schwelle nie erreicht.
+        """
+        from custom_components.shutter_pilot.export import async_build_export
+
+        hass.states.async_set("sensor.lux", "559.7", {"unit_of_measurement": "W/m²"})
+        md = (await async_build_export(hass, sun_entry))["markdown"]
+
+        assert "559.7 W/m²" in md
+
+    async def test_clamped_release_threshold_is_named(self, hass, sun_entry):
+        from custom_components.shutter_pilot.export import async_build_export
+
+        options = deepcopy_options(SUN_OPTIONS)
+        options["areas"][0]["sun_cond_a_on_above"] = 40
+        options["areas"][0]["sun_cond_a_off_below"] = 130
+        hass.config_entries.async_update_entry(sun_entry, options=options)
+        await hass.async_block_till_done()
+
+        md = (await async_build_export(hass, sun_entry))["markdown"]
+        assert "wird verworfen" in md
+        assert "≥ 40" in md
+
+    async def test_sane_thresholds_get_no_note(self, hass, sun_entry):
+        from custom_components.shutter_pilot.export import async_build_export
+
+        md = (await async_build_export(hass, sun_entry))["markdown"]
+        assert "wird verworfen" not in md
+
+    async def test_dead_sensor_says_why_it_ticks(self, hass, sun_entry):
+        """Ein ✅ hinter „unknown" liest sich wie eine bestandene Prüfung."""
+        from custom_components.shutter_pilot.export import async_build_export
+
+        hass.states.async_set("sensor.lux", "unknown")
+        md = (await async_build_export(hass, sun_entry))["markdown"]
+
+        assert "fail open" in md
+
+    async def test_switched_off_automation_is_said_out_loud(self, hass, sun_entry):
+        """„Ergebnis: beschatten" bei ausgeschalteter Automatik ist ein Versprechen."""
+        from custom_components.shutter_pilot.export import async_build_export
+
+        data = hass.data[DOMAIN][sun_entry.entry_id]
+        data["auto_modes"] = {"living": False}
+
+        md = (await async_build_export(hass, sun_entry))["markdown"]
+        assert "steht auf **aus**" in md
+
+
+class TestReleaseDropsTheWindowCycle:
+    """Fenster auf unter Beschattung, Beschattung endet – nichts fährt zurück."""
+
+    async def test_stale_restore_height_is_dropped(self, hass, sun_entry):
+        data = hass.data[DOMAIN][sun_entry.entry_id]
+        await _tick(hass, sun_entry)
+        assert "cover.living_room" in data["sun_protect_covers"]
+
+        # Der Fensterkontakt hat den beschatteten Rollladen hochgefahren und
+        # sich 40 % als Rückfahrhöhe gemerkt.
+        data["trigger_actions"]["cover.living_room"] = "triggered"
+        data["trigger_heights"]["cover.living_room"] = 40
+
+        hass.states.async_set(
+            "sun.sun", "above_horizon", {"elevation": 80.0, "azimuth": 180.0}
+        )
+        await _tick(hass, sun_entry)
+
+        assert "cover.living_room" not in data["sun_protect_covers"]
+        assert "cover.living_room" not in data["trigger_actions"]
+        assert "cover.living_room" not in data["trigger_heights"]

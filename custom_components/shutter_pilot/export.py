@@ -45,7 +45,9 @@ from .const import (
     CONF_SHUTTERS,
     CONF_SUN_GEOMETRY_OVERRIDE,
     DOMAIN,
+    INVERTED_BY_DEFAULT_SLOTS,
     SUN_CONDITION_SLOTS,
+    sun_condition_invert_key,
     sun_condition_keys,
 )
 from .helpers import (
@@ -121,12 +123,50 @@ def _memory_copy(
 
 
 def _state_of(hass: HomeAssistant, entity_id: str) -> str:
+    """The sensor value as it reads right now, with its unit.
+
+    The unit is the point. Two reports in a row set five-digit lux thresholds
+    on a sensor that measures W/m² and tops out near 1000 – the numbers look
+    fine side by side until the unit is next to them.
+    """
     state = hass.states.get(entity_id)
     if state is None:
         return "**Entität gibt es nicht**"
     if state.state in ("unknown", "unavailable"):
         return f"**{state.state}**"
-    return str(state.state)
+    unit = str(state.attributes.get("unit_of_measurement") or "").strip()
+    return f"{state.state} {unit}".strip()
+
+
+def _condition_note(
+    hass: HomeAssistant, cfg: dict[str, Any], slot: str, entity_id: str
+) -> str:
+    """Warn about the two ways a condition passes without meaning anything."""
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        # Shading conditions fail open by design, so this reads as a tick in
+        # the table – which looks like the condition was checked and held.
+        return "Sensor liefert nichts – blockiert nicht (fail open)"
+
+    _, on_key, off_key, states_key = sun_condition_keys(slot)
+    if _is_set(cfg.get(states_key)):
+        return ""
+    try:
+        on_above = float(cfg.get(on_key))
+        off_below = float(cfg.get(off_key))
+    except (TypeError, ValueError):
+        return ""
+    inverted = bool(
+        cfg.get(sun_condition_invert_key(slot), slot in INVERTED_BY_DEFAULT_SLOTS)
+    )
+    if (off_below > on_above) if not inverted else (off_below < on_above):
+        # Same clamp helpers.py applies, spelled out where it is visible.
+        return (
+            f"⚠️ „auf unter\" liegt auf der falschen Seite und wird verworfen – "
+            f"die Bedingung heißt nur noch „{'≤' if inverted else '≥'} "
+            f"{on_above:.10g}\""
+        )
+    return ""
 
 
 def _condition_rows(
@@ -157,14 +197,15 @@ def _condition_rows(
         )
         rows.append(
             f"| {slot} | `{entity_id}` | {_state_of(hass, entity_id)} | "
-            f"{limits} | {'✅' if met else '❌'} |"
+            f"{limits} | {'✅' if met else '❌'} | "
+            f"{_condition_note(hass, cfg, slot, entity_id) or '–'} |"
         )
     if not rows:
         return [], True
     return (
         [
-            "| Bed. | Sensor | Wert jetzt | Schwellen | erfüllt |",
-            "| --- | --- | --- | --- | --- |",
+            "| Bed. | Sensor | Wert jetzt | Schwellen | erfüllt | Hinweis |",
+            "| --- | --- | --- | --- | --- | --- |",
             *rows,
             "",
         ],
@@ -179,8 +220,14 @@ def _shading_verdict(
     data: dict[str, Any],
     elev: float | None,
     azim: float | None,
+    blocked: str = "",
 ) -> list[str]:
-    """Run the real shading decision for one shutter and explain the outcome."""
+    """Run the real shading decision for one shutter and explain the outcome.
+
+    `blocked` names the switch that stops this shutter from being driven at
+    all. The decision is still worth printing – it is what the configuration
+    says – but on its own it reads like a promise the integration will not keep.
+    """
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
     geo = resolve_shading_config(area, shutter)
 
@@ -217,7 +264,13 @@ def _shading_verdict(
         f"gemerkter Zustand: "
         f"{'beschattet' if is_cover_sun_protected(data, cover) else 'nicht beschattet'}"
     )
-    if should != is_cover_sun_protected(data, cover):
+    if blocked:
+        lines.append("")
+        lines.append(
+            f"> ⚠️ {blocked} steht auf **aus**. Diese Entscheidung wird berechnet, "
+            "aber nicht gefahren – die Beschattung bleibt aus, egal was hier steht."
+        )
+    elif should != is_cover_sun_protected(data, cover):
         lines.append("")
         lines.append(
             "> ⚠️ Entscheidung und gemerkter Zustand gehen auseinander. Das ist "
@@ -344,10 +397,23 @@ async def async_build_export(
         out += _settings_table(shutter)
 
         if down_area is not None and down_area.get(CONF_AREA_SUN_PROTECT_ENABLED):
+            if not is_system_enabled(hass, entry):
+                blocked = "Der Hauptschalter"
+            elif not is_auto_enabled(hass, entry, down_area):
+                blocked = (
+                    f"Die Automatik des Bereichs "
+                    f"„{down_area.get(CONF_AREA_NAME) or down_id}\""
+                )
+            elif not is_shutter_automation_enabled(hass, entry, shutter):
+                blocked = "Die Automatik dieses Rollladens"
+            else:
+                blocked = ""
             out += [
                 "Beschattungs-Prüfung mit den Werten von jetzt:",
                 "",
-                *_shading_verdict(hass, down_area, shutter, data, elev, azim),
+                *_shading_verdict(
+                    hass, down_area, shutter, data, elev, azim, blocked
+                ),
             ]
 
     out += [
