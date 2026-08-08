@@ -51,7 +51,6 @@ from .helpers import (
     get_tilt_for_role,
     is_auto_enabled,
     is_shutter_automation_enabled,
-    is_sun_protect_active,
     remember_drive_after_close,
     resolve_close_role,
     set_cover_position,
@@ -304,60 +303,59 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     area_id, lux, up_threshold,
                 )
             elif (within_up or is_pending) and lux > up_threshold:
-                if is_sun_protect_active(data, area_id):
-                    _LOGGER.info(
-                        "Brightness up: area %s skipped – sun protection still active",
-                        area_id,
+                # Shading is judged per shutter inside the loop. Asking the
+                # area aggregate here as well held back every window of the
+                # room as soon as a single one was shaded – rooms whose windows
+                # face different ways are exactly the case that has its own
+                # sensors and its own direction.
+                clear_covers_driven_for_direction(data, "up")
+                idx = 0
+                up_covers: list[str] = []
+                for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
+                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+                    if not cover_entity:
+                        continue
+                    if cover_entity in covers_driven_up:
+                        continue
+                    if not is_shutter_automation_enabled(hass, entry, shutter):
+                        continue
+                    if should_skip_automated_up(
+                        hass,
+                        entry,
+                        shutter,
+                        data,
+                        sun_protect_area_ids,
+                        within_up_window=within_up or is_pending,
+                        area=area,
+                    ):
+                        _LOGGER.info(
+                            "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
+                            cover_entity,
+                        )
+                        continue
+                    pos = get_position_for_role(shutter, ROLE_OPEN)
+                    tilt = get_tilt_for_role(shutter, ROLE_OPEN)
+                    _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
+                    up_covers.append(cover_entity)
+                    hass.async_create_task(
+                        _set_cover_position_with_delay(
+                            cover_entity, pos, "Brightness up", drive_delay, idx,
+                            tilt=tilt, area_id=area_id,
+                        )
                     )
-                else:
-                    clear_covers_driven_for_direction(data, "up")
-                    idx = 0
-                    up_covers: list[str] = []
-                    for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
-                        cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
-                        if not cover_entity:
-                            continue
-                        if cover_entity in covers_driven_up:
-                            continue
-                        if not is_shutter_automation_enabled(hass, entry, shutter):
-                            continue
-                        if should_skip_automated_up(
-                            hass,
-                            entry,
-                            shutter,
-                            data,
-                            sun_protect_area_ids,
-                            within_up_window=within_up or is_pending,
-                            area=area,
-                        ):
-                            _LOGGER.info(
-                                "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
-                                cover_entity,
-                            )
-                            continue
-                        pos = get_position_for_role(shutter, ROLE_OPEN)
-                        tilt = get_tilt_for_role(shutter, ROLE_OPEN)
-                        _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
-                        up_covers.append(cover_entity)
-                        hass.async_create_task(
-                            _set_cover_position_with_delay(
-                                cover_entity, pos, "Brightness up", drive_delay, idx,
-                                tilt=tilt, area_id=area_id,
-                            )
-                        )
-                        idx += 1
-                        covers_driven_up.add(cover_entity)
-                        covers_driven_down.discard(cover_entity)
-                        clear_stale_window_cycle_after_automated_up(data, cover_entity)
-                        moved_up = True
+                    idx += 1
+                    covers_driven_up.add(cover_entity)
+                    covers_driven_down.discard(cover_entity)
+                    clear_stale_window_cycle_after_automated_up(data, cover_entity)
+                    moved_up = True
 
-                    if moved_up:
-                        hass.async_create_task(
-                            clear_manual_override_for_covers(hass, entry, up_covers)
-                        )
-                        hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
-                        if is_pending:
-                            pending_up.pop(area_id, None)
+                if moved_up:
+                    hass.async_create_task(
+                        clear_manual_override_for_covers(hass, entry, up_covers)
+                    )
+                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
+                    if is_pending:
+                        pending_up.pop(area_id, None)
 
     @callback
     def _on_brightness_change(event) -> None:

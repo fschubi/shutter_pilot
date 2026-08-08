@@ -776,14 +776,23 @@ def should_skip_full_open_preserving_sun_protect(
     data: dict[str, Any],
     sun_protect_area_ids: set[str],
 ) -> bool:
-    """True if automated full-open should not run (active sun protection at cover)."""
+    """True if automated full-open should not run (active sun protection at cover).
+
+    Asked per cover, not per area. Shading has been tracked per cover since two
+    windows of one room were allowed their own direction and their own sensors;
+    this guard kept asking the area aggregate. One shaded window therefore
+    blocked the automated opening of every other window in the same area that
+    happened to stand near its own shading position – and nudging that shutter
+    by hand was the only way out, because the position is what this guard
+    compares.
+    """
     down_id = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip()
     if not down_id or down_id not in sun_protect_area_ids:
         return False
-    if not is_sun_protect_active(data, down_id):
-        return False
     cover = shutter.get(CONF_COVER_ENTITY_ID)
     if not cover:
+        return False
+    if not is_cover_sun_protected(data, cover):
         return False
     cur = get_cover_current_position(hass, cover)
     if cur is None:
