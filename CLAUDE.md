@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.8.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.8.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -677,6 +677,33 @@ mit ✅ heisst „blockiert nicht", nicht „erfüllt".
 je Test (Startup-Restore plus Fahrtkontrolle). Sechs neue Tests dort kosten
 anderthalb Minuten Suite-Laufzeit – wer dort etwas ergänzt, sollte prüfen, ob
 es nicht in eine Datei mit leichterem Aufbau gehört.
+
+### 2026-08-08 – 2.8.2: heinzies Diagnose-Datei gegengerechnet
+
+Er hat nicht den Einstellungs-Export geschickt, sondern die HA-Diagnose. Reicht
+auch: **beide** Rollläden mit Fensterkontakt (`cover.gardrobe`, `cover.buro`)
+tragen `window_open_state: "open"` an demselben `binary_sensor`, und beide
+stehen in `sun_protect_covers` bei 47 % bzw. 80 %. Damit greifen die zwei Fixes
+aus 2.8.1 an genau seinem Fall, jeder für sich schon ausreichend.
+
+Nachgerechnet mit `resolve_shading_config` gegen seine Werte: „Buero" beschattet
+korrekt (Elevation 54,1° in [0–90], Azimut 177,3° in [5–335], 620 W/m² ≥ 300).
+„Wohnz. 5" hat `elevation_max: -5` und Azimut 135–135, „Wohnz. 6" Schwellen von
+20.000 an einem W/m²-Sensor – beide können nie beschatten. Nicht sein
+gemeldetes Problem, aber er wird danach fragen.
+
+**Der Fund, den 2.8.1 nicht abdeckt:** Ein Kontakt ohne Kipp-Zustand ist
+zweiwertig, `_get_target_position_for_window_state()` fährt dann bewusst die
+**Kipp-Position** – auch für „offen". Im Formular standen trotzdem zwei
+Schieber, und heinzie hatte 97 % bei „offen" und 98 % bei „gekippt" gesetzt;
+gefahren wird 98. Ohne Kipp-Zustand steht jetzt nur noch ein Schieber da, auf
+`position_when_window_tilted`. Der alte Hinweis dazu behauptete, die Position
+gelte „wenn der Rollladen geschlossen ist" – seit 2.8.1 doppelt falsch.
+
+**Merke:** Die Diagnose-Datei (`diagnostics.py`) trägt `options` und `runtime`
+vollständig, inklusive `sun_protect_covers` und `sun_cond_state`. Für die Frage
+„warum fährt er nicht" ist sie so gut wie der Export – nur ohne die
+Sensorwerte, die man sich dann selbst dazu holen muss.
 
 **Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
 `sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht

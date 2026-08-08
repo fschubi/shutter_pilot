@@ -4,6 +4,14 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.8.2]
+
+Nacharbeit zu 2.8.1, aus heinzies Diagnose-Datei gelesen.
+
+### Behoben
+- **Die Position für „Fenster offen" tat bei den meisten Kontakten nichts.** Ein Kontakt ohne eigenen Kipp-Zustand meldet nur offen und zu; offen und gekippt sind für ihn dasselbe, gefahren wird deshalb die **Kipp-Position** – auch bei „offen". Im Formular standen trotzdem zwei Schieber untereinander, und der obere sah aus wie der zuständige. Wer dort 97 % einstellte, bekam die 98 % vom Feld darunter. Ohne Kipp-Zustand steht jetzt **ein** Schieber da, mit dem Hinweis daneben, warum. Sobald ein Kipp-Zustand eingetragen ist, erscheinen wieder beide.
+- **Der Hinweis dazu war schlicht falsch.** Er sagte, die Position gelte, „wenn der Rollladen geschlossen ist" – seit 2.8.1 stimmt das doppelt nicht mehr. Jetzt steht dort, was tatsächlich der Fall ist.
+
 ## [2.8.1]
 
 Der Export aus 2.8.0 hat sofort geliefert: MartyBrs Bericht beantwortete seine
