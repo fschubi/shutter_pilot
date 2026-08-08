@@ -28,6 +28,8 @@ from .const import (
     ROLE_SUN_PROTECT,
 )
 from .helpers import (
+    clear_stale_window_cycle_after_automated_up,
+    forget_drive_after_close,
     get_azimuth_bounds,
     get_elevation_bounds,
     get_position_for_role,
@@ -191,6 +193,13 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 tilt_position=tilt,
                 area_id=area_id,
             )
+            # The release opens the cover, so a window cycle that started under
+            # shading has nothing left to restore. Leaving it standing would
+            # drive the shutter back down to the shading position the moment
+            # the window closes – hours after shading ended. The catch-up drive
+            # goes with it, off disk too, since it was the shading drive.
+            clear_stale_window_cycle_after_automated_up(data, cover_entity)
+            forget_drive_after_close(hass, entry, data, cover_entity)
             idx += 1
             moved += 1
         return moved

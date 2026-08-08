@@ -105,6 +105,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 - **Cover entity** – your `cover.*` entity
 - **Window sensor** – optional `binary_sensor.*` for window open/tilt detection
 - **Extra sensor for "tilted"** – only needed if your window exposes two separate entities, one for open and one for tilted. Leave empty for a single 3-state contact
+- **Window state "open"** – which state of the entity means "the window is open". A `binary_sensor` only ever reports `on` or `off`, and which of the two means open depends on the contact, so the state it currently reports is shown below the field. The usual spellings (`on`/`open`/`true`) count as the same, as do `off`/`closed`. A 3-state `sensor` is read directly
 - **Area Up / Area Down** – which area controls this shutter for up/down movements
 - **Position sliders** – open, closed, and sun protection positions (0-100%)
 - **Lock protection** – minimum position when a door is open (prevents lockout)

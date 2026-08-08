@@ -26,6 +26,7 @@ from .const import (
 from .helpers import (
     forget_drive_after_close,
     get_tracked_position,
+    is_cover_sun_protected,
     is_shutter_automation_enabled,
     is_system_enabled,
     set_cover_position,
@@ -269,7 +270,14 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     trigger_actions.pop(cover_entity, None)
                     trigger_heights.pop(cover_entity, None)
                     continue
-                if not cycle_active and not _is_cover_effectively_closed(
+                # Shading counts as a reason to react, whatever the position.
+                # The order is window contact > shading > ventilation, but the
+                # contact could not reach a shaded shutter at all: shading
+                # parks it at, say, 25 %, which is neither closed nor open, so
+                # the check below sent it away. Opening the terrace door in the
+                # afternoon then left the shutter hanging in front of it.
+                shaded = is_cover_sun_protected(data, cover_entity)
+                if not cycle_active and not shaded and not _is_cover_effectively_closed(
                     shutter, current_pos
                 ):
                     # Not in "closed" state -> no window-trigger cycle active.

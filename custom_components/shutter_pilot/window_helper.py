@@ -24,6 +24,39 @@ def _normalize_state(val: Any) -> str:
     return str(val).lower().strip()
 
 
+# A binary_sensor only ever reports "on" or "off", but the form lets you pick
+# the word that means "open" – and "open" is the obvious pick, so people take
+# it. It then never equals "on", the contact reads as permanently closed and
+# nothing reacts to that window at all. Both sides are folded into the same two
+# tokens instead, which leaves every exact match exactly as it was.
+_STATE_SYNONYMS = {
+    "on": "on",
+    "true": "on",
+    "1": "on",
+    "open": "on",
+    "offen": "on",
+    "geöffnet": "on",
+    "geoeffnet": "on",
+    "auf": "on",
+    "off": "off",
+    "false": "off",
+    "0": "off",
+    "closed": "off",
+    "geschlossen": "off",
+    "zu": "off",
+}
+
+
+def _canonical_state(val: Any) -> str:
+    """Fold on/off vocabulary onto one token; leave anything else untouched.
+
+    Words like "tilted" or "2" are no synonym of either and stay themselves, so
+    a three-state contact keeps matching only what it really reports.
+    """
+    text = _normalize_state(val)
+    return _STATE_SYNONYMS.get(text, text)
+
+
 def _first_entity_id(value: Any) -> str:
     """Accept both a plain entity id and a single-element list."""
     if isinstance(value, list):
@@ -52,7 +85,7 @@ def _separate_tilt_active(hass: HomeAssistant, shutter: dict) -> bool:
     expected = _normalize_state(
         shutter.get(CONF_WINDOW_TILTED_ENTITY_STATE, DEFAULT_WINDOW_TILTED_ENTITY_STATE)
     ) or DEFAULT_WINDOW_TILTED_ENTITY_STATE
-    return _normalize_state(state.state) == expected
+    return _canonical_state(state.state) == _canonical_state(expected)
 
 
 def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
@@ -93,9 +126,11 @@ def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
     open_val = _normalize_state(shutter.get(CONF_WINDOW_OPEN_STATE, "on"))
     tilted_val = _normalize_state(shutter.get(CONF_WINDOW_TILTED_STATE, "none"))
 
-    if tilted_val and tilted_val != "none" and current == tilted_val:
+    if tilted_val and tilted_val != "none" and _canonical_state(
+        current
+    ) == _canonical_state(tilted_val):
         return "tilted"
-    if current == open_val:
+    if _canonical_state(current) == _canonical_state(open_val):
         return "open"
     return "closed"
 

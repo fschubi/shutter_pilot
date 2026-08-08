@@ -53,8 +53,13 @@ const PanelBase = LitElement ?? class extends HTMLElement {
 };
 
 const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset"};
-const WIN_OPEN_OPTS = ["on","open","true","offen"];
+const WIN_OPEN_OPTS = ["on","off","open","true","offen"];
 const WIN_TILT_OPTS = ["none","tilted","gekippt","kipp","2"];
+// Mirrors _STATE_SYNONYMS in window_helper.py. Used only to tell the user
+// whether the picked word can ever match what the contact reports.
+const WIN_STATE_SYNONYMS = {on:"on",true:"on",1:"on",open:"on",offen:"on","geöffnet":"on",geoeffnet:"on",auf:"on",
+  off:"off",false:"off",0:"off",closed:"off",geschlossen:"off",zu:"off"};
+const winCanon = v => { const t=String(v??"").toLowerCase().trim(); return WIN_STATE_SYNONYMS[t]||t; };
 const OVERRIDE_OPTS = ["never","daily","next_action"];
 /* Kompassrichtungen als Schnellwahl für den Azimut-Bereich (Fensterrichtung) */
 const COMPASS_PRESETS = [
@@ -288,6 +293,7 @@ de:{
   f_cover:"Rollladen / Cover",f_window_sensor:"Fenster-/Türsensor (optional)",
   f_win_open:"Fenster-Status 'offen'",f_win_tilt:"Fenster-Status 'gekippt'",
   f_win_tilt_none:"Deaktiviert (kein Kipp-Status)",
+  f_win_state_now:"Der Kontakt meldet gerade:",f_win_state_mismatch:"Dieser Zustand kann bei einem binary_sensor nie auftreten – der Kontakt gilt dann dauerhaft als geschlossen. Wähle „on“ oder „off“.",
   f_pos_win_open:"Position bei Fenster offen",f_pos_win_tilt:"Position bei Fenster gekippt",
   f_pos_win_tilt_2state_hint:"Bei 2-Zustands-Kontakten wird diese Position verwendet, wenn der Rollladen geschlossen ist.",
   f_lock:"Aussperrschutz (verhindert vollständiges Schließen bei offener Tür)",
@@ -485,6 +491,7 @@ en:{
   f_cover:"Shutter / Cover",f_window_sensor:"Window/door sensor (optional)",
   f_win_open:"Window state 'open'",f_win_tilt:"Window state 'tilted'",
   f_win_tilt_none:"Disabled (no tilt state)",
+  f_win_state_now:"The contact currently reports:",f_win_state_mismatch:"A binary_sensor can never report this state – the contact would always count as closed. Pick \"on\" or \"off\".",
   f_pos_win_open:"Position when window open",f_pos_win_tilt:"Position when window tilted",
   f_pos_win_tilt_2state_hint:"For 2-state contacts, this position is used when the shutter is closed.",
   f_lock:"Lock protection (prevents full close when door is open)",
@@ -627,6 +634,7 @@ fr:{
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
   f_cover:"Volet / Cover",f_window_sensor:"Capteur fenêtre (optionnel)",
   f_win_open:"État fenêtre 'ouverte'",f_win_tilt:"État fenêtre 'basculée'",f_win_tilt_none:"Désactivé",
+  f_win_state_now:"Le contact indique actuellement :",f_win_state_mismatch:"Un binary_sensor ne peut jamais avoir cet état – le contact serait toujours considéré comme fermé. Choisissez « on » ou « off ».",
   f_pos_win_open:"Position fenêtre ouverte",f_pos_win_tilt:"Position fenêtre basculée",
   f_pos_win_tilt_2state_hint:"Pour les contacts à 2 états, cette position est utilisée lorsque le volet est fermé.",
   f_lock:"Protection anti-enfermement",f_min_pos:"Position min. porte ouverte",
@@ -766,6 +774,7 @@ es:{
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
   f_cover:"Persiana / Cover",f_window_sensor:"Sensor ventana (opcional)",
   f_win_open:"Estado ventana 'abierta'",f_win_tilt:"Estado ventana 'inclinada'",f_win_tilt_none:"Desactivado",
+  f_win_state_now:"El contacto informa ahora mismo:",f_win_state_mismatch:"Un binary_sensor nunca puede tener este estado: el contacto contaría siempre como cerrado. Elige «on» u «off».",
   f_pos_win_open:"Posición ventana abierta",f_pos_win_tilt:"Posición ventana inclinada",
   f_pos_win_tilt_2state_hint:"Para contactos de 2 estados, esta posición se usa cuando la persiana está cerrada.",
   f_lock:"Protección anti-bloqueo",f_min_pos:"Posición mín. puerta abierta",
@@ -905,6 +914,7 @@ it:{
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
   f_cover:"Tapparella / Cover",f_window_sensor:"Sensore finestra (opzionale)",
   f_win_open:"Stato finestra 'aperta'",f_win_tilt:"Stato finestra 'ribaltata'",f_win_tilt_none:"Disattivato",
+  f_win_state_now:"Il contatto segnala ora:",f_win_state_mismatch:"Un binary_sensor non può mai avere questo stato: il contatto risulterebbe sempre chiuso. Scegli «on» oppure «off».",
   f_pos_win_open:"Posizione finestra aperta",f_pos_win_tilt:"Posizione finestra ribaltata",
   f_pos_win_tilt_2state_hint:"Per contatti a 2 stati, questa posizione viene usata quando la tapparella è chiusa.",
   f_lock:"Protezione anti-blocco",f_min_pos:"Posizione min. porta aperta",
@@ -1045,6 +1055,7 @@ nl:{
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
   f_cover:"Rolluik / Cover",f_window_sensor:"Raam-/deursensor (optioneel)",
   f_win_open:"Raamstatus 'open'",f_win_tilt:"Raamstatus 'gekanteld'",f_win_tilt_none:"Uitgeschakeld (geen kantelstatus)",
+  f_win_state_now:"Het contact meldt nu:",f_win_state_mismatch:"Een binary_sensor kan deze status nooit hebben – het contact geldt dan altijd als gesloten. Kies \"on\" of \"off\".",
   f_pos_win_open:"Positie bij raam open",f_pos_win_tilt:"Positie bij raam gekanteld",
   f_pos_win_tilt_2state_hint:"Bij 2-stands contacten wordt deze positie gebruikt wanneer het rolluik gesloten is.",
   f_lock:"Buitensluitbeveiliging (voorkomt volledig sluiten bij open deur)",f_min_pos:"Minimumpositie bij open deur",
@@ -1185,6 +1196,7 @@ da:{
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
   f_cover:"Persienne / Cover",f_window_sensor:"Vinduessensor (valgfrit)",
   f_win_open:"Vinduestilstand 'åben'",f_win_tilt:"Vinduestilstand 'vippet'",f_win_tilt_none:"Deaktiveret",
+  f_win_state_now:"Kontakten melder lige nu:",f_win_state_mismatch:"En binary_sensor kan aldrig have denne tilstand – kontakten vil altid tælle som lukket. Vælg \"on\" eller \"off\".",
   f_pos_win_open:"Position ved åbent vindue",f_pos_win_tilt:"Position ved vippet vindue",
   f_pos_win_tilt_2state_hint:"For 2-tilstands kontakter bruges denne position, når rullegardinet er lukket.",
   f_lock:"Låsebeskyttelse",f_min_pos:"Minimumposition ved åben dør",
@@ -1325,6 +1337,7 @@ sv:{
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
   f_cover:"Persienn / Cover",f_window_sensor:"Fönstersensor (valfritt)",
   f_win_open:"Fönsterstatus 'öppet'",f_win_tilt:"Fönsterstatus 'vippat'",f_win_tilt_none:"Inaktiverad",
+  f_win_state_now:"Kontakten rapporterar just nu:",f_win_state_mismatch:"En binary_sensor kan aldrig ha detta tillstånd – kontakten räknas då alltid som stängd. Välj \"on\" eller \"off\".",
   f_pos_win_open:"Position vid öppet fönster",f_pos_win_tilt:"Position vid vippat fönster",
   f_pos_win_tilt_2state_hint:"För 2-lägeskontakter används denna position när rullgardinen är stängd.",
   f_lock:"Utelåsningsskydd",f_min_pos:"Minimiposition vid öppen dörr",
@@ -1465,6 +1478,7 @@ pl:{
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
   f_cover:"Roleta / Cover",f_window_sensor:"Czujnik okna (opcjonalnie)",
   f_win_open:"Stan okna 'otwarte'",f_win_tilt:"Stan okna 'uchylone'",f_win_tilt_none:"Wyłączone",
+  f_win_state_now:"Kontaktron zgłasza teraz:",f_win_state_mismatch:"binary_sensor nigdy nie przyjmuje tego stanu – kontaktron byłby zawsze uznawany za zamknięty. Wybierz „on” lub „off”.",
   f_pos_win_open:"Pozycja przy otwartym oknie",f_pos_win_tilt:"Pozycja przy uchylonym oknie",
   f_pos_win_tilt_2state_hint:"Dla kontaktów 2-stanowych ta pozycja jest używana, gdy roleta jest zamknięta.",
   f_lock:"Blokada bezpieczeństwa",f_min_pos:"Minimalna pozycja przy otwartych drzwiach",
@@ -1605,6 +1619,7 @@ pt:{
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
   f_cover:"Estore / Cover",f_window_sensor:"Sensor de janela (opcional)",
   f_win_open:"Estado janela 'aberta'",f_win_tilt:"Estado janela 'basculante'",f_win_tilt_none:"Desativado",
+  f_win_state_now:"O contacto indica agora:",f_win_state_mismatch:"Um binary_sensor nunca pode ter este estado – o contacto contaria sempre como fechado. Escolhe «on» ou «off».",
   f_pos_win_open:"Posição janela aberta",f_pos_win_tilt:"Posição janela basculante",
   f_pos_win_tilt_2state_hint:"Para contactos de 2 estados, esta posição é usada quando a persiana está fechada.",
   f_lock:"Proteção anti-bloqueio",f_min_pos:"Posição mín. porta aberta",
@@ -1745,6 +1760,7 @@ nb:{
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
   f_cover:"Persienne / Cover",f_window_sensor:"Vindussensor (valgfritt)",
   f_win_open:"Vindustilstand 'åpent'",f_win_tilt:"Vindustilstand 'vippet'",f_win_tilt_none:"Deaktivert",
+  f_win_state_now:"Kontakten melder akkurat nå:",f_win_state_mismatch:"En binary_sensor kan aldri ha denne tilstanden – kontakten regnes da alltid som lukket. Velg \"on\" eller \"off\".",
   f_pos_win_open:"Posisjon ved åpent vindu",f_pos_win_tilt:"Posisjon ved vippet vindu",
   f_pos_win_tilt_2state_hint:"For 2-tilstandskontakter brukes denne posisjonen når persiennen er lukket.",
   f_lock:"Utestengingsbeskyttelse",f_min_pos:"Minimumsposisjon ved åpen dør",
@@ -2902,6 +2918,34 @@ class ShutterPilotPanel extends PanelBase {
       </div>
       <div class="hint">${T("f_copy_hint")}</div></div>`;
   }
+  _winEntityId(s){
+    const v=s.window_entity_id;
+    return String((Array.isArray(v)?v[0]:v)||"").trim();
+  }
+  /* Der gemeldete Zustand gehoert immer in die Liste. Ein binary_sensor kennt
+     nur on und off; wer daneben "open" waehlt, hat einen Kontakt konfiguriert,
+     der nie als offen gilt - und genau das war nirgends zu sehen. */
+  _winOpenOpts(s){
+    const cur=String(this.hass?.states?.[this._winEntityId(s)]?.state||"").toLowerCase().trim();
+    const opts=[...WIN_OPEN_OPTS];
+    if(cur&&!["unknown","unavailable"].includes(cur)&&!opts.includes(cur))opts.push(cur);
+    return opts;
+  }
+  _renderWinStateHint(s){
+    const T=k=>this.t(k);
+    const id=this._winEntityId(s);
+    if(!id)return "";
+    const st=this.hass?.states?.[id];
+    if(!st)return "";
+    const cur=String(st.state||"");
+    const line=html`<div class="hint">${T("f_win_state_now")} <code>${cur}</code></div>`;
+    // Ein binary_sensor kann nur on oder off melden. Alles andere trifft nie
+    // zu, der Kontakt gilt dauerhaft als geschlossen und keine einzige
+    // Reaktion laeuft - ohne dass irgendwo etwas davon steht.
+    if(!id.startsWith("binary_sensor."))return line;
+    if(["on","off"].includes(winCanon(s.window_open_state||"on")))return line;
+    return html`${line}<div class="hint warn">⚠️ ${T("f_win_state_mismatch")}</div>`;
+  }
   /* Identität und Zuordnung bleiben stehen; alles andere kommt von der Vorlage.
      Eine Ausschlussliste statt einer Erlaubnisliste, damit ein künftiges Feld
      nicht stillschweigend vom Kopieren ausgenommen bleibt. */
@@ -2990,7 +3034,8 @@ class ShutterPilotPanel extends PanelBase {
       ${s.window_entity_id||s.window_tilted_entity_id?html`
         ${ep("window_tilted_entity_id",T("f_window_tilt_sensor"),["binary_sensor","sensor"],HINTS.window)}
         <div class="hint">${T("f_window_tilt_sensor_hint")}</div>`:""}
-      ${sel("window_open_state",T("f_win_open"),WIN_OPEN_OPTS)}
+      ${sel("window_open_state",T("f_win_open"),this._winOpenOpts(s))}
+      ${this._renderWinStateHint(s)}
       ${sel("window_tilted_state",T("f_win_tilt"),
         [{v:"none",l:T("f_win_tilt_none")},...WIN_TILT_OPTS.filter(x=>x!=="none").map(x=>({v:x,l:x}))])}
       ${pct("position_when_window_open",T("f_pos_win_open"))}

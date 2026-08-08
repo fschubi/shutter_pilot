@@ -105,6 +105,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 - **Cover-Entity** – deine `cover.*` Entity
 - **Fenstersensor** – optionaler `binary_sensor.*` für Fenster-Offen/Kipp-Erkennung
 - **Zusätzlicher Sensor für „gekippt"** – nur nötig, wenn dein Fenster zwei getrennte Entitäten meldet, eine für offen und eine für gekippt. Bei einem Kontakt mit drei Zuständen bleibt das Feld leer
+- **Fenster-Status „offen"** – welcher Zustand der Entität „Fenster ist offen" bedeutet. Ein `binary_sensor` kennt nur `on` und `off`; welcher davon offen heißt, hängt vom Kontakt ab, deshalb steht der gerade gemeldete Zustand unter dem Feld. Die gängigen Schreibweisen (`on`/`open`/`offen`/`true`) gelten als gleichbedeutend, ebenso `off`/`closed`/`geschlossen`. Ein `sensor` mit drei Zuständen wird direkt gelesen
 - **Bereich Hoch / Bereich Runter** – welcher Bereich diesen Rollladen für Hoch-/Runter-Fahrten steuert
 - **Positions-Slider** – Offen-, Geschlossen- und Sonnenschutz-Positionen (0-100%)
 - **Aussperrschutz** – Mindest-Position bei offener Tür (verhindert Aussperren)
