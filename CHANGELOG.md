@@ -4,6 +4,11 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.9.1]
+
+### Geändert
+- **Die Abschnitte in den Formularen lassen sich auf- und zuklappen.** Bereich, Rollladen und Einstellungen waren eine einzige lange Bahn – im Bereichsformular über 20 Felder am Stück. Jede Überschrift ist jetzt ein Schalter, und **zugeklappt bleibt sie mit einer kurzen Erklärung stehen**: „Sonnenschutz – Sonnenhöhe, Richtung, Bedingungen", „Kalender & manuelle Bedienung – Feiertage, Zufallsversatz, manuelle Übersteuerung". So ist der Aufbau eines Formulars auf einen Blick zu lesen, statt ihn zu erscrollen. Fünf Überschriften hatten noch gar keine Erklärung – die haben jetzt eine. Was du auf- oder zuklappst, merkt sich der Browser; beim ersten Mal steht der erste Abschnitt offen. Ein zugeklappter Abschnitt ändert nichts an den Werten: gespeichert wird immer der ganze Datensatz. (Forum, Linos)
+
 ## [2.9.0]
 
 Ausführliches Feedback von **Linos** im Forum – Aufbau, Beschriftungen und zwei

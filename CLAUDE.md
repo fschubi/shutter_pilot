@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.9.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.9.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -735,11 +735,29 @@ gleichzeitig anzuklicken. Daraus muss aber wieder **ein** Min/Max-Bereich
 werden, und N+O ergaebe stillschweigend 0°–90° samt NO. Das ist genau die
 Verwechslung von Spanne und Punktepaar, die MartyBrs Fehler war.
 
-**Ebenfalls offen: aufklappbare Formularabschnitte.** `_section()` gibt nur
-eine Ueberschrift aus, die Felder folgen als Geschwister – zum Einklappen
-muessten alle **20** Aufrufstellen in drei Formularen ihre Felder in einen
-Container bekommen. Mechanisch machbar, aber ohne Browser nicht verantwortbar
-zu pruefen.
+**Nachgereicht in 2.9.1: die aufklappbaren Abschnitte.** Zurueckgestellt war
+sie, weil `_section()` nur die Ueberschrift ausgab und die Felder als
+Geschwister folgten – 18 Aufrufstellen in drei Formularen. Gegangen ist der
+Weg dann doch, weil sich das ganze Panel in Node auswerten laesst und der
+Umbau damit pruefbar wird.
+
+Zwei Dinge, die dabei zaehlen:
+
+* **Der Harnisch braucht zwei Ebenen.** Der LitElement-Resolver laeuft die
+  Prototypenkette hoch und nimmt die *hoechste* Klasse, die `html` und `css`
+  noch kennt. Gibt `customElements.get()` genau eine Stub-Klasse zurueck,
+  landet er bei `Function.prototype`. Es braucht `class Host extends Stub`.
+  Und `get("shutter-pilot-panel")` muss **leer** bleiben, sonst ueberspringt
+  das File sein eigenes `define()` und die Klasse ist nicht einzusammeln.
+* **Die Grenze eines Abschnitts ist nicht die naechste Ueberschrift.** Der
+  Export sitzt in `${this._isAdmin()?html\`…\`:""}`; ein Rumpf, der bis zur
+  naechsten Ueberschrift laeuft, verschluckt den oeffnenden Ausdruck und das
+  File laesst sich nicht mehr parsen. Beim automatisierten Umbau gehoeren die
+  umschliessenden Ausdruecke in die Abbruchliste.
+
+Geprueft wurde nicht die Optik, sondern der Bestand: beide Fassungen voll
+aufgeklappt gerendert und die `<label>`- und `hint`-Texte verglichen – 71
+Bedienelemente, keines verloren.
 
 **Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
 `sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht

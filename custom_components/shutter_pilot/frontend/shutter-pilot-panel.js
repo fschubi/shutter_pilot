@@ -168,7 +168,7 @@ de:{
   month_10:"Oktober",
   month_11:"November",
   month_12:"Dezember",
-  sec_basics:"Grunddaten",
+  sec_basics:"Grunddaten",sec_basics_sub:"Name, Modus, Abstand zwischen den Fahrten",sec_calendar_sub:"Feiertage, Zufallsversatz, manuelle Übersteuerung",sec_sunprotect_sub:"Sonnenhöhe, Richtung, Bedingungen",sec_shutter_sub:"Entität, Name, Automatik",sec_positions_sub:"offen, geschlossen, Sonnenschutz, Frost",
   sec_schedule:"Zeitplan",
   sec_schedule_time:"nach Uhrzeit",
   sec_schedule_brightness:"nach Helligkeit",
@@ -367,7 +367,7 @@ en:{
   month_10:"October",
   month_11:"November",
   month_12:"December",
-  sec_basics:"Basics",
+  sec_basics:"Basics",sec_basics_sub:"name, mode, gap between drives",sec_calendar_sub:"holidays, random jitter, manual override",sec_sunprotect_sub:"sun height, direction, conditions",sec_shutter_sub:"entity, name, automation",sec_positions_sub:"open, closed, sun protection, frost",
   sec_schedule:"Schedule",
   sec_schedule_time:"by time",
   sec_schedule_brightness:"by brightness",
@@ -530,7 +530,7 @@ fr:{
   month_10:"Octobre",
   month_11:"Novembre",
   month_12:"Décembre",
-  sec_basics:"Général",
+  sec_basics:"Général",sec_basics_sub:"nom, mode, intervalle entre les mouvements",sec_calendar_sub:"jours fériés, décalage aléatoire, priorité manuelle",sec_sunprotect_sub:"hauteur du soleil, direction, conditions",sec_shutter_sub:"entité, nom, automatisation",sec_positions_sub:"ouvert, fermé, protection solaire, gel",
   sec_schedule:"Horaire",
   sec_schedule_time:"par heure",
   sec_schedule_brightness:"par luminosité",
@@ -671,7 +671,7 @@ es:{
   month_10:"Octubre",
   month_11:"Noviembre",
   month_12:"Diciembre",
-  sec_basics:"Datos básicos",
+  sec_basics:"Datos básicos",sec_basics_sub:"nombre, modo, intervalo entre movimientos",sec_calendar_sub:"festivos, desfase aleatorio, anulación manual",sec_sunprotect_sub:"altura solar, dirección, condiciones",sec_shutter_sub:"entidad, nombre, automatización",sec_positions_sub:"abierto, cerrado, protección solar, helada",
   sec_schedule:"Horario",
   sec_schedule_time:"por hora",
   sec_schedule_brightness:"por luminosidad",
@@ -812,7 +812,7 @@ it:{
   month_10:"Ottobre",
   month_11:"Novembre",
   month_12:"Dicembre",
-  sec_basics:"Dati di base",
+  sec_basics:"Dati di base",sec_basics_sub:"nome, modalità, intervallo tra le corse",sec_calendar_sub:"festivi, scarto casuale, comando manuale",sec_sunprotect_sub:"altezza del sole, direzione, condizioni",sec_shutter_sub:"entità, nome, automazione",sec_positions_sub:"aperto, chiuso, protezione solare, gelo",
   sec_schedule:"Orario",
   sec_schedule_time:"per orario",
   sec_schedule_brightness:"per luminosità",
@@ -953,7 +953,7 @@ nl:{
   month_10:"Oktober",
   month_11:"November",
   month_12:"December",
-  sec_basics:"Basisgegevens",
+  sec_basics:"Basisgegevens",sec_basics_sub:"naam, modus, interval tussen bewegingen",sec_calendar_sub:"feestdagen, willekeurige spreiding, handmatige voorrang",sec_sunprotect_sub:"zonnehoogte, richting, voorwaarden",sec_shutter_sub:"entiteit, naam, automatisering",sec_positions_sub:"open, dicht, zonwering, vorst",
   sec_schedule:"Schema",
   sec_schedule_time:"op tijd",
   sec_schedule_brightness:"op helderheid",
@@ -1095,7 +1095,7 @@ da:{
   month_10:"Oktober",
   month_11:"November",
   month_12:"December",
-  sec_basics:"Grunddata",
+  sec_basics:"Grunddata",sec_basics_sub:"navn, tilstand, interval mellem kørsler",sec_calendar_sub:"helligdage, tilfældig forskydning, manuel tilsidesættelse",sec_sunprotect_sub:"solhøjde, retning, betingelser",sec_shutter_sub:"entitet, navn, automatik",sec_positions_sub:"åben, lukket, solafskærmning, frost",
   sec_schedule:"Tidsplan",
   sec_schedule_time:"efter tid",
   sec_schedule_brightness:"efter lysstyrke",
@@ -1237,7 +1237,7 @@ sv:{
   month_10:"Oktober",
   month_11:"November",
   month_12:"December",
-  sec_basics:"Grunduppgifter",
+  sec_basics:"Grunduppgifter",sec_basics_sub:"namn, läge, intervall mellan körningar",sec_calendar_sub:"helgdagar, slumpmässig spridning, manuell åsidosättning",sec_sunprotect_sub:"solhöjd, riktning, villkor",sec_shutter_sub:"entitet, namn, automatik",sec_positions_sub:"öppet, stängt, solskydd, frost",
   sec_schedule:"Schema",
   sec_schedule_time:"efter tid",
   sec_schedule_brightness:"efter ljusstyrka",
@@ -1379,7 +1379,7 @@ pl:{
   month_10:"Październik",
   month_11:"Listopad",
   month_12:"Grudzień",
-  sec_basics:"Dane podstawowe",
+  sec_basics:"Dane podstawowe",sec_basics_sub:"nazwa, tryb, odstęp między przejazdami",sec_calendar_sub:"święta, losowe przesunięcie, sterowanie ręczne",sec_sunprotect_sub:"wysokość słońca, kierunek, warunki",sec_shutter_sub:"encja, nazwa, automatyka",sec_positions_sub:"otwarte, zamknięte, ochrona przed słońcem, mróz",
   sec_schedule:"Harmonogram",
   sec_schedule_time:"według godziny",
   sec_schedule_brightness:"według jasności",
@@ -1521,7 +1521,7 @@ pt:{
   month_10:"Outubro",
   month_11:"Novembro",
   month_12:"Dezembro",
-  sec_basics:"Dados básicos",
+  sec_basics:"Dados básicos",sec_basics_sub:"nome, modo, intervalo entre movimentos",sec_calendar_sub:"feriados, desfasamento aleatório, comando manual",sec_sunprotect_sub:"altura do sol, direção, condições",sec_shutter_sub:"entidade, nome, automatismo",sec_positions_sub:"aberto, fechado, proteção solar, gelo",
   sec_schedule:"Horário",
   sec_schedule_time:"por hora",
   sec_schedule_brightness:"por luminosidade",
@@ -1663,7 +1663,7 @@ nb:{
   month_10:"Oktober",
   month_11:"November",
   month_12:"Desember",
-  sec_basics:"Grunndata",
+  sec_basics:"Grunndata",sec_basics_sub:"navn, modus, intervall mellom kjøringer",sec_calendar_sub:"helligdager, tilfeldig forskyvning, manuell overstyring",sec_sunprotect_sub:"solhøyde, retning, vilkår",sec_shutter_sub:"entitet, navn, automatikk",sec_positions_sub:"åpen, lukket, solskjerming, frost",
   sec_schedule:"Tidsplan",
   sec_schedule_time:"etter tid",
   sec_schedule_brightness:"etter lysstyrke",
@@ -1829,11 +1829,17 @@ class ShutterPilotPanel extends PanelBase {
     /* Abschnitte im Formular sichtbar trennen: vorher lief alles als eine
        lange Feldliste durch und man sah nicht, wo ein neues Thema anfängt. */
     .sec{margin:22px 0 12px;padding-top:14px;border-top:2px solid var(--divider);
-      display:flex;align-items:center;gap:8px}
+      display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
     .sec:first-of-type{margin-top:6px;padding-top:0;border-top:none}
+    .sec:hover h4{color:var(--sp)}
+    .sec:focus-visible{outline:2px solid var(--sp);outline-offset:3px;border-radius:6px}
     .sec ha-icon{--mdc-icon-size:19px;color:var(--sp)}
     .sec h4{margin:0;font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--txt)}
     .sec .sec-sub{font-size:12px;color:var(--txt2);font-weight:400}
+    /* Pfeil ganz rechts, damit die Kopfzeile als aufklappbar zu lesen ist. */
+    .sec .sec-chev{margin-left:auto;color:var(--txt2);transition:transform .15s ease}
+    .sec.open .sec-chev{transform:rotate(180deg)}
+    .sec-body{margin-bottom:4px}
     .field.open{background:var(--card2, rgba(127,127,127,.07));padding:10px;
       border-radius:8px;border:1px solid var(--sp)}
     .ent-group{padding:6px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
@@ -2326,10 +2332,44 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_sun_cond_add_hint")}</div>`}
         <div class="hint">${T("f_sun_cond_states_hint")}</div></div>`;
   }
-  _section(icon,titleKey,subKey=null){
-    return html`<div class="sec"><ha-icon icon="${icon}"></ha-icon>
-      <h4>${this.t(titleKey)}</h4>
-      ${subKey?html`<span class="sec-sub">${this.t(subKey)}</span>`:""}</div>`;
+  /* Aufklappbare Abschnitte. Zugeklappt bleibt die Kopfzeile mit ihrer kurzen
+     Erklaerung stehen – so ist der Aufbau eines langen Formulars auf einen
+     Blick zu lesen, statt ihn zu erscrollen. Der Zustand haengt am Abschnitt,
+     nicht am bearbeiteten Objekt, und ueberlebt im localStorage: wer seine
+     Bedingungen staendig braucht, klappt sie einmal auf und nie wieder zu.
+     Ein zugeklappter Abschnitt wird nicht gerendert – gespeichert wird aber
+     das ganze Objekt, es geht also nichts verloren. */
+  static get SEC_DEFAULT_OPEN(){return ["sec_weather","sec_basics","sec_shutter"];}
+  static get SEC_STORE(){return "shutter_pilot_sections";}
+  _secState(){
+    if(!this.__secs){
+      let saved=null;
+      try{saved=JSON.parse(localStorage.getItem(this.constructor.SEC_STORE)||"{}");}catch(e){}
+      this.__secs=(saved&&typeof saved==="object")?saved:{};
+    }
+    return this.__secs;
+  }
+  _secIsOpen(key){
+    const st=this._secState();
+    return key in st?!!st[key]:this.constructor.SEC_DEFAULT_OPEN.includes(key);
+  }
+  _secToggle(key){
+    const st=this._secState();
+    st[key]=!this._secIsOpen(key);
+    try{localStorage.setItem(this.constructor.SEC_STORE,JSON.stringify(st));}catch(e){}
+    this.requestUpdate();
+  }
+  _sec(icon,titleKey,subKey,body){
+    const open=this._secIsOpen(titleKey);
+    return html`<div class="sec ${open?"open":""}" role="button" tabindex="0"
+        aria-expanded=${open?"true":"false"}
+        @click=${()=>this._secToggle(titleKey)}
+        @keydown=${e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();this._secToggle(titleKey);}}}>
+        <ha-icon icon="${icon}"></ha-icon>
+        <h4>${this.t(titleKey)}</h4>
+        ${subKey?html`<span class="sec-sub">${this.t(subKey)}</span>`:""}
+        <ha-icon class="sec-chev" icon="mdi:chevron-down"></ha-icon></div>
+      ${open?html`<div class="sec-body">${body}</div>`:""}`;
   }
 
   _entityField(obj,key,label,domains,hint=null){
@@ -2463,7 +2503,7 @@ class ShutterPilotPanel extends PanelBase {
     const w=d.weather||{};
     const fmt=v=>v==null?"–":v;
     return html`<div class="form">
-      ${this._section("mdi:weather-partly-cloudy","sec_weather","sec_weather_sub")}
+      ${this._sec("mdi:weather-partly-cloudy","sec_weather","sec_weather_sub",html`
       <div class="hint">${T("f_weather_hint")}</div>
       ${this._entityField(s,"weather_entity",T("f_weather_entity"),["weather"],null)}
       ${s.weather_entity?html`
@@ -2475,14 +2515,14 @@ class ShutterPilotPanel extends PanelBase {
         </div>
         <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
 
-      ${this._section("mdi:transit-connection-horizontal","sec_drive","sec_drive_sub")}
+      `)}${this._sec("mdi:transit-connection-horizontal","sec_drive","sec_drive_sub",html`
       <div class="hint">${T("f_min_gap_hint")}</div>
       <div class="field"><label>${T("f_min_gap")}</label><div class="slider-row">
         <input type="range" min="0" max="10" step="0.5" .value=${s.min_drive_gap??0}
           @input=${e=>{s.min_drive_gap=Number(e.target.value);this.requestUpdate();}}>
         <span class="slider-val">${(s.min_drive_gap??0)==0?T("f_min_gap_off"):(s.min_drive_gap+" s")}</span></div></div>
 
-      ${this._section("mdi:check-circle-outline","sec_verify","sec_verify_sub")}
+      `)}${this._sec("mdi:check-circle-outline","sec_verify","sec_verify_sub",html`
       <div class="hint">${T("f_verify_hint")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!s.verify_enabled}
         @change=${e=>{s.verify_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_verify_enabled")}</label></div>
@@ -2499,12 +2539,12 @@ class ShutterPilotPanel extends PanelBase {
           <input type="range" min="0" max="5" .value=${s.verify_retries??1}
             @input=${e=>{s.verify_retries=Number(e.target.value);this.requestUpdate();}}>
           <span class="slider-val">${s.verify_retries??1}</span></div></div>
-        <div class="hint">${T("f_verify_event_hint")}</div>`:""}
+        <div class="hint">${T("f_verify_event_hint")}</div>`:""}`)}
 
       ${/* Der WS-Befehl ist admin-pflichtig wie jeder andere hier – ein Knopf,
            der nur eine Fehlermeldung liefern kann, gehört nicht ins Formular. */""}
       ${this._isAdmin()?html`
-      ${this._section("mdi:clipboard-text-outline","sec_export","sec_export_sub")}
+      ${this._sec("mdi:clipboard-text-outline","sec_export","sec_export_sub",html`
       <div class="hint">${T("f_export_hint")}</div>
       <div class="form-actions" style="justify-content:flex-start">
         <button class="btn" @click=${()=>this._buildExport()}>
@@ -2517,7 +2557,7 @@ class ShutterPilotPanel extends PanelBase {
       </div>
       ${this._export?html`
         <textarea class="export-box" readonly .value=${this._export}
-          @focus=${e=>e.target.select()}></textarea>`:""}`:""}
+          @focus=${e=>e.target.select()}></textarea>`:""}`)}`:""}
 
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveSettings()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
@@ -2781,7 +2821,7 @@ class ShutterPilotPanel extends PanelBase {
     const ep=(k,lbl,domains,hint=null)=>this._entityField(a,k,lbl,domains,hint);
     return html`<div class="form"><h3>${a._isNew?T("add_area"):T("edit_area")}</h3>
 
-      ${this._section("mdi:tag-outline","sec_basics")}
+      ${this._sec("mdi:tag-outline","sec_basics","sec_basics_sub",html`
       ${f("name",T("f_name"))}
       ${a._isNew?"":html`<div class="field"><label>${T("col_id")}</label><input disabled .value=${a.id}></div>`}
       <div class="field"><label>${T("f_mode")}</label>
@@ -2791,7 +2831,7 @@ class ShutterPilotPanel extends PanelBase {
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
 
-      ${this._section(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m)}
+      `)}${this._sec(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m,html`
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
         m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}
           <div class="hint">${T("f_sun_off_hint")}</div>
@@ -2808,7 +2848,7 @@ class ShutterPilotPanel extends PanelBase {
           ${numOpt("b_down_after_sunset",T("f_b_down_sunset"))}
           ${numOpt("b_up_before_sunrise",T("f_b_up_sunrise"))}`}
 
-      ${this._section("mdi:calendar-check","sec_calendar")}
+      `)}${this._sec("mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
       <div class="hint">${T("f_workday_hint")}</div>
       ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
@@ -2818,7 +2858,7 @@ class ShutterPilotPanel extends PanelBase {
           ${OVERRIDE_OPTS.map(o=>html`<option value="${o}" ?selected=${(a.manual_override||"never")===o}>${T("f_override_"+o)}</option>`)}
         </select><div class="hint">${T("f_manual_override_hint")}</div></div>
 
-      ${this._section("mdi:sun-wireless-outline","sec_sunprotect")}
+      `)}${this._sec("mdi:sun-wireless-outline","sec_sunprotect","sec_sunprotect_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
       ${a.sun_protect_enabled?html`
         ${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
@@ -2847,18 +2887,18 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
         ${this._renderConditionSlots(a,ep,f)}`:""}
 
-      ${this._section("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub")}
+      `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       <div class="hint">${T("f_close_cond_hint")}</div>
       ${ep("sun_cond_close_entity",T("f_close_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
       ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
 
-      ${this._section("mdi:snowflake-alert","sec_frost","sec_frost_sub")}
+      `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
       ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,f,true):""}
 
-      ${this._section("mdi:air-filter","sec_vent","sec_vent_sub")}
+      `)}${this._sec("mdi:air-filter","sec_vent","sec_vent_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.vent_enabled}
         @change=${e=>{a.vent_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_vent_enabled")}</label>
         <div class="hint">${T("f_vent_hint")}</div></div>
@@ -2869,9 +2909,9 @@ class ShutterPilotPanel extends PanelBase {
           ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",["binary_sensor","sensor","weather"],HINTS.condition)}
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
 
-      ${this._section("mdi:lightbulb-outline","sec_light","sec_light_sub")}
+      `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
-      ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}
+      ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}`)}
 
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveArea()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
@@ -3009,7 +3049,7 @@ class ShutterPilotPanel extends PanelBase {
     const areaSel=(k,lbl)=>sel(k,lbl,areas.map(a=>({v:a.id,l:a.name||a.id})));
     return html`<div class="form"><h3>${s._isNew?T("add_shutter"):T("edit_shutter")}</h3>
 
-      ${this._section("mdi:window-shutter","sec_shutter")}
+      ${this._sec("mdi:window-shutter","sec_shutter","sec_shutter_sub",html`
       ${ep("cover_entity_id",T("f_cover"),["cover"],null)}
       ${f("name",T("f_name"))}
       <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
@@ -3017,11 +3057,11 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_shutter_auto_hint")}</div></div>
       ${this._renderCopyFrom(d,s)}
 
-      ${this._section("mdi:map-marker","sec_areas","sec_areas_sub")}
+      `)}${this._sec("mdi:map-marker","sec_areas","sec_areas_sub",html`
       ${areaSel("area_up_id",T("f_area_up"))}
       ${areaSel("area_down_id",T("f_area_down"))}
 
-      ${this._section("mdi:arrow-up-down","sec_positions")}
+      `)}${this._sec("mdi:arrow-up-down","sec_positions","sec_positions_sub",html`
       ${pct("position_open",T("f_pos_open"))}
       ${pct("position_closed",T("f_pos_closed"))}
       ${pct("position_sun_protect",T("f_pos_sun"))}
@@ -3034,7 +3074,7 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_pos_closed_frost_hint")}</div></div>
       ${s.position_closed_frost!==""&&s.position_closed_frost!=null?pct("position_closed_frost",T("f_pos_closed_frost_val")):""}
 
-      ${this._section("mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub")}
+      `)}${this._sec("mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
         @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
         <div class="hint">${T("f_geo_override_hint")}</div></div>
@@ -3059,7 +3099,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="hint">${T("f_shutter_cond_hint")}</div>
       ${this._renderConditionSlots(s,ep,f)}
 
-      ${this._section("mdi:window-open-variant","sec_window","sec_window_sub")}
+      `)}${this._sec("mdi:window-open-variant","sec_window","sec_window_sub",html`
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}
       ${s.window_entity_id||s.window_tilted_entity_id?html`
         ${ep("window_tilted_entity_id",T("f_window_tilt_sensor"),["binary_sensor","sensor"],HINTS.window)}
@@ -3087,10 +3127,10 @@ class ShutterPilotPanel extends PanelBase {
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
 
-      ${this._section("mdi:blinds-horizontal","sec_slats","sec_slats_sub")}
+      `)}${this._sec("mdi:blinds-horizontal","sec_slats","sec_slats_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>
         <div class="hint">${this._supportsTilt(s.cover_entity_id)?T("f_tilt_hint"):T("f_tilt_unsupported")}</div></div>
-      ${s.tilt_enabled?html`${pct("tilt_open",T("f_tilt_open"))}${pct("tilt_closed",T("f_tilt_closed"))}${pct("tilt_sun_protect",T("f_tilt_sun"))}`:""}
+      ${s.tilt_enabled?html`${pct("tilt_open",T("f_tilt_open"))}${pct("tilt_closed",T("f_tilt_closed"))}${pct("tilt_sun_protect",T("f_tilt_sun"))}`:""}`)}
 
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveShutter()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
