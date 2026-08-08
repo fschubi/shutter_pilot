@@ -2908,11 +2908,14 @@ class ShutterPilotPanel extends PanelBase {
       <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
         @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
         <div class="hint">${T("f_geo_override_hint")}</div></div>
-      <div class="hint">${T("f_shutter_cond_hint")}</div>
-      ${this._renderConditionSlots(s,ep,f)}
+      ${/* Direkt unter den Haken, nicht hinter den Bedingungsblock: sonst hakt
+           man an, sieht darunter die Bedingungen erscheinen – und findet die
+           Felder nie, die der Haken tatsächlich freischaltet. Genau so ist im
+           Forum eine Beschattung eingerichtet worden, die nie lief. */""}
       ${s.sun_geometry_override?html`
         ${pctRange("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}
         ${pctRange("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}
+        <div class="hint">${T("f_geo_override_values_hint")}</div>
         <div class="field"><label><input type="checkbox" .checked=${!!s.azimuth_enabled}
           @change=${e=>{s.azimuth_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_azimuth")}</label></div>
         ${s.azimuth_enabled?html`
@@ -2923,6 +2926,8 @@ class ShutterPilotPanel extends PanelBase {
             </div></div>
           ${pctRange("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}
           ${pctRange("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
+      <div class="hint">${T("f_shutter_cond_hint")}</div>
+      ${this._renderConditionSlots(s,ep,f)}
 
       ${this._section("mdi:window-open-variant","sec_window","sec_window_sub")}
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}

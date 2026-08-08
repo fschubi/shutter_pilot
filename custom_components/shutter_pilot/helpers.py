@@ -507,9 +507,17 @@ def resolve_sun_geometry(
     ):
         if shutter.get(key) is not None:
             merged[key] = shutter[key]
-    # A per-shutter override replaces the legacy single threshold as well,
+    # A per-shutter elevation replaces the legacy single threshold as well,
     # otherwise get_elevation_bounds() would fall back to the area value.
-    merged.pop(CONF_AREA_ELEVATION_THRESHOLD, None)
+    # Only *then*, though: ticking the override without filling in the two
+    # sliders used to drop the area's threshold and fall back to the built-in
+    # default, so an area set to 25° silently shaded between 1° and 4° – which
+    # is never. The tick alone must not change where the sun protection sits.
+    if (
+        shutter.get(CONF_AREA_ELEVATION_MIN) is not None
+        or shutter.get(CONF_AREA_ELEVATION_MAX) is not None
+    ):
+        merged.pop(CONF_AREA_ELEVATION_THRESHOLD, None)
     return merged
 
 
