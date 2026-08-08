@@ -1757,7 +1757,7 @@ nb:{
 };
 
 class ShutterPilotPanel extends PanelBase {
-  static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false}};}
+  static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false},_export:{attribute:false},_exportCopied:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
@@ -2464,9 +2464,65 @@ class ShutterPilotPanel extends PanelBase {
           <span class="slider-val">${s.verify_retries??1}</span></div></div>
         <div class="hint">${T("f_verify_event_hint")}</div>`:""}
 
+      ${/* Der WS-Befehl ist admin-pflichtig wie jeder andere hier – ein Knopf,
+           der nur eine Fehlermeldung liefern kann, gehört nicht ins Formular. */""}
+      ${this._isAdmin()?html`
+      ${this._section("mdi:clipboard-text-outline","sec_export","sec_export_sub")}
+      <div class="hint">${T("f_export_hint")}</div>
+      <div class="form-actions" style="justify-content:flex-start">
+        <button class="btn" @click=${()=>this._buildExport()}>
+          <ha-icon icon="mdi:file-document-outline"></ha-icon>${T("btn_export")}</button>
+        ${this._export?html`
+          <button class="btn" @click=${()=>this._copyExport()}>
+            <ha-icon icon="mdi:content-copy"></ha-icon>${this._exportCopied?T("btn_export_copied"):T("btn_export_copy")}</button>
+          <button class="btn" @click=${()=>this._downloadExport()}>
+            <ha-icon icon="mdi:download"></ha-icon>${T("btn_export_download")}</button>`:""}
+      </div>
+      ${this._export?html`
+        <textarea class="export-box" readonly .value=${this._export}
+          @focus=${e=>e.target.select()}></textarea>`:""}`:""}
+
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveSettings()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
       </div></div>`;
+  }
+
+  /* ─── Einstellungs-Export ─── */
+  async _buildExport(){
+    try{
+      const res=await this.hass.callWS({type:"shutter_pilot/export_config"});
+      this._export=res.markdown;
+      this._exportCopied=false;
+      this.requestUpdate();
+    }catch(e){console.warn(e);alert("Error: "+e.message);}
+  }
+  async _copyExport(){
+    if(!this._export)return;
+    /* navigator.clipboard gibt es nur unter https bzw. auf localhost – im
+       Heimnetz läuft Home Assistant oft schlicht auf http. Ohne den Rückfall
+       auf ein Hilfs-Textfeld hätte der Knopf ausgerechnet dort nichts getan,
+       wo die meisten ihn drücken. */
+    try{
+      await navigator.clipboard.writeText(this._export);
+    }catch(e){
+      const ta=document.createElement("textarea");
+      ta.value=this._export;
+      ta.style.position="fixed";ta.style.opacity="0";
+      this.renderRoot.appendChild(ta);ta.select();
+      try{document.execCommand("copy");}catch(err){console.warn(err);}
+      ta.remove();
+    }
+    this._exportCopied=true;
+    this.requestUpdate();
+    setTimeout(()=>{this._exportCopied=false;this.requestUpdate();},2500);
+  }
+  _downloadExport(){
+    if(!this._export)return;
+    const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
+    const url=URL.createObjectURL(new Blob([this._export],{type:"text/markdown"}));
+    const a=document.createElement("a");
+    a.href=url;a.download=`shutter-pilot-${stamp}.md`;a.click();
+    URL.revokeObjectURL(url);
   }
   async _saveSettings(){
     try{

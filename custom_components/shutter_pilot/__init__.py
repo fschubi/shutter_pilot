@@ -350,7 +350,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
         _ws_set_shutter_automation,
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter,
-        _ws_save_settings,
+        _ws_save_settings, _ws_export_config,
     ):
         websocket_api.async_register_command(hass, cmd)
     _LOGGER.debug("Shutter Pilot WebSocket commands registered")
@@ -755,3 +755,24 @@ async def _ws_delete_shutter(hass: HomeAssistant, connection: websocket_api.Acti
     _update_entry_options(hass, entry, opts)
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
+
+
+# -- export_config ------------------------------------------------------------
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "shutter_pilot/export_config"})
+@websocket_api.async_response
+async def _ws_export_config(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Return every setting plus the shading decision of this moment.
+
+    Admin only, like every other write command here – the report names each
+    entity of the installation, which is more than a guest account should get
+    handed in one piece.
+    """
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    from .export import async_build_export
+
+    connection.send_result(msg["id"], await async_build_export(hass, entry))
