@@ -238,14 +238,17 @@ An empty field means no condition. An unavailable or broken sensor never blocks 
 
 ### Weather and forecast
 
-Set your `weather.*` entity in the **Settings** tab. Shutter Pilot then fetches the daily forecast itself and provides two sensors:
+Set your `weather.*` entity in the **Settings** tab. Shutter Pilot then fetches the daily forecast itself and provides three sensors:
 
 | Sensor | Content |
 |--------|---------|
-| Forecast high temperature | expected daily high |
+| Forecast high temperature | expected daily high, as the source reports it right now |
+| Forecast high today (peak) | the **highest** value reported today |
 | Forecast condition | expected condition, e.g. `sunny` |
 
-Pick either as an ordinary condition. A typical setup is **forecast high, shade above 24 °C** — so nothing is shaded on cool days and the sun warms the house.
+Pick any of them as an ordinary condition. A typical setup is **forecast high, shade above 24 °C** — so nothing is shaded on cool days and the sun warms the house.
+
+**Which of the two temperatures?** A daily forecast is revised as the day runs, and most sources lower it once the peak has passed: at 21:00 "high for today" may read 25 °C on a day that reached 28 °C at three. For decisions taken during the day — shading — use the live value. For decisions taken in the evening — partial close, night ventilation — use the **peak**; it only rises until midnight.
 
 An unreachable weather backend never blocks shading; the last known value is kept.
 

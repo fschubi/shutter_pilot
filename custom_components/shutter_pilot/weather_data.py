@@ -41,6 +41,29 @@ def _configured_entity(entry: ConfigEntry) -> str:
     return str(entry.options.get(CONF_WEATHER_ENTITY) or "").strip()
 
 
+def _peak_today(data: dict[str, Any], temp_max: float | None) -> float | None:
+    """Highest forecast high seen since midnight.
+
+    A daily forecast is revised while the day runs, and most sources lower it
+    once the peak has passed: at 21:00 the "high for today" can read 25 °C on a
+    day that reached 28 °C at three in the afternoon. A condition like "close
+    only halfway when it was above 26 °C" is evaluated exactly then – against a
+    number that has quietly walked away from what happened. So the day's
+    highest reading is kept alongside the live one, and it only ever rises
+    until midnight.
+    """
+    today = dt_util.now().date().isoformat()
+    if data.get("_weather_peak_day") != today:
+        data["_weather_peak_day"] = today
+        data["_weather_peak"] = None
+    if temp_max is None:
+        return data.get("_weather_peak")
+    previous = data.get("_weather_peak")
+    peak = temp_max if previous is None else max(float(previous), temp_max)
+    data["_weather_peak"] = peak
+    return peak
+
+
 async def async_fetch_forecast(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Fetch today's forecast and cache it.
 
@@ -96,10 +119,12 @@ async def async_fetch_forecast(hass: HomeAssistant, entry: ConfigEntry) -> None:
         except (TypeError, ValueError):
             return None
 
+    temp_max = _num("temperature")
     data["weather"] = {
         "source": entity_id,
-        "temp_max": _num("temperature"),
+        "temp_max": temp_max,
         "temp_min": _num("templow"),
+        "temp_max_peak": _peak_today(data, temp_max),
         "condition": str(forecast.get("condition") or "") or None,
         "precipitation_probability": _num("precipitation_probability"),
         "updated": dt_util.now().isoformat(),

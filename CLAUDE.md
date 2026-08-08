@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.8.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.9.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -704,6 +704,42 @@ gelte „wenn der Rollladen geschlossen ist" – seit 2.8.1 doppelt falsch.
 vollständig, inklusive `sun_protect_covers` und `sun_cond_state`. Für die Frage
 „warum fährt er nicht" ist sie so gut wie der Export – nur ohne die
 Sensorwerte, die man sich dann selbst dazu holen muss.
+
+### 2026-08-08 – 2.9.0: Linos' Durchgang durch die Oberflaeche
+
+Zehn Punkte, davon zwei echte Fehler, zwei Fragen mit einer Luecke dahinter
+und der Rest Beschriftung und Aufbau.
+
+**Der Anzeigefehler:** `_renderSunProtectInfo` setzte „Warte auf passende
+Sonnenhöhe", sobald `in_range` (= Geometrie erfüllt) galt und der Schutz
+trotzdem nicht aktiv war. Der Text erschien also genau dann, wenn die Höhe
+**passte**. Linos stellte 0°–90° ein und bekam ihn den ganzen Tag. Das Backend
+liefert `elevation_in_range` und `azimuth_in_range` längst mit – jetzt werden
+sie auch benutzt, mit einem eigenen Text für „Geometrie passt, Bedingungen
+fehlen noch".
+
+**Die Luecke hinter seiner Wetter-Frage:** `weather_data.py` nahm
+`forecast[0]["temperature"]` und schrieb ihn alle 30 Minuten neu. Eine
+Tagesvorhersage wird aber fortgeschrieben und faellt, sobald die Spitze vorbei
+ist. Wer abends „war es ueber 26 °C?" fragt, fragt gegen einen Wert, der
+inzwischen 25 sagt. `_peak_today()` haelt daher das Tagesmaximum, an das Datum
+gebunden, plus eigener Sensor `forecast_temp_max_peak`.
+
+**Seine zweite Frage war eine Verstaendnisfrage:** nachts teilweise oeffnen zum
+Luftwechsel ist *Abweichendes Schliessen* (`position_closed_alt` +
+`sun_cond_close_*`), nicht *Automatisches Lueften* – letzteres faehrt
+zwischendurch und wieder zurueck, ersteres bestimmt die Schliessposition.
+
+**Bewusst nicht gemacht: Kompass-Mehrfachauswahl.** Sein Vorschlag war, N+NO+O
+gleichzeitig anzuklicken. Daraus muss aber wieder **ein** Min/Max-Bereich
+werden, und N+O ergaebe stillschweigend 0°–90° samt NO. Das ist genau die
+Verwechslung von Spanne und Punktepaar, die MartyBrs Fehler war.
+
+**Ebenfalls offen: aufklappbare Formularabschnitte.** `_section()` gibt nur
+eine Ueberschrift aus, die Felder folgen als Geschwister – zum Einklappen
+muessten alle **20** Aufrufstellen in drei Formularen ihre Felder in einen
+Container bekommen. Mechanisch machbar, aber ohne Browser nicht verantwortbar
+zu pruefen.
 
 **Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
 `sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht

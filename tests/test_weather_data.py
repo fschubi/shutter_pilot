@@ -145,3 +145,60 @@ class TestNotConfigured:
         received = await _fetch(hass, entry, FORECAST)
         assert received == []
         assert get_weather_data(hass, entry.entry_id) == {}
+
+
+# --- Tagesspitze (Forum, Linos) ---------------------------------------------
+
+
+def _forecast(temp: float) -> dict:
+    return {
+        "weather.home": {
+            "forecast": [
+                {"datetime": "2026-08-02T00:00:00+00:00", "condition": "sunny",
+                 "temperature": temp, "templow": 16.0}
+            ]
+        }
+    }
+
+
+class TestDailyPeak:
+    """Der gemeldete Tageshöchstwert sinkt, sobald die Spitze vorbei ist.
+
+    Eine Bedingung „nur halb schliessen, wenn es über 26 °C hatte" wird abends
+    geprüft – gegen eine Zahl, die sich bis dahin klammheimlich nach unten
+    korrigiert hat.
+    """
+
+    async def test_peak_holds_when_the_forecast_drops(self, hass, weather_entry):
+        await _fetch(hass, weather_entry, _forecast(28.5))
+        assert get_weather_data(hass, weather_entry.entry_id)["temp_max_peak"] == 28.5
+
+        await _fetch(hass, weather_entry, _forecast(25.0))
+        data = get_weather_data(hass, weather_entry.entry_id)
+        assert data["temp_max"] == 25.0, "der Live-Wert folgt der Quelle"
+        assert data["temp_max_peak"] == 28.5, "die Spitze bleibt stehen"
+
+    async def test_peak_still_rises(self, hass, weather_entry):
+        await _fetch(hass, weather_entry, _forecast(24.0))
+        await _fetch(hass, weather_entry, _forecast(30.0))
+        assert get_weather_data(hass, weather_entry.entry_id)["temp_max_peak"] == 30.0
+
+    async def test_peak_resets_on_the_next_day(self, hass, weather_entry):
+        await _fetch(hass, weather_entry, _forecast(30.0))
+        # Der Tageswechsel, ohne die Uhr zu stellen: der gespeicherte Tag ist
+        # das einzige, woran die Spitze hängt.
+        hass.data[DOMAIN][weather_entry.entry_id]["_weather_peak_day"] = "2000-01-01"
+
+        await _fetch(hass, weather_entry, _forecast(18.0))
+        assert get_weather_data(hass, weather_entry.entry_id)["temp_max_peak"] == 18.0
+
+    async def test_missing_value_keeps_the_peak(self, hass, weather_entry):
+        await _fetch(hass, weather_entry, _forecast(29.0))
+        await _fetch(
+            hass,
+            weather_entry,
+            {"weather.home": {"forecast": [{"datetime": "x", "condition": "rainy"}]}},
+        )
+        data = get_weather_data(hass, weather_entry.entry_id)
+        assert data["temp_max"] is None
+        assert data["temp_max_peak"] == 29.0

@@ -4,6 +4,23 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.9.0]
+
+Ausführliches Feedback von **Linos** im Forum – Aufbau, Beschriftungen und zwei
+Fragen, hinter denen echte Lücken steckten.
+
+### Neu
+- **Sensor „Vorhersage Tageshöchstwert".** Eine Tagesvorhersage wird im Lauf des Tages fortgeschrieben, und die meisten Quellen setzen sie herunter, sobald die Spitze vorbei ist: um 21 Uhr steht bei „Höchsttemperatur heute" womöglich 25 °C, obwohl es um 15 Uhr 28 °C hatte. Eine Bedingung wie „nur halb schließen, wenn es über 26 °C hatte" wird genau dann geprüft – gegen eine Zahl, die sich klammheimlich davongestohlen hat. Der neue Sensor hält den höchsten Wert des Tages fest und steigt bis Mitternacht nur noch. Für Entscheidungen am Tag nimmt man weiter den laufenden Wert, für Entscheidungen am Abend diesen.
+- **Bereich duplizieren.** Knopf in der Bereichsliste: öffnet eine Kopie mit allen Einstellungen zum Umbenennen. ID und Automatik-Schalter bleiben leer, damit die Kopie nicht am Schalter des Originals hängt.
+
+### Behoben
+- **„Warte auf passende Sonnenhöhe" stand da, wenn die Sonnenhöhe passte.** Der Text erschien immer dann, wenn die Geometrie stimmte und der Sonnenschutz trotzdem nicht aktiv war – wer 0°–90° einstellte, bekam ihn den ganzen Tag und suchte den Fehler bei der Elevation. Das Dashboard sagt jetzt, woran es wirklich liegt: Sonnenhöhe daneben, falsche Himmelsrichtung, oder Geometrie passt und die Bedingungen fehlen noch.
+
+### Geändert
+- **Die beiden Offsets erklären ihr Vorzeichen.** Die Schieber gehen von −60 bis +60, nur stand nirgends, in welche Richtung. Es gilt: Plus verschiebt nach hinten, Minus nach vorn – −15 fährt eine Viertelstunde vor Sonnenaufgang. An der Rechnung ändert sich nichts, es steht jetzt nur dabei.
+- **Bereiche stehen überall alphabetisch.** Gespeichert wird weiter in Anlagereihenfolge, angezeigt sortiert – vorher stand derselbe Bereich im Dashboard an anderer Stelle als im Bereiche-Tab.
+- **Shutter Pilots eigene Entitäten stehen in der Auswahlliste ganz oben.** Die Vorhersage-Sensoren sind für die Bedingungsfelder gedacht, standen aber irgendwo zwischen tausend fremden Entitäten.
+
 ## [2.8.2]
 
 Nacharbeit zu 2.8.1, aus heinzies Diagnose-Datei gelesen.

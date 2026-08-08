@@ -52,6 +52,7 @@ async def async_setup_entry(
     # around as permanently unknown entities.
     if str(entry.options.get(CONF_WEATHER_ENTITY) or "").strip():
         entities.append(ShutterPilotForecastTempSensor(entry))
+        entities.append(ShutterPilotForecastTempPeakSensor(entry))
         entities.append(ShutterPilotForecastTempMinSensor(entry))
         entities.append(ShutterPilotForecastConditionSensor(entry))
 
@@ -119,6 +120,28 @@ class ShutterPilotForecastTempSensor(_ForecastSensorBase):
     @property
     def native_value(self) -> float | None:
         return self._weather().get("temp_max")
+
+
+class ShutterPilotForecastTempPeakSensor(_ForecastSensorBase):
+    """The day's highest forecast high, for decisions taken in the evening.
+
+    The plain forecast sensor follows the source and drops again once the peak
+    has passed. Anything that asks "was it hot today?" at closing time needs
+    this one instead.
+    """
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_icon = "mdi:thermometer-chevron-up"
+
+    def __init__(self, entry: ConfigEntry) -> None:
+        super().__init__(entry)
+        self._attr_unique_id = f"{entry.entry_id}_forecast_temp_max_peak"
+        self._attr_translation_key = "forecast_temp_max_peak"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._weather().get("temp_max_peak")
 
 
 class ShutterPilotForecastTempMinSensor(_ForecastSensorBase):

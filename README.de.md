@@ -238,14 +238,17 @@ Ein leeres Feld bedeutet: keine Bedingung. Ein nicht verfügbarer oder defekter 
 
 ### Wetter und Vorhersage
 
-Hinterlege im Tab **Einstellungen** deine `weather.*`-Entität. Shutter Pilot ruft dann selbst die Tagesvorhersage ab und stellt zwei Sensoren bereit:
+Hinterlege im Tab **Einstellungen** deine `weather.*`-Entität. Shutter Pilot ruft dann selbst die Tagesvorhersage ab und stellt drei Sensoren bereit:
 
 | Sensor | Inhalt |
 |--------|--------|
-| Vorhersage Höchsttemperatur | erwarteter Tageshöchstwert |
+| Vorhersage Höchsttemperatur | erwarteter Tageshöchstwert, wie die Quelle ihn gerade meldet |
+| Vorhersage Tageshöchstwert | der **höchste** Wert, der heute gemeldet wurde |
 | Vorhersage Wetterlage | erwartete Wetterlage, z. B. `sunny` |
 
-Beide wählst du ganz normal als Bedingung aus. Typisch: **Vorhersage Höchsttemperatur, beschatten ab 24 °C**. Damit wird an kühlen Tagen nicht beschattet, und die Sonne wärmt das Haus.
+Alle wählst du ganz normal als Bedingung aus. Typisch: **Vorhersage Höchsttemperatur, beschatten ab 24 °C**. Damit wird an kühlen Tagen nicht beschattet, und die Sonne wärmt das Haus.
+
+**Wann welcher der beiden Temperaturwerte?** Eine Tagesvorhersage wird im Lauf des Tages fortgeschrieben, und die meisten Quellen setzen sie herunter, sobald die Spitze vorbei ist: Um 21 Uhr steht bei „Höchsttemperatur heute" womöglich 25 °C, obwohl es um 15 Uhr 28 °C hatte. Für Entscheidungen am Tag – beschatten – nimm den laufenden Wert. Für Entscheidungen am Abend – abweichendes Schließen, Nachtlüftung – nimm den **Tageshöchstwert**; der steigt bis Mitternacht nur noch.
 
 Ein nicht erreichbares Wetter-Backend blockiert die Beschattung nie – der letzte bekannte Wert bleibt erhalten.
 

@@ -58,6 +58,9 @@
       "forecast_temp_max": {
         "name": "Shutter Pilot forecast high temperature"
       },
+      "forecast_temp_max_peak": {
+        "name": "Shutter Pilot forecast high today (peak)"
+      },
       "forecast_temp_min": {
         "name": "Shutter Pilot forecast low temperature"
       },
