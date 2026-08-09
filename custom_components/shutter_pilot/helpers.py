@@ -20,6 +20,7 @@ from .const import (
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_ELEVATION_MAX,
+    CONF_AREA_ELEVATION_ENABLED,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
     CLOSE_CONDITION_SLOTS,
@@ -59,6 +60,7 @@ from .const import (
     CONF_TILT_SUN_PROTECT,
     DEFAULT_AREA_AZIMUTH_MAX,
     DEFAULT_AREA_AZIMUTH_MIN,
+    DEFAULT_AREA_ELEVATION_ENABLED,
     DEFAULT_AREA_ELEVATION_MIN,
     DEFAULT_AREA_ELEVATION_THRESHOLD,
     DEFAULT_AREA_MANUAL_OVERRIDE,
@@ -199,8 +201,19 @@ def get_elevation_bounds(area: dict) -> tuple[float, float]:
     return e_min, e_max
 
 
+def elevation_used(area: dict) -> bool:
+    """Whether this configuration consults the sun's height at all."""
+    return bool(area.get(CONF_AREA_ELEVATION_ENABLED, DEFAULT_AREA_ELEVATION_ENABLED))
+
+
 def elevation_in_sun_protect_range(elevation: float, area: dict) -> bool:
-    """True when sun elevation is within the configured protection window."""
+    """True when sun elevation is within the configured protection window.
+
+    Switched off, the height never blocks: whoever has a brightness sensor per
+    window wants that sensor to decide, not a range they had to guess.
+    """
+    if not elevation_used(area):
+        return True
     e_min, e_max = get_elevation_bounds(area)
     return e_min <= elevation <= e_max
 
@@ -244,8 +257,11 @@ def sun_protect_conditions_met(
 ) -> bool:
     """True when both elevation and compass direction call for shading."""
     if elevation is None:
-        return False
-    if not elevation_in_sun_protect_range(elevation, area):
+        # No sun data at all. With the height switched off nothing here needs
+        # it, so a missing sun entity must not block on its own.
+        if elevation_used(area):
+            return False
+    elif not elevation_in_sun_protect_range(elevation, area):
         return False
     return azimuth_in_sun_protect_range(azimuth, area)
 
@@ -1144,8 +1160,10 @@ def get_sun_protect_status_for_areas(
         out[area_id] = {
             "active": is_sun_protect_active(data, area_id),
             "in_range": sun_protect_conditions_met(elev, azim, area),
-            "elevation_in_range": elev is not None
-            and elevation_in_sun_protect_range(elev, area),
+            "elevation_enabled": elevation_used(area),
+            "elevation_in_range": elevation_in_sun_protect_range(elev, area)
+            if elev is not None
+            else not elevation_used(area),
             "azimuth_in_range": azimuth_in_sun_protect_range(azim, area),
             "elevation_min": e_min,
             "elevation_max": e_max,

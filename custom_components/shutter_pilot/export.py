@@ -51,6 +51,7 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    elevation_used,
     get_azimuth_bounds,
     get_cover_current_position,
     get_elevation_bounds,
@@ -244,8 +245,12 @@ def _shading_verdict(
 
     elev_txt = "–" if elev is None else f"{elev:.1f}°"
     lines = [
-        f"- Elevation {elev_txt} in [{e_min:.1f}° – {e_max:.1f}°]: "
-        f"{'✅' if elev is not None and e_min <= elev <= e_max else '❌'}",
+        "- Sonnenhöhe: nicht geprüft (Option aus), gemessen " + elev_txt
+        if not elevation_used(geo)
+        else (
+            f"- Elevation {elev_txt} in [{e_min:.1f}° – {e_max:.1f}°]: "
+            f"{'✅' if elev is not None and e_min <= elev <= e_max else '❌'}"
+        ),
         "- Fensterrichtung: "
         + (
             f"{'✅' if geometry_ok else '❌'} "

@@ -131,9 +131,21 @@ CONF_AREA_SUN_PROTECT_ENABLED = "sun_protect_enabled"
 CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max
 CONF_AREA_ELEVATION_MIN = "elevation_min"
 CONF_AREA_ELEVATION_MAX = "elevation_max"
+# Whether the sun's height is consulted at all. Off means a brightness sensor
+# alone decides – the setup people with a lux meter per window actually want.
+# Default on, so nothing changes for anyone who already has a range set.
+CONF_AREA_ELEVATION_ENABLED = "elevation_enabled"
+DEFAULT_AREA_ELEVATION_ENABLED = True
 DEFAULT_AREA_ELEVATION_THRESHOLD = 4.0
 DEFAULT_AREA_ELEVATION_MIN = 0.0
-DEFAULT_AREA_ELEVATION_MAX = 15.0
+# 15° was a poor starting point: in summer the midday sun stands at 60°, so a
+# freshly created area with shading switched on never shaded during the day.
+# Only new areas are affected – the fallback for stored configs stays put.
+DEFAULT_AREA_ELEVATION_MAX = 90.0
+
+# Purely for the dashboard: a room temperature to show on the area card.
+# Never read by any automation – it decides nothing.
+CONF_AREA_TEMP_SENSOR = "temp_sensor"
 
 # Per-area sun protection: compass direction of the windows (azimuth, degrees).
 # 0 = North, 90 = East, 180 = South, 270 = West.

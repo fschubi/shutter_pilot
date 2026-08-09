@@ -117,6 +117,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 
 The Dashboard tab shows all areas as cards with:
 - Current shutter positions (live)
+- Room temperature, if the area has a sensor set for it (display only)
 - Auto-mode toggle per area
 - **Sun info panel** for sun-mode areas: next sunrise/sunset, offset, calculated trigger time, current elevation
 - Quick action buttons: **Up**, **Stop**, **Down**, **Sun protection**
@@ -390,7 +391,7 @@ With brightness sensors around the house, elevation and compass direction are no
 
 1. Enable sun protection in the **area**
 2. **Turn the compass direction off** — the azimuth is then not checked
-3. Set the **elevation range to 0–90**, so it holds whenever the sun is up at all
+3. **Turn "check the sun's height" off** — the elevation then plays no part at all
 4. Add the brightness sensor as an **extra condition**, with a switch-on and a switch-off threshold
 
 Brightness alone then decides. The two thresholds matter more here than elsewhere: they keep a passing cloud from releasing the shading right away.

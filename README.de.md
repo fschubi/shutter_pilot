@@ -117,6 +117,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 
 Das Dashboard zeigt alle Bereiche als Karten mit:
 - Aktuelle Rollladen-Positionen (live)
+- Raumtemperatur, wenn im Bereich ein Sensor dafür hinterlegt ist (reine Anzeige)
 - Auto-Modus-Schalter pro Bereich
 - **Sonnenstand-Info** für Sonnenstand-Bereiche: nächster Sonnenaufgang/-untergang, Offset, berechnete Trigger-Zeit, aktuelle Elevation
 - Schnellaktions-Buttons: **Hoch**, **Stop**, **Runter**, **Sonnenschutz**
@@ -390,7 +391,7 @@ Wer rund ums Haus Helligkeitssensoren verteilt hat, braucht Höhenwinkel und Him
 
 1. Im **Bereich** den Sonnenschutz aktivieren
 2. **Himmelsrichtung ausschalten** (Haken raus) – dann wird der Azimut nicht geprüft
-3. **Höhenwinkel auf 0 bis 90** stellen – damit gilt er, solange die Sonne überhaupt steht
+3. **„Sonnenhöhe prüfen" ausschalten** (Haken raus) – dann spielt der Höhenwinkel keine Rolle mehr
 4. Den Helligkeitssensor als **Zusatzbedingung** eintragen, mit Ein- und Ausschaltschwelle
 
 Damit entscheidet allein die Helligkeit. Die zwei Schwellen sind hier wichtiger als sonst: Sie verhindern, dass eine durchziehende Wolke die Beschattung sofort wieder aufhebt.

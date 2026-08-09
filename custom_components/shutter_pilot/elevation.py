@@ -29,6 +29,7 @@ from .const import (
 )
 from .helpers import (
     clear_stale_window_cycle_after_automated_up,
+    elevation_used,
     forget_drive_after_close,
     get_azimuth_bounds,
     get_elevation_bounds,
@@ -265,8 +266,9 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not was_active:
                 continue
 
+            uses_elevation = elevation_used(geo)
             e_min, e_max = get_elevation_bounds(geo)
-            if elev < e_min:
+            if uses_elevation and elev < e_min:
                 # Below the range the shutters belong to the evening
                 # schedule, not to shading. Drop the flag, do not drive, and
                 # do not wait out a hold time – the day is simply over.
@@ -285,7 +287,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # leaves the room dark for up to two hours – and, because this
             # shutter then still counts as shaded, blocks the scheduled opening
             # on top of it.
-            if elev > e_max:
+            if uses_elevation and elev > e_max:
                 reason = "sun above range"
             elif not geometry_ok:
                 a_min, a_max = get_azimuth_bounds(geo)

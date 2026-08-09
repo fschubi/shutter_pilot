@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.10.1]
+
+Drei Wünsche aus dem Forum, und einer davon deckte eine Falle auf, die neue
+Nutzer seit jeher trifft.
+
+### Neu
+- **„Sonnenhöhe prüfen" lässt sich abschalten** – je Bereich und je Rollladen. Wer an jedem Fenster einen Helligkeitssensor hängen hat, will den entscheiden lassen: der misst die Sonne bereits. Die Höhenspanne ist dann eine Zahl, die man raten müsste. Aus heißt: allein die Bedingungen zählen; die Fensterrichtung bleibt davon unberührt. Bestehende Bereiche prüfen unverändert weiter. (Forum, charly166)
+- **Raumtemperatur auf der Dashboard-Karte.** Optionaler Sensor je Bereich, rein zur Anzeige – er entscheidet nichts. Ein toter oder fehlender Sensor lässt die Zeile einfach weg. (Forum, hollizone)
+
+### Behoben
+- **Ein neu angelegter Bereich beschattete tagsüber nie.** Die Vorgabe für die Sonnenhöhe stand auf **0°–15°** – im Sommer steht die Mittagssonne bei 60°. Wer einen Bereich anlegte, den Sonnenschutz einschaltete, seine Bedingung eintrug und sonst nichts änderte, bekam Beschattung nur kurz nach Sonnenaufgang und vor Sonnenuntergang. Neue Bereiche starten jetzt mit **0°–90°**. Bestehende Bereiche behalten ihre Werte.
+
 ## [2.10.0]
 
 ### Neu

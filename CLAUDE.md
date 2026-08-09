@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.10.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.10.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -799,6 +799,40 @@ das jetzt am Slot; die Schluessel bleiben dieselben.
 Der Nachhol-Zweig faehrt gar nicht, obwohl der Aussperrschutz sagt, wie weit
 gefahren werden duerfte. Wer bei offenem Fenster die Lueftungsposition und
 beim Schliessen die volle Fahrt will, kann das nicht einstellen.
+
+### 2026-08-09 – 2.10.1: die Vorgabe, die nie beschattete
+
+**Der eigentliche Fund kam beim Pruefen eines Wunsches.** charly166 wollte
+seine Helligkeitssensoren ohne Elevation und Azimut nutzen. Azimut ist laengst
+optional, Bedingungen gehen laengst pro Rollladen – sein Ziel war also schon
+erreichbar. Beim Nachsehen fiel aber auf: `DEFAULT_AREA_ELEVATION_MAX = 15.0`.
+Die Mittagssonne steht im Sommer bei 60°. **Ein frisch angelegter Bereich mit
+eingeschaltetem Sonnenschutz beschattete tagsueber also nie** – nur kurz nach
+Sonnenaufgang und vor Sonnenuntergang. Das duerfte hinter einigen „warum
+beschattet er nicht"-Fragen stecken.
+
+Geaendert wurde nur die Vorgabe fuer **neue** Bereiche (Panel-Default und
+`DEFAULT_AREA_ELEVATION_MAX`, das ausschliesslich der config_flow beim
+Ersteinrichten liest). `DEFAULT_AREA_ELEVATION_THRESHOLD = 4.0` bleibt, weil
+`get_elevation_bounds()` es als Rueckfall fuer gespeicherte Konfigurationen
+ohne `elevation_max` benutzt – daran zu drehen haette Bestandsanlagen
+verschoben.
+
+**`elevation_enabled`** schaltet die Hoehenpruefung ab, Default `True`. Drei
+Stellen muessen mitziehen, sonst wirkt der Haken nur halb:
+
+* `elevation_in_sun_protect_range()` gibt True zurueck,
+* `sun_protect_conditions_met()` darf bei `elevation is None` nicht mehr
+  pauschal blockieren – ohne Sonnendaten gibt es nichts zu pruefen,
+* **`elevation.py` ist die leicht zu uebersehende:** die Freigabe-Zweige
+  `elev < e_min` („Tag vorbei") und `elev > e_max` haengen an denselben
+  Grenzen. Ohne Gate dort wuerde die Beschattung abends beendet, obwohl die
+  Hoehe egal sein soll.
+
+**Raumtemperatur im Dashboard** ist reines Frontend: `temp_sensor` je Bereich,
+gelesen aus `hass.states`. Kein Backend-Code – `save_area` speichert
+unbekannte Schluessel ohnehin mit. Tote und fehlende Sensoren lassen die Zeile
+weg, statt „unavailable" hinzuschreiben.
 
 **Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
 `sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht

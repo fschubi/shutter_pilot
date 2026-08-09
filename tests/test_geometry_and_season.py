@@ -38,6 +38,7 @@ from custom_components.shutter_pilot.helpers import (
     has_alt_close_position,
     resolve_sun_geometry,
     season_allows_shading,
+    elevation_in_sun_protect_range,
     sun_protect_conditions_met,
 )
 
@@ -216,3 +217,65 @@ class TestSecondCloseCondition:
         hass.states.async_set("binary_sensor.warm", "on")
         hass.states.async_set("binary_sensor.home", "unavailable")
         assert close_condition_met(hass, self._area(), {}) is False
+
+
+class TestElevationCanBeSwitchedOff:
+    """Beschattung allein nach Helligkeitssensor (Forum, charly166).
+
+    Wer an jedem Fenster einen Lux-Sensor hat, will den entscheiden lassen –
+    der misst die Sonne bereits. Die Höhenspanne ist dann eine Zahl, die man
+    raten müsste.
+    """
+
+    def _area(self, **overrides) -> dict:
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        area = {
+            CONF_AREA_ID: "living",
+            CONF_AREA_ELEVATION_MIN: 5.0,
+            CONF_AREA_ELEVATION_MAX: 40.0,
+            CONF_AREA_ELEVATION_ENABLED: False,
+        }
+        area.update(overrides)
+        return area
+
+    def test_height_outside_the_range_no_longer_blocks(self):
+        area = self._area()
+        assert elevation_in_sun_protect_range(75.0, area) is True
+        assert elevation_in_sun_protect_range(-10.0, area) is True
+        assert sun_protect_conditions_met(75.0, 180.0, area) is True
+
+    def test_missing_sun_data_does_not_block_either(self):
+        """Ohne Sonnenhöhe gibt es nichts zu prüfen – also auch nichts zu sperren."""
+        assert sun_protect_conditions_met(None, None, self._area()) is True
+
+    def test_the_range_still_applies_when_left_on(self):
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        area = self._area(**{CONF_AREA_ELEVATION_ENABLED: True})
+        assert elevation_in_sun_protect_range(75.0, area) is False
+        assert elevation_in_sun_protect_range(20.0, area) is True
+
+    def test_missing_key_keeps_checking(self):
+        """Bestandsanlagen kennen den Schlüssel nicht – die prüfen weiter."""
+        area = {
+            CONF_AREA_ID: "living",
+            CONF_AREA_ELEVATION_MIN: 5.0,
+            CONF_AREA_ELEVATION_MAX: 40.0,
+        }
+        assert elevation_in_sun_protect_range(75.0, area) is False
+        assert sun_protect_conditions_met(None, None, area) is False
+
+    def test_the_direction_still_decides(self):
+        """Nur die Höhe faellt weg, die Fensterrichtung bleibt in Kraft."""
+        from custom_components.shutter_pilot.const import CONF_AREA_AZIMUTH_ENABLED
+
+        area = self._area(
+            **{
+                CONF_AREA_AZIMUTH_ENABLED: True,
+                "azimuth_min": 90.0,
+                "azimuth_max": 180.0,
+            }
+        )
+        assert sun_protect_conditions_met(75.0, 120.0, area) is True
+        assert sun_protect_conditions_met(75.0, 300.0, area) is False
