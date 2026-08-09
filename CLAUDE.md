@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.9.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.10.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -758,6 +758,47 @@ Zwei Dinge, die dabei zaehlen:
 Geprueft wurde nicht die Optik, sondern der Bestand: beide Fassungen voll
 aufgeklappt gerendert und die `<label>`- und `hint`-Texte verglichen – 71
 Bedienelemente, keines verloren.
+
+### 2026-08-09 – 2.10.0: der nachgeholte Rollladen und Linos' Bedingungen
+
+**heinzies Ablauf, vier Schritte:** abends alle runter, einer bleibt wegen
+offenem Fenster oben (vorgemerkt), Fenster zu → holt nach, naechster Morgen →
+alle hoch **ausser ihm**.
+
+Der Nachhol-Zweig in `scheduler.py` und `brightness.py` verliess die Schleife
+mit `continue`, **bevor** `covers_driven_down.add()` / `covers_driven_up.
+discard()` liefen. Der Rollladen blieb damit als „heute hochgefahren"
+vermerkt, und `_run_up_async` filtert genau danach. Dass die Fahrt beim
+Fensterschliessen stattfand, sieht der Scheduler nicht – `window_trigger.py`
+pflegt diese Merker nicht. **Merke:** ein `continue` in einer Fahrschleife
+ueberspringt nicht nur die Fahrt, sondern auch deren Buchfuehrung.
+
+**Der Fund darunter:** `clear_covers_driven_for_direction()` setzte
+`data["covers_driven_up"] = set()` – ein **neues** Set. Scheduler und
+Helligkeitsmodus binden ihre Referenz aber einmalig beim Setup per
+`setdefault`. Ab dem ersten Aufruf schrieben sie also in ein Set, das nicht
+mehr in `data` haengt: der Aufruf war wirkungslos, und Diagnose wie Export
+zeigten dauerhaft „–", waehrend intern etwas anderes entschied. Genau das
+stand in allen bisherigen Exporten, und ich habe es geglaubt.
+
+Repariert wurde nicht die Funktion, sondern ihre Notwendigkeit: die vier
+Aufrufe sind weg, die Funktion auch. Die Sets pflegen sich ueber `add`/
+`discard` gegenseitig. **Wirksam machen waere die falsche Reparatur gewesen** –
+in `brightness.py` lief der Aufruf jede Minute, ein wirksames Leeren haette
+jede Minute neu gefahren; im Scheduler stand er direkt vor dem Filter, der
+gegen dasselbe Set prueft, und haette ihn ausgehebelt.
+
+**Linos, zwei Punkte:** „Abweichendes Schliessen" hat jetzt zwei Bedingungen
+(`CLOSE_CONDITION_SLOTS`, Muster von `VENT_CONDITION_SLOTS`, beide muessen
+zutreffen, fail closed wie bisher). Und die Zahlenfelder trugen ueberall die
+Beschriftung des Sonnenschutzes – „Beschatten ab" samt Hinweis auf
+durchziehende Wolken, auch bei Frost und Lueften. `_condLabels()` entscheidet
+das jetzt am Slot; die Schluessel bleiben dieselben.
+
+**Offen:** `drive_after_close` und Aussperrschutz schliessen sich heute aus.
+Der Nachhol-Zweig faehrt gar nicht, obwohl der Aussperrschutz sagt, wie weit
+gefahren werden duerfte. Wer bei offenem Fenster die Lueftungsposition und
+beim Schliessen die volle Fahrt will, kann das nicht einstellen.
 
 **Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
 `sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht

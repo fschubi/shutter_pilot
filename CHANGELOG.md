@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.10.0]
+
+### Neu
+- **Zwei Bedingungen für „Abweichendes Schliessen".** Bisher gab es nur eine, und „der Tag war warm" allein ist selten die ganze Regel – „und jemand ist zu Hause" ist die andere Hälfte. Die zweite erscheint, sobald die erste steht; sind beide eingetragen, muss abends auch beides zutreffen. Wie beim automatischen Lüften. Bestehende Einstellungen bleiben unverändert, die erste Bedingung behält ihren Schlüssel. (Forum, Linos)
+
+### Behoben
+- **Ein wegen offenem Fenster nachgeholter Rollladen blieb am nächsten Morgen unten.** Abends fahren alle runter, einer bleibt wegen offenem Fenster oben und wird vorgemerkt, nach dem Schließen holt er die Fahrt nach – und am nächsten Morgen fährt alles hoch außer ihm. Der Nachhol-Zweig verließ die Schleife, **bevor** die Merker „heute schon hoch-/runtergefahren" gesetzt wurden. Der Rollladen galt damit weiter als „heute hochgefahren", und genau danach filtert der nächste Morgen. (Forum, heinzie)
+- **Diagnose und Export zeigten „heute schon hochgefahren" dauerhaft leer.** Beim Beginn eines Fahrzyklus wurde die Merkliste durch eine **neue** ersetzt, während Zeitplan und Helligkeitsmodus weiter auf die alte schrieben. Ab der ersten Fahrt zeigten Diagnose und Export deshalb etwas anderes an als das, wonach tatsächlich entschieden wurde – und der Aufruf selbst blieb wirkungslos. Beide Listen sind jetzt dieselbe.
+
+### Geändert
+- **„Beschatten ab" stand auch dort, wo nichts beschattet wird.** Dieselben Felder tragen die Bedingung für Abweichendes Schliessen, Frostschutz und Lüften – beschriftet waren sie überall mit den Wörtern des Sonnenschutzes, samt Hinweis auf „durchziehende Wolken". Außerhalb des Sonnenschutzes heißt es jetzt „Trifft zu ab", und der Hinweis spricht von der Schwelle statt vom Wetter. An der Funktion ändert sich nichts – die Bedingungen hingen nie am Sonnenschutz. (Forum, Linos)
+
 ## [2.9.1]
 
 ### Geändert

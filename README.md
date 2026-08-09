@@ -336,10 +336,11 @@ South and west windows of the same room are then shaded at different times of da
 
 To keep certain shutters from closing fully on hot evenings so the room can keep ventilating:
 
-1. In the **area**, under *Partial closing*, set a condition — e.g. a sensor for heat and presence
-2. On the relevant **shutters**, set a partial position, e.g. 50 %
+1. In the **area**, under *Partial closing*, set a condition — the obvious one is the **Forecast high today (peak)** sensor Shutter Pilot provides itself
+2. Optionally a **second condition** — both then have to hold. A typical pair is “the day was warm” **and** “somebody is home”
+3. On the relevant **shutters**, set a partial position, e.g. 50 %
 
-Only shutters with a partial position deviate; all others close normally.
+Only shutters with a partial position deviate; all others close normally. A dead sensor counts as *not met* here, so the shutters close normally rather than standing part way open all night.
 
 ## Copying settings from another shutter
 

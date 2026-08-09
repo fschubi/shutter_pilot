@@ -44,7 +44,6 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
-    clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     get_position_for_role,
@@ -249,7 +248,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             moved_up = False
 
             if _area_window(area, now, "down", hass) and lux <= down_threshold:
-                clear_covers_driven_for_direction(data, "down")
                 idx = 0
                 down_covers: list[str] = []
                 for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
@@ -273,6 +271,12 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                             position=pos, tilt=tilt,
                             reason="Brightness down", shutter=shutter,
                         )
+                        # Wie im Scheduler: die Fahrt gilt als erledigt, sie
+                        # wartet nur noch aufs Fenster. Sonst ueberspringt der
+                        # naechste Morgen genau diesen Rollladen – und der
+                        # Merker wuerde hier jede Minute neu geschrieben.
+                        covers_driven_down.add(cover_entity)
+                        covers_driven_up.discard(cover_entity)
                         continue
                     pos = get_effective_close_position(hass, shutter, pos)
                     down_covers.append(cover_entity)
@@ -308,7 +312,6 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 # room as soon as a single one was shaded – rooms whose windows
                 # face different ways are exactly the case that has its own
                 # sensors and its own direction.
-                clear_covers_driven_for_direction(data, "up")
                 idx = 0
                 up_covers: list[str] = []
                 for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:

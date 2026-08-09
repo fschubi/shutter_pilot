@@ -336,10 +336,11 @@ So werden Süd- und Westfenster desselben Raums zu unterschiedlichen Tageszeiten
 
 Sollen bestimmte Rollläden an heißen Abenden nicht ganz zufahren, um weiter zu lüften:
 
-1. Im **Bereich** unter *Abweichendes Schliessen* eine Bedingung hinterlegen – etwa einen Sensor für Hitze und Anwesenheit
-2. Bei den betreffenden **Rollläden** eine Teilposition setzen, z. B. 50 %
+1. Im **Bereich** unter *Abweichendes Schliessen* eine Bedingung hinterlegen – naheliegend ist der Sensor **Vorhersage Tageshöchstwert**, den Shutter Pilot selbst bereitstellt
+2. Optional eine **zweite Bedingung** – beide müssen dann zutreffen. Typisch: „der Tag war warm“ **und** „jemand ist zu Hause“
+3. Bei den betreffenden **Rollläden** eine Teilposition setzen, z. B. 50 %
 
-Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal.
+Nur Rollläden mit gesetzter Teilposition weichen ab, alle anderen schließen normal. Ein toter Sensor gilt hier als *nicht erfüllt* – dann wird normal geschlossen, statt jeden Rollladen die Nacht über halb offen stehen zu lassen.
 
 ## Einstellungen von einem anderen Rollladen übernehmen
 

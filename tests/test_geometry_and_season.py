@@ -168,3 +168,51 @@ class TestAlternativeClosePosition:
 
         hass.states.async_set("binary_sensor.hot_and_home", "off")
         assert close_condition_met(hass, area, data) is False
+
+
+class TestSecondCloseCondition:
+    """Zwei Bedingungen fürs abweichende Schliessen (Forum, Linos).
+
+    „Der Tag war warm" allein ist selten die ganze Regel – „und jemand ist zu
+    Hause" ist die andere Hälfte. Beide müssen zutreffen, wie beim Lüften.
+    """
+
+    def _area(self, **overrides) -> dict:
+        from custom_components.shutter_pilot.const import CLOSE_CONDITION_SLOTS
+
+        a, b = (sun_condition_keys(s)[0] for s in CLOSE_CONDITION_SLOTS)
+        area = {CONF_AREA_ID: "living", a: "binary_sensor.warm", b: "binary_sensor.home"}
+        area.update(overrides)
+        return area
+
+    async def test_both_have_to_hold(self, hass):
+        hass.states.async_set("binary_sensor.warm", "on")
+        hass.states.async_set("binary_sensor.home", "on")
+        assert close_condition_met(hass, self._area(), {}) is True
+
+        hass.states.async_set("binary_sensor.home", "off")
+        assert close_condition_met(hass, self._area(), {}) is False
+
+    async def test_the_first_alone_still_decides(self, hass):
+        """Bestandsanlagen haben nur die erste – die muss unverändert wirken."""
+        from custom_components.shutter_pilot.const import CLOSE_CONDITION_SLOT
+
+        entity_key = sun_condition_keys(CLOSE_CONDITION_SLOT)[0]
+        area = {CONF_AREA_ID: "living", entity_key: "binary_sensor.warm"}
+
+        hass.states.async_set("binary_sensor.warm", "on")
+        assert close_condition_met(hass, area, {}) is True
+        hass.states.async_set("binary_sensor.warm", "off")
+        assert close_condition_met(hass, area, {}) is False
+
+    async def test_the_second_alone_works_too(self, hass):
+        hass.states.async_set("binary_sensor.home", "on")
+        area = self._area()
+        del area[sun_condition_keys("close")[0]]
+        assert close_condition_met(hass, area, {}) is True
+
+    async def test_dead_sensor_keeps_the_shutters_closing(self, hass):
+        """Fail closed: ein toter Sensor darf nicht alles halb offen lassen."""
+        hass.states.async_set("binary_sensor.warm", "on")
+        hass.states.async_set("binary_sensor.home", "unavailable")
+        assert close_condition_met(hass, self._area(), {}) is False

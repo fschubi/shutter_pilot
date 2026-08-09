@@ -203,6 +203,10 @@ de:{
   f_sun_cond_b:"Bedingung 2 (optional)",
   f_sun_cond_on:"Beschatten ab",
   f_sun_cond_off:"Aufheben unter",
+  f_cond_on:"Trifft zu ab",
+  f_cond_off:"Aufheben unter",
+  f_cond_num_hint:"„Aufheben unter“ darf niedriger sein als „Trifft zu ab“ – der Abstand verhindert Flattern, wenn der Wert um die Schwelle pendelt. Leer = gleicher Wert.",
+  f_close_cond_both_hint:"Sind beide Bedingungen eingetragen, muss abends auch beides zutreffen.",
   f_sun_cond_num_hint:"„Aufheben unter“ darf niedriger sein als „Beschatten ab“ – der Abstand verhindert Flattern bei durchziehenden Wolken. Leer = gleicher Wert.",
   f_sun_cond_wrong_way:"Die beiden Werte stehen verkehrt herum. Das ist ein Einschaltpunkt mit einem Aufhebepunkt DARUNTER, kein Bereich von–bis. So wie es dasteht, wird der zweite Wert verworfen und die Bedingung ist praktisch immer erfüllt. Für einen Bereich von Himmelsrichtungen gibt es „Nur bei passender Fensterrichtung“.",
   f_geo_override_values_hint:"Diese beiden Werte gelten jetzt statt derer des Bereichs – auch wenn du sie nicht anfasst.",
@@ -402,6 +406,10 @@ en:{
   f_sun_cond_b:"Condition 2 (optional)",
   f_sun_cond_on:"Shade above",
   f_sun_cond_off:"Release below",
+  f_cond_on:"Applies from",
+  f_cond_off:"Release below",
+  f_cond_num_hint:"«Release below» may sit lower than «Applies from» – the gap stops flapping when the value hovers around the threshold. Empty = same value.",
+  f_close_cond_both_hint:"With both conditions filled in, both have to hold in the evening.",
   f_sun_cond_num_hint:"Release below may be lower than Shade above – the gap prevents flapping when clouds pass. Empty = same value.",
   f_sun_cond_wrong_way:"These two are the wrong way round. This is a switch-on point with a release point BELOW it, not a from–to range. As entered, the second value is discarded and the condition is met practically all the time. For a range of compass directions use “Only when the sun faces this window”.",
   f_geo_override_values_hint:"These two now apply instead of the area's – whether you touch them or not.",
@@ -565,6 +573,10 @@ fr:{
   f_sun_cond_b:"Condition 2 (optionnel)",
   f_sun_cond_on:"Ombrager au-dessus de",
   f_sun_cond_off:"Lever en dessous de",
+  f_cond_on:"S'applique à partir de",
+  f_cond_off:"Annuler en dessous de",
+  f_cond_num_hint:"« Annuler en dessous de » peut être inférieur à « S'applique à partir de » – l'écart évite les oscillations autour du seuil. Vide = même valeur.",
+  f_close_cond_both_hint:"Si les deux conditions sont renseignées, les deux doivent être remplies le soir.",
   f_sun_cond_num_hint:"L'écart entre les deux seuils évite les oscillations. Vide = même valeur.",
   f_sun_cond_bin_hint:"Capteur binaire : ombrage tant qu'il est actif.",
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
@@ -706,6 +718,10 @@ es:{
   f_sun_cond_b:"Condición 2 (opcional)",
   f_sun_cond_on:"Sombrear por encima de",
   f_sun_cond_off:"Liberar por debajo de",
+  f_cond_on:"Se aplica a partir de",
+  f_cond_off:"Anular por debajo de",
+  f_cond_num_hint:"«Anular por debajo de» puede ser menor que «Se aplica a partir de»: la diferencia evita oscilaciones alrededor del umbral. Vacío = mismo valor.",
+  f_close_cond_both_hint:"Si se rellenan ambas condiciones, por la tarde deben cumplirse las dos.",
   f_sun_cond_num_hint:"La diferencia entre umbrales evita oscilaciones. Vacío = mismo valor.",
   f_sun_cond_bin_hint:"Sensor binario: sombrea mientras esté activo.",
   filter_entity:"Buscar…",no_match:"Sin resultados",
@@ -847,6 +863,10 @@ it:{
   f_sun_cond_b:"Condizione 2 (opzionale)",
   f_sun_cond_on:"Ombreggia sopra",
   f_sun_cond_off:"Rilascia sotto",
+  f_cond_on:"Vale a partire da",
+  f_cond_off:"Annulla sotto",
+  f_cond_num_hint:"«Annulla sotto» può essere inferiore a «Vale a partire da»: la distanza evita oscillazioni attorno alla soglia. Vuoto = stesso valore.",
+  f_close_cond_both_hint:"Se sono indicate entrambe le condizioni, la sera devono valere tutte e due.",
   f_sun_cond_num_hint:"Il divario tra le soglie evita oscillazioni. Vuoto = stesso valore.",
   f_sun_cond_bin_hint:"Sensore binario: ombreggia finché è attivo.",
   filter_entity:"Cerca…",no_match:"Nessun risultato",
@@ -988,6 +1008,10 @@ nl:{
   f_sun_cond_b:"Voorwaarde 2 (optioneel)",
   f_sun_cond_on:"Beschaduwen boven",
   f_sun_cond_off:"Opheffen onder",
+  f_cond_on:"Geldt vanaf",
+  f_cond_off:"Opheffen onder",
+  f_cond_num_hint:"«Opheffen onder» mag lager liggen dan «Geldt vanaf» – het verschil voorkomt pendelen rond de drempel. Leeg = zelfde waarde.",
+  f_close_cond_both_hint:"Zijn beide voorwaarden ingevuld, dan moeten 's avonds ook beide gelden.",
   f_sun_cond_num_hint:"Het verschil tussen de drempels voorkomt pendelen. Leeg = zelfde waarde.",
   f_sun_cond_bin_hint:"Binaire sensor: beschaduwt zolang deze aan is.",
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
@@ -1130,6 +1154,10 @@ da:{
   f_sun_cond_b:"Betingelse 2 (valgfri)",
   f_sun_cond_on:"Skyg over",
   f_sun_cond_off:"Ophæv under",
+  f_cond_on:"Gælder fra",
+  f_cond_off:"Ophæv under",
+  f_cond_num_hint:"«Ophæv under» må ligge lavere end «Gælder fra» – afstanden forhindrer flakken omkring tærsklen. Tom = samme værdi.",
+  f_close_cond_both_hint:"Er begge betingelser udfyldt, skal begge også være opfyldt om aftenen.",
   f_sun_cond_num_hint:"Afstanden mellem tærsklerne forhindrer svingninger. Tom = samme værdi.",
   f_sun_cond_bin_hint:"Binær sensor: skygger så længe den er aktiv.",
   filter_entity:"Søg…",no_match:"Ingen træffer",
@@ -1272,6 +1300,10 @@ sv:{
   f_sun_cond_b:"Villkor 2 (valfritt)",
   f_sun_cond_on:"Skugga över",
   f_sun_cond_off:"Släpp under",
+  f_cond_on:"Gäller från",
+  f_cond_off:"Upphäv under",
+  f_cond_num_hint:"«Upphäv under» får ligga lägre än «Gäller från» – avståndet hindrar fladder kring tröskeln. Tomt = samma värde.",
+  f_close_cond_both_hint:"Är båda villkoren ifyllda måste båda gälla på kvällen.",
   f_sun_cond_num_hint:"Avståndet mellan trösklarna förhindrar pendling. Tomt = samma värde.",
   f_sun_cond_bin_hint:"Binär sensor: skuggar så länge den är aktiv.",
   filter_entity:"Sök…",no_match:"Ingen träff",
@@ -1414,6 +1446,10 @@ pl:{
   f_sun_cond_b:"Warunek 2 (opcjonalnie)",
   f_sun_cond_on:"Zacieniaj powyżej",
   f_sun_cond_off:"Zwolnij poniżej",
+  f_cond_on:"Obowiązuje od",
+  f_cond_off:"Anuluj poniżej",
+  f_cond_num_hint:"„Anuluj poniżej” może być niższe niż „Obowiązuje od” – odstęp zapobiega migotaniu wokół progu. Puste = ta sama wartość.",
+  f_close_cond_both_hint:"Gdy wpisane są oba warunki, wieczorem muszą być spełnione oba.",
   f_sun_cond_num_hint:"Odstęp między progami zapobiega oscylacjom. Puste = ta sama wartość.",
   f_sun_cond_bin_hint:"Czujnik binarny: zacienia, gdy jest włączony.",
   filter_entity:"Szukaj…",no_match:"Brak wyników",
@@ -1556,6 +1592,10 @@ pt:{
   f_sun_cond_b:"Condição 2 (opcional)",
   f_sun_cond_on:"Sombrear acima de",
   f_sun_cond_off:"Libertar abaixo de",
+  f_cond_on:"Aplica-se a partir de",
+  f_cond_off:"Anular abaixo de",
+  f_cond_num_hint:"«Anular abaixo de» pode ser inferior a «Aplica-se a partir de» – a diferença evita oscilações em torno do limiar. Vazio = mesmo valor.",
+  f_close_cond_both_hint:"Se ambas as condições estiverem preenchidas, à noite têm de se verificar as duas.",
   f_sun_cond_num_hint:"A diferença entre limiares evita oscilações. Vazio = mesmo valor.",
   f_sun_cond_bin_hint:"Sensor binário: sombreia enquanto estiver ativo.",
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
@@ -1698,6 +1738,10 @@ nb:{
   f_sun_cond_b:"Betingelse 2 (valgfri)",
   f_sun_cond_on:"Skjerm over",
   f_sun_cond_off:"Frigi under",
+  f_cond_on:"Gjelder fra",
+  f_cond_off:"Opphev under",
+  f_cond_num_hint:"«Opphev under» kan ligge lavere enn «Gjelder fra» – avstanden hindrer flakking rundt terskelen. Tom = samme verdi.",
+  f_close_cond_both_hint:"Er begge vilkårene fylt ut, må begge også gjelde om kvelden.",
   f_sun_cond_num_hint:"Avstanden mellom tersklene hindrer pendling. Tom = samme verdi.",
   f_sun_cond_bin_hint:"Binær sensor: skjermer så lenge den er aktiv.",
   filter_entity:"Søk…",no_match:"Ingen treff",
@@ -2271,8 +2315,20 @@ class ShutterPilotPanel extends PanelBase {
     }
     return out;
   }
+  /* Ausserhalb des Sonnenschutzes heisst "Beschatten ab" schlicht falsch –
+     dieselben Felder tragen die Bedingung fuer Schliessen, Frost und Lueften.
+     Nur die Beschriftung dreht sich, die Schluessel bleiben dieselben. */
+  static get SUN_SLOTS(){return ["a","b","c","d"];}
+  _condLabels(slot,inverted){
+    const shading=this.constructor.SUN_SLOTS.includes(slot);
+    if(inverted)return{on:"f_sun_cond_on_below",off:"f_sun_cond_off_above",hint:"f_sun_cond_num_inv_hint"};
+    return shading
+      ? {on:"f_sun_cond_on", off:"f_sun_cond_off", hint:"f_sun_cond_num_hint"}
+      : {on:"f_cond_on",     off:"f_cond_off",     hint:"f_cond_num_hint"};
+  }
   _renderCondDetail(a,slot,eid,f,inverted){
     const T=k=>this.t(k);
+    const L=this._condLabels(slot,inverted);
     if(eid.startsWith("binary_sensor."))
       return html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`;
 
@@ -2291,10 +2347,10 @@ class ShutterPilotPanel extends PanelBase {
         a[`sun_cond_${slot}_off_below`]!==""&&a[`sun_cond_${slot}_off_below`]!=null&&
         (inverted?off<on:off>on);
       return html`
-        ${f(`sun_cond_${slot}_on_above`,T(inverted?"f_sun_cond_on_below":"f_sun_cond_on"),"number")}
-        ${f(`sun_cond_${slot}_off_below`,T(inverted?"f_sun_cond_off_above":"f_sun_cond_off"),"number")}
+        ${f(`sun_cond_${slot}_on_above`,T(L.on),"number")}
+        ${f(`sun_cond_${slot}_off_below`,T(L.off),"number")}
         ${wrongWay?html`<div class="hint warn">⚠️ ${T("f_sun_cond_wrong_way")}</div>`:""}
-        <div class="hint">${T(inverted?"f_sun_cond_num_inv_hint":"f_sun_cond_num_hint")}</div>`;
+        <div class="hint">${T(L.hint)}</div>`;
     }
 
     const chosen=new Set(this._condStates(a,sk));
@@ -2889,8 +2945,14 @@ class ShutterPilotPanel extends PanelBase {
 
       `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       <div class="hint">${T("f_close_cond_hint")}</div>
-      ${ep("sun_cond_close_entity",T("f_close_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
+      ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",["binary_sensor","sensor","weather"],HINTS.condition)}
       ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
+      ${/* Die zweite erst anbieten, wenn die erste steht – zwei leere Felder
+           uebereinander sehen nach Pflicht aus. Beide muessen zutreffen. */""}
+      ${a.sun_cond_close_entity?html`
+        ${ep("sun_cond_close_b_entity",T("f_close_cond")+" 2",["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${a.sun_cond_close_b_entity?this._renderCondDetail(a,"close_b",a.sun_cond_close_b_entity,f):""}
+        <div class="hint">${T("f_close_cond_both_hint")}</div>`:""}
 
       `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
       <div class="hint">${T("f_frost_cond_hint")}</div>

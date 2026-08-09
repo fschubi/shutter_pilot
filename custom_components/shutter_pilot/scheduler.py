@@ -29,7 +29,6 @@ from .const import (
 from .helpers import (
     remember_drive_after_close,
     resolve_close_role,
-    clear_covers_driven_for_direction,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     filter_shutters_by_area,
@@ -124,6 +123,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     hass, entry, data, cover,
                     position=position, tilt=tilt, reason=direction, shutter=shutter,
                 )
+                # Die Abwärtsfahrt ist beschlossen, sie steht nur noch aus.
+                # Ohne diese zwei Zeilen bleibt der Rollladen als "heute
+                # hochgefahren" vermerkt – und der nächste Morgen überspringt
+                # genau ihn, während alle anderen hochfahren.
+                covers_driven_down.add(cover)
+                covers_driven_up.discard(cover)
                 _LOGGER.info(
                     "%s: %s Fenster offen – Fahrt wird nach Schließen ausgeführt (drive_after_close)",
                     direction, cover,
@@ -184,7 +189,6 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping UP", trigger, area_id)
             return
-        clear_covers_driven_for_direction(data, "up")
         filtered = filter_shutters_by_area(shutters, area_id, use_up=True)
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
@@ -211,7 +215,6 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping DOWN", trigger, area_id)
             return
-        clear_covers_driven_for_direction(data, "down")
         filtered = filter_shutters_by_area(shutters, area_id, use_up=False)
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:

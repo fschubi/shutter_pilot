@@ -22,7 +22,7 @@ from .const import (
     CONF_AREA_ELEVATION_MAX,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
-    CLOSE_CONDITION_SLOT,
+    CLOSE_CONDITION_SLOTS,
     FROST_CONDITION_SLOT,
     INVERTED_BY_DEFAULT_SLOTS,
     CONF_AREA_MANUAL_OVERRIDE,
@@ -401,14 +401,25 @@ def sun_extra_conditions_met(
 def close_condition_met(
     hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
 ) -> bool:
-    """True when the area's condition for a partial evening close applies.
+    """True when the area's conditions for a partial evening close apply.
 
-    Uses the same evaluation as the shading conditions, just its own slot.
-    Without a configured entity this is False, so nothing changes for anyone
+    Same evaluation as the shading conditions, own slots. Two of them, and
+    both have to hold – "the day was warm" alone is rarely the whole rule,
+    "and somebody is home" is the other half.
+
+    Without any configured entity this is False, so nothing changes for anyone
     who has not set it up – unlike the shading conditions, where an unset
     condition must not block.
     """
-    return _own_slot_met(hass, area, data, CLOSE_CONDITION_SLOT)
+    configured = False
+    for slot in CLOSE_CONDITION_SLOTS:
+        entity_key = sun_condition_keys(slot)[0]
+        if not str(area.get(entity_key) or "").strip():
+            continue
+        configured = True
+        if not _own_slot_met(hass, area, data, slot):
+            return False
+    return configured
 
 
 def frost_condition_met(
@@ -788,14 +799,6 @@ def sun_protect_area_ids_from_options(areas: list[Any]) -> set[str]:
         if aid:
             out.add(aid)
     return out
-
-
-def clear_covers_driven_for_direction(data: dict[str, Any], direction: str) -> None:
-    """Clear phase locks when a new up/down cycle begins."""
-    if direction == "up":
-        data["covers_driven_up"] = set()
-    elif direction == "down":
-        data["covers_driven_down"] = set()
 
 
 async def clear_manual_override_for_covers(

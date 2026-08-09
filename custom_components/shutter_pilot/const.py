@@ -165,6 +165,9 @@ CONF_SUN_COND_INVERT = "sun_cond_{slot}_invert"
 
 # Slot used for the alternative closing position. Same evaluation, own name.
 CLOSE_CONDITION_SLOT = "close"
+# Two slots, like ventilation: "warm today AND somebody at home" needs both.
+# The first keeps its old key so existing setups carry over untouched.
+CLOSE_CONDITION_SLOTS = (CLOSE_CONDITION_SLOT, "close_b")
 
 # Automatic ventilation: drive to the ventilation position while every
 # configured condition holds, and back to where the shutter stood before once
