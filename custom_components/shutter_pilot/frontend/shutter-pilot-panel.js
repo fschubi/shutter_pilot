@@ -2724,10 +2724,13 @@ class ShutterPilotPanel extends PanelBase {
        Companion-App verwirft den Klick auf ein <a>, das nicht im Dokument
        haengt, und das sofortige revokeObjectURL() zieht die Blob-URL wieder
        weg, bevor der Download anlaeuft. Chrome am Rechner verzeiht beides. */
+    /* Endung .txt, nicht .md: der Bericht wird ins Forum hochgeladen, und
+       Discourse laesst dort nur eine feste Liste zu (txt ja, md nein). Der
+       Inhalt bleibt Markdown – wer ihn einfuegt, bekommt weiter die Tabellen. */
     const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
-    const url=URL.createObjectURL(new Blob([this._export],{type:"text/markdown"}));
+    const url=URL.createObjectURL(new Blob([this._export],{type:"text/plain;charset=utf-8"}));
     const a=document.createElement("a");
-    a.href=url;a.download=`shutter-pilot-${stamp}.md`;
+    a.href=url;a.download=`shutter-pilot-${stamp}.txt`;
     a.rel="noopener";a.style.display="none";
     document.body.appendChild(a);
     a.click();

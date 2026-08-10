@@ -279,3 +279,68 @@ class TestElevationCanBeSwitchedOff:
         )
         assert sun_protect_conditions_met(75.0, 120.0, area) is True
         assert sun_protect_conditions_met(75.0, 300.0, area) is False
+
+
+class TestElevationSwitchPerShutter:
+    """Der Haken „Sonnenhöhe prüfen" sitzt seit 2.10.1 auch am Rollladen.
+
+    Gespeichert wurde er von Anfang an, gelesen nicht: `resolve_sun_geometry`
+    kannte den Schlüssel nicht, also entschied weiter der Bereich. Aus Wolfs
+    Export – dort steht `elevation_enabled: nein` an einem Rollladen.
+    """
+
+    def _area(self) -> dict:
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        return {
+            CONF_AREA_ID: "living",
+            CONF_AREA_ELEVATION_MIN: 10.0,
+            CONF_AREA_ELEVATION_MAX: 40.0,
+            CONF_AREA_ELEVATION_ENABLED: True,
+        }
+
+    def test_shutter_can_switch_the_height_check_off(self):
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        merged = resolve_sun_geometry(
+            self._area(),
+            {
+                CONF_SUN_GEOMETRY_OVERRIDE: True,
+                CONF_AREA_ELEVATION_ENABLED: False,
+            },
+        )
+        assert elevation_in_sun_protect_range(75.0, merged) is True
+        assert sun_protect_conditions_met(75.0, 200.0, merged) is True
+
+    def test_shutter_can_switch_it_on_against_the_area(self):
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        area = self._area()
+        area[CONF_AREA_ELEVATION_ENABLED] = False
+        merged = resolve_sun_geometry(
+            area,
+            {
+                CONF_SUN_GEOMETRY_OVERRIDE: True,
+                CONF_AREA_ELEVATION_ENABLED: True,
+            },
+        )
+        assert elevation_in_sun_protect_range(75.0, merged) is False
+
+    def test_without_the_override_switch_the_area_still_decides(self):
+        """Wolfs Fall: Haken am Rollladen aus, „Eigene Ausrichtung" auch."""
+        from custom_components.shutter_pilot.const import CONF_AREA_ELEVATION_ENABLED
+
+        merged = resolve_sun_geometry(
+            self._area(),
+            {
+                CONF_SUN_GEOMETRY_OVERRIDE: False,
+                CONF_AREA_ELEVATION_ENABLED: False,
+            },
+        )
+        assert elevation_in_sun_protect_range(75.0, merged) is False
+
+    def test_an_untouched_shutter_inherits_the_area(self):
+        merged = resolve_sun_geometry(
+            self._area(), {CONF_SUN_GEOMETRY_OVERRIDE: True, **WEST}
+        )
+        assert elevation_in_sun_protect_range(75.0, merged) is False

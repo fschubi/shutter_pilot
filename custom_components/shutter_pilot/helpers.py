@@ -520,12 +520,17 @@ def resolve_sun_geometry(
     azimuth may be overridden per shutter. Returning a merged dict keeps
     get_elevation_bounds(), get_azimuth_bounds() and sun_protect_conditions_met()
     working unchanged – they simply read from the merged config.
+
+    The list below is the whole contract: a geometry key the form offers per
+    shutter but that is missing here is stored, shown and silently ignored.
+    That is what happened to the elevation switch when it arrived in 2.10.1.
     """
     if not shutter or not bool(shutter.get(CONF_SUN_GEOMETRY_OVERRIDE, False)):
         return area
 
     merged = dict(area)
     for key in (
+        CONF_AREA_ELEVATION_ENABLED,
         CONF_AREA_ELEVATION_MIN,
         CONF_AREA_ELEVATION_MAX,
         CONF_AREA_AZIMUTH_ENABLED,

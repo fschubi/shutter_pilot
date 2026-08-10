@@ -19,6 +19,7 @@ from custom_components.shutter_pilot.const import (
     CONF_AREA_AZIMUTH_MAX,
     CONF_AREA_AZIMUTH_MIN,
     CONF_AREA_DOWN_ID,
+    CONF_AREA_ELEVATION_ENABLED,
     CONF_AREA_ELEVATION_MAX,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ID,
@@ -79,6 +80,32 @@ class TestSilentSettings:
                     CONF_COVER_ENTITY_ID: COVER,
                     CONF_SUN_GEOMETRY_OVERRIDE: True,
                     CONF_AREA_ELEVATION_MIN: 19.5,
+                }
+            )
+            == []
+        )
+
+    def test_the_switched_off_height_check_is_named_too(self):
+        """Ohne „Eigene Ausrichtung" liest die Beschattung den Haken nie."""
+        notes = "\n".join(
+            _silent_setting_notes(
+                {
+                    CONF_COVER_ENTITY_ID: COVER,
+                    CONF_SUN_GEOMETRY_OVERRIDE: False,
+                    CONF_AREA_ELEVATION_ENABLED: False,
+                }
+            )
+        )
+        assert "elevation_enabled" in notes
+
+    def test_the_switched_on_height_check_is_no_deviation(self):
+        """Eingeschaltet ist die Vorgabe – als Warnung waere das Rauschen."""
+        assert (
+            _silent_setting_notes(
+                {
+                    CONF_COVER_ENTITY_ID: COVER,
+                    CONF_SUN_GEOMETRY_OVERRIDE: False,
+                    CONF_AREA_ELEVATION_ENABLED: True,
                 }
             )
             == []

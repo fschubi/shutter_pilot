@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.10.3]
+
+Wieder aus Wolfs Export – diesmal aus einer Zeile, über die niemand gestolpert
+war, weil sie sauber aussah.
+
+### Behoben
+- **„Sonnenhöhe prüfen" wirkte am einzelnen Rollladen nicht.** Der Haken kam in 2.10.1 für Bereich *und* Rollladen. Gespeichert wurde er auch am Rollladen, gelesen nie: die Beschattung fragte dort weiter den Bereich. Wer die Höhenprüfung an einem Fenster abschalten wollte – dem mit dem eigenen Helligkeitssensor –, bekam sie trotzdem. Ab jetzt zählt der Haken am Rollladen, sobald „Eigene Ausrichtung" eingeschaltet ist; ohne diesen Schalter gelten wie bei allen anderen Geometriewerten die Werte des Bereichs. (Forum, Wolf)
+
+### Geändert
+- **Der Bericht wird als `.txt` heruntergeladen.** Inhalt und Aufbau bleiben gleich, nur die Endung ändert sich: das Forum nimmt `.md` nicht an, `.txt` schon. Wer den Bericht stattdessen einfügt, merkt keinen Unterschied. (Forum, Wolf)
+- **Der Export nennt auch eine abgeschaltete Höhenprüfung, die niemand liest.** Steht sie am Rollladen auf „aus", während „Eigene Ausrichtung" aus ist, dann entscheidet der Bereich – der Haken steht in der Tabelle wie jeder wirksame Wert. Eingeschaltet bleibt er unerwähnt: das ist die Vorgabe und sagt nichts aus.
+
 ## [2.10.2]
 
 Aus Wolfs Einstellungs-Export im Forum. Der Bericht hat einen Fehler

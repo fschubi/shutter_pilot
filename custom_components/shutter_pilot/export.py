@@ -38,6 +38,7 @@ from .const import (
     CONF_AREA_AZIMUTH_MAX,
     CONF_AREA_AZIMUTH_MIN,
     CONF_AREA_DOWN_ID,
+    CONF_AREA_ELEVATION_ENABLED,
     CONF_AREA_ELEVATION_MAX,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ID,
@@ -245,6 +246,11 @@ def _silent_setting_notes(shutter: dict[str, Any]) -> list[str]:
 
     if not shutter.get(CONF_SUN_GEOMETRY_OVERRIDE):
         own = [key for key in _GEOMETRY_KEYS if _is_set(shutter.get(key))]
+        # Nur das *ausgeschaltete* Häkchen ist eine Abweichung. Eingeschaltet
+        # steht es auf der Vorgabe und beschreibt nichts, was der Bereich nicht
+        # ohnehin täte – als Warnung wäre es Rauschen an fast jedem Rollladen.
+        if shutter.get(CONF_AREA_ELEVATION_ENABLED) is False:
+            own.insert(0, CONF_AREA_ELEVATION_ENABLED)
         if own:
             notes.append(
                 "> ⚠️ Eigene Werte für Sonnenhöhe/Fensterrichtung sind "

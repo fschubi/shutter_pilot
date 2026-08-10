@@ -903,3 +903,46 @@ gemacht, `node --check` fuers Panel, i18n 291/291 Schluessel in allen elf
 Sprachen. **Nicht im Browser geprueft:** die Formularwarnung und der
 reparierte Download-Knopf – letzterer laesst sich ohne Android-Tablet ohnehin
 nicht nachstellen.
+
+### 2026-08-10 – 2.10.3: der Haken, den niemand gelesen hat
+
+Wolfs zweiter Export, und wieder steckte der Fund nicht in seiner Frage (sie
+ging um die Dateiendung), sondern in einer Zeile der Tabelle daneben:
+`elevation_enabled: nein` an einem Rollladen.
+
+**`resolve_sun_geometry()` kannte den Schlüssel nicht.** Das Panel rendert den
+Haken seit 2.10.1 in *beiden* Formularen und `save_shutter` speichert
+unbekannte Schlüssel ohnehin mit – gemerged wurde er nie. `elevation_used(geo)`
+las damit immer den Bereich, an allen drei Stellen (Helper, `elevation.py`,
+Export). Der Changelog-Eintrag von 2.10.1 verspricht ausdrücklich „je Bereich
+und je Rollladen".
+
+**Die Lehre ist die Liste selbst:** Der Schlüssel-Tupel in
+`resolve_sun_geometry` *ist* der Vertrag zwischen Formular und Logik. Steht ein
+Feld im Rollladenformular, aber nicht in dieser Liste, ist es gespeichert,
+sichtbar und wirkungslos – genau die Klasse Fehler, die `_silent_setting_notes()`
+seit 2.10.2 im Export benennt. Steht jetzt als Kommentar am Docstring.
+
+Am Export nachgezogen: der Hinweis nennt den Haken nur, wenn er **aus** ist.
+Eingeschaltet ist er die Vorgabe und beschreibt nichts – als Warnung stünde er
+sonst an fast jedem Rollladen (`_is_set(True)` wäre wahr).
+
+**Download jetzt `.txt`.** Kein Codefehler, sondern die Whitelist des Forums
+(jpg, png, …, yaml, txt – kein md). Der Inhalt bleibt Markdown; wer die Datei
+einfügt statt hochzuladen, merkt nichts.
+
+**Verifiziert:** `pytest` 442 Tests grün (6 neue), Gegenprobe gemacht – ohne die
+eine Zeile in `resolve_sun_geometry` fallen 2 der 4 neuen Geometrie-Tests.
+`node --check` fürs Panel. **Nicht im Browser geprüft:** der Download-Knopf.
+
+**Wolfs Anlage selbst** (nachgerechnet, nicht geschätzt): vier seiner sechs
+Rollläden hängen halb in der Luft, alle aus derselben Ursache – ein Bereich mit
+abgeschalteter Automatik auf einer der beiden Seiten. „Zimmer vorne" fährt über
+`wohnbereich_vorne` abends runter, aber sein Hoch-Bereich `abwesend_hoch` ist
+aus: er bleibt unten. „Küche vorne" ist der Spiegelfall (Runter-Bereich
+`abwesend_runter` aus, fährt also nie zu; dessen Sonnenschutz ist ebenfalls aus,
+seine eigenen Geometriewerte damit doppelt wirkungslos). „Wohnzimmer" und
+„Zimmer hinten" haben die Automatik am Rollladen aus. Die Abwesenheits-Bereiche
+als zweite Seite einzutragen ist naheliegend und kippt beim Einschalten das
+Verhalten der betroffenen Rollläden komplett – möglicher Kandidat für einen
+Hinweis im Formular.
