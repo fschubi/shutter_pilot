@@ -198,7 +198,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.10.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.10.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -839,3 +839,67 @@ weg, statt „unavailable" hinzuschreiben.
 `sun_cond_sun_cond_a_entity`, der Slot gilt als unkonfiguriert und
 `_condition_slot_met` gibt **True** zurück – ein fail-open, das wie ein
 bestandener Test aussieht.
+
+### 2026-08-10 – 2.10.2: Wolfs Export, und was der Export selbst verschwieg
+
+Der erste Bericht, der einen Fehler aufgedeckt hat, den vorher niemand gemeldet
+hatte. Gefunden nicht in seiner Beschwerde, sondern beim Durchrechnen der
+Tabelle daneben.
+
+**Der Fund: der Aussperrschutz galt beim Fenstertrigger nicht.**
+`get_effective_close_position()` sitzt an jedem automatisierten Fahrweg –
+Scheduler, Helligkeit, Beschattung – nur nicht an dem einen, der
+**ausschliesslich bei offenem Fenster** faehrt. `window_trigger.py` fuhr
+`target_pos` roh. Wolfs „Kueche vorne": Kontakt ohne Kipp-Zustand, also
+zweiwertig, also gilt `position_when_window_tilted` = 0 – und daneben
+Aussperrschutz mit Mindesthoehe 90. Terrassentuer auf, Rollladen zu.
+
+Zwei Dinge daran sind lehrreich:
+
+* **Der Weg dahin wurde erst 2.8.1 geoeffnet.** Solange der Fenstertrigger nur
+  (nahezu) geschlossene Rollladen erreichte, fuhr er von 0 auf 0 und der
+  fehlende Deckel fiel nicht auf. Erst seit der beschattete Rollladen den
+  Kontakt annimmt, faehrt er von 50 auf 0. Ein Fix kann eine alte Luecke
+  scharfstellen, ohne sie zu beruehren.
+* **Die Gegenprobe gehoert dazu:** ohne die eine Zeile fallen 2 der 4 neuen
+  Tests. Gemacht, nicht angenommen.
+
+**Was der Export selbst falsch erzaehlt hat.** Jedes Speichern im Panel ruft
+`async_reload` (`__init__.py:378`), und `hass.data[...]` wird dabei neu
+aufgebaut. Alle Laufzeit-Merker stehen danach leer. Wolf hat kurz vorher etwas
+umgestellt – sein Bericht zeigte deshalb „Laufender Zustand" komplett auf „–"
+und bei zwei Rollladen „Ergebnis: beschatten · gemerkter Zustand: nicht
+beschattet", samt der Aufforderung, das zu melden. Beides kein Befund.
+
+Dass die Beschattung vorher lief, stand trotzdem drin: beide Rollladen genau
+auf ihrer `position_sun_protect` (49 bzw. 59), Quelle `automation` – auf solche
+Werte faehrt nichts sonst. **Merke: bei leeren Merkern zuerst die Positionen
+gegen die Rollen halten, bevor man einen Fehler sucht.** `_runtime_started`
+steht jetzt im Dict, der Export nennt das Alter und erklaert die Striche.
+
+**Zwei stille Einstellungen** hat derselbe Export offengelegt, beide derselben
+Klasse: gespeichert, in der Tabelle sichtbar, wirkungslos, weil ein Schalter
+daneben etwas anderes lesen laesst. Eigene Geometriewerte ohne „Eigene
+Ausrichtung", und `position_when_window_open` an einem zweiwertigen Kontakt
+(2.8.2 hat dafuer das Formular aufgeraeumt, die Bestandsdaten nicht).
+`_silent_setting_notes()` benennt beide. `_has_tilt_state` ist dafuer nach
+`window_helper.py` gewandert und heisst dort `has_tilt_state`.
+
+**Bei Wolf selbst falsch eingestellt** (fuer die Antwort im Forum
+nachgerechnet, nicht geschaetzt): in seinem Helligkeitsbereich sind Hoch- und
+Runter-Zeitfenster vertauscht – Hoch 19:00–20:00, Runter 11:00–18:00. Damit
+faehrt dort morgens nie etwas hoch und abends nie etwas runter. Dazu Lux Hoch
+595 unter Lux Runter 956; zwischen beiden Werten gilt beides gleichzeitig.
+Gerettet wird ihn nur, dass sich die Zeitfenster nicht ueberschneiden –
+korrigiert er die, faengt es an zu pendeln. Daher die Formularwarnung.
+
+**Testfalle vermieden:** die neuen Export-Tests liegen in
+`tests/test_export_notes.py`, nicht in `test_forum_findings.py` – dessen
+Fixture kostet ~14 s je Test. `async_build_export` braucht kein echtes Setup:
+Optionen am Entry und ein hingestelltes `hass.data[DOMAIN][entry_id]` reichen.
+
+**Verifiziert:** `pytest` 436 Tests gruen (12 neue), Gegenprobe zum Fix
+gemacht, `node --check` fuers Panel, i18n 291/291 Schluessel in allen elf
+Sprachen. **Nicht im Browser geprueft:** die Formularwarnung und der
+reparierte Download-Knopf – letzterer laesst sich ohne Android-Tablet ohnehin
+nicht nachstellen.

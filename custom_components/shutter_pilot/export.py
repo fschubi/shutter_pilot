@@ -24,6 +24,7 @@ meant to document.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +34,12 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_AREA_AZIMUTH_ENABLED,
+    CONF_AREA_AZIMUTH_MAX,
+    CONF_AREA_AZIMUTH_MIN,
     CONF_AREA_DOWN_ID,
+    CONF_AREA_ELEVATION_MAX,
+    CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ID,
     CONF_AREA_MODE,
     CONF_AREA_NAME,
@@ -42,8 +48,11 @@ from .const import (
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
     CONF_NAME,
+    CONF_POSITION_WHEN_WINDOW_OPEN,
+    CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_SHUTTERS,
     CONF_SUN_GEOMETRY_OVERRIDE,
+    CONF_WINDOW_ENTITY_ID,
     DOMAIN,
     INVERTED_BY_DEFAULT_SLOTS,
     SUN_CONDITION_SLOTS,
@@ -65,6 +74,16 @@ from .helpers import (
     sun_protect_conditions_met,
 )
 from .position_store import get_position_store
+from .window_helper import has_tilt_state
+
+# Geometriewerte, die ohne "Eigene Ausrichtung" stumm liegen bleiben.
+_GEOMETRY_KEYS = (
+    CONF_AREA_ELEVATION_MIN,
+    CONF_AREA_ELEVATION_MAX,
+    CONF_AREA_AZIMUTH_MIN,
+    CONF_AREA_AZIMUTH_MAX,
+    CONF_AREA_AZIMUTH_ENABLED,
+)
 
 # Keys that only ever repeat what the heading already says.
 _SKIP_KEYS = frozenset({CONF_AREA_ID, CONF_AREA_NAME, CONF_COVER_ENTITY_ID})
@@ -214,6 +233,41 @@ def _condition_rows(
     )
 
 
+def _silent_setting_notes(shutter: dict[str, Any]) -> list[str]:
+    """Settings that are stored, look like they work, and do nothing.
+
+    Both come from the same trap: a value the form still shows – or showed in
+    an older version – while a switch next to it decides that something else
+    is read instead. In the table below they sit next to the values that do
+    apply, and nothing tells them apart.
+    """
+    notes: list[str] = []
+
+    if not shutter.get(CONF_SUN_GEOMETRY_OVERRIDE):
+        own = [key for key in _GEOMETRY_KEYS if _is_set(shutter.get(key))]
+        if own:
+            notes.append(
+                "> ⚠️ Eigene Werte für Sonnenhöhe/Fensterrichtung sind "
+                f"hinterlegt ({', '.join(f'`{k}`' for k in own)}), aber "
+                "**„Eigene Ausrichtung\" ist aus** – es gelten die Werte des "
+                "Bereichs."
+            )
+
+    window_id = shutter.get(CONF_WINDOW_ENTITY_ID)
+    if _is_set(window_id) and not has_tilt_state(shutter):
+        open_pos = shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN)
+        tilt_pos = shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED)
+        if _is_set(open_pos) and _is_set(tilt_pos) and open_pos != tilt_pos:
+            notes.append(
+                "> ⚠️ Ohne Kipp-Zustand ist der Kontakt zweiwertig, gefahren "
+                f"wird immer `position_when_window_tilted` ({_fmt(tilt_pos)} %) "
+                f"– auch bei „offen\". `position_when_window_open` "
+                f"({_fmt(open_pos)} %) wird nie benutzt."
+            )
+
+    return [*notes, ""] if notes else []
+
+
 def _shading_verdict(
     hass: HomeAssistant,
     area: dict[str, Any],
@@ -222,12 +276,16 @@ def _shading_verdict(
     elev: float | None,
     azim: float | None,
     blocked: str = "",
+    fresh_runtime: bool = False,
 ) -> list[str]:
     """Run the real shading decision for one shutter and explain the outcome.
 
     `blocked` names the switch that stops this shutter from being driven at
     all. The decision is still worth printing – it is what the configuration
     says – but on its own it reads like a promise the integration will not keep.
+
+    `fresh_runtime` says the markers were wiped moments ago by a reload, which
+    makes a divergence the expected reading rather than a finding.
     """
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
     geo = resolve_shading_config(area, shutter)
@@ -275,6 +333,13 @@ def _shading_verdict(
             f"> ⚠️ {blocked} steht auf **aus**. Diese Entscheidung wird berechnet, "
             "aber nicht gefahren – die Beschattung bleibt aus, egal was hier steht."
         )
+    elif should != is_cover_sun_protected(data, cover) and fresh_runtime:
+        lines.append("")
+        lines.append(
+            "> ℹ️ Entscheidung und gemerkter Zustand gehen auseinander, weil die "
+            "Integration gerade neu geladen wurde – der Merker ist dabei leer "
+            "geworden und steht nach der nächsten Minute wieder. Kein Fehler."
+        )
     elif should != is_cover_sun_protected(data, cover):
         lines.append("")
         lines.append(
@@ -305,6 +370,16 @@ async def async_build_export(
     elev, azim = get_sun_angles(hass)
     store = get_position_store(hass, entry.entry_id)
     now = dt_util.as_local(dt_util.now())
+
+    # Jedes Speichern im Panel laedt den Entry neu, und dabei gehen alle
+    # Laufzeit-Merker verloren. Wer danach exportiert – also fast jeder, der
+    # gerade etwas umgestellt hat – bekam eine Tabelle voller Striche und die
+    # Aufforderung, das zu melden.
+    started = data.get("_runtime_started")
+    age_minutes: float | None = None
+    if isinstance(started, datetime):
+        age_minutes = max(0.0, (dt_util.utcnow() - started).total_seconds() / 60.0)
+    fresh_runtime = age_minutes is not None and age_minutes < 5
 
     # Which build produced this report matters more than anything else in it –
     # half the answers in the forum are "that is fixed in the newer version".
@@ -400,6 +475,7 @@ async def async_build_export(
                 ]
 
         out += _settings_table(shutter)
+        out += _silent_setting_notes(shutter)
 
         if down_area is not None and down_area.get(CONF_AREA_SUN_PROTECT_ENABLED):
             if not is_system_enabled(hass, entry):
@@ -417,7 +493,8 @@ async def async_build_export(
                 "Beschattungs-Prüfung mit den Werten von jetzt:",
                 "",
                 *_shading_verdict(
-                    hass, down_area, shutter, data, elev, azim, blocked
+                    hass, down_area, shutter, data, elev, azim, blocked,
+                    fresh_runtime,
                 ),
             ]
 
@@ -431,8 +508,19 @@ async def async_build_export(
         f"| heute schon runtergefahren | {_fmt(sorted(data.get('covers_driven_down', set())))} |",
         f"| wartende Nachhol-Fahrten | {_fmt(sorted(data.get('drive_after_close_pending', {})))} |",
         f"| Minuten-Ticker läuft | {_fmt(bool(data.get('_minute_ticker_unsub')))} |",
+        "| zuletzt geladen | "
+        + ("–" if age_minutes is None else f"vor {age_minutes:.0f} min")
+        + " |",
         "",
     ]
+    if fresh_runtime:
+        out += [
+            "> ℹ️ Die Integration wurde gerade neu geladen – jedes Speichern im "
+            "Panel tut das. Die Merker oben fangen danach wieder bei null an "
+            "und füllen sich im Lauf des Tages. Leere Zeilen sind hier also "
+            "kein Befund.",
+            "",
+        ]
 
     return {
         "markdown": "\n".join(out),

@@ -16,7 +16,6 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_ENTITY_ID,
-    CONF_WINDOW_TILTED_STATE,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_POSITION_CLOSED,
@@ -32,9 +31,10 @@ from .helpers import (
     set_cover_position,
 )
 from .window_helper import (
+    get_effective_close_position,
     get_tilt_entity_id,
     get_window_state,
-    has_separate_tilt_entity,
+    has_tilt_state,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,15 +81,8 @@ def cancel_all_window_close(data: dict[str, Any]) -> None:
     tasks.clear()
 
 
-def _has_tilt_state(shutter: dict) -> bool:
-    """True if this shutter can tell "tilted" apart from "open".
-
-    Either through a 3-state contact or through a second, dedicated entity.
-    """
-    if has_separate_tilt_entity(shutter):
-        return True
-    tilted = shutter.get(CONF_WINDOW_TILTED_STATE, "none")
-    return bool(tilted) and str(tilted).lower() != "none"
+# Liegt in window_helper, seit der Export dieselbe Frage stellt.
+_has_tilt_state = has_tilt_state
 
 
 def _get_target_position_for_window_state(
@@ -298,6 +291,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     reason = "Window opened (2-state ventilation)"
                 else:
                     reason = "Window opened"
+                # Der Aussperrschutz galt an jedem automatisierten Fahrweg –
+                # ausser an diesem, dem einzigen, der ausschliesslich bei
+                # offenem Fenster faehrt. Eine Kipp-Position unterhalb der
+                # Mindesthoehe schloss den Rollladen damit vor der offenen
+                # Terrassentuer, genau was die Einstellung verhindern soll.
+                target_pos = get_effective_close_position(hass, shutter, target_pos)
                 hass.async_create_task(
                     set_cover_position(hass, entry, cover_entity, target_pos, reason)
                 )

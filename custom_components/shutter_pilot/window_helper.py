@@ -88,6 +88,19 @@ def _separate_tilt_active(hass: HomeAssistant, shutter: dict) -> bool:
     return _canonical_state(state.state) == _canonical_state(expected)
 
 
+def has_tilt_state(shutter: dict) -> bool:
+    """True if this shutter can tell "tilted" apart from "open".
+
+    Either through a 3-state contact or through a second, dedicated entity.
+    Without it the contact is two-valued and the tilt position is what gets
+    driven, "open" included – so the export has to ask this too.
+    """
+    if has_separate_tilt_entity(shutter):
+        return True
+    tilted = shutter.get(CONF_WINDOW_TILTED_STATE, "none")
+    return bool(tilted) and str(tilted).lower() != "none"
+
+
 def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
     """
     Return: "closed" | "tilted" | "open"

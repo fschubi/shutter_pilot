@@ -182,6 +182,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "recent_automation_covers": {},
         "sun_protect_active": {},
         "master_enabled": True,
+        # Jedes Speichern im Panel laedt den Entry neu und baut dieses Dict
+        # frisch auf – alle Merker oben stehen danach wieder leer. Ohne den
+        # Zeitstempel liest sich das im Export wie ein Fehler, und der erste
+        # Bericht dieser Art kam prompt aus dem Forum.
+        "_runtime_started": dt_util.utcnow(),
     }
 
     get_position_store(hass, entry.entry_id)

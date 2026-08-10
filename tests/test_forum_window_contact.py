@@ -32,6 +32,8 @@ from custom_components.shutter_pilot.const import (
     CONF_AREA_TIME_UP,
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
+    CONF_LOCK_PROTECTION,
+    CONF_MIN_POSITION_WHEN_OPEN,
     CONF_NAME,
     CONF_POSITION_CLOSED,
     CONF_POSITION_WHEN_WINDOW_OPEN,
@@ -157,7 +159,7 @@ def _shutter(**overrides) -> dict:
     return shutter
 
 
-async def _setup(hass, cover_position: int):
+async def _setup(hass, cover_position: int, shutter: dict | None = None):
     hass.states.async_set(
         COVER, "open", {"current_position": cover_position, "supported_features": 15}
     )
@@ -165,7 +167,7 @@ async def _setup(hass, cover_position: int):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Shutter Pilot",
-        options={CONF_AREAS: [AREA], CONF_SHUTTERS: [_shutter()]},
+        options={CONF_AREAS: [AREA], CONF_SHUTTERS: [shutter or _shutter()]},
     )
     config_entry.add_to_hass(hass)
     with patch(
@@ -276,3 +278,90 @@ class TestHeinziesSetup:
         # 98, nicht 97: ohne Kipp-Zustand gilt die Kipp-Position fuer beides.
         # Danach zurueck auf die Beschattungsposition, von der er kam.
         assert [c.data["position"] for c in cover_calls] == [98, 80]
+
+
+# --- Wolfs Terrassentuer, 10.08.2026 ----------------------------------------
+
+
+class TestLockProtectionOnTheWindowTrigger:
+    """Aussperrschutz an, Kipp-Position darunter – wer gewinnt?
+
+    Der Fenstertrigger ist der einzige automatisierte Fahrweg, der
+    ausschliesslich *bei offenem Fenster* faehrt, und ausgerechnet er fuhr
+    seine Zielposition ungefiltert. Eine Kipp-Position unterhalb der
+    Mindesthoehe schloss den Rollladen damit vor der offenen Terrassentuer –
+    genau der Fall, fuer den es die Einstellung gibt.
+    """
+
+    def _terrassentuer(self, **overrides) -> dict:
+        shutter = _shutter(
+            **{
+                CONF_POSITION_WHEN_WINDOW_TILTED: 0,
+                CONF_POSITION_WHEN_WINDOW_OPEN: 100,
+                CONF_LOCK_PROTECTION: True,
+                CONF_MIN_POSITION_WHEN_OPEN: 90,
+            }
+        )
+        shutter.update(overrides)
+        return shutter
+
+    async def test_position_below_the_minimum_is_capped(self, hass, cover_calls):
+        _, data = await _setup(
+            hass, cover_position=50, shutter=self._terrassentuer()
+        )
+        set_cover_sun_protected(data, COVER, True)
+
+        hass.states.async_set(WINDOW, "on")
+        await hass.async_block_till_done()
+
+        assert [c.data["position"] for c in cover_calls] == [90]
+
+    async def test_a_position_above_the_minimum_is_left_alone(
+        self, hass, cover_calls
+    ):
+        _, data = await _setup(
+            hass,
+            cover_position=50,
+            shutter=self._terrassentuer(**{CONF_POSITION_WHEN_WINDOW_TILTED: 95}),
+        )
+        set_cover_sun_protected(data, COVER, True)
+
+        hass.states.async_set(WINDOW, "on")
+        await hass.async_block_till_done()
+
+        assert [c.data["position"] for c in cover_calls] == [95]
+
+    async def test_without_lock_protection_nothing_changes(self, hass, cover_calls):
+        """Ohne Aussperrschutz bleibt es beim eingestellten Wert."""
+        _, data = await _setup(
+            hass,
+            cover_position=50,
+            shutter=self._terrassentuer(**{CONF_LOCK_PROTECTION: False}),
+        )
+        set_cover_sun_protected(data, COVER, True)
+
+        hass.states.async_set(WINDOW, "on")
+        await hass.async_block_till_done()
+
+        assert [c.data["position"] for c in cover_calls] == [0]
+
+    async def test_the_restore_height_is_still_the_one_from_before(
+        self, hass, cover_calls
+    ):
+        """Die Rueckfahrhoehe ist die Beschattungsposition, nicht die gekappte."""
+        _, data = await _setup(
+            hass, cover_position=50, shutter=self._terrassentuer()
+        )
+        set_cover_sun_protected(data, COVER, True)
+
+        hass.states.async_set(WINDOW, "on")
+        await hass.async_block_till_done()
+        assert data["trigger_heights"][COVER] == 50
+
+        hass.states.async_set(
+            COVER, "open", {"current_position": 90, "supported_features": 15}
+        )
+        hass.states.async_set(WINDOW, "off")
+        await hass.async_block_till_done()
+
+        assert [c.data["position"] for c in cover_calls] == [90, 50]

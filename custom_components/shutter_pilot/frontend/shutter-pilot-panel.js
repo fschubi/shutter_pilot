@@ -298,6 +298,7 @@ de:{
   dash_shutter_role_both:"Hoch- und Runterfahren über diesen Bereich",
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Helligkeitssensor",f_lux_up:"Lux Hoch-Schwelle",f_lux_down:"Lux Runter-Schwelle",
+  f_lux_wrong_way:"Die Hoch-Schwelle sollte über der Runter-Schwelle liegen: hoch geht es oberhalb, runter unterhalb. Liegt sie darunter, gilt zwischen den beiden Werten beides gleichzeitig – überschneiden sich dann noch die Zeitfenster, pendelt der Rollladen.",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
   f_cover:"Rollladen / Cover",f_window_sensor:"Fenster-/Türsensor (optional)",
@@ -506,6 +507,7 @@ en:{
   dash_shutter_role_both:"Up and down drives via this area",
   dash_current_lux:"Current",
   f_brightness_sensor:"Brightness sensor",f_lux_up:"Lux up threshold",f_lux_down:"Lux down threshold",
+  f_lux_wrong_way:"The up threshold belongs above the down threshold: up happens above it, down below. Put it lower and both rules hold between the two values at once – once the time windows overlap as well, the shutter starts oscillating.",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
   f_cover:"Shutter / Cover",f_window_sensor:"Window/door sensor (optional)",
@@ -660,6 +662,7 @@ fr:{
   dash_shutter_role_both:"Montée et descente via cette zone",
   dash_current_lux:"Actuel",
   f_brightness_sensor:"Capteur luminosité",f_lux_up:"Seuil lux montée",f_lux_down:"Seuil lux descente",
+  f_lux_wrong_way:"Le seuil de montée doit être au-dessus du seuil de descente : on monte au-dessus, on descend en dessous. S'il est plus bas, les deux règles s'appliquent en même temps entre les deux valeurs – et si les plages horaires se recoupent, le volet oscille.",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
   f_cover:"Volet / Cover",f_window_sensor:"Capteur fenêtre (optionnel)",
@@ -810,6 +813,7 @@ es:{
   dash_shutter_role_both:"Subida y bajada por esta zona",
   dash_current_lux:"Actual",
   f_brightness_sensor:"Sensor brillo",f_lux_up:"Umbral lux subida",f_lux_down:"Umbral lux bajada",
+  f_lux_wrong_way:"El umbral de subida debe estar por encima del de bajada: se sube por encima y se baja por debajo. Si queda más bajo, entre ambos valores se cumplen las dos reglas a la vez, y si además se solapan las franjas horarias la persiana oscila.",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
   f_cover:"Persiana / Cover",f_window_sensor:"Sensor ventana (opcional)",
@@ -960,6 +964,7 @@ it:{
   dash_shutter_role_both:"Apertura e chiusura da questa zona",
   dash_current_lux:"Attuale",
   f_brightness_sensor:"Sensore luminosità",f_lux_up:"Soglia lux apertura",f_lux_down:"Soglia lux chiusura",
+  f_lux_wrong_way:"La soglia di apertura va sopra quella di chiusura: si apre al di sopra, si chiude al di sotto. Se sta più in basso, fra i due valori valgono entrambe le regole insieme e, se si sovrappongono anche le fasce orarie, la tapparella oscilla.",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
   f_cover:"Tapparella / Cover",f_window_sensor:"Sensore finestra (opzionale)",
@@ -1111,6 +1116,7 @@ nl:{
   dash_shutter_role_both:"Omhoog en omlaag via deze zone",
   dash_current_lux:"Huidig",
   f_brightness_sensor:"Helderheidssensor",f_lux_up:"Lux omhoog drempel",f_lux_down:"Lux omlaag drempel",
+  f_lux_wrong_way:"De omhoog-drempel hoort boven de omlaag-drempel: omhoog gebeurt erboven, omlaag eronder. Ligt hij lager, dan gelden tussen beide waarden allebei de regels tegelijk – overlappen ook de tijdvensters, dan gaat het rolluik heen en weer.",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
   f_cover:"Rolluik / Cover",f_window_sensor:"Raam-/deursensor (optioneel)",
@@ -1262,6 +1268,7 @@ da:{
   dash_shutter_role_both:"Op og ned via dette område",
   dash_current_lux:"Aktuel",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux op-tærskel",f_lux_down:"Lux ned-tærskel",
+  f_lux_wrong_way:"Op-tærsklen hører over ned-tærsklen: op sker over den, ned under den. Ligger den lavere, gælder begge regler samtidig mellem de to værdier – og overlapper tidsrummene også, kører persiennen frem og tilbage.",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
   f_cover:"Persienne / Cover",f_window_sensor:"Vinduessensor (valgfrit)",
@@ -1413,6 +1420,7 @@ sv:{
   dash_shutter_role_both:"Upp och ner via detta område",
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Ljussensor",f_lux_up:"Lux upp-tröskel",f_lux_down:"Lux ner-tröskel",
+  f_lux_wrong_way:"Upp-tröskeln hör hemma över ner-tröskeln: upp sker ovanför, ner nedanför. Ligger den lägre gäller båda reglerna samtidigt mellan värdena – överlappar dessutom tidsfönstren pendlar persiennen.",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
   f_cover:"Persienn / Cover",f_window_sensor:"Fönstersensor (valfritt)",
@@ -1564,6 +1572,7 @@ pl:{
   dash_shutter_role_both:"W górę i w dół przez tę strefę",
   dash_current_lux:"Aktualnie",
   f_brightness_sensor:"Czujnik jasności",f_lux_up:"Próg lux w górę",f_lux_down:"Próg lux w dół",
+  f_lux_wrong_way:"Próg podnoszenia powinien być powyżej progu opuszczania: w górę powyżej, w dół poniżej. Jeśli jest niżej, między obiema wartościami obowiązują obie reguły naraz – a gdy nakładają się jeszcze okna czasowe, roleta zaczyna się wahać.",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
   f_cover:"Roleta / Cover",f_window_sensor:"Czujnik okna (opcjonalnie)",
@@ -1715,6 +1724,7 @@ pt:{
   dash_shutter_role_both:"Subir e descer por esta zona",
   dash_current_lux:"Atual",
   f_brightness_sensor:"Sensor de luminosidade",f_lux_up:"Limiar lux subir",f_lux_down:"Limiar lux descer",
+  f_lux_wrong_way:"O limiar de subida fica acima do de descida: sobe-se acima dele e desce-se abaixo. Se ficar mais baixo, entre os dois valores valem as duas regras ao mesmo tempo – e se as janelas horárias também se sobrepuserem, a persiana oscila.",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
   f_cover:"Estore / Cover",f_window_sensor:"Sensor de janela (opcional)",
@@ -1866,6 +1876,7 @@ nb:{
   dash_shutter_role_both:"Opp og ned via dette området",
   dash_current_lux:"Nå",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux opp-terskel",f_lux_down:"Lux ned-terskel",
+  f_lux_wrong_way:"Opp-terskelen hører over ned-terskelen: opp skjer over den, ned under den. Ligger den lavere, gjelder begge reglene samtidig mellom verdiene – overlapper tidsvinduene i tillegg, pendler rullegardinen.",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
   f_cover:"Persienne / Cover",f_window_sensor:"Vindussensor (valgfritt)",
@@ -2708,11 +2719,19 @@ class ShutterPilotPanel extends PanelBase {
   }
   _downloadExport(){
     if(!this._export)return;
+    /* Auf einem Android-Tablet reagierte der Knopf, lud aber nichts. Zwei
+       Gruende, beide auf dem Desktop unsichtbar: der WebView der
+       Companion-App verwirft den Klick auf ein <a>, das nicht im Dokument
+       haengt, und das sofortige revokeObjectURL() zieht die Blob-URL wieder
+       weg, bevor der Download anlaeuft. Chrome am Rechner verzeiht beides. */
     const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
     const url=URL.createObjectURL(new Blob([this._export],{type:"text/markdown"}));
     const a=document.createElement("a");
-    a.href=url;a.download=`shutter-pilot-${stamp}.md`;a.click();
-    URL.revokeObjectURL(url);
+    a.href=url;a.download=`shutter-pilot-${stamp}.md`;
+    a.rel="noopener";a.style.display="none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},4000);
   }
   async _saveSettings(){
     try{
@@ -2974,6 +2993,11 @@ class ShutterPilotPanel extends PanelBase {
           ${bd("sun_we_earliest_up",T("f_we_earliest_up"),"08:00")}${bd("sun_we_latest_up",T("f_we_latest_up"),"09:00")}
           ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
+          ${/* Hoch gilt oberhalb, Runter unterhalb. Liegt die Hoch-Schwelle
+               darunter, ist dazwischen beides zugleich wahr – solange sich die
+               Zeitfenster nicht überschneiden fällt das niemandem auf, danach
+               pendelt der Rollladen. */""}
+          ${Number(a.lux_up??500)<=Number(a.lux_down??400)?html`<div class="hint warn">⚠️ ${T("f_lux_wrong_way")}</div>`:""}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}
           <div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>

@@ -4,6 +4,21 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.10.2]
+
+Aus Wolfs Einstellungs-Export im Forum. Der Bericht hat einen Fehler
+aufgedeckt, der noch keinem aufgefallen war – und dabei gleich gezeigt, wo er
+selbst in die Irre führt.
+
+### Behoben
+- **Der Aussperrschutz galt beim Fensterkontakt nicht.** Er greift an jedem automatischen Fahrweg – nur nicht an dem einzigen, der ausschließlich *bei offenem Fenster* fährt. Wer die Position bei offenem Fenster niedriger eingestellt hatte als die Mindesthöhe des Aussperrschutzes, bekam genau das, was die Einstellung verhindern soll: Terrassentür auf, Rollladen davor zu. Aufgefallen bei einem Rollladen, der beschattet auf halber Höhe stand – seit 2.8.1 erreicht der Fensterkontakt auch den beschatteten Rollladen, und ab da war der Weg offen. Die Zielposition wird jetzt genauso gedeckelt wie bei jeder anderen Fahrt. (Forum, Wolf)
+- **„Bericht herunterladen" tat auf Android nichts.** Der Knopf reagierte, die Datei kam nie an. Zwei Ursachen, auf dem Rechner beide unsichtbar: die App verwirft den Klick auf einen Download-Verweis, der nicht in der Seite hängt, und die erzeugte Datei wurde sofort wieder freigegeben, bevor der Download anlief. (Forum, Wolf)
+
+### Geändert
+- **Der Export sagt jetzt, wenn die Merker gerade erst geleert wurden.** Jedes Speichern im Panel lädt die Integration neu, und dabei fangen „beschattete Rollläden", „heute schon hochgefahren" und die wartenden Nachhol-Fahrten wieder bei null an. Wer direkt nach einer Änderung exportierte – also fast jeder – bekam eine Tabelle voller Striche und obendrein den Hinweis, dass das in einen Fehlerbericht gehört. Der Bericht nennt jetzt den Zeitpunkt des letzten Ladens und erklärt die leeren Zeilen, statt sie anzuschwärzen.
+- **Der Export benennt zwei Einstellungen, die dastehen und nichts tun.** Eigene Werte für Sonnenhöhe und Fensterrichtung am Rollladen, während „Eigene Ausrichtung" aus ist – dann gelten die Werte des Bereichs. Und eine Position für „Fenster offen" an einem Kontakt ohne Kipp-Zustand: der ist zweiwertig, gefahren wird immer die Kipp-Position. Beide Werte stehen in der Tabelle wie jeder andere, und nichts unterschied sie bisher von denen, die wirken.
+- **Warnung im Formular, wenn die Lux-Schwellen verkehrt herum stehen.** Hochgefahren wird oberhalb der Hoch-Schwelle, runter unterhalb der Runter-Schwelle. Liegt die Hoch-Schwelle darunter, gilt zwischen beiden Werten beides gleichzeitig – überschneiden sich dann noch die Zeitfenster, pendelt der Rollladen. Dieselbe Art Hinweis wie bei den Bedingungsschwellen seit 2.8.0.
+
 ## [2.10.1]
 
 Drei Wünsche aus dem Forum, und einer davon deckte eine Falle auf, die neue
