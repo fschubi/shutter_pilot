@@ -433,6 +433,17 @@ async def async_build_export(
         if rows:
             out += ["Bedingungen des Bereichs, Werte von jetzt:", "", *rows]
 
+    # Derselbe Rollladen zweimal angelegt: seit 2.11.1 laesst das Panel es
+    # nicht mehr zu, bestehende Konfigurationen tragen es aber weiter. Mit
+    # verschiedenen Bereichen faehrt er im Minutentakt hin und her, und in der
+    # Liste sieht man zwei Zeilen, die sich auf nichts berufen.
+    cover_counts: dict[str, int] = {}
+    for entry_shutter in shutters:
+        if isinstance(entry_shutter, dict):
+            key = str(entry_shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+            if key:
+                cover_counts[key] = cover_counts.get(key, 0) + 1
+
     for shutter in shutters:
         cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
         name = str(shutter.get(CONF_NAME) or "")
@@ -457,6 +468,15 @@ async def async_build_export(
             "(der Runter-Bereich entscheidet über die Beschattung)",
             "",
         ]
+
+        if cover_counts.get(cover.strip(), 0) > 1:
+            out += [
+                f"> ⚠️ `{cover}` ist **{cover_counts[cover.strip()]}-mal** "
+                "angelegt. Jeder Eintrag entscheidet für sich – stehen "
+                "verschiedene Bereiche daran, fährt der Rollladen im "
+                "Minutentakt hin und her. Einen der Einträge löschen.",
+                "",
+            ]
 
         down_area = areas_by_id.get(down_id)
         if down_area is None and down_id:

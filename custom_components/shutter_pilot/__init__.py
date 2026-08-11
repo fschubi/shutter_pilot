@@ -33,6 +33,7 @@ from .const import (
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
+    CONF_NAME,
     CONF_SHUTTER_AUTOMATION_ENABLED,
     CONF_SHUTTER_AUTO_ENTITY_ID,
     CONF_VERIFY_AFTER,
@@ -704,6 +705,32 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
     idx = msg.get("index")
     opts = deepcopy(dict(entry.options or {}))
     shutters = opts.setdefault(CONF_SHUTTERS, [])
+
+    # Derselbe Rollladen zweimal angelegt, mit verschiedenen Bereichen, faehrt
+    # im Minutentakt hin und her: jeder Eintrag entscheidet fuer sich, und die
+    # beiden widersprechen sich. Das ist keine Einstellung, die jemand meint –
+    # es passiert durch einen Fehlklick, und im Panel sieht man es kaum.
+    cover = str(shutter_data.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if cover:
+        clash = next(
+            (
+                other
+                for i, other in enumerate(shutters)
+                if isinstance(other, dict)
+                and i != idx
+                and str(other.get(CONF_COVER_ENTITY_ID) or "").strip() == cover
+            ),
+            None,
+        )
+        if clash is not None:
+            connection.send_error(
+                msg["id"],
+                "duplicate_cover",
+                f"{cover} is already configured as "
+                f"\"{clash.get(CONF_NAME) or cover}\"",
+            )
+            return
+
     if idx is not None and 0 <= idx < len(shutters):
         shutters[idx] = shutter_data
     else:

@@ -302,7 +302,7 @@ de:{
   f_lux_wrong_way:"Die Hoch-Schwelle sollte über der Runter-Schwelle liegen: hoch geht es oberhalb, runter unterhalb. Liegt sie darunter, gilt zwischen den beiden Werten beides gleichzeitig – überschneiden sich dann noch die Zeitfenster, pendelt der Rollladen.",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
-  f_cover:"Rollladen / Cover",f_window_sensor:"Fenster-/Türsensor (optional)",
+  f_cover:"Rollladen / Cover",f_cover_dup:"Diese Cover-Entität ist bereits als „{name}“ angelegt. Zweimal derselbe Rollladen in verschiedenen Bereichen fährt im Minutentakt hin und her.",f_window_sensor:"Fenster-/Türsensor (optional)",
   f_win_open:"Fenster-Status 'offen'",f_win_tilt:"Fenster-Status 'gekippt'",
   f_win_tilt_none:"Deaktiviert (kein Kipp-Status)",
   f_win_state_now:"Der Kontakt meldet gerade:",f_win_state_mismatch:"Dieser Zustand kann bei einem binary_sensor nie auftreten – der Kontakt gilt dann dauerhaft als geschlossen. Wähle „on“ oder „off“.",
@@ -512,7 +512,7 @@ en:{
   f_lux_wrong_way:"The up threshold belongs above the down threshold: up happens above it, down below. Put it lower and both rules hold between the two values at once – once the time windows overlap as well, the shutter starts oscillating.",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
-  f_cover:"Shutter / Cover",f_window_sensor:"Window/door sensor (optional)",
+  f_cover:"Shutter / Cover",f_cover_dup:"This cover entity is already configured as “{name}”. The same shutter twice, in different areas, drives back and forth every minute.",f_window_sensor:"Window/door sensor (optional)",
   f_win_open:"Window state 'open'",f_win_tilt:"Window state 'tilted'",
   f_win_tilt_none:"Disabled (no tilt state)",
   f_win_state_now:"The contact currently reports:",f_win_state_mismatch:"A binary_sensor can never report this state – the contact would always count as closed. Pick \"on\" or \"off\".",
@@ -668,7 +668,7 @@ fr:{
   f_lux_wrong_way:"Le seuil de montée doit être au-dessus du seuil de descente : on monte au-dessus, on descend en dessous. S'il est plus bas, les deux règles s'appliquent en même temps entre les deux valeurs – et si les plages horaires se recoupent, le volet oscille.",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
-  f_cover:"Volet / Cover",f_window_sensor:"Capteur fenêtre (optionnel)",
+  f_cover:"Volet / Cover",f_cover_dup:"Cette entité cover est déjà configurée sous « {name} ». Le même volet deux fois, dans des zones différentes, monte et descend chaque minute.",f_window_sensor:"Capteur fenêtre (optionnel)",
   f_win_open:"État fenêtre 'ouverte'",f_win_tilt:"État fenêtre 'basculée'",f_win_tilt_none:"Désactivé",
   f_win_state_now:"Le contact indique actuellement :",f_win_state_mismatch:"Un binary_sensor ne peut jamais avoir cet état – le contact serait toujours considéré comme fermé. Choisissez « on » ou « off ».",
   f_pos_win_open:"Position fenêtre ouverte",f_pos_win_tilt:"Position fenêtre basculée",f_pos_win_2state:"Position quand la fenêtre est ouverte",
@@ -820,7 +820,7 @@ es:{
   f_lux_wrong_way:"El umbral de subida debe estar por encima del de bajada: se sube por encima y se baja por debajo. Si queda más bajo, entre ambos valores se cumplen las dos reglas a la vez, y si además se solapan las franjas horarias la persiana oscila.",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
-  f_cover:"Persiana / Cover",f_window_sensor:"Sensor ventana (opcional)",
+  f_cover:"Persiana / Cover",f_cover_dup:"Esta entidad cover ya está configurada como «{name}». La misma persiana dos veces, en zonas distintas, sube y baja cada minuto.",f_window_sensor:"Sensor ventana (opcional)",
   f_win_open:"Estado ventana 'abierta'",f_win_tilt:"Estado ventana 'inclinada'",f_win_tilt_none:"Desactivado",
   f_win_state_now:"El contacto informa ahora mismo:",f_win_state_mismatch:"Un binary_sensor nunca puede tener este estado: el contacto contaría siempre como cerrado. Elige «on» u «off».",
   f_pos_win_open:"Posición ventana abierta",f_pos_win_tilt:"Posición ventana inclinada",f_pos_win_2state:"Posición con la ventana abierta",
@@ -972,7 +972,7 @@ it:{
   f_lux_wrong_way:"La soglia di apertura va sopra quella di chiusura: si apre al di sopra, si chiude al di sotto. Se sta più in basso, fra i due valori valgono entrambe le regole insieme e, se si sovrappongono anche le fasce orarie, la tapparella oscilla.",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
-  f_cover:"Tapparella / Cover",f_window_sensor:"Sensore finestra (opzionale)",
+  f_cover:"Tapparella / Cover",f_cover_dup:"Questa entità cover è già configurata come «{name}». La stessa tapparella due volte, in aree diverse, sale e scende ogni minuto.",f_window_sensor:"Sensore finestra (opzionale)",
   f_win_open:"Stato finestra 'aperta'",f_win_tilt:"Stato finestra 'ribaltata'",f_win_tilt_none:"Disattivato",
   f_win_state_now:"Il contatto segnala ora:",f_win_state_mismatch:"Un binary_sensor non può mai avere questo stato: il contatto risulterebbe sempre chiuso. Scegli «on» oppure «off».",
   f_pos_win_open:"Posizione finestra aperta",f_pos_win_tilt:"Posizione finestra ribaltata",f_pos_win_2state:"Posizione a finestra aperta",
@@ -1125,7 +1125,7 @@ nl:{
   f_lux_wrong_way:"De omhoog-drempel hoort boven de omlaag-drempel: omhoog gebeurt erboven, omlaag eronder. Ligt hij lager, dan gelden tussen beide waarden allebei de regels tegelijk – overlappen ook de tijdvensters, dan gaat het rolluik heen en weer.",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
-  f_cover:"Rolluik / Cover",f_window_sensor:"Raam-/deursensor (optioneel)",
+  f_cover:"Rolluik / Cover",f_cover_dup:"Deze cover-entiteit is al ingesteld als “{name}”. Hetzelfde rolluik twee keer, in verschillende zones, rijdt elke minuut op en neer.",f_window_sensor:"Raam-/deursensor (optioneel)",
   f_win_open:"Raamstatus 'open'",f_win_tilt:"Raamstatus 'gekanteld'",f_win_tilt_none:"Uitgeschakeld (geen kantelstatus)",
   f_win_state_now:"Het contact meldt nu:",f_win_state_mismatch:"Een binary_sensor kan deze status nooit hebben – het contact geldt dan altijd als gesloten. Kies \"on\" of \"off\".",
   f_pos_win_open:"Positie bij raam open",f_pos_win_tilt:"Positie bij raam gekanteld",f_pos_win_2state:"Positie bij een open raam",
@@ -1278,7 +1278,7 @@ da:{
   f_lux_wrong_way:"Op-tærsklen hører over ned-tærsklen: op sker over den, ned under den. Ligger den lavere, gælder begge regler samtidig mellem de to værdier – og overlapper tidsrummene også, kører persiennen frem og tilbage.",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
-  f_cover:"Persienne / Cover",f_window_sensor:"Vinduessensor (valgfrit)",
+  f_cover:"Persienne / Cover",f_cover_dup:"Denne cover-enhed er allerede oprettet som “{name}”. Den samme persienne to gange, i forskellige områder, kører op og ned hvert minut.",f_window_sensor:"Vinduessensor (valgfrit)",
   f_win_open:"Vinduestilstand 'åben'",f_win_tilt:"Vinduestilstand 'vippet'",f_win_tilt_none:"Deaktiveret",
   f_win_state_now:"Kontakten melder lige nu:",f_win_state_mismatch:"En binary_sensor kan aldrig have denne tilstand – kontakten vil altid tælle som lukket. Vælg \"on\" eller \"off\".",
   f_pos_win_open:"Position ved åbent vindue",f_pos_win_tilt:"Position ved vippet vindue",f_pos_win_2state:"Position når vinduet er åbent",
@@ -1431,7 +1431,7 @@ sv:{
   f_lux_wrong_way:"Upp-tröskeln hör hemma över ner-tröskeln: upp sker ovanför, ner nedanför. Ligger den lägre gäller båda reglerna samtidigt mellan värdena – överlappar dessutom tidsfönstren pendlar persiennen.",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
-  f_cover:"Persienn / Cover",f_window_sensor:"Fönstersensor (valfritt)",
+  f_cover:"Persienn / Cover",f_cover_dup:"Den här cover-enheten är redan upplagd som ”{name}”. Samma persienn två gånger, i olika områden, åker upp och ner varje minut.",f_window_sensor:"Fönstersensor (valfritt)",
   f_win_open:"Fönsterstatus 'öppet'",f_win_tilt:"Fönsterstatus 'vippat'",f_win_tilt_none:"Inaktiverad",
   f_win_state_now:"Kontakten rapporterar just nu:",f_win_state_mismatch:"En binary_sensor kan aldrig ha detta tillstånd – kontakten räknas då alltid som stängd. Välj \"on\" eller \"off\".",
   f_pos_win_open:"Position vid öppet fönster",f_pos_win_tilt:"Position vid vippat fönster",f_pos_win_2state:"Position när fönstret är öppet",
@@ -1584,7 +1584,7 @@ pl:{
   f_lux_wrong_way:"Próg podnoszenia powinien być powyżej progu opuszczania: w górę powyżej, w dół poniżej. Jeśli jest niżej, między obiema wartościami obowiązują obie reguły naraz – a gdy nakładają się jeszcze okna czasowe, roleta zaczyna się wahać.",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
-  f_cover:"Roleta / Cover",f_window_sensor:"Czujnik okna (opcjonalnie)",
+  f_cover:"Roleta / Cover",f_cover_dup:"Ta encja cover jest już dodana jako „{name}”. Ta sama roleta dwa razy, w różnych strefach, jeździ w górę i w dół co minutę.",f_window_sensor:"Czujnik okna (opcjonalnie)",
   f_win_open:"Stan okna 'otwarte'",f_win_tilt:"Stan okna 'uchylone'",f_win_tilt_none:"Wyłączone",
   f_win_state_now:"Kontaktron zgłasza teraz:",f_win_state_mismatch:"binary_sensor nigdy nie przyjmuje tego stanu – kontaktron byłby zawsze uznawany za zamknięty. Wybierz „on” lub „off”.",
   f_pos_win_open:"Pozycja przy otwartym oknie",f_pos_win_tilt:"Pozycja przy uchylonym oknie",f_pos_win_2state:"Pozycja przy otwartym oknie",
@@ -1737,7 +1737,7 @@ pt:{
   f_lux_wrong_way:"O limiar de subida fica acima do de descida: sobe-se acima dele e desce-se abaixo. Se ficar mais baixo, entre os dois valores valem as duas regras ao mesmo tempo – e se as janelas horárias também se sobrepuserem, a persiana oscila.",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
-  f_cover:"Estore / Cover",f_window_sensor:"Sensor de janela (opcional)",
+  f_cover:"Estore / Cover",f_cover_dup:"Esta entidade cover já está configurada como «{name}». O mesmo estore duas vezes, em áreas diferentes, sobe e desce a cada minuto.",f_window_sensor:"Sensor de janela (opcional)",
   f_win_open:"Estado janela 'aberta'",f_win_tilt:"Estado janela 'basculante'",f_win_tilt_none:"Desativado",
   f_win_state_now:"O contacto indica agora:",f_win_state_mismatch:"Um binary_sensor nunca pode ter este estado – o contacto contaria sempre como fechado. Escolhe «on» ou «off».",
   f_pos_win_open:"Posição janela aberta",f_pos_win_tilt:"Posição janela basculante",f_pos_win_2state:"Posição com a janela aberta",
@@ -1890,7 +1890,7 @@ nb:{
   f_lux_wrong_way:"Opp-terskelen hører over ned-terskelen: opp skjer over den, ned under den. Ligger den lavere, gjelder begge reglene samtidig mellom verdiene – overlapper tidsvinduene i tillegg, pendler rullegardinen.",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
-  f_cover:"Persienne / Cover",f_window_sensor:"Vindussensor (valgfritt)",
+  f_cover:"Persienne / Cover",f_cover_dup:"Denne cover-enheten er allerede lagt inn som «{name}». Den samme persiennen to ganger, i ulike områder, kjører opp og ned hvert minutt.",f_window_sensor:"Vindussensor (valgfritt)",
   f_win_open:"Vindustilstand 'åpent'",f_win_tilt:"Vindustilstand 'vippet'",f_win_tilt_none:"Deaktivert",
   f_win_state_now:"Kontakten melder akkurat nå:",f_win_state_mismatch:"En binary_sensor kan aldri ha denne tilstanden – kontakten regnes da alltid som lukket. Velg \"on\" eller \"off\".",
   f_pos_win_open:"Posisjon ved åpent vindu",f_pos_win_tilt:"Posisjon ved vippet vindu",f_pos_win_2state:"Posisjon når vinduet er åpent",
@@ -3244,6 +3244,12 @@ class ShutterPilotPanel extends PanelBase {
 
       ${this._sec("mdi:window-shutter","sec_shutter","sec_shutter_sub",html`
       ${ep("cover_entity_id",T("f_cover"),["cover"],null)}
+      ${/* Zweimal derselbe Rollladen mit verschiedenen Bereichen faehrt im
+           Minutentakt hin und her – jeder Eintrag entscheidet fuer sich. Der
+           Riegel liegt auf dem Server; hier steht er, damit man es sieht,
+           bevor man auf Speichern drueckt. */""}
+      ${this._duplicateCover(s)?html`<div class="hint warn">⚠️ ${T("f_cover_dup")
+        .replace("{name}",this._duplicateCover(s).name||this._duplicateCover(s).cover_entity_id)}</div>`:""}
       ${f("name",T("f_name"))}
       <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
         @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_shutter_auto")}</label>
@@ -3411,8 +3417,20 @@ class ShutterPilotPanel extends PanelBase {
     if(!confirm(this.t("confirm_del_area").replace("{id}",id)))return;
     try{await this.hass.callWS({type:"shutter_pilot/delete_area",area_id:id});await this._load();}catch(e){console.warn(e);}
   }
+  /* Der Eintrag, der dieselbe Cover-Entität schon belegt – oder null.
+     Verglichen wird gegen den Index, nicht gegen die Entität: beim Bearbeiten
+     ist der eigene Eintrag natürlich derselbe Rollladen. */
+  _duplicateCover(s){
+    const cover=(s?.cover_entity_id||"").trim();
+    if(!cover)return null;
+    const list=this._data?.shutters||[];
+    const idx=s._index;
+    return list.find((o,i)=>i!==idx&&(o?.cover_entity_id||"").trim()===cover)||null;
+  }
   async _saveShutter(){
     const s={...this._editShutter};const idx=s._index;delete s._isNew;delete s._index;
+    const dup=this._duplicateCover(this._editShutter);
+    if(dup){alert(this.t("f_cover_dup").replace("{name}",dup.name||dup.cover_entity_id));return;}
     try{await this.hass.callWS({type:"shutter_pilot/save_shutter",shutter:s,index:idx});this._editShutter=null;await this._load();}catch(e){console.warn(e);alert("Error: "+e.message);}
   }
   async _deleteShutter(idx){

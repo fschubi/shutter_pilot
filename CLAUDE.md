@@ -999,3 +999,37 @@ Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
 **Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
 aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
 man Felder, die nur zugeklappt sind.
+
+### 2026-08-11 – 2.11.1: derselbe Rollladen zweimal
+
+Viktor hat sich verklickt und ein Rollo zweimal angelegt, in verschiedenen
+Bereichen. Ergebnis: Fahrt im Minutentakt hin und her – jeder Eintrag
+entscheidet für sich, und die beiden widersprechen sich. Gemerkt hat er es
+erst im Export.
+
+**`save_shutter` hängte ungeprüft an.** Bereiche sind über ihre `id`
+geschlüsselt (`_ws_save_area` sucht den Index und aktualisiert), Rollläden
+liegen dagegen als Liste mit Index vor – ohne Schlüssel gab es nichts, was
+einen zweiten Eintrag verhindert hätte. Der Riegel sitzt jetzt dort, mit
+`i != idx`: beim Bearbeiten ist der eigene Eintrag natürlich derselbe
+Rollladen.
+
+Drei Ebenen, bewusst:
+
+* **Server** – der Befehl lehnt ab (`duplicate_cover`), samt Name des
+  bestehenden Eintrags. Das ist die Grenze.
+* **Panel** – Warnung direkt unter der Auswahl und ein Abbruch vor dem Senden,
+  damit man es sieht, bevor man speichert. Beides über `_duplicateCover()`.
+* **Export** – nennt bestehende Doppeleinträge bei *beiden* Zeilen. Neue
+  Konfigurationen sind gesperrt, alte tragen den Fehler weiter.
+
+**Nicht gemacht:** die Laufzeit gegen Doppeleinträge härten (etwa in
+`elevation.py` nach Cover deduplizieren). Das würde den Fehler verstecken,
+statt ihn zu beheben – und welcher der beiden Bereiche gewinnt, wäre willkürlich.
+
+**Verifiziert:** `pytest` 461 Tests grün (6 neue), Gegenprobe gemacht (ohne den
+Riegel fällt die Ablehnung), Panel in Node gerendert – Hinweis erscheint beim
+Doppel und *nicht* beim Bearbeiten des vorhandenen Eintrags. i18n 296/296.
+
+**Falle beim Testschreiben:** `async_build_export` gibt ein Dict zurück
+(`{"markdown": …, …}`), keinen String.

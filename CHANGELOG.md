@@ -4,6 +4,16 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.11.1]
+
+Aus dem Forum, Viktor: ein Rollladen liess sich zweimal anlegen.
+
+### Behoben
+- **Derselbe Rollladen konnte mehrfach hinzugefügt werden.** Ein Fehlklick reichte – und mit verschiedenen Bereichen an den beiden Einträgen fuhr der Rollladen im Minutentakt hin und her, weil jeder Eintrag für sich entscheidet und die beiden sich widersprechen. In der Liste sieht man den Doppeleintrag kaum. Das Panel warnt jetzt direkt unter der Auswahl, und der Server nimmt einen zweiten Eintrag für dieselbe Cover-Entität gar nicht mehr an. Den bestehenden Eintrag zu bearbeiten geht unverändert. (Forum, Viktor)
+
+### Geändert
+- **Der Export benennt bestehende Doppeleinträge.** Wer den Fehler schon in seiner Konfiguration hat, findet ihn im Bericht statt beim Suchen: die Zeile steht bei beiden Einträgen, mit dem Hinweis, einen davon zu löschen.
+
 ## [2.11.0]
 
 Aus dem Forum, hollizone: im Helligkeitsmodus fehlte eine Uhrzeit, zu der
