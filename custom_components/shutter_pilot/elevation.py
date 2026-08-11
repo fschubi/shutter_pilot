@@ -27,9 +27,14 @@ from .const import (
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
 )
+from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
 from .helpers import (
+    awning_shade_position,
+    awning_track_step,
+    awning_tracks_sun,
     clear_stale_window_cycle_after_automated_up,
     elevation_used,
+    is_awning,
     forget_drive_after_close,
     get_azimuth_bounds,
     get_elevation_bounds,
@@ -115,11 +120,33 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
-            pos = get_position_for_role(shutter, ROLE_SUN_PROTECT)
-            tilt = get_tilt_for_role(shutter, ROLE_SUN_PROTECT)
-            if shutter.get(CONF_DRIVE_AFTER_CLOSE, False) and is_window_open_or_tilted(
-                hass, shutter
-            ):
+            awning = is_awning(shutter)
+            if awning:
+                # An awning shades by extending, and how far can depend on the
+                # sun's height. Everything below – stagger, drive, bookkeeping –
+                # is the same code as for a shutter; only the target differs.
+                pos = awning_shade_position(shutter, elev)
+                tilt = None
+                # Protection outranks shading, always. Asked here rather than
+                # leaving it to the guard to pull the awning back in a moment
+                # later: extending into a gust and retracting straight away is
+                # a drive nobody wants to watch, and radio actuators drop the
+                # second command more often than the first.
+                state = evaluate_guard(hass, entry, data, shutter)
+                if state.get("barred") and clamp_to_rest(shutter, pos) != pos:
+                    _LOGGER.info(
+                        "[sun-protect] %s: shading due, awning barred (%s) – "
+                        "staying in",
+                        cover_entity,
+                        describe_reasons(state.get("reasons")),
+                    )
+                    continue
+            else:
+                pos = get_position_for_role(shutter, ROLE_SUN_PROTECT)
+                tilt = get_tilt_for_role(shutter, ROLE_SUN_PROTECT)
+            if not awning and shutter.get(
+                CONF_DRIVE_AFTER_CLOSE, False
+            ) and is_window_open_or_tilted(hass, shutter):
                 remember_drive_after_close(
                     hass, entry, data, cover_entity,
                     position=pos, tilt=tilt, reason="Sun protect", shutter=shutter,
@@ -148,13 +175,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 entry,
                 cover_entity,
                 pos,
-                f"Sun protect (area={area_id})",
+                f"{'Awning shading' if awning else 'Sun protect'} (area={area_id})",
                 tilt_position=tilt,
                 area_id=area_id,
             )
             idx += 1
             if ok:
                 shaded.append(cover_entity)
+                if awning:
+                    data.setdefault("_awning_track_last", {})[cover_entity] = pos
             else:
                 _LOGGER.warning(
                     "[sun-protect] %s: drive failed – shading not marked active, "
@@ -261,6 +290,14 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 if not was_active:
                     # Der Merker wird erst gesetzt, wenn die Fahrt durch ist.
                     to_shade.setdefault(area_id, []).append(shutter)
+                elif awning_tracks_sun(shutter):
+                    # Already out, but the sun has moved on and the projection
+                    # no longer matches. Only past the configured step, or the
+                    # motor would run a few percent every single minute.
+                    wanted = awning_shade_position(shutter, elev)
+                    last = data.get("_awning_track_last", {}).get(cover)
+                    if last is None or abs(wanted - last) >= awning_track_step(shutter):
+                        to_shade.setdefault(area_id, []).append(shutter)
                 continue
 
             if not was_active:

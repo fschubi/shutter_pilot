@@ -4,6 +4,27 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.12.0]
+
+Markisen. Nicht als umgedrehter Rollladen, sondern mit dem Teil, der eine
+Markise erst betriebssicher macht: Wind- und Regenschutz.
+
+### Neu
+- **Eigener Tab „Markisen".** Eine Markise wird dort angelegt statt bei den Rollläden. Sie hat nur zwei Positionen – Ruhestellung (eingefahren) und Beschattung (ausgefahren) –, dazu einen Beschattungsbereich statt Hoch- und Runter-Bereich. **Eine Markise fährt in keinem Zeitplan mit**: weder Uhrzeit noch Helligkeit noch Sonnenauf- und -untergang bewegen sie. Ausgefahren wird sie allein von der Beschattung, und die rechnet mit denselben Regeln wie bei den Rollläden – Sonnenhöhe, Fensterrichtung, Zusatzbedingungen, Saison, Haltezeit.
+- **Wind-, Regen- und Frostschutz.** Wind-, Regen- und Temperatursensor stehen global unter Einstellungen und gelten für jede Markise. Beim **Wind** darf eine einzelne Markise abweichen – eigener Sensor oder nur eigene Schwellen –, weil Wind örtlich verschieden ist; Regen und Frost fallen übers ganze Haus gleich und bleiben global. Über der Einfahrschwelle fährt die Markise sofort ein und darf nicht mehr ausfahren; freigegeben wird sie erst wieder unter der zweiten Schwelle **und** nach einer Sperrzeit (Vorgabe 20 min bei Wind, 30 min bei Regen). Eine Bö ist nach zwanzig Sekunden vorbei – die Markise soll trotzdem nicht sofort wieder heraus, und jede neue Überschreitung startet die Zeit von vorn. Dasselbe für Regen und, nach unten vergleichend, für Frost.
+- **Der Schutz gilt auch bei ausgeschalteten Schaltern.** Hauptschalter aus, Bereichsautomatik aus, Markisen-Automatik aus: eingefahren wird trotzdem. Das ist eine bewusste Abweichung von der sonstigen Rangfolge. Ein Schutz, der sich versehentlich abschalten lässt, ist keiner; abschalten geht absichtlich, indem der Sensor entfernt wird.
+- **Toter Sensor: ausfahren sofort gesperrt, einfahren nach Karenz.** Meldet der Sensor `unavailable` oder `unknown`, weiß niemand, was der Wind tut – ausgefahren wird ab der ersten Sekunde nicht mehr. Eine bereits ausgefahrene Markise wird erst nach einer Karenzzeit (Vorgabe 10 min) hereingeholt, damit ein Sensor, der beim Neustart kurz aussetzt, nicht das ganze Haus einfährt.
+- **Ausfahrlänge nach Sonnenhöhe** (optional, Vorgabe aus). Steht die Sonne hoch, reicht wenig Ausfall; sinkt sie, braucht dieselbe Fläche mehr. Zwei Stützpunkte, gerade Linie dazwischen, dazu eine Mindeständerung – ohne die liefe der Antrieb jede Minute ein paar Prozent.
+- **Sperr-Sensor je Markise** (`binary_sensor.…_sperre`) mit Grund und Restzeit als Attribute, **Dienst `shutter_pilot.retract_awnings`** für eine angekündigte Sturmwarnung (fährt alle Markisen sofort ein, ohne Staffelung), und das Ereignis `shutter_pilot_awning_retracted` für eigene Benachrichtigungen.
+- **Bestehenden Rollladen als Markise übernehmen.** Wer eine Markise erst als Rollladen angelegt hat, wählt sie im Markisen-Tab aus und bekommt einen Knopf dafür. Fenster-, Lamellen- und Schließ-Einstellungen werden dabei gelöscht statt stehengelassen – gespeichert, sichtbar und wirkungslos ist genau die Sorte Einstellung, die der Export seit 2.10.2 anprangert.
+
+### Behoben
+- **Antriebe ohne Positionsmeldung ließen sich gar nicht fahren.** Viele Markisenmotoren und etliche ältere Rollladenantriebe kennen nur auf, stop und zu; `cover.set_cover_position` scheitert dort. Seit 2.8.0 wird eine gescheiterte Fahrt jede Minute wiederholt – aus einem stummen Fehler wurde also eine Endlosschleife. Jetzt wird auf „ganz auf" bzw. „ganz zu" ausgewichen, und eine Teilposition an so einem Antrieb steht einmal als Warnung im Log. Betrifft Rollläden genauso.
+
+### Geändert
+- **Der Export beantwortet „warum ist die Markise nicht draußen".** Je Markise eine Tabelle mit Wert, Einheit, Schwellen und Ergebnis je Schutz, dazu die Freigabezeit. Warnt außerdem, wenn ein Windsensor in m/s misst und die Schwelle nach km/h aussieht: Faktor 3,6 daneben heißt, die Markise fährt nie ein.
+- **Der Auto-Schalter einer Markise heißt „Markise <Name>"** statt „Rollladen <Name>". Bestehende Entitäts-IDs bleiben.
+
 ## [2.11.1]
 
 Aus dem Forum, Viktor: ein Rollladen liess sich zweimal anlegen.

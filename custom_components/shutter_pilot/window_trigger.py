@@ -28,6 +28,7 @@ from .helpers import (
     is_cover_sun_protected,
     is_shutter_automation_enabled,
     is_system_enabled,
+    only_shutters,
     set_cover_position,
 )
 from .window_helper import (
@@ -138,7 +139,11 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         if shutter not in bucket:
             bucket.append(shutter)
 
-    for shutter in shutters:
+    # An awning has no window contact – the form does not offer one, and
+    # converting a shutter deletes the keys. Filtering anyway costs nothing
+    # and keeps a stray leftover value from registering a listener that would
+    # then drive an awning to a tilted-window position it does not have.
+    for shutter in only_shutters(shutters):
         window_id = shutter.get(CONF_WINDOW_ENTITY_ID)
         if isinstance(window_id, list):
             window_id = window_id[0] if window_id else ""

@@ -40,3 +40,18 @@ ventilate_group:
       selector:
         text:
 
+
+retract_awnings:
+  name: Markisen einfahren
+  description: >-
+    Fährt alle Markisen sofort ein – ohne Staffelung und ohne den globalen
+    Mindestabstand, gedacht für eine angekündigte Sturmwarnung. Ohne Bereich
+    gilt der Dienst für das ganze Haus.
+  fields:
+    area_id:
+      name: Bereich-ID
+      description: >-
+        Optional. Nur die Markisen dieses Beschattungsbereichs einfahren.
+      required: false
+      selector:
+        text:

@@ -16,7 +16,7 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 ## Funktionen
 
 - **Drei Steuerungsmodi** pro Bereich: Zeitbasiert, helligkeitsbasiert (Lux-Sensor) oder Sonnenstand (Sonnenauf-/untergang)
-- **Sidebar-Panel** mit Dashboard, Bereiche und Rollläden-Tabs zur vollständigen Verwaltung
+- **Sidebar-Panel** mit Dashboard, Bereiche, Rollläden und Markisen-Tabs zur vollständigen Verwaltung
 - **Fenster-/Türsensoren** – öffnet Rollläden automatisch bei geöffnetem Fenster
 - **Aussperrschutz** – verhindert vollständiges Schließen bei offener Tür
 - **Sonnenschutz mit Himmelsrichtung** – beschattet nur, wenn die Sonne im eingestellten Höhenwinkel **und** vor den Fenstern steht
@@ -31,6 +31,7 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 - **Mehrsprachiges Panel** – passt sich automatisch an die HA-Sprache an (11 Sprachen)
 - **Wochentag-/Wochenend-Zeitpläne** – separate Zeitfenster für Wochentage und Wochenenden (Zeitmodus und Helligkeitsmodus)
 - **Sonnenstand-Info im Dashboard** – zeigt nächsten Sonnenaufgang/-untergang, Offset und berechnete Trigger-Zeit für Sonnenstand-Bereiche
+- **Markisen** – eigener Tab, Beschattung ohne Zeitplan, mit **Wind-, Regen- und Frostschutz** (gilt auch bei ausgeschalteter Automatik) und optionaler Ausfahrlänge nach Sonnenhöhe
 
 ## Screenshots
 
@@ -130,8 +131,9 @@ Das Dashboard zeigt alle Bereiche als Karten mit:
 | `shutter_pilot.close_group` | Alle Rollläden eines Bereichs schließen |
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 | `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
+| `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung. `area_id` ist hier **optional** |
 
-Alle Services erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`). Jeder Rollladen fährt dabei auf seine eigene konfigurierte Position.
+Alle Services außer `retract_awnings` erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`). Jeder Rollladen fährt dabei auf seine eigene konfigurierte Position.
 
 ## Entitäten
 
@@ -144,6 +146,8 @@ Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dash
 | `switch.shutter_pilot_rollladen_<name>` | Automatik pro Rollladen (Name aus dem Feld **Name**) |
 | `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
+| `switch.shutter_pilot_markise_<name>` | Automatik pro Markise (der Wind- und Regenschutz gilt trotzdem) |
+| `binary_sensor.shutter_pilot_<name>_sperre` | `on`, solange die Markise nicht ausfahren darf. Attribute: `reasons`, `release_in_seconds` |
 
 ## Automatik abschalten
 
@@ -212,15 +216,103 @@ Das Shutter Pilot Panel passt sich automatisch an die Spracheinstellung deines H
 
 Wenn deine Sprache nicht aufgeführt ist, wird automatisch Englisch verwendet. Du möchtest eine Übersetzung beitragen? Pull Requests sind willkommen!
 
-## Geplant: Markisen-Steuerung
+## Markisen
 
-> **Wir planen eine Markisen-Steuerung** mit Wind-, Regen- und Temperatursensoren als eigenen Tab. Markisen haben andere Anforderungen als Rollläden – sie müssen bei schlechtem Wetter eingefahren werden, um Schäden zu vermeiden.
->
-> Geplante Funktionen: Windgeschwindigkeits-Sensor, Regensensor, Temperatur-Schwellwert, Wetterwarnungs-Integration (DWD, OpenWeatherMap), automatisches Einfahren bei gefährlichen Bedingungen.
+Seit 2.12.0 gibt es einen eigenen Tab **Markisen**. Eine Markise ist kein
+umgedrehter Rollladen, auch wenn der Fahrweg derselbe ist – zwei Dinge sind
+grundlegend anders, und beide sind hier umgesetzt.
 
-**Würdest du diese Funktion nutzen? [Hier abstimmen!](https://github.com/fschubi/shutter_pilot/discussions/1)**
+### Sie fährt in keinem Zeitplan mit
 
-[![Feature-Umfrage](https://img.shields.io/badge/Abstimmen-Markisen%20Umfrage-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+Uhrzeit, Helligkeit, Sonnenauf- und -untergang bewegen eine Markise nicht.
+Ausgefahren wird sie allein von der Beschattung. Die rechnet mit denselben
+Regeln wie bei den Rollläden – Sonnenhöhe, Fensterrichtung, bis zu vier
+Zusatzbedingungen, Beschattungszeitraum, Haltezeit –, deshalb bekommt die
+Markise auch nur *einen* Bereich: den, dessen Sonnenschutz gelten soll.
+
+Sie hat entsprechend nur zwei Positionen:
+
+| Position | Bedeutung | Vorgabe |
+| --- | --- | --- |
+| Ruhestellung | eingefahren, wenn keine Beschattung nötig ist | 0 % |
+| Beschattung | ausgefahren zum Beschatten | 100 % |
+
+Fensterkontakt, Aussperrschutz, Lamellen, abweichende Schließposition,
+Frostposition und automatisches Lüften gibt es an einer Markise nicht – das
+Formular zeigt sie gar nicht erst.
+
+### Wind-, Regen- und Frostschutz
+
+Der Teil, ohne den eine Markisensteuerung nicht betriebssicher ist.
+
+Unter **Einstellungen** stehen alle drei Sensoren – Wind, Regen und Temperatur
+(Frost). Sie gelten für jede Markise im Haus.
+
+Beim **Wind** kann eine einzelne Markise davon abweichen: eigener Sensor (ein
+Balkon hinterm Haus sieht anderen Wind als die Terrasse) oder nur eigene
+Schwellen (ein kleiner Gelenkarm muss früher rein als eine Kassette am selben
+Sensor). **Regen und Frost gibt es nur global** – die fallen über dem ganzen
+Haus gleich, und ein zweites Feld dafür wäre nur eine weitere Zeile zum
+Übersehen.
+
+Wie es wirkt:
+
+* **Über der Einfahrschwelle** fährt die Markise sofort ein und darf nicht mehr
+  ausfahren.
+* **Freigegeben** wird sie erst wieder unter der zweiten Schwelle **und** nach
+  einer Sperrzeit (Vorgabe 20 min bei Wind, 30 min bei Regen). Eine Bö ist nach
+  zwanzig Sekunden vorbei – die Markise soll trotzdem nicht sofort wieder
+  heraus. Jede neue Überschreitung startet die Zeit von vorn.
+* **Reagiert wird in Sekunden, nicht im Minutentakt:** der Schutz hängt direkt
+  an den Sensoren, der Minutentakt ist nur das Sicherheitsnetz.
+
+> ⚠️ **Der Schutz gilt auch bei ausgeschalteten Schaltern.** Hauptschalter aus,
+> Bereichsautomatik aus, Markisen-Automatik aus: eingefahren wird trotzdem. Das
+> ist eine bewusste Abweichung von der sonst geltenden Rangfolge. Ein Schutz,
+> der sich versehentlich abschalten lässt, ist keiner – abschalten geht
+> absichtlich, indem der Sensor entfernt wird.
+
+**Toter Sensor:** Meldet der Sensor `unavailable` oder `unknown`, weiß niemand,
+was der Wind tut. Ausgefahren wird dann ab der ersten Sekunde nicht mehr. Eine
+bereits ausgefahrene Markise wird erst nach einer Karenzzeit (Vorgabe 10 min)
+hereingeholt – ein Sensor, der beim Neustart kurz aussetzt, soll nicht das ganze
+Haus einfahren.
+
+### Ausfahrlänge nach Sonnenhöhe
+
+Optional, Vorgabe aus. Steht die Sonne hoch, reicht wenig Ausfall; sinkt sie,
+braucht dieselbe Fläche mehr. Zwei Stützpunkte, gerade Linie dazwischen:
+
+```
+Sonne steht hoch bei 60°  →  ausfahren auf  60 %
+Sonne steht tief bei 20°  →  ausfahren auf 100 %
+```
+
+Dazu eine **Mindeständerung** (Vorgabe 10 %). Ohne die liefe der Antrieb jede
+Minute ein paar Prozent – der sicherste Weg, ein Getriebe zu verschleißen.
+
+### Entitäten, Dienst und Ereignis
+
+| Art | Name |
+| --- | --- |
+| Binärsensor | `binary_sensor.shutter_pilot_<name>_sperre` – an, solange nicht ausgefahren werden darf. Attribute: Grund und Restzeit |
+| Schalter | `switch.shutter_pilot_markise_<name>` – Automatik je Markise (der Schutz gilt trotzdem) |
+| Dienst | `shutter_pilot.retract_awnings` – alle Markisen sofort einfahren, ohne Staffelung. Für eine angekündigte Sturmwarnung |
+| Ereignis | `shutter_pilot_awning_retracted` mit `entity_id` und `reasons` – für eigene Benachrichtigungen |
+
+### Einen bestehenden Rollladen übernehmen
+
+Wer eine Markise erst als Rollladen angelegt hat: im Markisen-Tab dieselbe
+Cover-Entität auswählen, dann erscheint ein Knopf **„Als Markise übernehmen"**.
+Fenster-, Lamellen- und Schließ-Einstellungen werden dabei gelöscht statt
+stehengelassen, und die beiden Positionen auf die Markisen-Vorgabe gesetzt.
+
+### Antriebe ohne Positionsmeldung
+
+Viele Markisenmotoren kennen nur auf, stop und zu. Shutter Pilot weicht dort
+selbstständig auf „ganz auf" bzw. „ganz zu" aus. Teilpositionen und die
+Ausfahrlänge nach Sonnenhöhe funktionieren an solchen Antrieben nicht – das
+steht einmal als Warnung im Log.
 
 ## Sonnenschutz nur bei echter Sonne und Wärme
 

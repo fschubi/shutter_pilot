@@ -189,7 +189,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping UP", trigger, area_id)
             return
-        filtered = filter_shutters_by_area(shutters, area_id, use_up=True)
+        filtered = filter_shutters_by_area(
+            shutters, area_id, use_up=True, include_awnings=False
+        )
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up]
         if not filtered:
             return
@@ -215,7 +217,9 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping DOWN", trigger, area_id)
             return
-        filtered = filter_shutters_by_area(shutters, area_id, use_up=False)
+        filtered = filter_shutters_by_area(
+            shutters, area_id, use_up=False, include_awnings=False
+        )
         filtered = [s for s in filtered if (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_down]
         if not filtered:
             return

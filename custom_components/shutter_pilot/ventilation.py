@@ -37,6 +37,7 @@ from .helpers import (
     is_auto_enabled,
     is_cover_sun_protected,
     is_shutter_automation_enabled,
+    only_shutters,
     register_minute_callback,
     set_cover_position,
     vent_conditions_met,
@@ -133,7 +134,11 @@ async def setup_ventilation(hass: HomeAssistant, entry: ConfigEntry) -> None:
             to_open: list[tuple[dict, float]] = []
             to_close: list[tuple[dict, float]] = []
 
-            for shutter in shutters:
+            # Awnings are not ventilated: there is no room behind them, and the
+            # ventilation position is the tilted-window one, which they do not
+            # have. Filtered here rather than inside the loop, whose two
+            # branches both keep bookkeeping.
+            for shutter in only_shutters(shutters):
                 cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
                 if not cover:
                     continue

@@ -25,6 +25,7 @@ from .const import (
     CONF_AREA_ELEVATION_THRESHOLD,
     CLOSE_CONDITION_SLOTS,
     FROST_CONDITION_SLOT,
+    GUARD_REASON_UNAVAILABLE,
     INVERTED_BY_DEFAULT_SLOTS,
     CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SEASON_FROM,
@@ -38,6 +39,22 @@ from .const import (
     CONF_AREA_UP_ID,
     CONF_BLIND_DRIVE,
     CONF_COVER_ENTITY_ID,
+    CONF_AWNING_TRACK_ENABLED,
+    CONF_AWNING_TRACK_HIGH_ELEV,
+    CONF_AWNING_TRACK_HIGH_POS,
+    CONF_AWNING_TRACK_LOW_ELEV,
+    CONF_AWNING_TRACK_LOW_POS,
+    CONF_AWNING_TRACK_STEP,
+    CONF_DEVICE_KIND,
+    DEFAULT_AWNING_POSITION_OPEN,
+    DEFAULT_AWNING_POSITION_SUN_PROTECT,
+    DEFAULT_AWNING_TRACK_HIGH_ELEV,
+    DEFAULT_AWNING_TRACK_HIGH_POS,
+    DEFAULT_AWNING_TRACK_LOW_ELEV,
+    DEFAULT_AWNING_TRACK_LOW_POS,
+    DEFAULT_AWNING_TRACK_STEP,
+    DEFAULT_DEVICE_KIND,
+    KIND_AWNING,
     CONF_MASTER_ENTITY_ID,
     CONF_MIN_DRIVE_GAP,
     DEFAULT_MIN_DRIVE_GAP,
@@ -177,6 +194,34 @@ def is_shutter_automation_enabled(
             return str(state.state).lower() in ("on", "true", "1")
 
     return bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True))
+
+
+def is_awning(shutter: dict[str, Any]) -> bool:
+    """True if this entry is an awning rather than a shutter.
+
+    Both live in the same list. Everything that works per cover entity –
+    verification, the position store, the drive gap, manual override, the
+    duplicate check – therefore keeps working without knowing the difference.
+    Only the paths that drive *roles an awning does not have* ask this.
+    """
+    kind = str(shutter.get(CONF_DEVICE_KIND) or DEFAULT_DEVICE_KIND).strip()
+    return kind == KIND_AWNING
+
+
+def only_shutters(shutters: list[Any]) -> list[Any]:
+    """Drop awnings from a list of covers about to be driven by schedule.
+
+    Filtering here rather than with a `continue` inside the drive loop is on
+    purpose: a `continue` skips the bookkeeping that follows it as well, which
+    is how a shutter stayed marked "raised today" in 2.10.0 and was left down
+    the next morning.
+    """
+    return [s for s in shutters if isinstance(s, dict) and not is_awning(s)]
+
+
+def only_awnings(shutters: list[Any]) -> list[Any]:
+    """Return just the awnings, in configuration order."""
+    return [s for s in shutters if isinstance(s, dict) and is_awning(s)]
 
 
 def get_elevation_bounds(area: dict) -> tuple[float, float]:
@@ -490,6 +535,40 @@ def _own_slot_met(
     return _condition_slot_met(hass, area, slot, condition_memory(data, area_id))
 
 
+def guard_slot_danger(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    data: dict[str, Any],
+    slot: str,
+    cover_entity_id: str,
+) -> tuple[bool, str]:
+    """Evaluate one awning protection slot. True means "do not extend".
+
+    This is a third polarity, and that is why it cannot borrow either of the
+    existing two. The shading conditions fail *open*, because a dead sensor
+    must never keep a shutter down. The close, frost and ventilation slots fail
+    *closed*, and count "not configured" as not met. Neither is right here:
+
+      not configured  -> no protection was asked for, the awning may go out
+      configured, dead -> nobody knows what the wind is doing, it stays in
+
+    Returns the danger flag and a short reason for the log, the panel and the
+    export – "it is blocked" without saying by what is the report that starts
+    the forum thread rather than ending it.
+    """
+    entity_key = sun_condition_keys(slot)[0]
+    entity_id = str(config.get(entity_key) or "").strip()
+    if not entity_id:
+        return False, ""
+
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        return True, GUARD_REASON_UNAVAILABLE
+
+    memory = condition_memory(data, f"guard|{slot}", cover_entity_id)
+    return _condition_slot_met(hass, config, slot, memory), slot
+
+
 def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> bool:
     """True if today lies inside the configured shading season.
 
@@ -728,13 +807,94 @@ _ROLE_TILT_KEYS = {
 }
 
 
+# An awning reads the same two roles with the opposite meaning: at rest it is
+# retracted, shading extends it. Only the *fallbacks* differ – a stored value
+# always wins, which is what lets one form serve both.
+_AWNING_ROLE_FALLBACK = {
+    ROLE_OPEN: DEFAULT_AWNING_POSITION_OPEN,
+    ROLE_SUN_PROTECT: DEFAULT_AWNING_POSITION_SUN_PROTECT,
+}
+
+
 def get_position_for_role(shutter: dict[str, Any], role: str) -> float:
     """Return the configured cover position for open/closed/sun_protect."""
     key, fallback = _ROLE_POSITION_KEYS.get(role, (CONF_POSITION_OPEN, 100))
+    if is_awning(shutter):
+        fallback = _AWNING_ROLE_FALLBACK.get(role, fallback)
     try:
         return float(shutter.get(key, fallback))
     except (TypeError, ValueError):
         return float(fallback)
+
+
+def awning_tracks_sun(shutter: dict[str, Any]) -> bool:
+    """True when this awning extends further as the sun sinks."""
+    return is_awning(shutter) and bool(shutter.get(CONF_AWNING_TRACK_ENABLED, False))
+
+
+def awning_shade_position(shutter: dict[str, Any], elevation: float | None) -> float:
+    """Extension for the current sun height.
+
+    A high sun is shaded by a short projection; the same table needs the full
+    one in the late afternoon. Two anchor points with a straight line between
+    them – the physically exact answer is `depth + height / tan(elevation)`,
+    but that needs the mounting height, and a rule nobody can fill in correctly
+    is worse than one that is a few percent off.
+
+    Falls back to the plain shading position whenever tracking is off, the sun
+    is unknown, or the two anchors are not a usable range.
+    """
+    plain = get_position_for_role(shutter, ROLE_SUN_PROTECT)
+    if not awning_tracks_sun(shutter) or elevation is None:
+        return plain
+
+    def _num(key: str, fallback: float) -> float:
+        try:
+            value = shutter.get(key)
+            return fallback if value is None or str(value).strip() == "" else float(value)
+        except (TypeError, ValueError):
+            return fallback
+
+    high_e = _num(CONF_AWNING_TRACK_HIGH_ELEV, DEFAULT_AWNING_TRACK_HIGH_ELEV)
+    high_p = _num(CONF_AWNING_TRACK_HIGH_POS, DEFAULT_AWNING_TRACK_HIGH_POS)
+    low_e = _num(CONF_AWNING_TRACK_LOW_ELEV, DEFAULT_AWNING_TRACK_LOW_ELEV)
+    low_p = _num(CONF_AWNING_TRACK_LOW_POS, DEFAULT_AWNING_TRACK_LOW_POS)
+
+    if high_e <= low_e:
+        # Anchors the wrong way round or identical: no line can be drawn
+        # through them. Same decision as the useless-hysteresis clamp – say so
+        # and fall back to the plain position rather than inventing one.
+        _LOGGER.warning(
+            "Awning %s: the high anchor (%.10g°) must lie above the low one "
+            "(%.10g°) – sun tracking ignored, extending to %d%%.",
+            shutter.get(CONF_COVER_ENTITY_ID),
+            high_e,
+            low_e,
+            int(plain),
+        )
+        return plain
+
+    if elevation >= high_e:
+        return max(0.0, min(100.0, high_p))
+    if elevation <= low_e:
+        return max(0.0, min(100.0, low_p))
+    share = (elevation - low_e) / (high_e - low_e)
+    return max(0.0, min(100.0, low_p + (high_p - low_p) * share))
+
+
+def awning_track_step(shutter: dict[str, Any]) -> float:
+    """Smallest change worth driving for, in percent.
+
+    Without it the motor runs a few percent every single minute, which wears
+    out a fabric drive and is the fastest way to make somebody switch the whole
+    feature off again.
+    """
+    try:
+        value = shutter.get(CONF_AWNING_TRACK_STEP)
+        step = DEFAULT_AWNING_TRACK_STEP if value is None or str(value).strip() == "" else float(value)
+    except (TypeError, ValueError):
+        step = DEFAULT_AWNING_TRACK_STEP
+    return max(1.0, min(100.0, step))
 
 
 def get_tilt_for_role(shutter: dict[str, Any], role: str) -> float | None:
@@ -749,10 +909,19 @@ def get_tilt_for_role(shutter: dict[str, Any], role: str) -> float | None:
     return max(0.0, min(100.0, value))
 
 
-def filter_shutters_by_area(shutters: list, area_id: str, use_up: bool) -> list:
-    """Filter shutters by area_up_id or area_down_id."""
+def filter_shutters_by_area(
+    shutters: list, area_id: str, use_up: bool, include_awnings: bool = True
+) -> list:
+    """Filter shutters by area_up_id or area_down_id.
+
+    Awnings are in by default because the group services are pressed buttons –
+    "close_group" on an awning means "retract it", and refusing that would be
+    surprising. The schedule passes include_awnings=False instead: it drives
+    open and closed roles, and an awning has neither.
+    """
     key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
-    return [s for s in shutters if str(s.get(key) or "").strip() == area_id]
+    picked = [s for s in shutters if str(s.get(key) or "").strip() == area_id]
+    return picked if include_awnings else only_shutters(picked)
 
 
 def get_cover_current_position(hass: HomeAssistant, entity_id: str) -> float | None:
@@ -1242,22 +1411,23 @@ async def set_cover_position(
     source: str | None = None,
     tilt_position: float | None = None,
     area_id: str | None = None,
+    urgent: bool = False,
 ) -> bool:
     """Set cover position (and optionally slat angle) and persist the result.
 
     Returns whether the drive went through. Callers that record a state after
     driving need to know – a failure used to be a log line only, so shading
     could mark itself active for a shutter that never moved.
+
+    `urgent` skips the global drive gap. Storm protection is the one caller
+    that has it: with a ten second gap and four awnings the last one would
+    stand in the wind for half a minute.
     """
     mark_automation_pending(hass, entry, entity_id)
     try:
-        await _respect_min_drive_gap(hass, entry)
-        await hass.services.async_call(
-            "cover",
-            "set_cover_position",
-            {"entity_id": entity_id, "position": position},
-            blocking=True,
-        )
+        if not urgent:
+            await _respect_min_drive_gap(hass, entry)
+        await _send_position(hass, entity_id, position)
         _LOGGER.info("%s: %s -> %d%%", reason, entity_id, int(position))
 
         if tilt_position is not None:
@@ -1302,17 +1472,60 @@ async def set_cover_position(
         return False
 
 
+def _supported_features(hass: HomeAssistant, entity_id: str) -> int:
+    """Supported-features bitmask of a cover, 0 when it cannot be read."""
+    state = hass.states.get(entity_id)
+    if state is None:
+        return 0
+    try:
+        return int(state.attributes.get("supported_features") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+async def _send_position(hass: HomeAssistant, entity_id: str, position: float) -> None:
+    """Drive a cover to a position, falling back to open/close where needed.
+
+    Many awning drives – and plenty of older shutter motors – only know up,
+    stop and down; `cover.set_cover_position` raises on those. Without the
+    fallback the drive fails, and since 2.8.0 a failed drive is retried every
+    minute forever. The tilt path has checked its feature bit since it was
+    written; the position path never did.
+    """
+    features = _supported_features(hass, entity_id)
+    # CoverEntityFeature.SET_POSITION == 4, OPEN == 1, CLOSE == 2
+    if not features or features & 4:
+        await hass.services.async_call(
+            "cover",
+            "set_cover_position",
+            {"entity_id": entity_id, "position": position},
+            blocking=True,
+        )
+        return
+
+    if position >= 50:
+        service = "open_cover"
+    else:
+        service = "close_cover"
+    if 0 < position < 100:
+        _LOGGER.warning(
+            "%s cannot be positioned – %d%% is driven as %s. Configure only 0 "
+            "or 100 for this cover, or switch it to a drive that reports a "
+            "position.",
+            entity_id,
+            int(position),
+            service,
+        )
+    await hass.services.async_call(
+        "cover", service, {"entity_id": entity_id}, blocking=True
+    )
+
+
 async def _set_cover_tilt(
     hass: HomeAssistant, entity_id: str, tilt_position: float, reason: str
 ) -> None:
     """Set the slat angle. Covers without tilt support are skipped quietly."""
-    state = hass.states.get(entity_id)
-    supported = 0
-    if state is not None:
-        try:
-            supported = int(state.attributes.get("supported_features") or 0)
-        except (TypeError, ValueError):
-            supported = 0
+    supported = _supported_features(hass, entity_id)
     # CoverEntityFeature.SET_TILT_POSITION == 128
     if supported and not supported & 128:
         _LOGGER.debug("%s does not support tilt – skipping slat angle", entity_id)

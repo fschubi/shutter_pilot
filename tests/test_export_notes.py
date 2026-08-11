@@ -245,3 +245,141 @@ class TestReloadIsNotAFinding:
         md = (await async_build_export(hass, entry))["markdown"]
         assert "| zuletzt geladen | – |" in md
         assert "gerade neu geladen" not in md
+
+
+# --- Markisen im Bericht -----------------------------------------------------
+
+
+class TestAwningReport:
+    """Die haeufigste Frage an einer Markise ist „warum ist sie nicht draussen".
+
+    Die Antwort steht oefter im Schutz als in der Geometrie – deshalb kommt der
+    Block davor, und deshalb muessen Wert, Einheit und Freigabezeit drinstehen.
+    """
+
+    @pytest.fixture
+    def awning_entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            AWNING_GUARD_WIND,
+            CONF_DEVICE_KIND,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+            awning_lockout_key,
+            sun_condition_keys,
+        )
+
+        keys = sun_condition_keys(AWNING_GUARD_WIND)
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: "cover.markise",
+                        CONF_NAME: "Markise Terrasse",
+                        CONF_DEVICE_KIND: KIND_AWNING,
+                        CONF_AREA_DOWN_ID: "vorne",
+                        CONF_POSITION_OPEN: 0,
+                        CONF_POSITION_SUN_PROTECT: 100,
+                    }
+                ],
+                keys[0]: "sensor.wind",
+                keys[1]: 30,
+                keys[2]: 15,
+                awning_lockout_key(AWNING_GUARD_WIND): 20,
+            },
+        )
+        config_entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "covers_driven_up": set(),
+            "covers_driven_down": set(),
+            "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+        }
+        return config_entry
+
+    async def test_it_is_called_a_markise_not_a_rollladen(self, hass, awning_entry):
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+        assert "### Markise `cover.markise`" in md
+
+    async def test_the_two_positions_are_named_by_their_meaning(
+        self, hass, awning_entry
+    ):
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+        assert "Ruhestellung (eingefahren): 0 %" in md
+        assert "Beschattung (ausgefahren): 100 %" in md
+
+    async def test_the_guard_table_carries_value_and_unit(self, hass, awning_entry):
+        """559,7 neben 30000 erklaert nichts, 559,7 W/m² neben 30000 alles."""
+        hass.states.async_set(
+            "sensor.wind", "34.1", {"unit_of_measurement": "km/h"}
+        )
+
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+
+        assert "34.1 km/h" in md
+        assert "einfahren ab 30" in md
+
+    async def test_a_barred_awning_says_why_and_until_when(
+        self, hass, awning_entry
+    ):
+        from custom_components.shutter_pilot.awning_guard import evaluate_guard
+
+        hass.states.async_set("sensor.wind", "41", {"unit_of_measurement": "km/h"})
+        data = hass.data[DOMAIN][awning_entry.entry_id]
+        shutter = awning_entry.options[CONF_SHUTTERS][0]
+        evaluate_guard(hass, awning_entry, data, shutter)
+        hass.states.async_set("sensor.wind", "4", {"unit_of_measurement": "km/h"})
+        evaluate_guard(hass, awning_entry, data, shutter)
+
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+
+        assert "**Ergebnis: gesperrt**" in md
+        assert "Freigabe frühestens in" in md
+
+    async def test_the_metres_per_second_trap_is_named(self, hass, awning_entry):
+        """Faktor 3,6 daneben heisst: die Markise faehrt nie ein."""
+        hass.states.async_set("sensor.wind", "6.2", {"unit_of_measurement": "m/s"})
+
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+
+        assert "misst in **m/s**" in md
+        assert "7 m/s" in md
+
+    async def test_a_matching_unit_gets_no_warning(self, hass, awning_entry):
+        hass.states.async_set("sensor.wind", "12", {"unit_of_measurement": "km/h"})
+
+        md = (await async_build_export(hass, awning_entry))["markdown"]
+
+        assert "misst in" not in md
+
+    async def test_leftover_shutter_keys_are_named(self, hass, awning_entry):
+        from custom_components.shutter_pilot.export import _awning_silent_notes
+
+        notes = "\n".join(
+            _awning_silent_notes(
+                {
+                    CONF_COVER_ENTITY_ID: "cover.markise",
+                    CONF_LOCK_PROTECTION: True,
+                    CONF_WINDOW_ENTITY_ID: "binary_sensor.tuer",
+                }
+            )
+        )
+
+        assert "lock_protection" in notes
+        assert "window_entity_id" in notes
+
+    async def test_a_clean_awning_gets_no_note(self, hass):
+        from custom_components.shutter_pilot.export import _awning_silent_notes
+
+        assert _awning_silent_notes({CONF_COVER_ENTITY_ID: "cover.markise"}) == []
+
+    async def test_the_report_does_not_create_guard_state(self, hass, awning_entry):
+        """Wie beim Hysterese-Speicher: der Bericht darf nichts verschieben."""
+        hass.states.async_set("sensor.wind", "41", {"unit_of_measurement": "km/h"})
+
+        await async_build_export(hass, awning_entry)
+
+        assert "_awning_guard" not in hass.data[DOMAIN][awning_entry.entry_id]

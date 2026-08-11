@@ -15,6 +15,7 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_AREAS,
     CONF_AREA_ID,
+    CONF_AREA_DOWN_ID,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
     ROLE_CLOSED,
@@ -22,10 +23,19 @@ from .const import (
     ROLE_SUN_PROTECT,
     ROLE_VENTILATION,
 )
+from .awning_guard import (
+    async_retract_awning,
+    clamp_to_rest,
+    describe_reasons,
+    guard_status,
+    is_barred,
+)
 from .helpers import (
     filter_shutters_by_area,
     get_position_for_role,
     get_tilt_for_role,
+    is_awning,
+    only_awnings,
     set_cover_position,
 )
 from .window_helper import get_effective_close_position
@@ -36,10 +46,13 @@ SERVICE_OPEN_GROUP = "open_group"
 SERVICE_CLOSE_GROUP = "close_group"
 SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 SERVICE_VENTILATE_GROUP = "ventilate_group"
+SERVICE_RETRACT_AWNINGS = "retract_awnings"
 
 SERVICE_SCHEMA = vol.Schema(
     {vol.Required("area_id"): str}
 )
+# "Storm warning received" is a house-wide event, not an area one.
+RETRACT_SCHEMA = vol.Schema({vol.Optional("area_id"): str})
 
 
 async def _drive_group(
@@ -60,6 +73,18 @@ async def _drive_group(
         if not cover:
             continue
         position = get_position_for_role(shutter, role)
+        # An awning that must not be out stays in, whoever asked. Judged by the
+        # target rather than by the role: close_group on an awning means
+        # "retract it", and refusing *that* during a storm would be absurd.
+        if is_awning(shutter) and is_barred(data, cover):
+            if clamp_to_rest(shutter, position) != position:
+                _LOGGER.info(
+                    "%s: %s skipped – awning protection active (%s)",
+                    direction,
+                    cover,
+                    describe_reasons(guard_status(data, cover).get("reasons")),
+                )
+                continue
         tilt = get_tilt_for_role(shutter, role)
         eff_pos = position
         if apply_lock_protection:
@@ -193,7 +218,10 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 type(shutters),
             )
             shutters = []
-        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
+        # Awnings have no ventilation position – it is the tilted-window one.
+        shutters = filter_shutters_by_area(
+            shutters, area_id, use_up=False, include_awnings=False
+        )
         await _drive_group(
             hass,
             entry,
@@ -204,7 +232,31 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             area_id,
         )
 
+    async def retract_awnings(call) -> None:
+        """Pull every awning in at once, for an announced storm.
+
+        No stagger and no drive gap: spacing four awnings ten seconds apart
+        would leave the last one out for half a minute, and that is the half
+        minute this service exists for.
+        """
+        data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+        if not isinstance(data, dict):
+            return
+        shutters = entry.options.get(CONF_SHUTTERS, [])
+        if not isinstance(shutters, list):
+            return
+        area_id = str(call.data.get("area_id") or "").strip()
+        targets = only_awnings(shutters)
+        if area_id:
+            targets = [
+                s for s in targets
+                if str(s.get(CONF_AREA_DOWN_ID) or "").strip() == area_id
+            ]
+        for shutter in targets:
+            await async_retract_awning(hass, entry, data, shutter, ["service"])
+
     def _unregister() -> None:
+        hass.services.async_remove(DOMAIN, SERVICE_RETRACT_AWNINGS)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_CLOSE_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_SUN_PROTECT_GROUP)
@@ -223,7 +275,11 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_VENTILATE_GROUP, ventilate_group, schema=SERVICE_SCHEMA
     )
+    hass.services.async_register(
+        DOMAIN, SERVICE_RETRACT_AWNINGS, retract_awnings, schema=RETRACT_SCHEMA
+    )
     entry.async_on_unload(_unregister)
     _LOGGER.info(
-        "Services registered: open_group, close_group, sun_protect_group, ventilate_group"
+        "Services registered: open_group, close_group, sun_protect_group, "
+        "ventilate_group, retract_awnings"
     )

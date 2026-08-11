@@ -24,6 +24,7 @@ meant to document.
 
 from __future__ import annotations
 
+import time
 from datetime import datetime
 from typing import Any
 
@@ -34,6 +35,9 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    AWNING_GUARD_SLOTS,
+    AWNING_GUARD_WIND,
+    AWNING_UNUSED_KEYS,
     CONF_AREA_AZIMUTH_ENABLED,
     CONF_AREA_AZIMUTH_MAX,
     CONF_AREA_AZIMUTH_MIN,
@@ -56,6 +60,8 @@ from .const import (
     CONF_WINDOW_ENTITY_ID,
     DOMAIN,
     INVERTED_BY_DEFAULT_SLOTS,
+    ROLE_OPEN,
+    ROLE_SUN_PROTECT,
     SUN_CONDITION_SLOTS,
     sun_condition_invert_key,
     sun_condition_keys,
@@ -66,7 +72,9 @@ from .helpers import (
     get_cover_current_position,
     get_elevation_bounds,
     get_sun_angles,
+    get_position_for_role,
     is_auto_enabled,
+    is_awning,
     is_cover_sun_protected,
     is_shutter_automation_enabled,
     is_system_enabled,
@@ -232,6 +240,125 @@ def _condition_rows(
         ],
         all_met,
     )
+
+
+def _guard_rows(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    shutter: dict[str, Any],
+) -> list[str]:
+    """The protection verdict for one awning, with values and units.
+
+    Reads the guard's last decision rather than making a new one: evaluating
+    writes hysteresis and lockout timers, and a report that moved the state it
+    documents would be measuring its own measurement. Same split as
+    `_memory_copy()` above.
+    """
+    from .awning_guard import guard_status, resolve_guard_config
+
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
+    config = resolve_guard_config(dict(entry.options or {}), shutter)
+    status = guard_status(data, cover)
+
+    rows: list[str] = []
+    for slot in AWNING_GUARD_SLOTS:
+        entity_key, on_key, off_key, states_key = sun_condition_keys(slot)
+        entity_id = str(config.get(entity_key) or "").strip()
+        if not entity_id:
+            rows.append(f"| {slot} | – | – | – | nicht eingerichtet |")
+            continue
+        limits = (
+            f"Zustände: {_fmt(config.get(states_key))}"
+            if _is_set(config.get(states_key))
+            else f"einfahren ab {_fmt(config.get(on_key))} / "
+            f"frei unter {_fmt(config.get(off_key))}"
+        )
+        hit = [r for r in (status.get("reasons") or []) if r.split(":")[0] == slot]
+        verdict = "⛔ " + ", ".join(hit) if hit else "✅ frei"
+        rows.append(
+            f"| {slot} | `{entity_id}` | {_state_of(hass, entity_id)} | "
+            f"{limits} | {verdict} |"
+        )
+
+    out = [
+        "Wind-, Regen- und Frostschutz:",
+        "",
+        "| Schutz | Sensor | Wert jetzt | Schwellen | Ergebnis |",
+        "| --- | --- | --- | --- | --- |",
+        *rows,
+        "",
+    ]
+
+    if not status:
+        out += [
+            "> ℹ️ Der Schutz hat in diesem Lauf noch nicht ausgewertet – nach "
+            "der nächsten Minute steht hier ein Ergebnis.",
+            "",
+        ]
+    else:
+        release_at = status.get("release_at")
+        if release_at is not None:
+            remaining = max(0, int(round((release_at - time.monotonic()) / 60)))
+            out.append(f"Freigabe frühestens in {remaining} min.")
+            out.append("")
+        out.append(
+            f"**Ergebnis: {'gesperrt' if status.get('barred') else 'darf ausfahren'}**"
+            + (
+                f" · Grund: {', '.join(status.get('reasons') or [])}"
+                if status.get("barred")
+                else ""
+            )
+        )
+        out.append("")
+
+    # Die Einheitenprüfung steht bewusst *hinter* dem Ergebnis, aber nicht
+    # hinter einem Ausstieg: gerade die frisch eingerichtete Markise, deren
+    # Schutz noch nie ausgewertet hat, ist der Fall, in dem die Schwelle noch
+    # nie zugeschlagen hat – und genau der, in dem sie falsch stehen kann.
+    # Ein Windwert in m/s neben einer Schwelle in km/h ist der W/m²-Fehler noch
+    # einmal, nur gefaehrlicher: Faktor 3,6 daneben heisst, dass die Markise
+    # nie einfaehrt. Der Wert allein sagt es nicht – die Einheit schon.
+    wind_entity = str(
+        config.get(sun_condition_keys(AWNING_GUARD_WIND)[0]) or ""
+    ).strip()
+    if wind_entity:
+        state = hass.states.get(wind_entity)
+        unit = str((state.attributes.get("unit_of_measurement") if state else "") or "")
+        try:
+            threshold = float(
+                config.get(sun_condition_keys(AWNING_GUARD_WIND)[1])
+            )
+        except (TypeError, ValueError):
+            threshold = None
+        if unit.lower() in ("m/s", "m/s²") and threshold is not None and threshold > 25:
+            out += [
+                f"> ⚠️ `{wind_entity}` misst in **{unit}**, die Einfahrschwelle "
+                f"steht auf **{threshold:.10g}**. In m/s sind das "
+                f"{threshold * 3.6:.0f} km/h – dieser Wert wird nie erreicht, "
+                "die Markise fährt also nie ein. 25 km/h entsprechen rund "
+                "7 m/s.",
+                "",
+            ]
+    return out
+
+
+def _awning_silent_notes(shutter: dict[str, Any]) -> list[str]:
+    """Shutter settings left on an awning, where they mean nothing.
+
+    Same class as `_silent_setting_notes()`: stored, shown in the table above,
+    and never read. Converting a shutter deletes them, but a configuration
+    written by hand or carried over from an older version can still have them.
+    """
+    leftovers = [key for key in AWNING_UNUSED_KEYS if _is_set(shutter.get(key))]
+    if not leftovers:
+        return []
+    return [
+        "> ⚠️ An dieser Markise stehen Rollladen-Einstellungen, die hier nichts "
+        f"bedeuten und nicht gelesen werden: `{'`, `'.join(leftovers)}`. "
+        "Sie einmal im Formular zu speichern räumt sie weg.",
+        "",
+    ]
 
 
 def _silent_setting_notes(shutter: dict[str, Any]) -> list[str]:
@@ -452,7 +579,8 @@ async def async_build_export(
         pos = get_cover_current_position(hass, cover)
         record = store.get_record(cover) or {}
 
-        heading = f"### Rollladen `{cover}`"
+        awning = is_awning(shutter)
+        heading = f"### {'Markise' if awning else 'Rollladen'} `{cover}`"
         if name:
             heading += f" – „{name}\""
         out += [
@@ -464,10 +592,23 @@ async def async_build_export(
             f"Automatik: "
             f"{'an' if is_shutter_automation_enabled(hass, entry, shutter) else '**aus**'}",
             "",
-            f"Bereich hoch: `{up_id or '–'}` · Bereich runter: `{down_id or '–'}` "
-            "(der Runter-Bereich entscheidet über die Beschattung)",
-            "",
         ]
+        if awning:
+            out += [
+                f"Ruhestellung (eingefahren): "
+                f"{get_position_for_role(shutter, ROLE_OPEN):.0f} % · "
+                f"Beschattung (ausgefahren): "
+                f"{get_position_for_role(shutter, ROLE_SUN_PROTECT):.0f} %",
+                "",
+                f"Beschattungsbereich: `{down_id or '–'}`",
+                "",
+            ]
+        else:
+            out += [
+                f"Bereich hoch: `{up_id or '–'}` · Bereich runter: `{down_id or '–'}` "
+                "(der Runter-Bereich entscheidet über die Beschattung)",
+                "",
+            ]
 
         if cover_counts.get(cover.strip(), 0) > 1:
             out += [
@@ -502,6 +643,13 @@ async def async_build_export(
 
         out += _settings_table(shutter)
         out += _silent_setting_notes(shutter)
+
+        if awning:
+            # Vor die Beschattung, nicht dahinter: die haeufigste Frage an einer
+            # Markise ist „warum ist sie nicht draussen", und die Antwort steht
+            # oefter hier als in der Geometrie darunter.
+            out += _awning_silent_notes(shutter)
+            out += _guard_rows(hass, entry, data, shutter)
 
         if down_area is not None and down_area.get(CONF_AREA_SUN_PROTECT_ENABLED):
             if not is_system_enabled(hass, entry):

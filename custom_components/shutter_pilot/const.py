@@ -187,6 +187,16 @@ CONF_SUN_COND_STATES = "sun_cond_{slot}_states"
 # so the three places that unpack that tuple stay untouched.
 CONF_SUN_COND_INVERT = "sun_cond_{slot}_invert"
 
+# Awning protection reuses the very same slot mechanism, with one deliberate
+# difference in meaning: here a satisfied slot means *danger*, not permission.
+# "on" at a rain sensor, "wind above 30" and "colder than -2" all read the
+# natural way round that, and the existing hysteresis then does exactly what is
+# wanted – retract at on_above, release only below off_below.
+AWNING_GUARD_WIND = "wind"
+AWNING_GUARD_RAIN = "rain"
+AWNING_GUARD_ICE = "ice"
+AWNING_GUARD_SLOTS = (AWNING_GUARD_WIND, AWNING_GUARD_RAIN, AWNING_GUARD_ICE)
+
 # Slot used for the alternative closing position. Same evaluation, own name.
 CLOSE_CONDITION_SLOT = "close"
 # Two slots, like ventilation: "warm today AND somebody at home" needs both.
@@ -201,8 +211,9 @@ VENT_CONDITION_SLOTS = ("vent_a", "vent_b")
 # Frost protection: do not close all the way, so the slats cannot freeze shut.
 FROST_CONDITION_SLOT = "frost"
 # Slots that ask "below" rather than "above" unless told otherwise. Frost is
-# always about falling temperatures, so users should not have to say so.
-INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT,)
+# always about falling temperatures, so users should not have to say so – and
+# ice on an awning is the same question asked at the other end of the house.
+INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT, AWNING_GUARD_ICE)
 
 # Standard weather conditions in Home Assistant, offered as checkboxes.
 WEATHER_CONDITIONS = (
@@ -316,6 +327,103 @@ CONF_MASTER_ENTITY_ID = "master_entity_id"
 CONF_AREA_DOWN_LIGHT_ENTITY = "down_light_entity"
 CONF_AREA_DOWN_LIGHT_BRIGHTNESS = "down_light_brightness"
 DEFAULT_AREA_DOWN_LIGHT_BRIGHTNESS = 40
+
+# ---------------------------------------------------------------------------
+#  Awnings
+# ---------------------------------------------------------------------------
+# An awning is a cover like any other – it just shades by moving *out* instead
+# of down. That is why it needs no second drive engine: sun protection drives
+# to position_sun_protect and releases to position_open, and which number that
+# is comes from the configuration, not from the code. Only two things really
+# differ: an awning belongs in no schedule, and it has to come in when it blows.
+CONF_DEVICE_KIND = "device_kind"
+KIND_SHUTTER = "shutter"
+KIND_AWNING = "awning"
+# A missing key is a shutter, so no stored configuration needs migrating.
+DEFAULT_DEVICE_KIND = KIND_SHUTTER
+
+# Defaults when creating an awning: at rest it is retracted, shading extends it.
+# Exactly the other way round from a shutter, which is the whole trick.
+DEFAULT_AWNING_POSITION_OPEN = 0
+DEFAULT_AWNING_POSITION_SUN_PROTECT = 100
+# Awnings that go in and out with every passing cloud are the classic
+# complaint, and a fabric drive dislikes it more than a shutter motor does.
+DEFAULT_AWNING_SHADE_HOLD = 15
+
+# Keys that mean nothing on an awning. Converting a shutter deletes them
+# instead of leaving them behind: stored, visible and ineffective is exactly
+# the class of fault _silent_setting_notes() has been reporting since 2.10.2.
+AWNING_UNUSED_KEYS = (
+    CONF_AREA_UP_ID,
+    CONF_POSITION_CLOSED,
+    CONF_POSITION_CLOSED_ALT,
+    CONF_POSITION_CLOSED_FROST,
+    CONF_WINDOW_ENTITY_ID,
+    CONF_WINDOW_OPEN_STATE,
+    CONF_WINDOW_TILTED_STATE,
+    CONF_WINDOW_TILTED_ENTITY_ID,
+    CONF_WINDOW_TILTED_ENTITY_STATE,
+    CONF_POSITION_WHEN_WINDOW_OPEN,
+    CONF_POSITION_WHEN_WINDOW_TILTED,
+    CONF_LOCK_PROTECTION,
+    CONF_MIN_POSITION_WHEN_OPEN,
+    CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_DRIVE_AFTER_CLOSE,
+    CONF_TILT_ENABLED,
+    CONF_TILT_OPEN,
+    CONF_TILT_CLOSED,
+    CONF_TILT_SUN_PROTECT,
+)
+
+# How long after the last exceedance the awning stays in, in minutes. Value
+# hysteresis alone is not enough for wind: a gust is over in twenty seconds and
+# the awning still must not go straight back out.
+CONF_AWNING_GUARD_LOCKOUT = "guard_{slot}_lockout"
+DEFAULT_AWNING_LOCKOUT = {
+    AWNING_GUARD_WIND: 20,
+    AWNING_GUARD_RAIN: 30,
+    # Frost does not gust. The hysteresis on the temperature is the whole story.
+    AWNING_GUARD_ICE: 0,
+}
+MAX_AWNING_LOCKOUT = 120
+
+# How long an unreadable guard sensor is tolerated before the awning is pulled
+# in, in minutes. Extending is barred from the first second either way – the
+# grace only covers the far more drastic forced retraction, so that a sensor
+# blinking out for a moment during a restart does not yank every awning in.
+CONF_AWNING_SENSOR_GRACE = "awning_sensor_grace"
+DEFAULT_AWNING_SENSOR_GRACE = 10
+MAX_AWNING_SENSOR_GRACE = 120
+
+# Why an awning is currently barred from extending.
+GUARD_REASON_UNAVAILABLE = "sensor_unavailable"
+
+# Extending further as the sun sinks: at a high sun a short projection shades
+# the same area that needs the full one later on. Two anchor points with a
+# straight line between them, because that is a rule one can explain in a form
+# without asking for the mounting height.
+CONF_AWNING_TRACK_ENABLED = "awning_track_enabled"
+CONF_AWNING_TRACK_HIGH_ELEV = "awning_track_high_elev"
+CONF_AWNING_TRACK_HIGH_POS = "awning_track_high_pos"
+CONF_AWNING_TRACK_LOW_ELEV = "awning_track_low_elev"
+CONF_AWNING_TRACK_LOW_POS = "awning_track_low_pos"
+# Minimum change before the awning is moved again. Without it the motor runs a
+# few percent every single minute, which is the surest way to wear out a drive
+# and to make the owner switch the whole thing off.
+CONF_AWNING_TRACK_STEP = "awning_track_step"
+DEFAULT_AWNING_TRACK_HIGH_ELEV = 60.0
+DEFAULT_AWNING_TRACK_HIGH_POS = 60
+DEFAULT_AWNING_TRACK_LOW_ELEV = 20.0
+DEFAULT_AWNING_TRACK_LOW_POS = 100
+DEFAULT_AWNING_TRACK_STEP = 10
+
+EVENT_AWNING_RETRACTED = "shutter_pilot_awning_retracted"
+
+
+def awning_lockout_key(slot: str) -> str:
+    """Return the lockout option key for a guard slot."""
+    return CONF_AWNING_GUARD_LOCKOUT.format(slot=slot)
+
 
 # Defaults
 DEFAULT_POSITION_OPEN = 100

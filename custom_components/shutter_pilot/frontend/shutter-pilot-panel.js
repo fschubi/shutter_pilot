@@ -74,6 +74,22 @@ const WEATHER_CONDITIONS = ["sunny","partlycloudy","cloudy","rainy","pouring",
   "snowy","snowy-rainy","fog","hail","lightning","lightning-rainy","windy",
   "windy-variant","clear-night","exceptional"];
 const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
+/* Markisen stehen in derselben Liste wie die Rollläden – nur der Tab und das
+   Formular sind getrennt. Ein fehlender Schlüssel ist ein Rollladen, damit
+   kein Bestand angefasst werden muss. Spiegelt const.py. */
+const KIND_AWNING = "awning";
+const isAwning = s => String(s?.device_kind||"shutter") === KIND_AWNING;
+const AWNING_GUARD_SLOTS = ["wind","rain","ice"];
+/* Schlüssel, die an einer Markise nichts bedeuten. Beim Übernehmen eines
+   bestehenden Rollladens werden sie gelöscht statt stehengelassen – gespeichert,
+   sichtbar und wirkungslos ist genau die Sorte Einstellung, die der Export seit
+   2.10.2 anprangert. Spiegelt AWNING_UNUSED_KEYS in const.py. */
+const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt",
+  "position_closed_frost","window_entity_id","window_open_state",
+  "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
+  "position_when_window_open","position_when_window_tilted","lock_protection",
+  "min_position_when_open","window_close_debounce","drive_after_close",
+  "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 
 /* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
    Anzeigenamen samt Entity-ID. Beides nur zum Vorsortieren – nichts wird
@@ -317,6 +333,73 @@ de:{
   f_win_debounce:"Verzögerung beim Schließen (Sek.)",f_win_debounce_hint:"Beim Drehen des Griffs von „gekippt“ auf „offen“ meldet der Kontakt kurz „geschlossen“. So lange muss „geschlossen“ anhalten, bevor der Rollladen zurückfährt. 0 = sofort reagieren.",
   pick_entity:"Entität auswählen…",
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
+  /* Markisen */
+  tab_awnings:"Markisen",
+  f_guard_global_only:"Regen- und Frostschutz gelten fürs ganze Haus und stehen unter Einstellungen.",
+  f_copy_pick_awning:"– Markise wählen –",
+  f_copy_hint_awning:"Kopiert Positionen, Ausfahrlänge, Beschattung, Bedingungen und den Wind- und Regenschutz. Cover-Entität, Name und Beschattungsbereich bleiben unverändert.",
+  add_awning:"Markise hinzufügen",
+  edit_awning:"Markise bearbeiten",
+  empty_awnings_list:"Noch keine Markise angelegt.",
+  col_area_shade:"Beschattungsbereich",
+  col_guard:"Schutz",
+  guard_free:"frei",
+  guard_barred:"gesperrt",
+  guard_release_in:"Freigabe in {min} min",
+  guard_reason_wind:"Wind",
+  guard_reason_rain:"Regen",
+  guard_reason_ice:"Frost",
+  guard_lockout_running:"Sperrzeit läuft",
+  guard_sensor_dead:"Sensor liefert nichts",
+  sec_awning:"Markise",
+  sec_awning_sub:"Entität, Name und Beschattungsbereich",
+  sec_awning_pos:"Ausfahren",
+  sec_awning_pos_sub:"Ruhestellung, Beschattung und Nachführung",
+  sec_awning_guard:"Wind- und Regenschutz",
+  sec_awning_guard_sub:"Eigene Sensoren statt der globalen",
+  sec_awning_sun:"Beschattung",
+  sec_awning_sun_sub:"Sonnenstand und Bedingungen",
+  sec_guard:"Wind- und Regenschutz für Markisen",
+  sec_guard_sub:"Gilt für alle Markisen ohne eigenen Sensor",
+  f_cover_awning:"Markisen-Entität",
+  f_cover_is_shutter:"„{name}“ ist bereits als Rollladen angelegt. Übernehmen macht daraus eine Markise – Fenster-, Lamellen- und Schließ-Einstellungen werden dabei entfernt.",
+  f_convert_to_awning:"Als Markise übernehmen",
+  f_awning_auto:"Automatik für diese Markise",
+  f_awning_auto_hint:"Aus heißt: keine Beschattung. Der Wind- und Regenschutz gilt trotzdem weiter.",
+  f_area_shade:"Beschattungsbereich",
+  f_area_shade_hint:"Dieser Bereich liefert Sonnenhöhe, Fensterrichtung, Bedingungen und Haltezeit. Eine Markise fährt in keinem Zeitplan mit.",
+  f_pos_retracted:"Ruhestellung (eingefahren)",
+  f_pos_retracted_hint:"Wohin die Markise fährt, wenn keine Beschattung nötig ist – meist 0 %.",
+  f_pos_extended:"Beschattung (ausgefahren)",
+  f_pos_extended_hint:"Wie weit sie zum Beschatten ausfährt. Antriebe ohne Positionsmeldung fahren nur ganz ein oder ganz aus.",
+  f_track:"Ausfahrlänge nach Sonnenhöhe",
+  f_track_hint:"Steht die Sonne hoch, reicht wenig Ausfall; sinkt sie, braucht dieselbe Fläche mehr. Zwei Stützpunkte, gerade Linie dazwischen.",
+  f_track_high_elev:"Sonne steht hoch bei",
+  f_track_high_pos:"… dann ausfahren auf",
+  f_track_low_elev:"Sonne steht tief bei",
+  f_track_low_pos:"… dann ausfahren auf",
+  f_track_step:"Mindeständerung",
+  f_track_step_hint:"Kleinere Änderungen werden nicht gefahren – sonst läuft der Antrieb jede Minute ein paar Prozent.",
+  f_guard_intro:"Schwelle überschritten heißt: sofort einfahren und nicht mehr ausfahren. Ohne Sensor gibt es keinen Schutz; mit einem Sensor, der nichts liefert, bleibt die Markise drin.",
+  f_guard_ignores_switches:"⚠️ Der Schutz gilt auch bei ausgeschaltetem Hauptschalter und ausgeschalteter Automatik. Abschalten geht nur, indem der Sensor entfernt wird.",
+  f_guard_wind:"Windsensor",
+  f_guard_rain:"Regensensor",
+  f_guard_ice:"Temperatursensor (Frost)",
+  f_guard_inherits:"Leer lassen: dann gilt der Sensor aus den Einstellungen.",
+  f_guard_on_above:"Einfahren ab",
+  f_guard_off_below:"Wieder freigeben unter",
+  f_guard_on_below:"Sperren unter",
+  f_guard_off_above:"Wieder freigeben über",
+  f_guard_hyst_hint:"Die beiden Werte sind ein Einschaltpunkt und ein Aufhebepunkt dahinter, kein Bereich. Ohne Abstand pendelt die Markise an der Schwelle.",
+  f_guard_bin_hint:"„on“ gilt als Gefahr – die Markise fährt ein.",
+  f_guard_lockout:"Sperrzeit nach der letzten Überschreitung",
+  f_guard_lockout_hint:"Eine Böe ist nach zwanzig Sekunden vorbei, die Markise soll trotzdem nicht sofort wieder heraus. Jede neue Überschreitung startet die Zeit von vorn.",
+  f_guard_grace:"Karenz bei totem Sensor",
+  f_guard_grace_hint:"Ausfahren ist ab der ersten Sekunde gesperrt. Erst nach dieser Zeit wird eine ausgefahrene Markise auch eingefahren – ein Sensor, der beim Neustart kurz aussetzt, soll nicht das ganze Haus einfahren.",
+  f_awning_cond_hint:"Zusätzliche Bedingungen der Markise ersetzen die des Bereichs – leer heißt: der Bereichswert gilt.",
+  btn_extend:"Ausfahren",
+  btn_retract:"Einfahren",
+  btn_extend_barred:"Gesperrt – Wind- oder Regenschutz aktiv",
 },
 en:{
   f_bound_none:"no limit – tap to set",
@@ -527,6 +610,73 @@ en:{
   f_win_debounce:"Close delay (sec.)",f_win_debounce_hint:"Turning the handle from tilted to open makes the contact report \"closed\" for a moment. This is how long \"closed\" has to hold before the shutter drives back. 0 = react immediately.",
   pick_entity:"Select entity…",
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
+  /* Markisen */
+  tab_awnings:"Awnings",
+  f_guard_global_only:"Rain and frost protection apply house-wide and live under Settings.",
+  f_copy_pick_awning:"– choose an awning –",
+  f_copy_hint_awning:"Copies positions, extension, shading, conditions and the wind and rain protection. Cover entity, name and shading area are left alone.",
+  add_awning:"Add awning",
+  edit_awning:"Edit awning",
+  empty_awnings_list:"No awning configured yet.",
+  col_area_shade:"Shading area",
+  col_guard:"Protection",
+  guard_free:"clear",
+  guard_barred:"barred",
+  guard_release_in:"released in {min} min",
+  guard_reason_wind:"Wind",
+  guard_reason_rain:"Rain",
+  guard_reason_ice:"Frost",
+  guard_lockout_running:"lockout running",
+  guard_sensor_dead:"sensor reports nothing",
+  sec_awning:"Awning",
+  sec_awning_sub:"Entity, name and shading area",
+  sec_awning_pos:"Extension",
+  sec_awning_pos_sub:"Rest position, shading and sun tracking",
+  sec_awning_guard:"Wind and rain protection",
+  sec_awning_guard_sub:"Own sensors instead of the global ones",
+  sec_awning_sun:"Shading",
+  sec_awning_sun_sub:"Sun position and conditions",
+  sec_guard:"Wind and rain protection for awnings",
+  sec_guard_sub:"Applies to every awning without its own sensor",
+  f_cover_awning:"Awning entity",
+  f_cover_is_shutter:"“{name}” is already configured as a shutter. Converting turns it into an awning – window, slat and closing settings are removed.",
+  f_convert_to_awning:"Convert to awning",
+  f_awning_auto:"Automation for this awning",
+  f_awning_auto_hint:"Off means no shading. Wind and rain protection still applies.",
+  f_area_shade:"Shading area",
+  f_area_shade_hint:"This area supplies sun elevation, window direction, conditions and hold time. An awning never runs on a schedule.",
+  f_pos_retracted:"Rest position (retracted)",
+  f_pos_retracted_hint:"Where the awning goes when no shading is needed – usually 0%.",
+  f_pos_extended:"Shading (extended)",
+  f_pos_extended_hint:"How far it extends to shade. Drives without position feedback only go fully in or fully out.",
+  f_track:"Extend further as the sun sinks",
+  f_track_hint:"A high sun needs little projection; as it sinks the same area needs more. Two anchor points with a straight line between them.",
+  f_track_high_elev:"Sun is high at",
+  f_track_high_pos:"… then extend to",
+  f_track_low_elev:"Sun is low at",
+  f_track_low_pos:"… then extend to",
+  f_track_step:"Minimum change",
+  f_track_step_hint:"Smaller changes are not driven – otherwise the motor runs a few percent every single minute.",
+  f_guard_intro:"Above the threshold means: retract at once and do not extend again. Without a sensor there is no protection; with a sensor that reports nothing the awning stays in.",
+  f_guard_ignores_switches:"⚠️ Protection applies even with the master switch and the automation switched off. The only way to switch it off is to remove the sensor.",
+  f_guard_wind:"Wind sensor",
+  f_guard_rain:"Rain sensor",
+  f_guard_ice:"Temperature sensor (frost)",
+  f_guard_inherits:"Leave empty to use the sensor from the settings.",
+  f_guard_on_above:"Retract above",
+  f_guard_off_below:"Release again below",
+  f_guard_on_below:"Bar below",
+  f_guard_off_above:"Release again above",
+  f_guard_hyst_hint:"These two are a switch-on point and a release point behind it, not a range. Without a gap the awning oscillates at the threshold.",
+  f_guard_bin_hint:"“on” counts as danger – the awning retracts.",
+  f_guard_lockout:"Lockout after the last exceedance",
+  f_guard_lockout_hint:"A gust is over in twenty seconds, the awning still must not go straight back out. Every new exceedance restarts the clock.",
+  f_guard_grace:"Grace for a dead sensor",
+  f_guard_grace_hint:"Extending is barred from the first second. Only after this time is an extended awning also pulled in – a sensor blinking out during a restart should not retract the whole house.",
+  f_awning_cond_hint:"Conditions set on the awning replace the area's – empty means the area value applies.",
+  btn_extend:"Extend",
+  btn_retract:"Retract",
+  btn_extend_barred:"Barred – wind or rain protection active",
 },
 fr:{
   f_sun_cond_wrong_way:"Ces deux valeurs sont inversées. Il s’agit d’un seuil de déclenchement avec un seuil de levée EN DESSOUS, pas d’une plage de–à. Telle quelle, la seconde valeur est ignorée et la condition est remplie pratiquement en permanence. Pour une plage d’orientations, utilisez « Seulement si la fenêtre est bien orientée ».",
@@ -679,6 +829,73 @@ fr:{
   f_drive_after:"Rattraper si fenêtre ouverte",f_drive_after_hint:"La commande sera exécutée dès que la fenêtre sera fermée.",
   f_win_debounce:"Délai à la fermeture (sec.)",f_win_debounce_hint:"Durée pendant laquelle « fermé » doit se maintenir avant le retour du volet. 0 = immédiat.",
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
+  /* Markisen */
+  tab_awnings:"Stores bannes",
+  f_guard_global_only:"Les protections pluie et gel valent pour toute la maison et se trouvent dans les réglages.",
+  f_copy_pick_awning:"– choisir un store –",
+  f_copy_hint_awning:"Copie positions, déploiement, ombrage, conditions et la protection vent et pluie. Entité, nom et zone d'ombrage restent inchangés.",
+  add_awning:"Ajouter un store",
+  edit_awning:"Modifier le store",
+  empty_awnings_list:"Aucun store configuré.",
+  col_area_shade:"Zone d'ombrage",
+  col_guard:"Protection",
+  guard_free:"libre",
+  guard_barred:"bloqué",
+  guard_release_in:"libéré dans {min} min",
+  guard_reason_wind:"Vent",
+  guard_reason_rain:"Pluie",
+  guard_reason_ice:"Gel",
+  guard_lockout_running:"délai en cours",
+  guard_sensor_dead:"le capteur ne renvoie rien",
+  sec_awning:"Store banne",
+  sec_awning_sub:"Entité, nom et zone d'ombrage",
+  sec_awning_pos:"Déploiement",
+  sec_awning_pos_sub:"Position de repos, ombrage et suivi du soleil",
+  sec_awning_guard:"Protection vent et pluie",
+  sec_awning_guard_sub:"Capteurs propres au lieu des capteurs globaux",
+  sec_awning_sun:"Ombrage",
+  sec_awning_sun_sub:"Position du soleil et conditions",
+  sec_guard:"Protection vent et pluie des stores",
+  sec_guard_sub:"S'applique à tout store sans capteur propre",
+  f_cover_awning:"Entité du store",
+  f_cover_is_shutter:"« {name} » est déjà configuré comme volet. La conversion en fait un store – les réglages fenêtre, lames et fermeture sont supprimés.",
+  f_convert_to_awning:"Convertir en store",
+  f_awning_auto:"Automatisation de ce store",
+  f_awning_auto_hint:"Désactivé : pas d'ombrage. La protection vent et pluie reste active.",
+  f_area_shade:"Zone d'ombrage",
+  f_area_shade_hint:"Cette zone fournit hauteur du soleil, orientation, conditions et temps de maintien. Un store ne suit aucun horaire.",
+  f_pos_retracted:"Position de repos (replié)",
+  f_pos_retracted_hint:"Où va le store quand aucun ombrage n'est nécessaire – en général 0 %.",
+  f_pos_extended:"Ombrage (déployé)",
+  f_pos_extended_hint:"Jusqu'où il se déploie pour ombrager. Les moteurs sans retour de position vont seulement tout dedans ou tout dehors.",
+  f_track:"Déployer davantage quand le soleil baisse",
+  f_track_hint:"Un soleil haut demande peu d'avancée ; quand il baisse, la même surface en demande plus. Deux points d'appui, droite entre les deux.",
+  f_track_high_elev:"Soleil haut à",
+  f_track_high_pos:"… déployer alors à",
+  f_track_low_elev:"Soleil bas à",
+  f_track_low_pos:"… déployer alors à",
+  f_track_step:"Variation minimale",
+  f_track_step_hint:"Les variations plus faibles ne sont pas exécutées – sinon le moteur bouge de quelques pour cent chaque minute.",
+  f_guard_intro:"Au-dessus du seuil : rentrer aussitôt et ne plus se déployer. Sans capteur, aucune protection ; avec un capteur muet, le store reste rentré.",
+  f_guard_ignores_switches:"⚠️ La protection s'applique même avec l'interrupteur principal et l'automatisation désactivés. Pour la désactiver, il faut retirer le capteur.",
+  f_guard_wind:"Capteur de vent",
+  f_guard_rain:"Capteur de pluie",
+  f_guard_ice:"Capteur de température (gel)",
+  f_guard_inherits:"Laisser vide : le capteur des réglages s'applique.",
+  f_guard_on_above:"Rentrer au-dessus de",
+  f_guard_off_below:"Libérer sous",
+  f_guard_on_below:"Bloquer sous",
+  f_guard_off_above:"Libérer au-dessus de",
+  f_guard_hyst_hint:"Ces deux valeurs sont un point de déclenchement et un point de libération derrière, pas une plage. Sans écart, le store oscille au seuil.",
+  f_guard_bin_hint:"« on » vaut danger – le store rentre.",
+  f_guard_lockout:"Délai après le dernier dépassement",
+  f_guard_lockout_hint:"Une rafale passe en vingt secondes, le store ne doit pas ressortir aussitôt. Chaque nouveau dépassement relance le délai.",
+  f_guard_grace:"Tolérance capteur muet",
+  f_guard_grace_hint:"Le déploiement est bloqué dès la première seconde. Ce n'est qu'après ce délai qu'un store déployé est aussi rentré – un capteur absent au démarrage ne doit pas tout rentrer.",
+  f_awning_cond_hint:"Les conditions du store remplacent celles de la zone – vide signifie que la valeur de la zone s'applique.",
+  btn_extend:"Déployer",
+  btn_retract:"Rentrer",
+  btn_extend_barred:"Bloqué – protection vent ou pluie active",
 },
 es:{
   f_sun_cond_wrong_way:"Estos dos valores están al revés. Es un punto de activación con un punto de liberación POR DEBAJO, no un rango de–a. Tal como está, el segundo valor se descarta y la condición se cumple prácticamente siempre. Para un rango de orientaciones usa «Solo con la orientación adecuada de la ventana».",
@@ -831,6 +1048,73 @@ es:{
   f_drive_after:"Recuperar si ventana abierta",f_drive_after_hint:"Se ejecutará cuando la ventana se cierre.",
   f_win_debounce:"Retardo al cerrar (seg.)",f_win_debounce_hint:"Tiempo que debe mantenerse «cerrado» antes de que la persiana vuelva. 0 = inmediato.",
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
+  /* Markisen */
+  tab_awnings:"Toldos",
+  f_guard_global_only:"La protección de lluvia y helada vale para toda la casa y está en los ajustes.",
+  f_copy_pick_awning:"– elegir un toldo –",
+  f_copy_hint_awning:"Copia posiciones, extensión, sombreado, condiciones y la protección de viento y lluvia. Entidad, nombre y zona de sombreado no se tocan.",
+  add_awning:"Añadir toldo",
+  edit_awning:"Editar toldo",
+  empty_awnings_list:"Todavía no hay ningún toldo.",
+  col_area_shade:"Zona de sombreado",
+  col_guard:"Protección",
+  guard_free:"libre",
+  guard_barred:"bloqueado",
+  guard_release_in:"libre en {min} min",
+  guard_reason_wind:"Viento",
+  guard_reason_rain:"Lluvia",
+  guard_reason_ice:"Helada",
+  guard_lockout_running:"espera en curso",
+  guard_sensor_dead:"el sensor no responde",
+  sec_awning:"Toldo",
+  sec_awning_sub:"Entidad, nombre y zona de sombreado",
+  sec_awning_pos:"Extensión",
+  sec_awning_pos_sub:"Posición de reposo, sombreado y seguimiento solar",
+  sec_awning_guard:"Protección de viento y lluvia",
+  sec_awning_guard_sub:"Sensores propios en lugar de los globales",
+  sec_awning_sun:"Sombreado",
+  sec_awning_sun_sub:"Posición del sol y condiciones",
+  sec_guard:"Protección de viento y lluvia para toldos",
+  sec_guard_sub:"Vale para todo toldo sin sensor propio",
+  f_cover_awning:"Entidad del toldo",
+  f_cover_is_shutter:"«{name}» ya está configurado como persiana. Al convertirlo pasa a ser un toldo: se eliminan los ajustes de ventana, lamas y cierre.",
+  f_convert_to_awning:"Convertir en toldo",
+  f_awning_auto:"Automatización de este toldo",
+  f_awning_auto_hint:"Desactivado: sin sombreado. La protección de viento y lluvia sigue activa.",
+  f_area_shade:"Zona de sombreado",
+  f_area_shade_hint:"Esta zona aporta altura solar, orientación, condiciones y tiempo de espera. Un toldo no sigue ningún horario.",
+  f_pos_retracted:"Posición de reposo (recogido)",
+  f_pos_retracted_hint:"Adónde va el toldo cuando no hace falta sombra: normalmente 0 %.",
+  f_pos_extended:"Sombreado (extendido)",
+  f_pos_extended_hint:"Cuánto se extiende para dar sombra. Los motores sin posición solo van del todo dentro o del todo fuera.",
+  f_track:"Extender más cuando baja el sol",
+  f_track_hint:"Con el sol alto basta poco vuelo; al bajar, la misma superficie pide más. Dos puntos de apoyo y una recta entre ellos.",
+  f_track_high_elev:"Sol alto en",
+  f_track_high_pos:"… extender entonces a",
+  f_track_low_elev:"Sol bajo en",
+  f_track_low_pos:"… extender entonces a",
+  f_track_step:"Cambio mínimo",
+  f_track_step_hint:"Los cambios menores no se ejecutan; si no, el motor se mueve unos puntos cada minuto.",
+  f_guard_intro:"Por encima del umbral: recoger de inmediato y no volver a extender. Sin sensor no hay protección; con un sensor mudo el toldo se queda dentro.",
+  f_guard_ignores_switches:"⚠️ La protección vale incluso con el interruptor principal y la automatización apagados. Solo se desactiva quitando el sensor.",
+  f_guard_wind:"Sensor de viento",
+  f_guard_rain:"Sensor de lluvia",
+  f_guard_ice:"Sensor de temperatura (helada)",
+  f_guard_inherits:"Déjalo vacío: se usa el sensor de los ajustes.",
+  f_guard_on_above:"Recoger por encima de",
+  f_guard_off_below:"Liberar por debajo de",
+  f_guard_on_below:"Bloquear por debajo de",
+  f_guard_off_above:"Liberar por encima de",
+  f_guard_hyst_hint:"Los dos valores son un punto de activación y otro de liberación detrás, no un rango. Sin separación el toldo oscila en el umbral.",
+  f_guard_bin_hint:"«on» cuenta como peligro: el toldo se recoge.",
+  f_guard_lockout:"Espera tras el último exceso",
+  f_guard_lockout_hint:"Una racha pasa en veinte segundos y el toldo no debe salir de nuevo enseguida. Cada exceso reinicia el tiempo.",
+  f_guard_grace:"Margen con sensor mudo",
+  f_guard_grace_hint:"Extender queda bloqueado desde el primer segundo. Solo después de este tiempo se recoge también un toldo extendido: un sensor que falla al arrancar no debe recogerlo todo.",
+  f_awning_cond_hint:"Las condiciones del toldo sustituyen a las de la zona; vacío significa que vale el valor de la zona.",
+  btn_extend:"Extender",
+  btn_retract:"Recoger",
+  btn_extend_barred:"Bloqueado: protección de viento o lluvia activa",
 },
 it:{
   f_sun_cond_wrong_way:"I due valori sono invertiti. È un punto di attivazione con un punto di rilascio SOTTO di esso, non un intervallo da–a. Così com’è, il secondo valore viene scartato e la condizione risulta soddisfatta praticamente sempre. Per un intervallo di orientamenti usa «Solo con l’orientamento giusto della finestra».",
@@ -983,6 +1267,73 @@ it:{
   f_drive_after:"Recupera se finestra aperta",f_drive_after_hint:"Verrà eseguito alla chiusura della finestra.",
   f_win_debounce:"Ritardo alla chiusura (sec.)",f_win_debounce_hint:"Per quanto tempo deve permanere «chiuso» prima che la tapparella torni indietro. 0 = subito.",
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
+  /* Markisen */
+  tab_awnings:"Tende da sole",
+  f_guard_global_only:"Le protezioni pioggia e gelo valgono per tutta la casa e stanno nelle impostazioni.",
+  f_copy_pick_awning:"– scegli una tenda –",
+  f_copy_hint_awning:"Copia posizioni, estensione, ombreggiatura, condizioni e la protezione vento e pioggia. Entità, nome e zona di ombreggiatura restano invariati.",
+  add_awning:"Aggiungi tenda",
+  edit_awning:"Modifica tenda",
+  empty_awnings_list:"Nessuna tenda configurata.",
+  col_area_shade:"Zona di ombreggiatura",
+  col_guard:"Protezione",
+  guard_free:"libera",
+  guard_barred:"bloccata",
+  guard_release_in:"libera tra {min} min",
+  guard_reason_wind:"Vento",
+  guard_reason_rain:"Pioggia",
+  guard_reason_ice:"Gelo",
+  guard_lockout_running:"attesa in corso",
+  guard_sensor_dead:"il sensore non risponde",
+  sec_awning:"Tenda da sole",
+  sec_awning_sub:"Entità, nome e zona di ombreggiatura",
+  sec_awning_pos:"Estensione",
+  sec_awning_pos_sub:"Posizione di riposo, ombreggiatura e inseguimento solare",
+  sec_awning_guard:"Protezione vento e pioggia",
+  sec_awning_guard_sub:"Sensori propri al posto di quelli globali",
+  sec_awning_sun:"Ombreggiatura",
+  sec_awning_sun_sub:"Posizione del sole e condizioni",
+  sec_guard:"Protezione vento e pioggia per le tende",
+  sec_guard_sub:"Vale per ogni tenda senza sensore proprio",
+  f_cover_awning:"Entità della tenda",
+  f_cover_is_shutter:"«{name}» è già configurato come tapparella. Convertendolo diventa una tenda: le impostazioni di finestra, lamelle e chiusura vengono rimosse.",
+  f_convert_to_awning:"Converti in tenda",
+  f_awning_auto:"Automazione di questa tenda",
+  f_awning_auto_hint:"Spenta: nessuna ombreggiatura. La protezione vento e pioggia resta attiva.",
+  f_area_shade:"Zona di ombreggiatura",
+  f_area_shade_hint:"Questa zona fornisce altezza del sole, orientamento, condizioni e tempo di mantenimento. Una tenda non segue nessun orario.",
+  f_pos_retracted:"Posizione di riposo (chiusa)",
+  f_pos_retracted_hint:"Dove va la tenda quando non serve ombra: di solito 0 %.",
+  f_pos_extended:"Ombreggiatura (estesa)",
+  f_pos_extended_hint:"Quanto si estende per ombreggiare. I motori senza posizione vanno solo tutto dentro o tutto fuori.",
+  f_track:"Estendere di più quando il sole scende",
+  f_track_hint:"Con il sole alto basta poco sbraccio; scendendo, la stessa superficie ne chiede di più. Due punti di appoggio e una retta fra loro.",
+  f_track_high_elev:"Sole alto a",
+  f_track_high_pos:"… estendere allora a",
+  f_track_low_elev:"Sole basso a",
+  f_track_low_pos:"… estendere allora a",
+  f_track_step:"Variazione minima",
+  f_track_step_hint:"Le variazioni minori non vengono eseguite, altrimenti il motore si muove di pochi punti ogni minuto.",
+  f_guard_intro:"Sopra la soglia: rientrare subito e non estendersi più. Senza sensore non c'è protezione; con un sensore muto la tenda resta dentro.",
+  f_guard_ignores_switches:"⚠️ La protezione vale anche con l'interruttore principale e l'automazione spenti. Si disattiva solo togliendo il sensore.",
+  f_guard_wind:"Sensore vento",
+  f_guard_rain:"Sensore pioggia",
+  f_guard_ice:"Sensore temperatura (gelo)",
+  f_guard_inherits:"Lascia vuoto: vale il sensore delle impostazioni.",
+  f_guard_on_above:"Rientrare sopra",
+  f_guard_off_below:"Liberare sotto",
+  f_guard_on_below:"Bloccare sotto",
+  f_guard_off_above:"Liberare sopra",
+  f_guard_hyst_hint:"I due valori sono un punto di attivazione e uno di rilascio dietro, non un intervallo. Senza distacco la tenda oscilla alla soglia.",
+  f_guard_bin_hint:"«on» vale come pericolo: la tenda rientra.",
+  f_guard_lockout:"Attesa dopo l'ultimo superamento",
+  f_guard_lockout_hint:"Una raffica passa in venti secondi, la tenda non deve però riuscire subito. Ogni nuovo superamento riavvia il tempo.",
+  f_guard_grace:"Tolleranza per sensore muto",
+  f_guard_grace_hint:"L'estensione è bloccata dal primo secondo. Solo dopo questo tempo una tenda estesa viene anche rientrata: un sensore assente all'avvio non deve far rientrare tutto.",
+  f_awning_cond_hint:"Le condizioni della tenda sostituiscono quelle della zona; vuoto significa che vale il valore della zona.",
+  btn_extend:"Estendi",
+  btn_retract:"Rientra",
+  btn_extend_barred:"Bloccata: protezione vento o pioggia attiva",
 },
 nl:{
   f_sun_cond_wrong_way:"Deze twee waarden staan omgekeerd. Dit is een inschakelpunt met een opheffingspunt ERONDER, geen bereik van–tot. Zoals het er nu staat wordt de tweede waarde weggegooid en is de voorwaarde vrijwel altijd vervuld. Voor een bereik van windrichtingen is er «Alleen bij passende raamrichting».",
@@ -1136,6 +1487,73 @@ nl:{
   f_drive_after:"Inhalen als raam open",f_drive_after_hint:"Als de sluitingstijd bereikt wordt maar het raam nog open is, wordt de actie uitgevoerd zodra het raam gesloten wordt.",
   f_win_debounce:"Vertraging bij sluiten (sec.)",f_win_debounce_hint:"Hoe lang «gesloten» moet aanhouden voordat het rolluik terugkeert. 0 = direct.",
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
+  /* Markisen */
+  tab_awnings:"Zonneschermen",
+  f_guard_global_only:"Regen- en vorstbeveiliging gelden voor het hele huis en staan bij de instellingen.",
+  f_copy_pick_awning:"– zonnescherm kiezen –",
+  f_copy_hint_awning:"Kopieert posities, uitschuiflengte, schaduw, voorwaarden en de wind- en regenbeveiliging. Entiteit, naam en schaduwzone blijven ongewijzigd.",
+  add_awning:"Zonnescherm toevoegen",
+  edit_awning:"Zonnescherm bewerken",
+  empty_awnings_list:"Nog geen zonnescherm ingesteld.",
+  col_area_shade:"Schaduwzone",
+  col_guard:"Beveiliging",
+  guard_free:"vrij",
+  guard_barred:"geblokkeerd",
+  guard_release_in:"vrij over {min} min",
+  guard_reason_wind:"Wind",
+  guard_reason_rain:"Regen",
+  guard_reason_ice:"Vorst",
+  guard_lockout_running:"wachttijd loopt",
+  guard_sensor_dead:"sensor geeft niets door",
+  sec_awning:"Zonnescherm",
+  sec_awning_sub:"Entiteit, naam en schaduwzone",
+  sec_awning_pos:"Uitschuiven",
+  sec_awning_pos_sub:"Ruststand, schaduw en zonvolging",
+  sec_awning_guard:"Wind- en regenbeveiliging",
+  sec_awning_guard_sub:"Eigen sensoren in plaats van de globale",
+  sec_awning_sun:"Schaduw",
+  sec_awning_sun_sub:"Zonnestand en voorwaarden",
+  sec_guard:"Wind- en regenbeveiliging voor zonneschermen",
+  sec_guard_sub:"Geldt voor elk scherm zonder eigen sensor",
+  f_cover_awning:"Entiteit van het zonnescherm",
+  f_cover_is_shutter:"„{name}” is al als rolluik ingesteld. Overnemen maakt er een zonnescherm van – raam-, lamellen- en sluitinstellingen worden verwijderd.",
+  f_convert_to_awning:"Als zonnescherm overnemen",
+  f_awning_auto:"Automatisering voor dit scherm",
+  f_awning_auto_hint:"Uit betekent geen schaduw. De wind- en regenbeveiliging blijft gelden.",
+  f_area_shade:"Schaduwzone",
+  f_area_shade_hint:"Deze zone levert zonshoogte, raamrichting, voorwaarden en houdtijd. Een zonnescherm loopt in geen enkel schema mee.",
+  f_pos_retracted:"Ruststand (ingeschoven)",
+  f_pos_retracted_hint:"Waar het scherm naartoe gaat als er geen schaduw nodig is – meestal 0 %.",
+  f_pos_extended:"Schaduw (uitgeschoven)",
+  f_pos_extended_hint:"Hoe ver het uitschuift om schaduw te geven. Motoren zonder positieterugmelding gaan alleen helemaal in of helemaal uit.",
+  f_track:"Verder uitschuiven als de zon zakt",
+  f_track_hint:"Bij een hoge zon volstaat weinig uitval; zakt ze, dan vraagt hetzelfde oppervlak meer. Twee steunpunten met een rechte lijn ertussen.",
+  f_track_high_elev:"Zon staat hoog bij",
+  f_track_high_pos:"… dan uitschuiven tot",
+  f_track_low_elev:"Zon staat laag bij",
+  f_track_low_pos:"… dan uitschuiven tot",
+  f_track_step:"Minimale verandering",
+  f_track_step_hint:"Kleinere veranderingen worden niet gereden – anders loopt de motor elke minuut een paar procent.",
+  f_guard_intro:"Boven de drempel: meteen inschuiven en niet meer uitschuiven. Zonder sensor is er geen beveiliging; met een sensor die niets meldt blijft het scherm binnen.",
+  f_guard_ignores_switches:"⚠️ De beveiliging geldt ook bij uitgeschakelde hoofdschakelaar en automatisering. Uitschakelen kan alleen door de sensor te verwijderen.",
+  f_guard_wind:"Windsensor",
+  f_guard_rain:"Regensensor",
+  f_guard_ice:"Temperatuursensor (vorst)",
+  f_guard_inherits:"Leeg laten: dan geldt de sensor uit de instellingen.",
+  f_guard_on_above:"Inschuiven vanaf",
+  f_guard_off_below:"Weer vrijgeven onder",
+  f_guard_on_below:"Blokkeren onder",
+  f_guard_off_above:"Weer vrijgeven boven",
+  f_guard_hyst_hint:"De twee waarden zijn een inschakelpunt en een vrijgavepunt erachter, geen bereik. Zonder afstand pendelt het scherm op de drempel.",
+  f_guard_bin_hint:"„on” geldt als gevaar – het scherm schuift in.",
+  f_guard_lockout:"Wachttijd na de laatste overschrijding",
+  f_guard_lockout_hint:"Een windvlaag is na twintig seconden voorbij, het scherm mag er toch niet meteen weer uit. Elke nieuwe overschrijding start de tijd opnieuw.",
+  f_guard_grace:"Tolerantie bij dode sensor",
+  f_guard_grace_hint:"Uitschuiven is vanaf de eerste seconde geblokkeerd. Pas na deze tijd wordt een uitgeschoven scherm ook ingehaald – een sensor die bij het opstarten even wegvalt mag niet het hele huis inschuiven.",
+  f_awning_cond_hint:"Voorwaarden op het scherm vervangen die van de zone – leeg betekent dat de zonewaarde geldt.",
+  btn_extend:"Uitschuiven",
+  btn_retract:"Inschuiven",
+  btn_extend_barred:"Geblokkeerd – wind- of regenbeveiliging actief",
 },
 da:{
   f_sun_cond_wrong_way:"De to værdier står omvendt. Det er et tændpunkt med et ophævelsespunkt UNDER, ikke et interval fra–til. Som det står nu, kasseres den anden værdi, og betingelsen er stort set altid opfyldt. Til et interval af verdenshjørner findes «Kun ved passende vinduesretning».",
@@ -1289,6 +1707,73 @@ da:{
   f_drive_after:"Indhent hvis vindue åbent",f_drive_after_hint:"Handlingen udføres, så snart vinduet lukkes.",
   f_win_debounce:"Forsinkelse ved lukning (sek.)",f_win_debounce_hint:"Hvor længe «lukket» skal holde, før rullegardinet kører tilbage. 0 = med det samme.",
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
+  /* Markisen */
+  tab_awnings:"Markiser",
+  f_guard_global_only:"Regn- og frostbeskyttelse gælder hele huset og står under indstillinger.",
+  f_copy_pick_awning:"– vælg en markise –",
+  f_copy_hint_awning:"Kopierer positioner, udkørsel, skygge, betingelser og vind- og regnbeskyttelsen. Entitet, navn og skyggeområde forbliver uændret.",
+  add_awning:"Tilføj markise",
+  edit_awning:"Rediger markise",
+  empty_awnings_list:"Ingen markise oprettet endnu.",
+  col_area_shade:"Skyggeområde",
+  col_guard:"Beskyttelse",
+  guard_free:"fri",
+  guard_barred:"spærret",
+  guard_release_in:"frigives om {min} min",
+  guard_reason_wind:"Vind",
+  guard_reason_rain:"Regn",
+  guard_reason_ice:"Frost",
+  guard_lockout_running:"spærretid kører",
+  guard_sensor_dead:"sensoren melder intet",
+  sec_awning:"Markise",
+  sec_awning_sub:"Entitet, navn og skyggeområde",
+  sec_awning_pos:"Udkørsel",
+  sec_awning_pos_sub:"Hvilestilling, skygge og solfølgning",
+  sec_awning_guard:"Vind- og regnbeskyttelse",
+  sec_awning_guard_sub:"Egne sensorer i stedet for de globale",
+  sec_awning_sun:"Skygge",
+  sec_awning_sun_sub:"Solens position og betingelser",
+  sec_guard:"Vind- og regnbeskyttelse for markiser",
+  sec_guard_sub:"Gælder alle markiser uden egen sensor",
+  f_cover_awning:"Markise-entitet",
+  f_cover_is_shutter:"„{name}” er allerede oprettet som rullegardin. Konvertering gør den til en markise – vindues-, lamel- og lukkeindstillinger fjernes.",
+  f_convert_to_awning:"Konverter til markise",
+  f_awning_auto:"Automatik for denne markise",
+  f_awning_auto_hint:"Fra betyder ingen skygge. Vind- og regnbeskyttelsen gælder fortsat.",
+  f_area_shade:"Skyggeområde",
+  f_area_shade_hint:"Dette område leverer solhøjde, vinduesretning, betingelser og holdetid. En markise kører ikke med i nogen tidsplan.",
+  f_pos_retracted:"Hvilestilling (kørt ind)",
+  f_pos_retracted_hint:"Hvor markisen kører hen, når der ikke er brug for skygge – som regel 0 %.",
+  f_pos_extended:"Skygge (kørt ud)",
+  f_pos_extended_hint:"Hvor langt den kører ud for at skygge. Motorer uden positionsmelding kører kun helt ind eller helt ud.",
+  f_track:"Kør længere ud, når solen falder",
+  f_track_hint:"Står solen højt, er lidt udfald nok; falder den, kræver samme areal mere. To støttepunkter med en ret linje imellem.",
+  f_track_high_elev:"Solen står højt ved",
+  f_track_high_pos:"… kør så ud til",
+  f_track_low_elev:"Solen står lavt ved",
+  f_track_low_pos:"… kør så ud til",
+  f_track_step:"Mindste ændring",
+  f_track_step_hint:"Mindre ændringer køres ikke – ellers kører motoren et par procent hvert minut.",
+  f_guard_intro:"Over tærsklen betyder: kør ind straks, og kør ikke ud igen. Uden sensor er der ingen beskyttelse; med en sensor, der intet melder, bliver markisen inde.",
+  f_guard_ignores_switches:"⚠️ Beskyttelsen gælder også med hovedafbryderen og automatikken slået fra. Den kan kun slås fra ved at fjerne sensoren.",
+  f_guard_wind:"Vindsensor",
+  f_guard_rain:"Regnsensor",
+  f_guard_ice:"Temperatursensor (frost)",
+  f_guard_inherits:"Lad stå tom: så gælder sensoren fra indstillingerne.",
+  f_guard_on_above:"Kør ind over",
+  f_guard_off_below:"Frigiv igen under",
+  f_guard_on_below:"Spær under",
+  f_guard_off_above:"Frigiv igen over",
+  f_guard_hyst_hint:"De to værdier er et tilkoblingspunkt og et frigivelsespunkt bagved, ikke et interval. Uden afstand pendler markisen ved tærsklen.",
+  f_guard_bin_hint:"„on” tæller som fare – markisen kører ind.",
+  f_guard_lockout:"Spærretid efter sidste overskridelse",
+  f_guard_lockout_hint:"Et vindstød er ovre på tyve sekunder, men markisen må alligevel ikke straks ud igen. Hver ny overskridelse starter tiden forfra.",
+  f_guard_grace:"Nådetid ved død sensor",
+  f_guard_grace_hint:"Udkørsel er spærret fra første sekund. Først efter denne tid køres en udkørt markise også ind – en sensor, der falder ud ved genstart, skal ikke trække hele huset ind.",
+  f_awning_cond_hint:"Betingelser på markisen erstatter områdets – tom betyder, at områdets værdi gælder.",
+  btn_extend:"Kør ud",
+  btn_retract:"Kør ind",
+  btn_extend_barred:"Spærret – vind- eller regnbeskyttelse aktiv",
 },
 sv:{
   f_sun_cond_wrong_way:"De två värdena står omvänt. Det här är en påslagspunkt med en frigöringspunkt UNDER, inte ett intervall från–till. Som det står nu kastas det andra värdet och villkoret är uppfyllt praktiskt taget hela tiden. För ett intervall av väderstreck finns «Endast vid passande fönsterriktning».",
@@ -1442,6 +1927,73 @@ sv:{
   f_drive_after:"Hämta om fönster öppet",f_drive_after_hint:"Åtgärden utförs så snart fönstret stängs.",
   f_win_debounce:"Fördröjning vid stängning (sek.)",f_win_debounce_hint:"Hur länge «stängt» måste hålla innan jalusin åker tillbaka. 0 = direkt.",
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
+  /* Markisen */
+  tab_awnings:"Markiser",
+  f_guard_global_only:"Regn- och frostskydd gäller hela huset och finns under inställningar.",
+  f_copy_pick_awning:"– välj en markis –",
+  f_copy_hint_awning:"Kopierar positioner, utfällning, skugga, villkor och vind- och regnskyddet. Entitet, namn och skuggområde lämnas orörda.",
+  add_awning:"Lägg till markis",
+  edit_awning:"Redigera markis",
+  empty_awnings_list:"Ingen markis är skapad än.",
+  col_area_shade:"Skuggområde",
+  col_guard:"Skydd",
+  guard_free:"fri",
+  guard_barred:"spärrad",
+  guard_release_in:"frisläpps om {min} min",
+  guard_reason_wind:"Vind",
+  guard_reason_rain:"Regn",
+  guard_reason_ice:"Frost",
+  guard_lockout_running:"spärrtid pågår",
+  guard_sensor_dead:"sensorn rapporterar inget",
+  sec_awning:"Markis",
+  sec_awning_sub:"Entitet, namn och skuggområde",
+  sec_awning_pos:"Utfällning",
+  sec_awning_pos_sub:"Viloläge, skugga och solföljning",
+  sec_awning_guard:"Vind- och regnskydd",
+  sec_awning_guard_sub:"Egna sensorer i stället för de globala",
+  sec_awning_sun:"Skugga",
+  sec_awning_sun_sub:"Solens läge och villkor",
+  sec_guard:"Vind- och regnskydd för markiser",
+  sec_guard_sub:"Gäller varje markis utan egen sensor",
+  f_cover_awning:"Markisens entitet",
+  f_cover_is_shutter:"”{name}” är redan upplagd som persienn. Konvertering gör den till en markis – fönster-, lamell- och stängningsinställningar tas bort.",
+  f_convert_to_awning:"Konvertera till markis",
+  f_awning_auto:"Automatik för denna markis",
+  f_awning_auto_hint:"Av betyder ingen skugga. Vind- och regnskyddet gäller ändå.",
+  f_area_shade:"Skuggområde",
+  f_area_shade_hint:"Området levererar solhöjd, fönsterriktning, villkor och hålltid. En markis följer inget schema.",
+  f_pos_retracted:"Viloläge (infälld)",
+  f_pos_retracted_hint:"Dit markisen går när ingen skugga behövs – oftast 0 %.",
+  f_pos_extended:"Skugga (utfälld)",
+  f_pos_extended_hint:"Hur långt den fälls ut för att skugga. Motorer utan lägesåterkoppling går bara helt in eller helt ut.",
+  f_track:"Fäll ut mer när solen sjunker",
+  f_track_hint:"Med hög sol räcker litet utfall; när den sjunker kräver samma yta mer. Två stödpunkter med en rak linje mellan.",
+  f_track_high_elev:"Solen står högt vid",
+  f_track_high_pos:"… fäll då ut till",
+  f_track_low_elev:"Solen står lågt vid",
+  f_track_low_pos:"… fäll då ut till",
+  f_track_step:"Minsta ändring",
+  f_track_step_hint:"Mindre ändringar körs inte – annars går motorn några procent varje minut.",
+  f_guard_intro:"Över tröskeln betyder: fäll in genast och fäll inte ut igen. Utan sensor finns inget skydd; med en sensor som inget rapporterar stannar markisen inne.",
+  f_guard_ignores_switches:"⚠️ Skyddet gäller även med huvudbrytaren och automatiken avstängda. Det stängs bara av genom att ta bort sensorn.",
+  f_guard_wind:"Vindsensor",
+  f_guard_rain:"Regnsensor",
+  f_guard_ice:"Temperatursensor (frost)",
+  f_guard_inherits:"Lämna tomt: då gäller sensorn från inställningarna.",
+  f_guard_on_above:"Fäll in över",
+  f_guard_off_below:"Frisläpp igen under",
+  f_guard_on_below:"Spärra under",
+  f_guard_off_above:"Frisläpp igen över",
+  f_guard_hyst_hint:"De två värdena är en tillslagspunkt och en frisläppningspunkt bakom, inte ett intervall. Utan avstånd pendlar markisen vid tröskeln.",
+  f_guard_bin_hint:"”on” räknas som fara – markisen fälls in.",
+  f_guard_lockout:"Spärrtid efter senaste överskridandet",
+  f_guard_lockout_hint:"En vindby är över på tjugo sekunder, men markisen får ändå inte ut igen direkt. Varje nytt överskridande startar om tiden.",
+  f_guard_grace:"Respit vid död sensor",
+  f_guard_grace_hint:"Utfällning är spärrad från första sekunden. Först efter denna tid fälls även en utfälld markis in – en sensor som faller bort vid omstart ska inte dra in hela huset.",
+  f_awning_cond_hint:"Villkor på markisen ersätter områdets – tomt betyder att områdets värde gäller.",
+  btn_extend:"Fäll ut",
+  btn_retract:"Fäll in",
+  btn_extend_barred:"Spärrad – vind- eller regnskydd aktivt",
 },
 pl:{
   f_sun_cond_wrong_way:"Te dwie wartości są odwrócone. To punkt włączenia z punktem wyłączenia PONIŻEJ niego, a nie zakres od–do. W tej postaci druga wartość jest odrzucana, a warunek jest spełniony praktycznie zawsze. Dla zakresu kierunków świata służy «Tylko przy odpowiednim kierunku okna».",
@@ -1595,6 +2147,73 @@ pl:{
   f_drive_after:"Nadrobić gdy okno otwarte",f_drive_after_hint:"Akcja zostanie wykonana po zamknięciu okna.",
   f_win_debounce:"Opóźnienie przy zamykaniu (sek.)",f_win_debounce_hint:"Jak długo musi utrzymać się stan „zamknięte”, zanim roleta wróci. 0 = natychmiast.",
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
+  /* Markisen */
+  tab_awnings:"Markizy",
+  f_guard_global_only:"Ochrona przed deszczem i mrozem obowiązuje w całym domu i znajduje się w ustawieniach.",
+  f_copy_pick_awning:"– wybierz markizę –",
+  f_copy_hint_awning:"Kopiuje położenia, wysunięcie, zacienienie, warunki oraz ochronę przed wiatrem i deszczem. Encja, nazwa i strefa zacienienia pozostają bez zmian.",
+  add_awning:"Dodaj markizę",
+  edit_awning:"Edytuj markizę",
+  empty_awnings_list:"Nie dodano jeszcze żadnej markizy.",
+  col_area_shade:"Strefa zacienienia",
+  col_guard:"Ochrona",
+  guard_free:"wolna",
+  guard_barred:"zablokowana",
+  guard_release_in:"zwolnienie za {min} min",
+  guard_reason_wind:"Wiatr",
+  guard_reason_rain:"Deszcz",
+  guard_reason_ice:"Mróz",
+  guard_lockout_running:"trwa blokada",
+  guard_sensor_dead:"czujnik nic nie zgłasza",
+  sec_awning:"Markiza",
+  sec_awning_sub:"Encja, nazwa i strefa zacienienia",
+  sec_awning_pos:"Wysuwanie",
+  sec_awning_pos_sub:"Położenie spoczynkowe, zacienienie i podążanie za słońcem",
+  sec_awning_guard:"Ochrona przed wiatrem i deszczem",
+  sec_awning_guard_sub:"Własne czujniki zamiast globalnych",
+  sec_awning_sun:"Zacienienie",
+  sec_awning_sun_sub:"Położenie słońca i warunki",
+  sec_guard:"Ochrona markiz przed wiatrem i deszczem",
+  sec_guard_sub:"Dotyczy każdej markizy bez własnego czujnika",
+  f_cover_awning:"Encja markizy",
+  f_cover_is_shutter:"„{name}” jest już dodany jako roleta. Konwersja zmieni go w markizę – ustawienia okna, lameli i zamykania zostaną usunięte.",
+  f_convert_to_awning:"Zmień na markizę",
+  f_awning_auto:"Automatyka tej markizy",
+  f_awning_auto_hint:"Wyłączona oznacza brak zacienienia. Ochrona przed wiatrem i deszczem działa dalej.",
+  f_area_shade:"Strefa zacienienia",
+  f_area_shade_hint:"Ta strefa dostarcza wysokość słońca, kierunek okien, warunki i czas przytrzymania. Markiza nie działa według harmonogramu.",
+  f_pos_retracted:"Położenie spoczynkowe (schowana)",
+  f_pos_retracted_hint:"Dokąd jedzie markiza, gdy zacienienie nie jest potrzebne – zwykle 0 %.",
+  f_pos_extended:"Zacienienie (wysunięta)",
+  f_pos_extended_hint:"Jak daleko wysuwa się do zacienienia. Napędy bez informacji o położeniu jadą tylko całkiem do środka lub całkiem na zewnątrz.",
+  f_track:"Wysuwaj dalej, gdy słońce opada",
+  f_track_hint:"Przy wysokim słońcu wystarczy mały wysięg; gdy opada, ta sama powierzchnia wymaga większego. Dwa punkty oparcia i prosta między nimi.",
+  f_track_high_elev:"Słońce wysoko przy",
+  f_track_high_pos:"… wysuń wtedy do",
+  f_track_low_elev:"Słońce nisko przy",
+  f_track_low_pos:"… wysuń wtedy do",
+  f_track_step:"Minimalna zmiana",
+  f_track_step_hint:"Mniejsze zmiany nie są wykonywane – inaczej napęd pracowałby o kilka procent co minutę.",
+  f_guard_intro:"Powyżej progu: natychmiast schować i już nie wysuwać. Bez czujnika nie ma ochrony; przy czujniku, który nic nie zgłasza, markiza zostaje schowana.",
+  f_guard_ignores_switches:"⚠️ Ochrona działa nawet przy wyłączonym wyłączniku głównym i wyłączonej automatyce. Wyłączyć ją można tylko usuwając czujnik.",
+  f_guard_wind:"Czujnik wiatru",
+  f_guard_rain:"Czujnik deszczu",
+  f_guard_ice:"Czujnik temperatury (mróz)",
+  f_guard_inherits:"Zostaw puste: obowiązuje czujnik z ustawień.",
+  f_guard_on_above:"Schowaj powyżej",
+  f_guard_off_below:"Zwolnij ponownie poniżej",
+  f_guard_on_below:"Zablokuj poniżej",
+  f_guard_off_above:"Zwolnij ponownie powyżej",
+  f_guard_hyst_hint:"Te dwie wartości to punkt załączenia i punkt zwolnienia za nim, a nie zakres. Bez odstępu markiza oscyluje przy progu.",
+  f_guard_bin_hint:"„on” liczy się jako zagrożenie – markiza się chowa.",
+  f_guard_lockout:"Blokada po ostatnim przekroczeniu",
+  f_guard_lockout_hint:"Podmuch mija w dwadzieścia sekund, a markiza i tak nie powinna od razu wyjechać. Każde nowe przekroczenie uruchamia czas od nowa.",
+  f_guard_grace:"Karencja przy martwym czujniku",
+  f_guard_grace_hint:"Wysuwanie jest zablokowane od pierwszej sekundy. Dopiero po tym czasie wysunięta markiza zostaje też schowana – czujnik, który zniknie przy restarcie, nie powinien schować całego domu.",
+  f_awning_cond_hint:"Warunki markizy zastępują warunki strefy – puste oznacza, że obowiązuje wartość strefy.",
+  btn_extend:"Wysuń",
+  btn_retract:"Schowaj",
+  btn_extend_barred:"Zablokowane – aktywna ochrona przed wiatrem lub deszczem",
 },
 pt:{
   f_sun_cond_wrong_way:"Estes dois valores estão trocados. Trata-se de um ponto de activação com um ponto de libertação ABAIXO dele, não de um intervalo de–a. Assim, o segundo valor é descartado e a condição fica praticamente sempre cumprida. Para um intervalo de orientações existe «Apenas com a orientação certa da janela».",
@@ -1748,6 +2367,73 @@ pt:{
   f_drive_after:"Recuperar se janela aberta",f_drive_after_hint:"A ação será executada assim que a janela for fechada.",
   f_win_debounce:"Atraso ao fechar (seg.)",f_win_debounce_hint:"Quanto tempo «fechado» tem de se manter antes de o estore recuar. 0 = imediato.",
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
+  /* Markisen */
+  tab_awnings:"Toldos",
+  f_guard_global_only:"As proteções de chuva e geada valem para toda a casa e estão nas definições.",
+  f_copy_pick_awning:"– escolher um toldo –",
+  f_copy_hint_awning:"Copia posições, extensão, sombreamento, condições e a proteção de vento e chuva. Entidade, nome e zona de sombreamento ficam inalterados.",
+  add_awning:"Adicionar toldo",
+  edit_awning:"Editar toldo",
+  empty_awnings_list:"Ainda não há nenhum toldo.",
+  col_area_shade:"Zona de sombreamento",
+  col_guard:"Proteção",
+  guard_free:"livre",
+  guard_barred:"bloqueado",
+  guard_release_in:"libertado em {min} min",
+  guard_reason_wind:"Vento",
+  guard_reason_rain:"Chuva",
+  guard_reason_ice:"Geada",
+  guard_lockout_running:"tempo de espera a correr",
+  guard_sensor_dead:"o sensor não responde",
+  sec_awning:"Toldo",
+  sec_awning_sub:"Entidade, nome e zona de sombreamento",
+  sec_awning_pos:"Extensão",
+  sec_awning_pos_sub:"Posição de repouso, sombreamento e seguimento solar",
+  sec_awning_guard:"Proteção de vento e chuva",
+  sec_awning_guard_sub:"Sensores próprios em vez dos globais",
+  sec_awning_sun:"Sombreamento",
+  sec_awning_sun_sub:"Posição do sol e condições",
+  sec_guard:"Proteção de vento e chuva para toldos",
+  sec_guard_sub:"Vale para todos os toldos sem sensor próprio",
+  f_cover_awning:"Entidade do toldo",
+  f_cover_is_shutter:"«{name}» já está configurado como estore. Converter transforma-o num toldo – as definições de janela, lâminas e fecho são removidas.",
+  f_convert_to_awning:"Converter em toldo",
+  f_awning_auto:"Automatização deste toldo",
+  f_awning_auto_hint:"Desligada significa sem sombreamento. A proteção de vento e chuva continua a valer.",
+  f_area_shade:"Zona de sombreamento",
+  f_area_shade_hint:"Esta zona fornece altura do sol, orientação, condições e tempo de retenção. Um toldo não segue nenhum horário.",
+  f_pos_retracted:"Posição de repouso (recolhido)",
+  f_pos_retracted_hint:"Para onde vai o toldo quando não é preciso sombra – normalmente 0 %.",
+  f_pos_extended:"Sombreamento (estendido)",
+  f_pos_extended_hint:"Até onde se estende para dar sombra. Motores sem posição vão só totalmente para dentro ou para fora.",
+  f_track:"Estender mais quando o sol desce",
+  f_track_hint:"Com o sol alto basta pouco avanço; ao descer, a mesma área pede mais. Dois pontos de apoio e uma reta entre eles.",
+  f_track_high_elev:"Sol alto a",
+  f_track_high_pos:"… estender então até",
+  f_track_low_elev:"Sol baixo a",
+  f_track_low_pos:"… estender então até",
+  f_track_step:"Alteração mínima",
+  f_track_step_hint:"Alterações menores não são executadas – caso contrário o motor mexe-se alguns pontos a cada minuto.",
+  f_guard_intro:"Acima do limite: recolher de imediato e não voltar a estender. Sem sensor não há proteção; com um sensor mudo o toldo fica recolhido.",
+  f_guard_ignores_switches:"⚠️ A proteção vale mesmo com o interruptor principal e a automatização desligados. Só se desliga removendo o sensor.",
+  f_guard_wind:"Sensor de vento",
+  f_guard_rain:"Sensor de chuva",
+  f_guard_ice:"Sensor de temperatura (geada)",
+  f_guard_inherits:"Deixar vazio: vale o sensor das definições.",
+  f_guard_on_above:"Recolher acima de",
+  f_guard_off_below:"Libertar de novo abaixo de",
+  f_guard_on_below:"Bloquear abaixo de",
+  f_guard_off_above:"Libertar de novo acima de",
+  f_guard_hyst_hint:"Os dois valores são um ponto de ativação e um de libertação atrás, não um intervalo. Sem distância o toldo oscila no limite.",
+  f_guard_bin_hint:"«on» conta como perigo – o toldo recolhe.",
+  f_guard_lockout:"Espera após a última ultrapassagem",
+  f_guard_lockout_hint:"Uma rajada passa em vinte segundos e o toldo não deve sair logo de novo. Cada nova ultrapassagem reinicia o tempo.",
+  f_guard_grace:"Tolerância com sensor mudo",
+  f_guard_grace_hint:"Estender está bloqueado desde o primeiro segundo. Só após este tempo um toldo estendido é também recolhido – um sensor que falha no arranque não deve recolher a casa inteira.",
+  f_awning_cond_hint:"As condições do toldo substituem as da zona – vazio significa que vale o valor da zona.",
+  btn_extend:"Estender",
+  btn_retract:"Recolher",
+  btn_extend_barred:"Bloqueado – proteção de vento ou chuva ativa",
 },
 nb:{
   f_sun_cond_wrong_way:"De to verdiene står omvendt. Dette er et påslagspunkt med et opphevingspunkt UNDER, ikke et intervall fra–til. Slik det står nå forkastes den andre verdien, og vilkåret er oppfylt så godt som hele tiden. For et intervall av himmelretninger finnes «Bare ved passende vindusretning».",
@@ -1901,6 +2587,73 @@ nb:{
   f_drive_after:"Ta igjen hvis vindu åpent",f_drive_after_hint:"Handlingen utføres så snart vinduet lukkes.",
   f_win_debounce:"Forsinkelse ved lukking (sek.)",f_win_debounce_hint:"Hvor lenge «lukket» må holde før rullegardinen kjører tilbake. 0 = umiddelbart.",
   pick_entity:"Velg entitet…",confirm_del_area:"Slette område \"{id}\"?",confirm_del_shutter:"Slette persienne?",
+  /* Markisen */
+  tab_awnings:"Markiser",
+  f_guard_global_only:"Regn- og frostbeskyttelse gjelder hele huset og står under innstillinger.",
+  f_copy_pick_awning:"– velg en markise –",
+  f_copy_hint_awning:"Kopierer posisjoner, utkjøring, skygge, betingelser og vind- og regnbeskyttelsen. Entitet, navn og skyggeområde forblir uendret.",
+  add_awning:"Legg til markise",
+  edit_awning:"Rediger markise",
+  empty_awnings_list:"Ingen markise er opprettet ennå.",
+  col_area_shade:"Skyggeområde",
+  col_guard:"Beskyttelse",
+  guard_free:"fri",
+  guard_barred:"sperret",
+  guard_release_in:"frigis om {min} min",
+  guard_reason_wind:"Vind",
+  guard_reason_rain:"Regn",
+  guard_reason_ice:"Frost",
+  guard_lockout_running:"sperretid går",
+  guard_sensor_dead:"sensoren melder ingenting",
+  sec_awning:"Markise",
+  sec_awning_sub:"Entitet, navn og skyggeområde",
+  sec_awning_pos:"Utkjøring",
+  sec_awning_pos_sub:"Hvilestilling, skygge og solfølging",
+  sec_awning_guard:"Vind- og regnbeskyttelse",
+  sec_awning_guard_sub:"Egne sensorer i stedet for de globale",
+  sec_awning_sun:"Skygge",
+  sec_awning_sun_sub:"Solens posisjon og betingelser",
+  sec_guard:"Vind- og regnbeskyttelse for markiser",
+  sec_guard_sub:"Gjelder alle markiser uten egen sensor",
+  f_cover_awning:"Markise-entitet",
+  f_cover_is_shutter:"«{name}» er allerede opprettet som rullegardin. Konvertering gjør den til en markise – vindus-, lamell- og lukkeinnstillinger fjernes.",
+  f_convert_to_awning:"Konverter til markise",
+  f_awning_auto:"Automatikk for denne markisen",
+  f_awning_auto_hint:"Av betyr ingen skygge. Vind- og regnbeskyttelsen gjelder likevel.",
+  f_area_shade:"Skyggeområde",
+  f_area_shade_hint:"Dette området gir solhøyde, vindusretning, betingelser og holdetid. En markise følger ingen tidsplan.",
+  f_pos_retracted:"Hvilestilling (inne)",
+  f_pos_retracted_hint:"Hvor markisen kjører når skygge ikke trengs – som regel 0 %.",
+  f_pos_extended:"Skygge (ute)",
+  f_pos_extended_hint:"Hvor langt den kjører ut for å skygge. Motorer uten posisjonsmelding kjører bare helt inn eller helt ut.",
+  f_track:"Kjør lenger ut når sola synker",
+  f_track_hint:"Med høy sol holder det med lite utfall; når den synker krever samme flate mer. To støttepunkter med en rett linje mellom.",
+  f_track_high_elev:"Sola står høyt ved",
+  f_track_high_pos:"… kjør da ut til",
+  f_track_low_elev:"Sola står lavt ved",
+  f_track_low_pos:"… kjør da ut til",
+  f_track_step:"Minste endring",
+  f_track_step_hint:"Mindre endringer kjøres ikke – ellers går motoren noen prosent hvert minutt.",
+  f_guard_intro:"Over terskelen betyr: kjør inn straks og ikke ut igjen. Uten sensor er det ingen beskyttelse; med en sensor som ikke melder noe, blir markisen inne.",
+  f_guard_ignores_switches:"⚠️ Beskyttelsen gjelder også med hovedbryteren og automatikken slått av. Den kan bare slås av ved å fjerne sensoren.",
+  f_guard_wind:"Vindsensor",
+  f_guard_rain:"Regnsensor",
+  f_guard_ice:"Temperatursensor (frost)",
+  f_guard_inherits:"La stå tom: da gjelder sensoren fra innstillingene.",
+  f_guard_on_above:"Kjør inn over",
+  f_guard_off_below:"Frigi igjen under",
+  f_guard_on_below:"Sperr under",
+  f_guard_off_above:"Frigi igjen over",
+  f_guard_hyst_hint:"De to verdiene er et innkoblingspunkt og et frigivelsespunkt bak, ikke et intervall. Uten avstand pendler markisen ved terskelen.",
+  f_guard_bin_hint:"«on» teller som fare – markisen kjører inn.",
+  f_guard_lockout:"Sperretid etter siste overskridelse",
+  f_guard_lockout_hint:"Et vindkast er over på tjue sekunder, markisen skal likevel ikke ut igjen med en gang. Hver ny overskridelse starter tiden på nytt.",
+  f_guard_grace:"Nådetid ved død sensor",
+  f_guard_grace_hint:"Utkjøring er sperret fra første sekund. Først etter denne tiden kjøres en utkjørt markise også inn – en sensor som faller ut ved omstart skal ikke trekke inn hele huset.",
+  f_awning_cond_hint:"Betingelser på markisen erstatter områdets – tomt betyr at områdets verdi gjelder.",
+  btn_extend:"Kjør ut",
+  btn_retract:"Kjør inn",
+  btn_extend_barred:"Sperret – vind- eller regnbeskyttelse aktiv",
 },
 };
 
@@ -2605,7 +3358,7 @@ class ShutterPilotPanel extends PanelBase {
     // Ohne Administratorrechte bleibt nur das Dashboard. Der Tab-Zustand wird
     // hier abgefangen, damit auch ein alter Wert aus der Sitzung nicht in ein
     // Formular führt, das sich gar nicht speichern liesse.
-    const tabs=admin?["dashboard","areas","shutters","settings"]:["dashboard"];
+    const tabs=admin?["dashboard","areas","shutters","awnings","settings"]:["dashboard"];
     const tab=tabs.includes(this._tab)?this._tab:"dashboard";
     return html`
       <div class="topbar"><div style="flex:1">
@@ -2628,6 +3381,7 @@ class ShutterPilotPanel extends PanelBase {
         tab==="dashboard"?this._renderDashboard(d):
         tab==="areas"?this._renderAreas(d):
         tab==="settings"?this._renderSettings(d):
+        tab==="awnings"?this._renderAwnings(d):
         this._renderShutters(d)}`;
   }
 
@@ -2649,6 +3403,23 @@ class ShutterPilotPanel extends PanelBase {
           <div class="v">${w.updated?new Date(w.updated).toLocaleString():"–"}</div>
         </div>
         <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
+
+      `)}${this._sec("mdi:weather-windy","sec_guard","sec_guard_sub",html`
+      <div class="hint">${T("f_guard_intro")}</div>
+      <div class="hint warn">${T("f_guard_ignores_switches")}</div>
+      ${AWNING_GUARD_SLOTS.map(slot=>this._renderGuardSlot(
+        s,slot,
+        (k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint),
+        (k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`,
+        (k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+          <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+          <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`,
+        false))}
+      <div class="field"><label>${T("f_guard_grace")}</label><div class="slider-row">
+        <input type="range" min="0" max="60" step="1" .value=${s.awning_sensor_grace??10}
+          @input=${e=>{s.awning_sensor_grace=Number(e.target.value);this.requestUpdate();}}>
+        <span class="slider-val">${s.awning_sensor_grace??10} min</span></div>
+        <div class="hint">${T("f_guard_grace_hint")}</div></div>
 
       `)}${this._sec("mdi:transit-connection-horizontal","sec_drive","sec_drive_sub",html`
       <div class="hint">${T("f_min_gap_hint")}</div>
@@ -3112,15 +3883,22 @@ class ShutterPilotPanel extends PanelBase {
   }
 
   /* ─── Shutters Tab ─── */
+  /* Beide Listen tragen den Index der *vollen* Liste mit: `save_shutter` und
+     `delete_shutter` arbeiten darüber, und ein Index aus einer gefilterten
+     Liste zeigte auf den falschen Eintrag. */
+  _byKind(d,awning){
+    return (d.shutters||[]).map((s,i)=>({s,i})).filter(x=>isAwning(x.s)===awning);
+  }
   _renderShutters(d){
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
+    const rows=this._byKind(d,false);
     return html`
       <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,blind_drive:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
-      ${!d.shutters?.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
+      ${!rows.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
-            ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
+            ${rows.map(({s,i})=>{const st=this.hass?.states?.[s.cover_entity_id];
               const friendly=st?.attributes?.friendly_name||"";
               const entityId=s.cover_entity_id||"";
               const title=s.name||friendly||entityId||"–";
@@ -3148,7 +3926,7 @@ class ShutterPilotPanel extends PanelBase {
         `:html`
           <div class="card"><div class="table-wrap"><table>
             <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_up")}</th><th>${T("col_area_down")}</th><th>${T("col_window")}</th><th>${T("auto")}</th><th></th></tr>
-            ${d.shutters.map((s,i)=>{const st=this.hass?.states?.[s.cover_entity_id];
+            ${rows.map(({s,i})=>{const st=this.hass?.states?.[s.cover_entity_id];
               return html`<tr>
                 <td><strong>${s.name||"–"}</strong></td>
                 <td style="color:var(--txt2)">${st?.attributes?.friendly_name||s.cover_entity_id}</td>
@@ -3161,25 +3939,123 @@ class ShutterPilotPanel extends PanelBase {
           </table></div></div>
         `}`;
   }
+
+  /* ─── Markisen ─── */
+  _newAwning(d){
+    return {cover_entity_id:"",name:"",device_kind:KIND_AWNING,
+      area_down_id:d.areas[0]?.id||"",
+      /* Umgekehrt zum Rollladen: in Ruhe eingefahren, beschattet ausgefahren. */
+      position_open:0,position_sun_protect:100,
+      sun_geometry_override:false,blind_drive:false,
+      awning_track_enabled:false,awning_track_high_elev:60,awning_track_high_pos:60,
+      awning_track_low_elev:20,awning_track_low_pos:100,awning_track_step:10,
+      _isNew:true,_index:null};
+  }
+  _renderAwnings(d){
+    if(this._editShutter)return this._renderShutterForm(d);
+    const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
+    const rows=this._byKind(d,true);
+    const edit=(s,i)=>{this._copyFrom="";this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();};
+    return html`
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter=this._newAwning(d);this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_awning")}</button></div>
+      ${!rows.length?html`<div class="empty">${T("empty_awnings_list")}</div>`:
+        this._isMobile?html`
+          <div class="grid">
+            ${rows.map(({s,i})=>{const st=this.hass?.states?.[s.cover_entity_id];
+              const friendly=st?.attributes?.friendly_name||"";
+              const entityId=s.cover_entity_id||"";
+              return html`<div class="card">
+                <div class="card-hdr">
+                  <div class="ic"><ha-icon icon="mdi:awning-outline"></ha-icon></div>
+                  <div class="info">
+                    <h2 style="margin:0;font-size:16px">${s.name||friendly||entityId||"–"}</h2>
+                    <span style="font-size:12px">${friendly||entityId||"–"}</span>
+                  </div>
+                </div>
+                <div class="auto-row"><span class="lbl">${T("auto")}</span>${this._shutterAutoSwitch(s)}</div>
+                <div class="kv">
+                  <div class="k">${T("col_area_shade")}</div><div class="v">${areaName(s.area_down_id)||"–"}</div>
+                  <div class="k">${T("col_guard")}</div><div class="v">${this._guardText(s)}</div>
+                </div>
+                <div class="row-actions">
+                  <button class="btn edit" @click=${()=>edit(s,i)}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button>
+                </div>
+              </div>`;})}
+          </div>
+        `:html`
+          <div class="card"><div class="table-wrap"><table>
+            <tr><th>${T("col_name")}</th><th>${T("col_cover")}</th><th>${T("col_area_shade")}</th><th>${T("col_guard")}</th><th>${T("auto")}</th><th></th></tr>
+            ${rows.map(({s,i})=>{const st=this.hass?.states?.[s.cover_entity_id];
+              return html`<tr>
+                <td><strong>${s.name||"–"}</strong></td>
+                <td style="color:var(--txt2)">${st?.attributes?.friendly_name||s.cover_entity_id}</td>
+                <td>${areaName(s.area_down_id)}</td>
+                <td>${this._guardText(s)}</td>
+                <td>${this._shutterAutoSwitch(s)}</td>
+                <td style="text-align:right">
+                  <button class="btn edit" @click=${()=>edit(s,i)}><ha-icon icon="mdi:pencil"></ha-icon></button>
+                  <button class="btn del" @click=${()=>this._deleteShutter(i)}><ha-icon icon="mdi:delete"></ha-icon></button></td></tr>`;})}
+          </table></div></div>
+        `}`;
+  }
+  /* Der Sperr-Binärsensor je Markise ist die Anzeige des Schutzes. Gefunden
+     wird er über die Entity-ID der Markise in seinen Attributen – der Name
+     kann umbenannt worden sein, die Zuordnung nicht. */
+  _guardEntity(s){
+    const cover=(s?.cover_entity_id||"").trim();
+    if(!cover||!this.hass?.states)return null;
+    for(const st of Object.values(this.hass.states)){
+      if(!String(st.entity_id||"").startsWith("binary_sensor."))continue;
+      if(st.attributes?.cover_entity_id===cover&&"release_in_seconds" in (st.attributes||{}))return st;
+    }
+    return null;
+  }
+  _isAwningBarred(s){return this._guardEntity(s)?.state==="on";}
+  _guardText(s){
+    const T=k=>this.t(k);
+    const st=this._guardEntity(s);
+    if(!st)return html`<span class="sun-off">–</span>`;
+    if(st.state!=="on")return html`<span>${T("guard_free")}</span>`;
+    /* Ein Grund sieht aus wie "wind", "wind:lockout" oder
+       "wind:sensor_unavailable". Der Slot allein reicht nicht: „Wind" heisst
+       je nach Zusatz „es weht", „es hat eben geweht" oder „niemand weiss es". */
+    const reasons=(st.attributes?.reasons||[]).map(r=>{
+      const [slot,why]=String(r).split(":");
+      const base=T("guard_reason_"+slot);
+      if(why==="lockout")return `${base} (${T("guard_lockout_running")})`;
+      if(why)return `${base} (${T("guard_sensor_dead")})`;
+      return base;
+    });
+    const secs=st.attributes?.release_in_seconds;
+    const until=secs?` · ${T("guard_release_in").replace("{min}",Math.ceil(secs/60))}`:"";
+    return html`<span class="hint warn">⛔ ${reasons.join(", ")||T("guard_barred")}${until}</span>`;
+  }
   /* „Einstellungen übernehmen von …" – der kleine Bruder von Profilen.
      Nimmt die Tipparbeit ab, ohne das Datenmodell umzubauen: kopiert wird
      alles ausser Identität und Bereichszuordnung, denn genau die unterscheidet
      zwei sonst gleiche Rollläden. */
   _renderCopyFrom(d,s){
     const T=k=>this.t(k);
-    const others=(d.shutters||[]).filter(o=>o.cover_entity_id&&o.cover_entity_id!==s.cover_entity_id);
+    /* Nur Vorlagen derselben Art. Ein Rollladen als Vorlage einer Markise
+       brächte `position_open: 100`, Fenster- und Lamellenschlüssel mit – also
+       genau die Werte, die an einer Markise nichts bedeuten und die der Export
+       hinterher als Karteileichen meldet. */
+    const awning=isAwning(s);
+    const others=(d.shutters||[]).filter(o=>o.cover_entity_id
+      &&o.cover_entity_id!==s.cover_entity_id&&isAwning(o)===awning);
     if(!others.length)return "";
     const pick=this._copyFrom||"";
     return html`<div class="field"><label>${T("f_copy_from")}</label>
       <div class="copy-row">
         <select .value=${pick} @change=${e=>{this._copyFrom=e.target.value;this.requestUpdate();}}>
-          <option value="">${T("f_copy_pick")}</option>
+          <option value="">${T(awning?"f_copy_pick_awning":"f_copy_pick")}</option>
           ${others.map(o=>html`<option value="${o.cover_entity_id}" ?selected=${pick===o.cover_entity_id}>${o.name||o.cover_entity_id}</option>`)}
         </select>
         <button class="btn" ?disabled=${!pick} @click=${()=>this._applyCopyFrom(others)}>
           <ha-icon icon="mdi:content-copy"></ha-icon>${T("f_copy_btn")}</button>
       </div>
-      <div class="hint">${T("f_copy_hint")}</div></div>`;
+      <div class="hint">${T(awning?"f_copy_hint_awning":"f_copy_hint")}</div></div>`;
   }
   _winEntityId(s){
     const v=s.window_entity_id;
@@ -3214,6 +4090,9 @@ class ShutterPilotPanel extends PanelBase {
      nicht stillschweigend vom Kopieren ausgenommen bleibt. */
   static get COPY_KEEP(){return ["cover_entity_id","name","area_up_id","area_down_id",
     "window_entity_id","window_tilted_entity_id","shutter_auto_entity_id",
+    /* Die Geraeteart darf eine Vorlage nie mitbringen – aus dem Kopierknopf
+       wuerde sonst ein Umschalter, der die halbe Konfiguration wegwirft. */
+    "device_kind",
     "_isNew","_index"];}
   _applyCopyFrom(others){
     const src=others.find(o=>o.cover_entity_id===this._copyFrom);
@@ -3227,8 +4106,151 @@ class ShutterPilotPanel extends PanelBase {
     this._copyFrom="";
     this.requestUpdate();
   }
-  _renderShutterForm(d){
+  /* Das Markisenformular ist ein eigenes, kein umgeschaltetes: an einer
+     Markise fällt mehr als die Hälfte der Abschnitte weg (Fenster, Lamellen,
+     abweichendes Schliessen, Frostposition), und sechs geschachtelte
+     Bedingungen im grossen Formular wären schwerer zu lesen als zwei Methoden.
+     Geteilt wird, was wirklich dasselbe ist: Bedingungen, Entitätsauswahl,
+     Doppel-Riegel, Speichern. */
+  _renderAwningForm(d){
     const s=this._editShutter;const areas=this._sortedAreas(d);const T=k=>this.t(k);
+    const pct=(k,lbl,hint=null)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${s[k]??0}%</span></div>${hint?html`<div class="hint">${hint}</div>`:""}</div>`;
+    const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`;
+    const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
+    const ep=(k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint);
+    const sel=(k,lbl,opts)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
+      ${opts.map(o=>html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
+    const dup=this._duplicateCover(s);
+    return html`<div class="form"><h3>${s._isNew?T("add_awning"):T("edit_awning")}</h3>
+
+      ${this._sec("mdi:awning-outline","sec_awning","sec_awning_sub",html`
+      ${ep("cover_entity_id",T("f_cover_awning"),["cover"],null)}
+      ${dup?(isAwning(dup)
+        ? html`<div class="hint warn">⚠️ ${T("f_cover_dup").replace("{name}",dup.name||dup.cover_entity_id)}</div>`
+        /* Ein vorhandener Rollladen mit derselben Entität ist kein Fehlklick,
+           sondern der übliche Weg: erst als Rollladen angelegt, dann gemerkt,
+           dass es eine Markise ist. Übernehmen statt ablehnen – und dabei die
+           Rollladen-Schlüssel wegräumen, nicht stehenlassen. */
+        : html`<div class="hint warn">⚠️ ${T("f_cover_is_shutter").replace("{name}",dup.name||dup.cover_entity_id)}</div>
+            <button class="btn" @click=${()=>this._convertToAwning(d,dup)}>
+              <ha-icon icon="mdi:swap-horizontal"></ha-icon>${T("f_convert_to_awning")}</button>`):""}
+      ${f("name",T("f_name"))}
+      <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
+        @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_awning_auto")}</label>
+        <div class="hint">${T("f_awning_auto_hint")}</div></div>
+      <div class="field"><label>${T("f_area_shade")}</label>
+        <select .value=${s.area_down_id||""} @change=${e=>{s.area_down_id=e.target.value;this.requestUpdate();}}>
+          ${areas.map(a=>html`<option value="${a.id}" ?selected=${s.area_down_id===a.id}>${a.name||a.id}</option>`)}
+        </select><div class="hint">${T("f_area_shade_hint")}</div></div>
+      ${this._renderCopyFrom(d,s)}
+
+      `)}${this._sec("mdi:arrow-expand-horizontal","sec_awning_pos","sec_awning_pos_sub",html`
+      ${pct("position_open",T("f_pos_retracted"),T("f_pos_retracted_hint"))}
+      ${pct("position_sun_protect",T("f_pos_extended"),T("f_pos_extended_hint"))}
+      <div class="field"><label><input type="checkbox" .checked=${!!s.awning_track_enabled}
+        @change=${e=>{s.awning_track_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_track")}</label>
+        <div class="hint">${T("f_track_hint")}</div></div>
+      ${s.awning_track_enabled?html`
+        ${rng("awning_track_high_elev",T("f_track_high_elev"),5,90,1,"°")}
+        ${pct("awning_track_high_pos",T("f_track_high_pos"))}
+        ${rng("awning_track_low_elev",T("f_track_low_elev"),0,60,1,"°")}
+        ${pct("awning_track_low_pos",T("f_track_low_pos"))}
+        ${rng("awning_track_step",T("f_track_step"),1,50,1," %")}
+        <div class="hint">${T("f_track_step_hint")}</div>`:""}
+      <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
+        @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
+        <div class="hint">${T("f_blind_drive_hint")}</div></div>
+
+      `)}${this._sec("mdi:weather-windy","sec_awning_guard","sec_awning_guard_sub",html`
+      <div class="hint">${T("f_guard_intro")}</div>
+      <div class="hint warn">${T("f_guard_ignores_switches")}</div>
+      ${/* Nur der Wind steht je Markise zur Wahl. Regen und Frost fallen ueber
+           dem ganzen Haus gleich – zwei Markisen mit verschiedenen Regensensoren
+           gaebe es nicht, das Feld waere nur eine weitere Zeile zum Uebersehen.
+           Der Wind dagegen ist oertlich: ein Balkon hinterm Haus sieht anderen
+           als die Terrasse, und eine kleine Markise muss frueher rein als eine
+           grosse am selben Sensor. */""}
+      ${AWNING_GUARD_SLOTS.filter(slot=>slot==="wind")
+        .map(slot=>this._renderGuardSlot(s,slot,ep,f,rng,true))}
+      <div class="hint">${T("f_guard_global_only")}</div>
+
+      `)}${this._sec("mdi:sun-compass","sec_awning_sun","sec_awning_sun_sub",html`
+      <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
+        @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
+        <div class="hint">${T("f_geo_override_hint")}</div></div>
+      ${s.sun_geometry_override?html`
+        <div class="field"><label><input type="checkbox" .checked=${s.elevation_enabled!==false}
+          @change=${e=>{s.elevation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_elev_enabled")}</label>
+          <div class="hint">${T("f_elev_enabled_hint")}</div></div>
+        ${s.elevation_enabled!==false?html`
+          ${rng("elevation_min",T("f_elev_min"),-5,45,0.5,"°")}
+          ${rng("elevation_max",T("f_elev_max"),-5,90,0.5,"°")}`:""}
+        <div class="hint">${T("f_geo_override_values_hint")}</div>
+        <div class="field"><label><input type="checkbox" .checked=${!!s.azimuth_enabled}
+          @change=${e=>{s.azimuth_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_azimuth")}</label></div>
+        ${s.azimuth_enabled?html`
+          <div class="field"><label>${T("f_azimuth_preset")}</label>
+            <div class="preset-row">${COMPASS_PRESETS.map(p=>html`
+              <button class="btn preset ${(Number(s.azimuth_min)===p.min&&Number(s.azimuth_max)===p.max)?"active":""}"
+                @click=${()=>{s.azimuth_min=p.min;s.azimuth_max=p.max;this.requestUpdate();}}>${T("compass_"+p.key)}</button>`)}
+            </div></div>
+          ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}
+          ${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
+      <div class="hint">${T("f_awning_cond_hint")}</div>
+      ${this._renderConditionSlots(s,ep,f)}`)}
+
+      <div class="form-actions">
+        <button class="btn save" @click=${()=>this._saveShutter()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
+        <button class="btn cancel" @click=${()=>{this._editShutter=null;this.requestUpdate();}}>${T("btn_cancel")}</button></div></div>`;
+  }
+  /* Ein Schutz-Slot, entweder global in den Einstellungen oder je Markise.
+     Am Formular unterscheidet sich nur, dass die Markise leer lassen darf –
+     dann gilt der globale Wert. */
+  _renderGuardSlot(obj,slot,ep,f,rng,perAwning){
+    const T=k=>this.t(k);
+    const ek=`sun_cond_${slot}_entity`;
+    const eid=obj[ek]||"";
+    const domains=slot==="rain"?["binary_sensor","sensor","weather"]:["sensor","binary_sensor"];
+    return html`
+      <div class="guard-slot">
+        ${ep(ek,T("f_guard_"+slot),domains,slot==="ice"?HINTS.temperature:null)}
+        ${perAwning&&!eid?html`<div class="hint">${T("f_guard_inherits")}</div>`:""}
+        ${eid&&!eid.startsWith("binary_sensor.")?html`
+          ${f(`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")),"number")}
+          ${f(`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")),"number")}
+          <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
+        ${eid&&eid.startsWith("binary_sensor.")?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
+        ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
+        ${eid?html`<div class="hint">${T("f_guard_lockout_hint")}</div>`:""}
+      </div>`;
+  }
+  /* Aus einem bestehenden Rollladen eine Markise machen. Die Schlüssel, die
+     hier nichts mehr bedeuten, werden gelöscht statt stehengelassen, und die
+     beiden Positionen auf die Markisen-Vorgabe gesetzt – ein übernommener
+     Rollladen brächte sonst `position_open: 100` mit und stünde in Ruhe
+     ausgefahren da. */
+  _convertToAwning(d,existing){
+    const idx=(d.shutters||[]).indexOf(existing);
+    if(idx<0)return;
+    const target={...existing,...this._editShutter};
+    for(const k of AWNING_UNUSED_KEYS)delete target[k];
+    target.device_kind=KIND_AWNING;
+    target.position_open=0;
+    target.position_sun_protect=100;
+    target.area_down_id=this._editShutter.area_down_id||existing.area_down_id||"";
+    target._isNew=false;
+    target._index=idx;
+    this._editShutter=target;
+    this.requestUpdate();
+  }
+  _renderShutterForm(d){
+    const s=this._editShutter;
+    if(isAwning(s))return this._renderAwningForm(d);
+    const areas=this._sortedAreas(d);const T=k=>this.t(k);
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
@@ -3355,10 +4377,28 @@ class ShutterPilotPanel extends PanelBase {
   _rowButtons(shutter){
     if(!shutter?.cover_entity_id)return "";
     const act=a=>this._coverAction([shutter],a);
+    const T=k=>this.t(k);
+    if(isAwning(shutter)){
+      /* Bei einer Markise heisst "auf" ausfahren. Der Knopf wird gesperrt,
+         solange der Schutz gilt: Das Backend faengt ihn nicht ab – die Knoepfe
+         rufen die cover-Dienste direkt auf, damit Home Assistant die Rechte je
+         Entitaet prueft (siehe 2.7.1). Der Guard holt die Markise zwar binnen
+         Sekunden wieder herein, aber eine Fahrt in die Boe und zurueck will
+         niemand sehen. Zweite Stelle fuer dieselbe Regel, aus demselben Grund
+         wie damals: die Alternative waere ein Loch in der Rechtepruefung. */
+      const barred=this._isAwningBarred(shutter);
+      return html`<span class="srow-btns">
+        <button class="rbtn up" ?disabled=${barred}
+          title="${barred?T("btn_extend_barred"):T("btn_extend")}"
+          @click=${()=>{if(!barred)act("open");}}><ha-icon icon="mdi:arrow-expand-right"></ha-icon></button>
+        <button class="rbtn stop" title="${T("btn_stop")}" @click=${()=>act("stop")}><ha-icon icon="mdi:stop"></ha-icon></button>
+        <button class="rbtn down" title="${T("btn_retract")}" @click=${()=>act("close")}><ha-icon icon="mdi:arrow-collapse-left"></ha-icon></button>
+      </span>`;
+    }
     return html`<span class="srow-btns">
-      <button class="rbtn up" title="${this.t("btn_up")}" @click=${()=>act("open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon></button>
-      <button class="rbtn stop" title="${this.t("btn_stop")}" @click=${()=>act("stop")}><ha-icon icon="mdi:stop"></ha-icon></button>
-      <button class="rbtn down" title="${this.t("btn_down")}" @click=${()=>act("close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon></button>
+      <button class="rbtn up" title="${T("btn_up")}" @click=${()=>act("open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon></button>
+      <button class="rbtn stop" title="${T("btn_stop")}" @click=${()=>act("stop")}><ha-icon icon="mdi:stop"></ha-icon></button>
+      <button class="rbtn down" title="${T("btn_down")}" @click=${()=>act("close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon></button>
     </span>`;
   }
   /* Der Mindestabstand aus den Einstellungen sitzt im Backend, in
@@ -3371,7 +4411,15 @@ class ShutterPilotPanel extends PanelBase {
      Gestaffelt wird auch "Stop": ein verschluckter Stopp-Befehl lässt den
      Rollladen bis zum Anschlag weiterfahren, ein um Sekunden späterer nicht. */
   async _coverAction(shutters,action){
-    const list=(shutters||[]).filter(s=>s?.cover_entity_id);
+    let list=(shutters||[]).filter(s=>s?.cover_entity_id);
+    /* Bei den Gruppenknoepfen eines Bereichs haengen Rollläden und Markisen
+       zusammen. Zwei Aktionen bedeuten fuer eine Markise etwas anderes oder
+       nichts: "Lueften" hat sie nicht, und "auf"/"Sonnenschutz" faehrt sie
+       aus – das darf bei aktiver Sperre nicht passieren. "zu" und "Stop"
+       bleiben immer erlaubt, das sind die sicheren Richtungen. */
+    if(action==="vent")list=list.filter(s=>!isAwning(s));
+    if(action==="open"||action==="sun")
+      list=list.filter(s=>!isAwning(s)||!this._isAwningBarred(s));
     if(!list.length)return;
     const gap=Math.max(0,Number(this._data?.settings?.min_drive_gap)||0);
     const call=(s)=>{

@@ -24,6 +24,7 @@ from .const import (
     CONF_SHUTTER_AUTOMATION_ENABLED,
     CONF_SHUTTER_AUTO_ENTITY_ID,
 )
+from .helpers import is_awning
 
 # Zustände, die keine Nutzerentscheidung sind: Die Entität war beim letzten
 # Beenden noch nicht bereit oder der Wert stammt aus einer früheren
@@ -105,14 +106,16 @@ async def async_setup_entry(
         # "Rollladen" statt "Auto": Bereiche heissen bereits "Auto <Bereich>",
         # und Bereich und Rollladen tragen oft denselben Namen (Wohnzimmer).
         # Sonst stünden zwei gleichnamige Schalter in der Liste und Home
-        # Assistant hängte an einen davon ein "_2".
+        # Assistant hängte an einen davon ein "_2". Die Entity-ID bleibt über
+        # die unique_id erhalten, wenn eine Markise umbenannt wird – umgekehrt
+        # hiesse der Schalter einer Markise dauerhaft "Rollladen".
         entities.append(
             ShutterPilotShutterAutomationSwitch(
                 hass=hass,
                 entry=entry,
                 index=index,
                 cover_entity_id=cover,
-                name=f"Rollladen {name}",
+                name=f"{'Markise' if is_awning(shutter) else 'Rollladen'} {name}",
                 configured_on=bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True)),
             )
         )

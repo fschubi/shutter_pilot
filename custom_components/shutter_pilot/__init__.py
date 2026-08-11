@@ -48,6 +48,7 @@ from .const import (
     DEFAULT_VERIFY_TOLERANCE,
 )
 from .window_trigger import cancel_all_window_close, setup_window_triggers
+from .awning_guard import setup_awning_guard
 from .brightness import setup_brightness_listener
 from .scheduler import setup_schedulers
 from .elevation import setup_elevation_listener
@@ -203,6 +204,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
+        # After shading: the guard must already know its verdict when the
+        # first shading evaluation asks whether an awning may go out.
+        await setup_awning_guard(hass, entry)
         await setup_ventilation(hass, entry)
         await setup_weather(hass, entry)
         _setup_minute_ticker(hass, entry)
@@ -259,6 +263,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await setup_brightness_listener(hass, entry)
     await setup_schedulers(hass, entry)
     await setup_elevation_listener(hass, entry)
+    await setup_awning_guard(hass, entry)
     await setup_ventilation(hass, entry)
 
 
@@ -271,6 +276,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "_brightness_unsubs",
                 "_window_unsubs",
                 "_cover_tracker_unsubs",
+                "_awning_guard_unsubs",
             ):
                 for unsub in data.get(key, []):
                     try:

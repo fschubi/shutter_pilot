@@ -58,6 +58,7 @@ from .helpers import (
     get_tilt_for_role,
     is_auto_enabled,
     is_shutter_automation_enabled,
+    only_shutters,
     register_minute_callback,
     remember_drive_after_close,
     resolve_close_role,
@@ -248,7 +249,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         idx = 0
         moved = False
         down_covers: list[str] = []
-        for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
+        for shutter in only_shutters(
+            [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]
+        ):
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
@@ -307,7 +310,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         idx = 0
         moved = False
         up_covers: list[str] = []
-        for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
+        for shutter in only_shutters(
+            [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]
+        ):
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue

@@ -16,6 +16,7 @@ from .const import (
     CONF_MIN_POSITION_WHEN_OPEN,
     DEFAULT_WINDOW_TILTED_ENTITY_STATE,
 )
+from .helpers import is_awning
 
 
 def _normalize_state(val: Any) -> str:
@@ -162,6 +163,13 @@ def get_effective_close_position(
       (so we never fully close - you can't lock yourself out)
     - Otherwise return target_position
     """
+    # An awning must never be capped from below: the cap exists so a shutter
+    # cannot close in front of an open door, and on an awning "lower" means
+    # retracted – the safe end, not the dangerous one. A leftover lock_protection
+    # from a converted shutter would stop it coming in at 20%.
+    if is_awning(shutter):
+        return target_position
+
     if not shutter.get(CONF_LOCK_PROTECTION, False):
         return target_position
 

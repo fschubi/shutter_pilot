@@ -27,6 +27,7 @@ custom_components/shutter_pilot/
   brightness.py      Helligkeitsmodus mit erlaubten Zeitfenstern
   elevation.py       Beschattung: Elevation, Azimut, Bedingungen, pro Rollladen
   ventilation.py     Automatisches Lüften nach Bedingungen
+  awning_guard.py    Markisen: Wind-, Regen- und Frostschutz (Sperre + Zwangsfahrt)
   schedule_times.py  Zeitmathematik: Wochenende, Jitter, Zeitklammern
   window_trigger.py  Reaktion auf Fensterkontakte
   window_helper.py   Fensterzustand und Aussperrschutz
@@ -38,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (374 Tests)
+tests/               pytest-Suite (534 Tests)
 ```
 
 ## Funktionsumfang
@@ -86,6 +87,30 @@ leer erbt den Bereichswert. Die Hysterese liegt deshalb pro Cover, nicht pro
 Bereich – sonst hebt eine Wolke vor einem Fenster die Beschattung des anderen
 auf. Ein fehlender oder toter Sensor blockiert nie (fail open).
 
+### Markisen
+
+Ein Eintrag in derselben `shutters`-Liste, unterschieden durch `device_kind`
+(fehlt = Rollladen, keine Migration). Der Fahrweg ist **derselbe**: die
+Beschattung fährt auf `position_sun_protect` und gibt auf `position_open` frei,
+und welche Zahl das ist, entscheidet die Konfiguration – bei der Markise 100
+bzw. 0. Nur die *Rückfallwerte* in `get_position_for_role()` drehen sich.
+
+Anders sind zwei Dinge:
+
+1. **Kein Zeitplan.** Scheduler, Helligkeit, Lüften und Fenstertrigger filtern
+   Markisen aus (`only_shutters()`), der Aussperrschutz steigt früh aus – er
+   klemmt nach unten, und unten ist bei einer Markise die *sichere* Seite.
+2. **`awning_guard.py`.** Wind, Regen, Frost global unter Einstellungen; **nur
+   der Wind** ist je Markise überschreibbar (örtlich verschieden), Regen und
+   Frost fallen übers ganze Haus gleich. Slots derselben Mechanik, mit
+   der Bedeutung **„Gefahr liegt vor"** statt „Bedingung erfüllt" – dadurch
+   passen Binärsensor, Zahlenhysterese und Textzustände ohne eine einzige
+   Änderung an `_condition_slot_met()`. Dazu eine **Sperrzeit** je Slot, die
+   die Wertehysterese nicht leisten kann (eine Bö ist nach 20 s vorbei).
+
+Optional: **Ausfahrlänge nach Sonnenhöhe**, zwei Stützpunkte linear
+interpoliert, mit Mindeständerung gegen den Minutentakt am Getriebe.
+
 ### Manuelle Übersteuerung
 
 Drei Modi je Bereich: `never` (manuelle Position blockiert bis zum nächsten
@@ -122,15 +147,17 @@ Wiederholungen.
 | --- | --- |
 | Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter |
 | Sensor | je Bereich „nächste Fahrt"; Vorhersage Höchst-/Tiefsttemperatur und Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
-| Binärsensor | je Bereich „Sonnenschutz aktiv" |
+| Binärsensor | je Bereich „Sonnenschutz aktiv"; je Markise „Sperre" mit Grund und Restzeit |
 
-Dienste: `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`.
-Events: `shutter_pilot_cover_moved`, `shutter_pilot_cover_failed`.
+Dienste: `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`,
+`retract_awnings` (Bereich optional, ohne Staffelung).
+Events: `shutter_pilot_cover_moved`, `shutter_pilot_cover_failed`,
+`shutter_pilot_awning_retracted`.
 
 ### Panel
 
 Ein einzelnes JS-File, kein Build-Schritt. Tabs: Dashboard · Bereiche ·
-Rollläden · Einstellungen. Besonderheiten, die man kennen muss:
+Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 
 - **LitElement kommt aus der Prototypenkette** eines geladenen HA-Elements –
   Home Assistant stellt kein Modul dafür bereit. Der Resolver probiert zehn
@@ -144,7 +171,8 @@ Rollläden · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (je 258 Schlüssel) – das gilt es zu halten.
+  (Stand 2.12.0: je 361 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
 
@@ -172,7 +200,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 374 Tests, ~6 s
+.venv/bin/pytest            # 534 Tests, ~8 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -198,7 +226,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.10.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.12.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -999,6 +1027,100 @@ Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
 **Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
 aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
 man Felder, die nur zugeklappt sind.
+
+### 2026-08-11 – 2.12.0: Markisen
+
+Der Wunsch stand seit Monaten als „Geplant" im README, mit Umfrage. Umgesetzt
+wurde er nicht als zweites Datenmodell, sondern als **ein Schlüssel**.
+
+**Der Befund, der den ganzen Umbau bestimmt hat:** `elevation.py` ist
+richtungsblind. Es fährt beim Beschatten auf `position_sun_protect` und beim
+Freigeben auf `position_open` – welche Zahl das ist, interessiert den Code
+nicht. Eine Markise mit 0 als Ruhestellung und 100 als Beschattung läuft durch
+dieselbe Maschine. Elevation, Azimut, Saison, die vier Bedingungen, Haltezeit,
+Hysterese je Cover, Mindestabstand, Fahrtkontrolle, Positionsspeicher,
+manuelle Übersteuerung, der Doppel-Riegel aus 2.11.1: alles trägt unverändert.
+
+Deshalb `device_kind` in derselben `shutters`-Liste statt einer zweiten Liste.
+Fehlender Schlüssel = Rollladen, also **keine Migration**. Ein eigenes Array
+hätte bedeutet, jede der oben genannten Mechaniken zu duplizieren.
+
+**Die drei Polaritäten der Bedingungs-Slots.** Das ist der Teil, den man beim
+nächsten Mal nicht neu herleiten will:
+
+| Wer | nicht konfiguriert | Sensor tot |
+| --- | --- | --- |
+| Beschattung (`sun_extra_conditions_met`) | ja (blockiert nicht) | ja – **fail open** |
+| Schließen/Frost/Lüften (`_own_slot_met`) | nein | nein – **fail closed** |
+| Markisenschutz (`guard_slot_danger`) | **keine Gefahr** | **Gefahr** |
+
+Die dritte passt in keine der beiden vorhandenen, deshalb eigene Funktion mit
+genau diesem Kommentar darüber. Und: der Slot bedeutet **„Gefahr liegt vor"**,
+nicht „Freigabe erfüllt". Damit lesen sich Binärsensor („on" = Regen),
+Zahlenhysterese (einfahren ab 30, frei unter 15) und Textzustände alle richtig
+herum, ohne dass `_condition_slot_met()` angefasst werden musste.
+
+**Zwei Zustände, nicht einer.** *Gesperrt* (nicht ausfahren) und *einfahren*
+sind getrennt. Ein toter Sensor sperrt ab der ersten Sekunde, holt die Markise
+aber erst nach einer Karenz herein – sonst reißt ein Sensor, der beim Neustart
+eine Minute aussetzt, jede Markise im Haus hinein.
+
+**Der Schutz ignoriert Haupt-, Bereichs- und Rollladenschalter.** Bewusste
+Abweichung von der sonst geltenden Rangfolge, an drei Stellen dokumentiert
+(Panel, README, Changelog). Sonst meldet der erste Nutzer, dessen Markise bei
+ausgeschaltetem System einfährt, das als Fehler.
+
+**Zwei Fehler in der eigenen Guard-Logik, beide beim Testschreiben gefunden:**
+
+1. Die Ruhe-Uhr für die Sperrzeit wurde beim *ersten Blick* auf einen ruhigen
+   Sensor gestellt statt beim *Übergang* von Gefahr auf Ruhe. Damit hätte jeder
+   Neustart jede Markise zwanzig Minuten ausgesperrt, ohne dass je etwas
+   überschritten war.
+2. Der Merker „schon eingefahren" saß an der Absicht statt an der Fahrt – eine
+   gescheiterte Zwangsfahrt wäre nie wiederholt worden. **Dieselbe Klasse wie
+   Fund 1 aus 2.8.0.** Der Fehler ist offenbar leicht wieder zu machen: der
+   Merker gehört an die Handlung, nicht an den Entschluss.
+
+**Ein dritter, im Export:** die Warnung „Windsensor misst in m/s, Schwelle sieht
+nach km/h aus" stand hinter einem frühen `return` – ausgerechnet im Fall
+„frisch eingerichtet, Schutz hat noch nie ausgewertet", also genau da, wo die
+Schwelle noch falsch stehen kann. Faktor 3,6 daneben heißt: die Markise fährt
+nie ein. Das ist der W/m²-Fehler aus 2.8.1 noch einmal, nur gefährlicher.
+
+**Mitgenommen, unabhängig von Markisen:** `set_cover_position()` rief immer
+`cover.set_cover_position`, ohne das Feature-Bit zu prüfen – die Tilt-Fahrt tut
+das seit jeher. Antriebe ohne Positionierung (viele Markisenmotoren, etliche
+alte Rollladenantriebe) scheiterten dort, und seit 2.8.0 wird eine gescheiterte
+Fahrt jede Minute wiederholt. Jetzt Rückfall auf `open_cover`/`close_cover`.
+
+**Im Panel aufgefallen, beim Rendern in Node:** der Kopierknopf bot im
+Markisenformular auch Rollläden als Vorlage an – samt `position_open: 100`,
+Fenster- und Lamellenschlüsseln. Vorlagen sind jetzt auf dieselbe Geräteart
+beschränkt, und `device_kind` steht in `COPY_KEEP`: sonst wäre aus dem
+Kopierknopf ein Umschalter geworden, der die halbe Konfiguration wegwirft.
+
+**Aufteilung der Sensoren** (ausdrückliche Vorgabe): alle drei global, davon
+**nur der Wind** je Markise überschreibbar. Im Formular steht deshalb nur der
+Windsensor plus ein Verweis auf die Einstellungen; das Backend könnte alle drei
+mergen, das Formular bietet sie nur nicht an.
+
+**Verifiziert:** `pytest` 534 Tests grün (73 neue), **vier Gegenproben** gemacht
+(ohne den Scheduler-Filter fährt die Markise abends mit; ohne den
+Aussperrschutz-Riegel bleibt sie bei 20 % stehen; ohne die Guard-Abfrage in der
+Beschattung fährt sie in den Sturm; mit dem Merker an der Absicht wird eine
+gescheiterte Fahrt nie wiederholt). `node --check` fürs Panel, i18n 361/361 in
+allen elf Sprachen, Panel in Node gerendert – alle sieben Ansichten plus
+zwanzig Inhaltsprüfungen. **Nicht im Browser geprüft.**
+
+**Testfalle, neu:** `evaluate_guard(now=…)` mischt sich nicht mit der echten
+monotonen Uhr. Wer den ersten Aufruf ohne `now` macht und danach absolute Werte
+übergibt, vergleicht gegen einen Nullpunkt Jahre in der Zukunft. In
+`test_awning_guard.py` steht dafür `T0 = 0.0`.
+
+**Offen:** Die Sperrzeit steht nur im RAM – ein Neustart mitten in der
+Sperrzeit gibt die Markise früher frei. Die Wertehysterese hält weiterhin,
+betroffen ist nur das Fenster „ruhig, aber noch in der Sperrzeit". Persistent
+wäre `position_store.py` der Ablageort.
 
 ### 2026-08-11 – 2.11.1: derselbe Rollladen zweimal
 

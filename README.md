@@ -16,7 +16,7 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 ## Features
 
 - **Three control modes** per area: Time-based, brightness-based (lux sensor), or sun position (sunrise/sunset)
-- **Sidebar panel** with Dashboard, Areas, and Shutters tabs for full management
+- **Sidebar panel** with Dashboard, Areas, Shutters and Awnings tabs for full management
 - **Window/door sensors** – automatically opens shutters when windows are opened
 - **Lock protection** – prevents full closing when a door is open
 - **Sun protection with compass direction** – shades only when the sun is within the elevation range **and** actually facing the windows
@@ -31,6 +31,7 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 - **Multi-language panel** – automatically adapts to your HA language (11 languages)
 - **Weekday/weekend schedules** – separate time windows for weekdays and weekends (time mode and brightness mode)
 - **Sun info on dashboard** – shows next sunrise/sunset, configured offsets, and calculated trigger times for sun-mode areas
+- **Awnings** – their own tab, shading without any schedule, with **wind, rain and frost protection** (applies even with automation switched off) and optional sun tracking of the extension
 
 ## Screenshots
 
@@ -130,8 +131,9 @@ The Dashboard tab shows all areas as cards with:
 | `shutter_pilot.close_group` | Close all shutters in an area |
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 | `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
+| `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning. `area_id` is **optional** here |
 
-All services accept an `area_id` parameter (e.g. `living`, `bedroom`). Every shutter moves to its own configured position.
+All services except `retract_awnings` accept an `area_id` parameter (e.g. `living`, `bedroom`). Every shutter moves to its own configured position.
 
 ## Entities
 
@@ -144,6 +146,8 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 | `switch.shutter_pilot_rollladen_<name>` | Automation per shutter (named after the **Name** field) |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
+| `switch.shutter_pilot_markise_<name>` | Automation per awning (wind and rain protection still applies) |
+| `binary_sensor.shutter_pilot_<name>_sperre` | `on` while the awning must not extend. Attributes: `reasons`, `release_in_seconds` |
 
 ## Switching automation off
 
@@ -212,15 +216,101 @@ The Shutter Pilot panel automatically adapts to your Home Assistant language set
 
 If your language is not listed, the panel falls back to English. Want to contribute a translation? PRs are welcome!
 
-## Planned: Awning / Marquise Support
+## Awnings
 
-> **We're considering adding awning/marquise control** with wind, rain, and temperature sensors as a dedicated tab. Awnings have different requirements than shutters – they need to retract during bad weather to prevent damage.
->
-> Planned features: wind speed sensor, rain sensor, temperature threshold, weather warning integration (DWD, OpenWeatherMap), and automatic retraction on dangerous conditions.
+Since 2.12.0 there is a dedicated **Awnings** tab. An awning is not an upside
+down shutter, even though the drive path is the same – two things are
+fundamentally different, and both are covered here.
 
-**Would you use this feature? [Vote here!](https://github.com/fschubi/shutter_pilot/discussions/1)**
+### It runs on no schedule
 
-[![Feature Poll](https://img.shields.io/badge/Vote-Awning%20Support%20Poll-blue?style=for-the-badge&logo=github)](https://github.com/fschubi/shutter_pilot/discussions/1)
+Clock times, brightness and sunrise/sunset do not move an awning. Only shading
+extends it. Shading uses exactly the same rules as for shutters – sun
+elevation, window direction, up to four extra conditions, shading season, hold
+time – which is why an awning gets only *one* area: the one whose sun
+protection should apply.
+
+It therefore has just two positions:
+
+| Position | Meaning | Default |
+| --- | --- | --- |
+| Rest position | retracted, when no shading is needed | 0% |
+| Shading | extended to shade | 100% |
+
+Window contact, lock protection, slats, alternative closing position, frost
+position and automatic ventilation do not exist on an awning – the form does
+not even show them.
+
+### Wind, rain and frost protection
+
+The part without which an awning controller is not safe to run.
+
+All three sensors – wind, rain and temperature (frost) – are configured under
+**Settings** and apply to every awning in the house.
+
+For **wind**, a single awning may deviate: its own sensor (a balcony behind the
+house sees a different wind than the terrace), or just its own thresholds (a
+small folding arm awning has to come in earlier than a cassette one on the same
+sensor). **Rain and frost are global only** – they fall the same way over the
+whole house, and a second field for them would only be one more line to
+overlook.
+
+How it behaves:
+
+* **Above the retract threshold** the awning comes in at once and must not
+  extend again.
+* **It is released** only below the second threshold **and** after a lockout
+  (default 20 min for wind, 30 min for rain). A gust is over in twenty seconds
+  – the awning still must not go straight back out. Every new exceedance
+  restarts the clock.
+* **Reaction is in seconds, not on the minute tick:** protection listens to the
+  sensors directly; the minute tick is only the safety net.
+
+> ⚠️ **Protection applies even with the switches off.** Master switch off, area
+> automation off, awning automation off: it still retracts. This is a
+> deliberate departure from the order that governs everything else. A
+> protection that can be switched off by accident is not a protection –
+> switching it off on purpose means removing the sensor.
+
+**Dead sensor:** if the sensor reports `unavailable` or `unknown`, nobody knows
+what the wind is doing. Extending is barred from the first second. An already
+extended awning is pulled in only after a grace period (default 10 min) – a
+sensor blinking out during a restart should not retract the whole house.
+
+### Extending further as the sun sinks
+
+Optional, off by default. A high sun needs little projection; as it sinks, the
+same area needs more. Two anchor points with a straight line between them:
+
+```
+Sun is high at 60°  →  extend to  60%
+Sun is low  at 20°  →  extend to 100%
+```
+
+Plus a **minimum change** (default 10%). Without it the motor would run a few
+percent every single minute – the surest way to wear out a drive.
+
+### Entities, service and event
+
+| Kind | Name |
+| --- | --- |
+| Binary sensor | `binary_sensor.shutter_pilot_<name>_sperre` – on while extending is barred. Attributes: reason and remaining time |
+| Switch | `switch.shutter_pilot_markise_<name>` – automation per awning (protection still applies) |
+| Service | `shutter_pilot.retract_awnings` – retract every awning at once, no stagger. For an announced storm warning |
+| Event | `shutter_pilot_awning_retracted` with `entity_id` and `reasons` – for your own notifications |
+
+### Converting an existing shutter
+
+If you set an awning up as a shutter first: pick the same cover entity in the
+Awnings tab and a **"Convert to awning"** button appears. Window, slat and
+closing settings are deleted rather than left behind, and the two positions are
+set to the awning defaults.
+
+### Drives without position feedback
+
+Many awning motors only know open, stop and close. Shutter Pilot falls back to
+"fully open" / "fully closed" by itself there. Partial positions and sun
+tracking do not work on such a drive – that is logged once as a warning.
 
 ## Shade only on real sun and real warmth
 
