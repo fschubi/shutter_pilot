@@ -353,6 +353,57 @@ Each area can be limited to certain months, e.g. April to September. Ranges may 
 
 A temperature condition usually makes this unnecessary: if the winter forecast stays below the threshold, no shading happens anyway.
 
+### Shading only during certain hours
+
+Elevation, window direction, conditions and the shading season all describe
+*the sun*. Sometimes the rule is about the household instead: "during the
+school holidays the child's room has to stay dark until nine".
+
+Two fields cover that, **each optional on its own**:
+
+| Field | Meaning |
+| --- | --- |
+| Shade no earlier than | no shading before this time |
+| Shade only until | released after this time |
+
+So "only from 09:00" is a valid setting by itself; no upper bound is needed.
+Configurable **per area and per shutter** – empty on the shutter means the
+area's value applies. It is meant for the one room that needs a different rule.
+
+Two things worth knowing:
+
+* When shading ends at this boundary it is **released immediately**. The hold
+  time does not apply – that exists for passing clouds, and a clock boundary
+  does not come back within the hold.
+* A window **across midnight does not exist**. If the second time lies before
+  the first, the setting is discarded and logged, rather than silently read as
+  a wrap-around.
+
+> 💡 For "the shutter should **open** later in the morning" this is not the
+> right field – use the area's **special-days sensor**, see below.
+
+### Opening later on holidays and school breaks
+
+The **special-days sensor** per area (formerly "workday sensor") switches
+between the weekday and weekend schedule. It applies in **all three modes** –
+time, brightness and sun position.
+
+That covers public holidays, vacation, shift work **and school holidays**. The
+recipe for holidays:
+
+1. Build a binary sensor that reports `on` while school is on – and `off` on
+   holiday **and** weekend days
+2. Set it as the area's special-days sensor
+3. Set "weekend up" to `09:00` and **leave "weekend down" empty** (empty
+   weekend values fall back to the weekday ones)
+
+The shutter then stays down until nine during the holidays and closes in the
+evening exactly as before.
+
+If this should apply to **one room only**: give that shutter its own **up
+area** and keep the shared down area. Up and down areas may differ. Shading is
+unaffected – that is decided by the down area.
+
 ### Sensors per window instead of per area
 
 Conditions can live on the **area** and on the **individual shutter**. The rule is simple:

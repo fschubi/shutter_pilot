@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (534 Tests)
+tests/               pytest-Suite (551 Tests)
 ```
 
 ## Funktionsumfang
@@ -80,6 +80,10 @@ Aktiv, wenn **alle** Bedingungen zugleich gelten:
    eigenen Slots `close`, `frost` und `vent_a`/`vent_b` – die sind aber **fail
    closed**, ein toter Sensor löst dort nichts aus.
 4. Datum liegt im konfigurierten **Beschattungszeitraum** (Jahreswechsel möglich)
+5. Uhrzeit liegt im **Beschattungs-Zeitfenster** (`shade_from`/`shade_to`, beide
+   einzeln optional, je Bereich und je Rollladen). Die einzige der fünf
+   Prüfungen, die nicht die Sonne beschreibt, sondern den Haushalt – und
+   bewusst **ohne** Wrap über Mitternacht
 
 Geometrie und Bedingungen lassen sich **pro Rollladen** überschreiben. Der
 Rückfall wirkt je Bedingungs-Slot: gesetzt am Rollladen ersetzt den Slot,
@@ -171,7 +175,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.12.0: je 361 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.13.0: je 366 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -200,7 +204,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 534 Tests, ~8 s
+.venv/bin/pytest            # 551 Tests, ~9 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -226,7 +230,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.12.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.13.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -1027,6 +1031,70 @@ Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
 **Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
 aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
 man Felder, die nur zugeklappt sind.
+
+### 2026-08-11 – 2.13.0: die Uhrzeit, die der Beschattung fehlte
+
+Aus GitHub-Diskussion #5 (Fireblade900rr): das Kinderzimmer soll in den
+Schulferien morgens dunkel bleiben. Der Screenshot im Chat war eine
+Übersetzung; das englische Original ist präziser – *„prevent a shutter from
+opening at standard time/sunrise **and delay sun shading to a defined hour**"*,
+Titel *„…of single shutter"*.
+
+**Erst nachgesehen, dann gebaut.** Das war eine Anfrage in drei Teilen, und
+zwei davon konnte die Integration bereits:
+
+| Teil | Stand |
+| --- | --- |
+| später hochfahren, sensorgesteuert | **ging** – `is_weekend_schedule()` fragt den Workday-Sensor vor dem Kalender, und zwar in *allen drei* Modi |
+| Automatik ganz unterbinden | **ging** – Auto-Schalter je Rollladen |
+| Beschattung erst ab einer Uhrzeit | **fehlte** – Elevation, Azimut, Bedingungen und Saison beschreiben alle die Sonne, keine davon die Uhr |
+
+Gebaut wurde deshalb nur der dritte Teil, plus eine Umbenennung.
+
+**`shade_from`/`shade_to`, beide einzeln optional.** „Erst ab 09:00" ist für
+sich eine gültige Einstellung – eine obere Grenze zu erzwingen hätte den
+gefragten Fall umständlicher gemacht als nötig. Rückfall **je Schlüssel** in
+`resolve_shading_config()`, nicht hinter dem Geometrie-Haken: der gefragte Fall
+ist immer ein einzelnes Fenster, und ihn an „Eigene Ausrichtung" zu koppeln
+hieße, eine völlig unabhängige Einstellung zu erzwingen.
+
+**Kein Wrap über Mitternacht** – bewusst anders als Saison und Azimut. Ein
+Beschattungsfenster durch die Nacht meint niemand, und `from > to` als Umschlag
+zu lesen wäre die Verwechslung von Spanne und Punktepaar, die 2.8.0 vier
+Bedingungen wirkungslos gemacht hat. Stattdessen: verwerfen und ins Log.
+
+**Freigabe ohne Haltezeit**, wie beim Saisonende. Die Haltezeit ist für
+durchziehende Wolken; eine Uhrzeitgrenze kommt innerhalb der Haltezeit nicht
+zurück, und der Rollladen zählte solange weiter als beschattet – was den
+Abendplan zusätzlich blockiert. Derselbe Doppel-Riegel wie Fund 3 aus 2.8.0.
+
+**Der Fehler, den der Test gefunden hat:** `parse_time()` fällt bei
+unlesbaren Werten auf **06:00** zurück, nicht auf `None`. Ein Tippfehler im
+Zeitfeld hätte damit jeden Morgen eine Beschattungssperre erfunden, die
+niemand eingetragen hat. Die neuen Felder prüfen deshalb streng auf `HH:MM`
+und ignorieren alles andere. **Merke: `parse_time(x, None)` gibt nicht `None`
+zurück** – wer eine „keine Grenze"-Semantik braucht, muss selbst parsen.
+
+**Die zweite Hälfte war kein Code.** Der „Workday-Sensor" heißt jetzt
+„Sondertage-Sensor", und der Hinweistext nennt das vollständige Ferien-Rezept
+(Sensor eintragen, „Hoch Wochenende" 09:00, „Runter Wochenende" leer lassen).
+Schlüssel und Verhalten unverändert. Wer nur „Workday-Sensor" liest, kommt
+nicht auf Schulferien – und genau das war hier der Grund für die Anfrage.
+
+**Verifiziert:** `pytest` 551 Tests grün (17 neue), **drei Gegenproben**
+gemacht (ohne das Gate beschattet sie durch; ohne den Rückfall je Rollladen
+greift der eigene Wert nicht; mit `parse_time` statt der strengen Prüfung
+blockiert ein Tippfehler). i18n 366/366 in allen elf Sprachen, Panel in Node
+gerendert – Bereichs-, Rollladen- und Markisenformular. **Nicht im Browser
+geprüft.**
+
+**Beinahe-Unfall beim Arbeiten, nicht im Produkt:**
+`open(p,"w").write(open(p).read().replace(...))` leert die Datei, bevor sie
+gelesen wird – Python wertet `open(p,"w")` zuerst aus. Die `manifest.json`
+stand danach auf 0 Bytes. Aufgefallen ist es nur, weil die Kontrollausgabe
+danach leer blieb. **Lesen und Schreiben immer in zwei Anweisungen**, und nach
+jeder Skript-Änderung an einer Datei deren Inhalt prüfen, nicht nur den
+Rückgabewert des Skripts.
 
 ### 2026-08-11 – 2.12.0: Markisen
 

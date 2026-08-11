@@ -49,6 +49,7 @@ from .helpers import (
     resolve_shading_config,
     season_allows_shading,
     set_cover_position,
+    shading_time_window_ok,
     set_cover_sun_protected,
     set_sun_protect_active,
     sun_extra_conditions_met,
@@ -280,7 +281,11 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             geometry_ok = sun_protect_conditions_met(elev, azim, geo)
             conditions_ok = sun_extra_conditions_met(hass, geo, data, cover)
             season_ok = season_allows_shading(area)
-            should_protect = geometry_ok and conditions_ok and season_ok
+            # Read from the merged config, not from the area: the request this
+            # exists for ("the child's room stays dark until nine during the
+            # holidays") is about one window, not about the whole area.
+            window_ok = shading_time_window_ok(geo)
+            should_protect = geometry_ok and conditions_ok and season_ok and window_ok
             was_active = is_cover_sun_protected(data, cover)
 
             if should_protect:
@@ -331,6 +336,12 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 reason = f"sun left window direction ({a_min:.0f}°–{a_max:.0f}°)"
             elif not season_ok:
                 reason = "outside shading season"
+            elif not window_ok:
+                # A clock boundary is like the season and unlike a cloud: it
+                # does not come back within the hold time, so waiting it out
+                # would only leave the room dark – and, because the cover then
+                # still counts as shaded, block the scheduled opening on top.
+                reason = "outside shading hours"
             else:
                 # Geometry still fits, so a condition dropped out – clouds
                 # moved in or it cooled down. This is the case the hold time

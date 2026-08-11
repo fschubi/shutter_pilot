@@ -237,8 +237,8 @@ de:{
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Workday-Sensor (optional)",
-  f_workday_hint:"Wenn gesetzt, gilt bei \"aus\" der Wochenend-Zeitplan – berücksichtigt Feiertage, Urlaub und Schichtarbeit. Ohne Sensor zählen Samstag und Sonntag.",
+  f_workday_sensor:"Sondertage-Sensor (optional)",
+  f_workday_hint:"Ein Binärsensor, der an normalen Tagen „an\" meldet. Bei „aus\" gilt der Wochenend-Zeitplan – damit lassen sich Feiertage, Urlaub, Schichtdienst und **Schulferien** abbilden. Beispiel: Ferien-Sensor „an\" = Schule; „Hoch Wochenende\" auf 09:00 stellen und „Runter Wochenende\" leer lassen, dann bleibt der Rollladen in den Ferien bis neun unten. Ohne Sensor zählen Samstag und Sonntag.",
   f_random_offset:"Zufalls-Offset (Anwesenheitssimulation)",
   f_random_offset_hint:"Verschiebt die Fahrzeiten täglich zufällig um bis zu ± diesen Wert. 0 = aus.",
   f_manual_override:"Manuelle Position",
@@ -335,6 +335,10 @@ de:{
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
   /* Markisen */
   tab_awnings:"Markisen",
+  f_shade_from:"Beschattung frühestens ab",
+  f_shade_to:"Beschattung nur bis",
+  f_shade_hours_hint:"Beide einzeln optional. Elevation, Ausrichtung und Bedingungen beschreiben die Sonne – dies hier den Haushalt: „in den Ferien erst ab neun beschatten“. Ein Fenster über Mitternacht gibt es nicht.",
+  f_shade_hours_shutter_hint:"Leer heißt: es gilt der Wert des Bereichs. Gedacht für das eine Zimmer, das eine andere Regel braucht.",
   f_guard_global_only:"Regen- und Frostschutz gelten fürs ganze Haus und stehen unter Einstellungen.",
   f_copy_pick_awning:"– Markise wählen –",
   f_copy_hint_awning:"Kopiert Positionen, Ausfahrlänge, Beschattung, Bedingungen und den Wind- und Regenschutz. Cover-Entität, Name und Beschattungsbereich bleiben unverändert.",
@@ -514,8 +518,8 @@ en:{
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Workday sensor (optional)",
-  f_workday_hint:"When set, \"off\" means the weekend schedule applies – covers public holidays, vacation and shift work. Without a sensor, Saturday and Sunday count.",
+  f_workday_sensor:"Special-days sensor (optional)",
+  f_workday_hint:"A binary sensor that reports \"on\" on normal days. \"off\" switches to the weekend schedule – which covers public holidays, vacation, shift work and **school holidays**. Example: a holidays sensor that is \"on\" while school is on; set \"weekend up\" to 09:00 and leave \"weekend down\" empty, and the shutter stays down until nine during the holidays. Without a sensor, Saturday and Sunday count.",
   f_random_offset:"Random offset (presence simulation)",
   f_random_offset_hint:"Shifts the scheduled times by up to ± this value, chosen once per day. 0 = off.",
   f_manual_override:"Manual position",
@@ -612,6 +616,10 @@ en:{
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
   /* Markisen */
   tab_awnings:"Awnings",
+  f_shade_from:"Shade no earlier than",
+  f_shade_to:"Shade only until",
+  f_shade_hours_hint:"Each bound is optional on its own. Elevation, direction and conditions describe the sun – this describes the household: “during the holidays, do not shade before nine”. A window across midnight does not exist.",
+  f_shade_hours_shutter_hint:"Empty means the area's value applies. Meant for the one room that needs a different rule.",
   f_guard_global_only:"Rain and frost protection apply house-wide and live under Settings.",
   f_copy_pick_awning:"– choose an awning –",
   f_copy_hint_awning:"Copies positions, extension, shading, conditions and the wind and rain protection. Cover entity, name and shading area are left alone.",
@@ -746,8 +754,8 @@ fr:{
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Capteur jour ouvré (optionnel)",
-  f_workday_hint:"Si défini, \"off\" applique l'horaire du week-end – prend en compte jours fériés, congés et travail posté.",
+  f_workday_sensor:"Capteur jours particuliers (optionnel)",
+  f_workday_hint:"Un capteur binaire qui indique « on » les jours normaux. « off » active l'horaire du week-end – jours fériés, vacances, travail posté et **vacances scolaires**. Exemple : capteur vacances « on » pendant l'école ; régler « montée week-end » sur 09:00 et laisser « descente week-end » vide, le volet reste baissé jusqu'à neuf heures pendant les vacances. Sans capteur, samedi et dimanche comptent.",
   f_random_offset:"Décalage aléatoire (simulation de présence)",
   f_random_offset_hint:"Décale les horaires de ± cette valeur, tiré une fois par jour. 0 = désactivé.",
   f_manual_override:"Position manuelle",
@@ -831,6 +839,10 @@ fr:{
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
   /* Markisen */
   tab_awnings:"Stores bannes",
+  f_shade_from:"Ombrer au plus tôt à",
+  f_shade_to:"Ombrer seulement jusqu'à",
+  f_shade_hours_hint:"Chaque borne est optionnelle. Hauteur, orientation et conditions décrivent le soleil – ceci décrit le foyer : « pendant les vacances, pas d'ombrage avant neuf heures ». Une plage passant minuit n'existe pas.",
+  f_shade_hours_shutter_hint:"Vide : la valeur de la zone s'applique. Prévu pour la seule pièce qui a besoin d'une autre règle.",
   f_guard_global_only:"Les protections pluie et gel valent pour toute la maison et se trouvent dans les réglages.",
   f_copy_pick_awning:"– choisir un store –",
   f_copy_hint_awning:"Copie positions, déploiement, ombrage, conditions et la protection vent et pluie. Entité, nom et zone d'ombrage restent inchangés.",
@@ -965,8 +977,8 @@ es:{
   filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Sensor de día laborable (opcional)",
-  f_workday_hint:"Si se define, \"off\" aplica el horario de fin de semana – cubre festivos, vacaciones y turnos.",
+  f_workday_sensor:"Sensor de días especiales (opcional)",
+  f_workday_hint:"Un sensor binario que indica «on» en días normales. «off» activa el horario de fin de semana: festivos, vacaciones, turnos y **vacaciones escolares**. Ejemplo: sensor de vacaciones «on» mientras hay colegio; pon «subir fin de semana» a las 09:00 y deja «bajar fin de semana» vacío, y la persiana se queda bajada hasta las nueve en vacaciones. Sin sensor cuentan sábado y domingo.",
   f_random_offset:"Desfase aleatorio (simulación de presencia)",
   f_random_offset_hint:"Desplaza los horarios ± este valor, elegido una vez al día. 0 = desactivado.",
   f_manual_override:"Posición manual",
@@ -1050,6 +1062,10 @@ es:{
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
   /* Markisen */
   tab_awnings:"Toldos",
+  f_shade_from:"Sombrear no antes de",
+  f_shade_to:"Sombrear solo hasta",
+  f_shade_hours_hint:"Cada límite es opcional por separado. Altura, orientación y condiciones describen el sol; esto describe la casa: «en vacaciones no sombrear antes de las nueve». No existe una ventana que cruce la medianoche.",
+  f_shade_hours_shutter_hint:"Vacío: vale el valor de la zona. Pensado para la única habitación que necesita otra regla.",
   f_guard_global_only:"La protección de lluvia y helada vale para toda la casa y está en los ajustes.",
   f_copy_pick_awning:"– elegir un toldo –",
   f_copy_hint_awning:"Copia posiciones, extensión, sombreado, condiciones y la protección de viento y lluvia. Entidad, nombre y zona de sombreado no se tocan.",
@@ -1184,8 +1200,8 @@ it:{
   filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Sensore giorno feriale (opzionale)",
-  f_workday_hint:"Se impostato, \"off\" applica l'orario del fine settimana – copre festivi, ferie e turni.",
+  f_workday_sensor:"Sensore giorni particolari (opzionale)",
+  f_workday_hint:"Un sensore binario che segnala «on» nei giorni normali. «off» attiva l'orario del fine settimana: festivi, ferie, turni e **vacanze scolastiche**. Esempio: sensore vacanze «on» quando c'è scuola; imposta «salita fine settimana» alle 09:00 e lascia vuoto «discesa fine settimana», così la tapparella resta giù fino alle nove durante le vacanze. Senza sensore contano sabato e domenica.",
   f_random_offset:"Scarto casuale (simulazione di presenza)",
   f_random_offset_hint:"Sposta gli orari di ± questo valore, scelto una volta al giorno. 0 = disattivato.",
   f_manual_override:"Posizione manuale",
@@ -1269,6 +1285,10 @@ it:{
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
   /* Markisen */
   tab_awnings:"Tende da sole",
+  f_shade_from:"Ombreggiare non prima di",
+  f_shade_to:"Ombreggiare solo fino a",
+  f_shade_hours_hint:"Ogni limite è opzionale da solo. Altezza, orientamento e condizioni descrivono il sole; questo descrive la casa: «in vacanza non ombreggiare prima delle nove». Una finestra che attraversa la mezzanotte non esiste.",
+  f_shade_hours_shutter_hint:"Vuoto: vale il valore della zona. Pensato per l'unica stanza che ha bisogno di un'altra regola.",
   f_guard_global_only:"Le protezioni pioggia e gelo valgono per tutta la casa e stanno nelle impostazioni.",
   f_copy_pick_awning:"– scegli una tenda –",
   f_copy_hint_awning:"Copia posizioni, estensione, ombreggiatura, condizioni e la protezione vento e pioggia. Entità, nome e zona di ombreggiatura restano invariati.",
@@ -1403,8 +1423,8 @@ nl:{
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Werkdag-sensor (optioneel)",
-  f_workday_hint:"Indien ingesteld geldt bij \"uit\" het weekendschema – houdt rekening met feestdagen, vakantie en ploegendienst.",
+  f_workday_sensor:"Sensor voor bijzondere dagen (optioneel)",
+  f_workday_hint:"Een binaire sensor die op normale dagen „aan” meldt. „uit” schakelt naar het weekendschema – feestdagen, vakantie, ploegendienst en **schoolvakanties**. Voorbeeld: vakantiesensor „aan” tijdens schooltijd; zet „omhoog weekend” op 09:00 en laat „omlaag weekend” leeg, dan blijft het rolluik in de vakantie tot negen uur beneden. Zonder sensor tellen zaterdag en zondag.",
   f_random_offset:"Willekeurige afwijking (aanwezigheidssimulatie)",
   f_random_offset_hint:"Verschuift de tijden met ± deze waarde, één keer per dag gekozen. 0 = uit.",
   f_manual_override:"Handmatige positie",
@@ -1489,6 +1509,10 @@ nl:{
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
   /* Markisen */
   tab_awnings:"Zonneschermen",
+  f_shade_from:"Schaduw niet eerder dan",
+  f_shade_to:"Schaduw alleen tot",
+  f_shade_hours_hint:"Elke grens is los optioneel. Hoogte, richting en voorwaarden beschrijven de zon – dit beschrijft het huishouden: „in de vakantie pas vanaf negen uur schaduwen”. Een venster over middernacht bestaat niet.",
+  f_shade_hours_shutter_hint:"Leeg betekent: de waarde van de zone geldt. Bedoeld voor die ene kamer die een andere regel nodig heeft.",
   f_guard_global_only:"Regen- en vorstbeveiliging gelden voor het hele huis en staan bij de instellingen.",
   f_copy_pick_awning:"– zonnescherm kiezen –",
   f_copy_hint_awning:"Kopieert posities, uitschuiflengte, schaduw, voorwaarden en de wind- en regenbeveiliging. Entiteit, naam en schaduwzone blijven ongewijzigd.",
@@ -1623,8 +1647,8 @@ da:{
   filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Arbejdsdag-sensor (valgfri)",
-  f_workday_hint:"Når den er sat, betyder \"fra\" at weekendplanen gælder – dækker helligdage, ferie og skifteholdsarbejde.",
+  f_workday_sensor:"Sensor for særlige dage (valgfri)",
+  f_workday_hint:"En binær sensor, der melder „on” på normale dage. „off” bruger weekendplanen – helligdage, ferie, skiftehold og **skoleferier**. Eksempel: feriesensor „on” når der er skole; sæt „op weekend” til 09:00 og lad „ned weekend” stå tom, så bliver rullegardinet nede til klokken ni i ferien. Uden sensor tæller lørdag og søndag.",
   f_random_offset:"Tilfældig forskydning (tilstedeværelsessimulering)",
   f_random_offset_hint:"Forskyder tiderne med ± denne værdi, valgt én gang om dagen. 0 = fra.",
   f_manual_override:"Manuel position",
@@ -1709,6 +1733,10 @@ da:{
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
   /* Markisen */
   tab_awnings:"Markiser",
+  f_shade_from:"Skygge tidligst fra",
+  f_shade_to:"Skygge kun indtil",
+  f_shade_hours_hint:"Hver grænse er valgfri for sig. Højde, retning og betingelser beskriver solen – dette beskriver husstanden: „i ferien først skygge fra ni“. Et vindue hen over midnat findes ikke.",
+  f_shade_hours_shutter_hint:"Tom betyder: områdets værdi gælder. Tænkt til det ene værelse, der skal have en anden regel.",
   f_guard_global_only:"Regn- og frostbeskyttelse gælder hele huset og står under indstillinger.",
   f_copy_pick_awning:"– vælg en markise –",
   f_copy_hint_awning:"Kopierer positioner, udkørsel, skygge, betingelser og vind- og regnbeskyttelsen. Entitet, navn og skyggeområde forbliver uændret.",
@@ -1843,8 +1871,8 @@ sv:{
   filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Arbetsdagssensor (valfri)",
-  f_workday_hint:"När den är satt betyder \"av\" att helgschemat gäller – täcker helgdagar, semester och skiftarbete.",
+  f_workday_sensor:"Sensor för särskilda dagar (valfri)",
+  f_workday_hint:"En binär sensor som rapporterar ”on” på vanliga dagar. ”off” använder helgschemat – helgdagar, semester, skiftarbete och **skollov**. Exempel: lovsensor ”on” när det är skola; sätt ”upp helg” till 09:00 och lämna ”ner helg” tomt, så stannar persiennen nere till nio under lovet. Utan sensor räknas lördag och söndag.",
   f_random_offset:"Slumpmässig förskjutning (närvarosimulering)",
   f_random_offset_hint:"Förskjuter tiderna med ± detta värde, valt en gång per dag. 0 = av.",
   f_manual_override:"Manuellt läge",
@@ -1929,6 +1957,10 @@ sv:{
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
   /* Markisen */
   tab_awnings:"Markiser",
+  f_shade_from:"Skugga tidigast från",
+  f_shade_to:"Skugga bara till",
+  f_shade_hours_hint:"Varje gräns är valfri för sig. Höjd, riktning och villkor beskriver solen – detta beskriver hushållet: ”under lovet, skugga inte före nio”. Ett fönster över midnatt finns inte.",
+  f_shade_hours_shutter_hint:"Tomt betyder att områdets värde gäller. Tänkt för det enda rum som behöver en annan regel.",
   f_guard_global_only:"Regn- och frostskydd gäller hela huset och finns under inställningar.",
   f_copy_pick_awning:"– välj en markis –",
   f_copy_hint_awning:"Kopierar positioner, utfällning, skugga, villkor och vind- och regnskyddet. Entitet, namn och skuggområde lämnas orörda.",
@@ -2063,8 +2095,8 @@ pl:{
   filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Czujnik dnia roboczego (opcjonalnie)",
-  f_workday_hint:"Gdy ustawiony, \"off\" oznacza harmonogram weekendowy – obejmuje święta, urlopy i pracę zmianową.",
+  f_workday_sensor:"Czujnik dni szczególnych (opcjonalnie)",
+  f_workday_hint:"Czujnik binarny zgłaszający „on” w zwykłe dni. „off” włącza harmonogram weekendowy – święta, urlop, praca zmianowa i **ferie szkolne**. Przykład: czujnik ferii „on”, gdy trwa szkoła; ustaw „w górę weekend” na 09:00 i zostaw „w dół weekend” puste, wtedy roleta w ferie zostaje opuszczona do dziewiątej. Bez czujnika liczą się sobota i niedziela.",
   f_random_offset:"Losowe przesunięcie (symulacja obecności)",
   f_random_offset_hint:"Przesuwa godziny o ± tę wartość, losowaną raz dziennie. 0 = wyłączone.",
   f_manual_override:"Pozycja ręczna",
@@ -2149,6 +2181,10 @@ pl:{
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
   /* Markisen */
   tab_awnings:"Markizy",
+  f_shade_from:"Zacienianie najwcześniej od",
+  f_shade_to:"Zacienianie tylko do",
+  f_shade_hours_hint:"Każda granica jest osobno opcjonalna. Wysokość, kierunek i warunki opisują słońce – to opisuje domowników: „w ferie zacieniać dopiero od dziewiątej”. Okno przez północ nie istnieje.",
+  f_shade_hours_shutter_hint:"Puste oznacza, że obowiązuje wartość strefy. Pomyślane dla tego jednego pokoju, który potrzebuje innej reguły.",
   f_guard_global_only:"Ochrona przed deszczem i mrozem obowiązuje w całym domu i znajduje się w ustawieniach.",
   f_copy_pick_awning:"– wybierz markizę –",
   f_copy_hint_awning:"Kopiuje położenia, wysunięcie, zacienienie, warunki oraz ochronę przed wiatrem i deszczem. Encja, nazwa i strefa zacienienia pozostają bez zmian.",
@@ -2283,8 +2319,8 @@ pt:{
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Sensor de dia útil (opcional)",
-  f_workday_hint:"Quando definido, \"off\" aplica o horário de fim de semana – cobre feriados, férias e turnos.",
+  f_workday_sensor:"Sensor de dias especiais (opcional)",
+  f_workday_hint:"Um sensor binário que indica «on» nos dias normais. «off» ativa o horário de fim de semana – feriados, férias, turnos e **férias escolares**. Exemplo: sensor de férias «on» enquanto há aulas; define «subir fim de semana» às 09:00 e deixa «descer fim de semana» vazio, e o estore fica em baixo até às nove nas férias. Sem sensor contam sábado e domingo.",
   f_random_offset:"Desvio aleatório (simulação de presença)",
   f_random_offset_hint:"Desloca os horários em ± este valor, escolhido uma vez por dia. 0 = desligado.",
   f_manual_override:"Posição manual",
@@ -2369,6 +2405,10 @@ pt:{
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
   /* Markisen */
   tab_awnings:"Toldos",
+  f_shade_from:"Sombrear não antes de",
+  f_shade_to:"Sombrear apenas até",
+  f_shade_hours_hint:"Cada limite é opcional por si. Altura, orientação e condições descrevem o sol; isto descreve a casa: «nas férias, não sombrear antes das nove». Uma janela que atravessa a meia-noite não existe.",
+  f_shade_hours_shutter_hint:"Vazio: vale o valor da zona. Pensado para o único quarto que precisa de outra regra.",
   f_guard_global_only:"As proteções de chuva e geada valem para toda a casa e estão nas definições.",
   f_copy_pick_awning:"– escolher um toldo –",
   f_copy_hint_awning:"Copia posições, extensão, sombreamento, condições e a proteção de vento e chuva. Entidade, nome e zona de sombreamento ficam inalterados.",
@@ -2503,8 +2543,8 @@ nb:{
   filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
-  f_workday_sensor:"Arbeidsdag-sensor (valgfri)",
-  f_workday_hint:"Når den er satt, betyr \"av\" at helgeplanen gjelder – dekker helligdager, ferie og skiftarbeid.",
+  f_workday_sensor:"Sensor for spesielle dager (valgfritt)",
+  f_workday_hint:"En binærsensor som melder «on» på vanlige dager. «off» bruker helgeplanen – helligdager, ferie, skiftarbeid og **skoleferier**. Eksempel: feriesensor «on» når det er skole; sett «opp helg» til 09:00 og la «ned helg» stå tom, da blir rullegardinen nede til klokka ni i ferien. Uten sensor teller lørdag og søndag.",
   f_random_offset:"Tilfeldig forskyvning (tilstedeværelsessimulering)",
   f_random_offset_hint:"Forskyver tidene med ± denne verdien, valgt én gang per dag. 0 = av.",
   f_manual_override:"Manuell posisjon",
@@ -2589,6 +2629,10 @@ nb:{
   pick_entity:"Velg entitet…",confirm_del_area:"Slette område \"{id}\"?",confirm_del_shutter:"Slette persienne?",
   /* Markisen */
   tab_awnings:"Markiser",
+  f_shade_from:"Skygge tidligst fra",
+  f_shade_to:"Skygge bare til",
+  f_shade_hours_hint:"Hver grense er valgfri for seg. Høyde, retning og betingelser beskriver sola – dette beskriver husstanden: «i ferien skal det ikke skygges før ni». Et vindu over midnatt finnes ikke.",
+  f_shade_hours_shutter_hint:"Tomt betyr at områdets verdi gjelder. Ment for det ene rommet som trenger en annen regel.",
   f_guard_global_only:"Regn- og frostbeskyttelse gjelder hele huset og står under innstillinger.",
   f_copy_pick_awning:"– velg en markise –",
   f_copy_hint_awning:"Kopierer posisjoner, utkjøring, skygge, betingelser og vind- og regnbeskyttelsen. Entitet, navn og skyggeområde forblir uendret.",
@@ -3699,7 +3743,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",shade_from:"",shade_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -3842,6 +3886,14 @@ class ShutterPilotPanel extends PanelBase {
               ${MONTHS.map(m=>html`<option value="${m}" ?selected=${String(a.season_to)===String(m)}>${T("month_"+m)}</option>`)}
             </select></div>
           <div class="hint">${T("f_season_hint")}</div></div>
+        ${/* Elevation, Azimut, Bedingungen und Saison beschreiben die Sonne –
+             diese beiden den Haushalt. Sie stehen deshalb ans Ende des Blocks,
+             nach allem, was mit dem Sonnenstand zu tun hat. Beide einzeln
+             optional: "erst ab 09:00" ist fuer sich eine gueltige Einstellung
+             und war genau das Gefragte. */""}
+        ${bd("shade_from",T("f_shade_from"),"09:00")}
+        ${bd("shade_to",T("f_shade_to"),"20:00")}
+        <div class="hint">${T("f_shade_hours_hint")}</div>
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
         ${this._renderConditionSlots(a,ep,f)}`:""}
 
@@ -4200,6 +4252,9 @@ class ShutterPilotPanel extends PanelBase {
             </div></div>
           ${rng("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}
           ${rng("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
+      ${this._timeField(s,"shade_from",T("f_shade_from"),"09:00",true)}
+      ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
+      <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
       <div class="hint">${T("f_awning_cond_hint")}</div>
       ${this._renderConditionSlots(s,ep,f)}`)}
 
@@ -4321,6 +4376,13 @@ class ShutterPilotPanel extends PanelBase {
             </div></div>
           ${pctRange("azimuth_min",T("f_azimuth_min"),0,360,5,"°")}
           ${pctRange("azimuth_max",T("f_azimuth_max"),0,360,5,"°")}`:""}`:""}
+      ${/* Der gefragte Fall ist immer ein einzelnes Fenster ("das Kinderzimmer
+           bleibt in den Ferien bis neun dunkel"), nicht der ganze Bereich.
+           Leer heisst: der Bereichswert gilt – wie bei den Bedingungen und
+           anders als bei der Geometrie, die am Haken haengt. */""}
+      ${this._timeField(s,"shade_from",T("f_shade_from"),"09:00",true)}
+      ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
+      <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
       <div class="hint">${T("f_shutter_cond_hint")}</div>
       ${this._renderConditionSlots(s,ep,f)}
 

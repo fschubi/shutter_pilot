@@ -4,6 +4,22 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.13.0]
+
+Aus GitHub-Diskussion #5 (Fireblade900rr): das Kinderzimmer soll in den
+Schulferien morgens dunkel bleiben.
+
+### Neu
+- **Beschattung nur zu bestimmten Uhrzeiten.** Elevation, Fensterrichtung, Bedingungen und Beschattungszeitraum beschreiben alle *die Sonne* – für „erst ab neun" gab es bisher nichts. Zwei neue Felder, **beide einzeln optional**: „Beschattung frühestens ab" reicht für sich, eine obere Grenze braucht es nicht. Einstellbar je Bereich und **je Rollladen** – der gefragte Fall ist immer ein einzelnes Zimmer, nicht das ganze Geschoss. Leer am Rollladen heißt: der Bereichswert gilt. Ein Fenster über Mitternacht gibt es bewusst nicht; steht die zweite Zeit vor der ersten, wird die Einstellung verworfen und im Log genannt, statt sie stillschweigend als Umschlag zu lesen.
+- Endet die Beschattung an dieser Grenze, wird **sofort freigegeben** – die Haltezeit gilt dafür nicht. Sie ist für durchziehende Wolken da; eine Uhrzeit kommt innerhalb der Haltezeit nicht zurück, und der Rollladen zählte solange weiter als beschattet, was das planmäßige Öffnen zusätzlich blockiert hätte.
+
+### Geändert
+- **Der „Workday-Sensor" heißt jetzt „Sondertage-Sensor".** Der alte Name verschwieg seinen wichtigsten Einsatz: Damit lassen sich Feiertage, Urlaub, Schichtdienst **und Schulferien** abbilden. Der Hinweistext nennt jetzt das vollständige Rezept – Ferien-Sensor eintragen, „Hoch Wochenende" auf 09:00, „Runter Wochenende" leer lassen –, mit dem genau die gefragte Ferienregelung ohne eine Zeile Code entsteht. Gespeicherter Schlüssel und Verhalten bleiben unverändert.
+- **Der Export nennt die Uhrzeit-Grenze**, wenn eine gesetzt ist: aktuelle Uhrzeit, Fenster und Ergebnis in derselben Zeile wie Elevation und Azimut.
+
+### Behoben
+- **Ein Tippfehler in einem Zeitfeld erfand eine Grenze.** Der gemeinsame Zeit-Parser fällt bei unlesbaren Werten auf 06:00 zurück. Für die neuen Felder wäre daraus eine Beschattungssperre jeden Morgen geworden, die niemand eingetragen hat. Sie prüfen jetzt streng auf `HH:MM` und ignorieren alles andere – mit einer Zeile im Log.
+
 ## [2.12.0]
 
 Markisen. Nicht als umgedrehter Rollladen, sondern mit dem Teil, der eine

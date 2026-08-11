@@ -284,6 +284,19 @@ MAX_AREA_SHADE_HOLD = 120
 CONF_AREA_SEASON_FROM = "season_from"
 CONF_AREA_SEASON_TO = "season_to"
 
+# Clock window in which shading may run at all, "HH:MM". Either bound may be
+# left empty. Elevation, azimuth and the conditions all describe *the sun*;
+# this one describes the household – "not before nine during the holidays,
+# the room has to stay dark". Overridable per shutter, because that request
+# is always about one window, not about the whole area.
+#
+# Deliberately no wrap across midnight, unlike the season and the azimuth: a
+# shading window that runs through the night is not a configuration anybody
+# means, and reading `from > to` as a wrap is exactly the range-versus-point
+# confusion that cost four condition slots their effect in 2.8.0.
+CONF_AREA_SHADE_FROM = "shade_from"
+CONF_AREA_SHADE_TO = "shade_to"
+
 # Global weather entity used to fetch today's forecast.
 CONF_WEATHER_ENTITY = "weather_entity"
 

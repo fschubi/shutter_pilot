@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, time as dt_time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -30,6 +31,8 @@ from .const import (
     CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SEASON_FROM,
     CONF_AREA_SEASON_TO,
+    CONF_AREA_SHADE_FROM,
+    CONF_AREA_SHADE_TO,
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_POSITION_CLOSED_ALT,
@@ -590,6 +593,75 @@ def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> 
     return month >= start or month <= end
 
 
+def shading_time_window_ok(
+    config: dict[str, Any], now: datetime | None = None
+) -> bool:
+    """True if the clock allows shading right now.
+
+    Elevation, azimuth, conditions and season all describe the sun. This one
+    describes the household: "not before nine during the school holidays, the
+    room has to stay dark". Both bounds are optional, so "only from 09:00" is
+    a valid setting on its own.
+
+    Fails **open** in every unusable case – no value, unparsable, or the two
+    bounds the wrong way round. Shading blocking itself because a time field
+    holds nonsense would be the worst of the three possible outcomes: the room
+    heats up and nothing says why.
+    """
+    raw_from = str(config.get(CONF_AREA_SHADE_FROM) or "").strip()
+    raw_to = str(config.get(CONF_AREA_SHADE_TO) or "").strip()
+    if not raw_from and not raw_to:
+        return True
+
+    def _bound(raw: str) -> Any:
+        """Strictly "HH:MM", or nothing.
+
+        Deliberately not parse_time(): that one falls back to 06:00 when it
+        cannot read the value, which here would invent a boundary nobody typed
+        and block shading every morning – a setting that looks like one thing
+        and does another, which is the fault this project keeps digging out.
+        """
+        if not raw:
+            return None
+        parts = raw.split(":")
+        try:
+            hour, minute = int(parts[0]), int(parts[1])
+        except (ValueError, IndexError):
+            _LOGGER.warning(
+                "Shading window: %r is not a time of day (expected HH:MM) – "
+                "the bound is ignored.",
+                raw,
+            )
+            return None
+        if not (0 <= hour <= 23 and 0 <= minute <= 59):
+            _LOGGER.warning("Shading window: %r is not a valid time – ignored.", raw)
+            return None
+        return dt_time(hour, minute)
+
+    moment = (now or dt_util.now()).time()
+    start = _bound(raw_from)
+    end = _bound(raw_to)
+    if start is None and end is None:
+        return True
+
+    if start is not None and end is not None and start > end:
+        # No wrap across midnight on purpose – see the comment in const.py.
+        _LOGGER.warning(
+            "Shading window %s–%s ends before it starts. A window across "
+            "midnight is not supported (the sun does not shine at night); the "
+            "window is ignored and shading runs all day.",
+            raw_from,
+            raw_to,
+        )
+        return True
+
+    if start is not None and moment < start:
+        return False
+    if end is not None and moment > end:
+        return False
+    return True
+
+
 def resolve_sun_geometry(
     area: dict[str, Any], shutter: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -648,6 +720,16 @@ def resolve_shading_config(
     merged = resolve_sun_geometry(area, shutter)
     if not shutter:
         return merged
+
+    # The clock window falls back per key, like the condition slots and unlike
+    # the geometry: the request it exists for ("the child's room stays dark
+    # until nine") is always about one window, and tying it to the geometry
+    # tick would force an unrelated setting on whoever wants it.
+    for key in (CONF_AREA_SHADE_FROM, CONF_AREA_SHADE_TO):
+        if str(shutter.get(key) or "").strip():
+            if merged is area:
+                merged = dict(area)
+            merged[key] = shutter[key]
 
     overridden: list[str] = []
     for slot in SUN_CONDITION_SLOTS:

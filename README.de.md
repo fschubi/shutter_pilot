@@ -355,6 +355,59 @@ Pro Bereich lässt sich einstellen, in welchen Monaten überhaupt beschattet wir
 
 Meist erübrigt sich das durch eine Temperaturbedingung: Wenn die Vorhersage im Winter ohnehin unter der Schwelle bleibt, wird gar nicht erst beschattet.
 
+### Beschattung nur zu bestimmten Uhrzeiten
+
+Elevation, Fensterrichtung, Bedingungen und Beschattungszeitraum beschreiben
+alle *die Sonne*. Manchmal geht es aber um den Haushalt: „in den Schulferien
+soll das Kinderzimmer bis neun dunkel bleiben".
+
+Dafür gibt es zwei Felder, **beide einzeln optional**:
+
+| Feld | Bedeutung |
+| --- | --- |
+| Beschattung frühestens ab | vorher wird nicht beschattet |
+| Beschattung nur bis | danach wird freigegeben |
+
+„Erst ab 09:00" reicht also für sich, eine obere Grenze braucht es nicht.
+Einstellbar **je Bereich und je Rollladen** – leer am Rollladen heißt: der
+Bereichswert gilt. Gedacht ist es für das eine Zimmer, das eine andere Regel
+braucht.
+
+Zwei Dinge, die man wissen sollte:
+
+* Endet die Beschattung an dieser Grenze, wird **sofort freigegeben**. Die
+  Haltezeit gilt dafür nicht – sie ist für durchziehende Wolken da, und eine
+  Uhrzeit kommt innerhalb der Haltezeit nicht zurück.
+* Ein Fenster **über Mitternacht gibt es nicht**. Steht die zweite Zeit vor der
+  ersten, wird die Einstellung verworfen und im Log genannt, statt sie
+  stillschweigend als Umschlag zu lesen.
+
+> 💡 Für „der Rollladen soll morgens später **hochfahren**" ist nicht dieses
+> Feld zuständig, sondern der **Sondertage-Sensor** des Bereichs – siehe unten.
+
+### Später hochfahren an Ferien- und Feiertagen
+
+Der **Sondertage-Sensor** je Bereich (früher „Workday-Sensor") schaltet zwischen
+Wochentags- und Wochenend-Zeitplan um. Er wirkt in **allen drei Modi** – Zeit,
+Helligkeit und Sonnenstand.
+
+Damit lassen sich Feiertage, Urlaub, Schichtdienst **und Schulferien**
+abbilden. Das Rezept für Ferien:
+
+1. Einen Binärsensor bauen, der `on` meldet, solange Schule ist – und `off` an
+   Ferien- **und** Wochenendtagen
+2. Ihn als Sondertage-Sensor des Bereichs eintragen
+3. „Hoch Wochenende" auf `09:00` stellen, **„Runter Wochenende" leer lassen**
+   (leere Wochenendwerte fallen auf die Wochentagswerte zurück)
+
+Dann bleibt der Rollladen in den Ferien bis neun unten und fährt abends
+unverändert zu.
+
+Soll das nur für **ein einzelnes Zimmer** gelten: dem Rollladen einen eigenen
+**Hoch-Bereich** geben und den gemeinsamen Runter-Bereich behalten. Hoch- und
+Runter-Bereich dürfen verschieden sein. Die Beschattung ändert sich dadurch
+nicht – die entscheidet der Runter-Bereich.
+
 ### Sensoren pro Fenster statt pro Bereich
 
 Bedingungen lassen sich sowohl im **Bereich** als auch am **einzelnen Rollladen** hinterlegen. Die Regel ist einfach:

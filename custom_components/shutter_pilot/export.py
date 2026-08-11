@@ -48,6 +48,8 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_MODE,
     CONF_AREA_NAME,
+    CONF_AREA_SHADE_FROM,
+    CONF_AREA_SHADE_TO,
     CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_AREA_UP_ID,
     CONF_AREAS,
@@ -80,6 +82,7 @@ from .helpers import (
     is_system_enabled,
     resolve_shading_config,
     season_allows_shading,
+    shading_time_window_ok,
     sun_protect_conditions_met,
 )
 from .position_store import get_position_store
@@ -451,9 +454,20 @@ def _shading_verdict(
             else "nicht geprüft (Option aus)"
         ),
         f"- Beschattungszeitraum: {'✅' if season_ok else '❌'}",
-        f"- Zusätzliche Bedingungen: {'✅' if conditions_ok else '❌'}",
     ]
-    should = geometry_ok and season_ok and conditions_ok
+    # Die Uhrzeit-Grenze steht nur da, wenn sie gesetzt ist – sonst stünde an
+    # jedem Rollladen eine Zeile, die nichts beschreibt.
+    moment = dt_util.as_local(dt_util.now())
+    window_ok = shading_time_window_ok(geo, moment)
+    if _is_set(geo.get(CONF_AREA_SHADE_FROM)) or _is_set(geo.get(CONF_AREA_SHADE_TO)):
+        lines.append(
+            f"- Uhrzeit {moment.strftime('%H:%M')} in "
+            f"[{_fmt(geo.get(CONF_AREA_SHADE_FROM))} – "
+            f"{_fmt(geo.get(CONF_AREA_SHADE_TO))}]: "
+            f"{'✅' if window_ok else '❌'}"
+        )
+    lines.append(f"- Zusätzliche Bedingungen: {'✅' if conditions_ok else '❌'}")
+    should = geometry_ok and season_ok and conditions_ok and window_ok
     lines.append("")
     lines.append(
         f"**Ergebnis: {'beschatten' if should else 'nicht beschatten'}** · "
