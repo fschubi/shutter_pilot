@@ -126,6 +126,18 @@ CONF_AREA_WE_DOWN_TO = "we_down_to"
 CONF_AREA_B_DOWN_AFTER_SUNSET = "b_down_after_sunset"
 CONF_AREA_B_UP_BEFORE_SUNRISE = "b_up_before_sunrise"
 
+# Deadlines that drive *without* the lux value. In the dark half of the year
+# the up threshold may never be reached, and the clock windows only ever
+# permit a drive – they never trigger one. Off by default: switched on
+# unasked, a deadline would move shutters in installations that are happy.
+# The weekend value falls back to the weekday value when left empty.
+CONF_AREA_B_LATEST_UP_ENABLED = "b_latest_up_enabled"
+CONF_AREA_B_LATEST_UP = "b_latest_up"
+CONF_AREA_B_WE_LATEST_UP = "b_we_latest_up"
+CONF_AREA_B_LATEST_DOWN_ENABLED = "b_latest_down_enabled"
+CONF_AREA_B_LATEST_DOWN = "b_latest_down"
+CONF_AREA_B_WE_LATEST_DOWN = "b_we_latest_down"
+
 # Per-area sun protection (elevation range: active when min <= elev <= max)
 CONF_AREA_SUN_PROTECT_ENABLED = "sun_protect_enabled"
 CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max
@@ -328,3 +340,5 @@ DEFAULT_AREA_WE_UP_FROM = "07:00"
 DEFAULT_AREA_WE_UP_TO = "10:00"
 DEFAULT_AREA_WE_DOWN_FROM = "16:00"
 DEFAULT_AREA_WE_DOWN_TO = "23:59"
+DEFAULT_AREA_B_LATEST_UP = "09:00"
+DEFAULT_AREA_B_LATEST_DOWN = "18:00"

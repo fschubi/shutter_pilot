@@ -946,3 +946,56 @@ seine eigenen Geometriewerte damit doppelt wirkungslos). „Wohnzimmer" und
 als zweite Seite einzutragen ist naheliegend und kippt beim Einschalten das
 Verhalten der betroffenen Rollläden komplett – möglicher Kandidat für einen
 Hinweis im Formular.
+
+### 2026-08-11 – 2.11.0: die Frist im Helligkeitsmodus
+
+hollizone: in der dunklen Jahreszeit wird die Lux-Schwelle nie erreicht, er
+braucht eine Uhrzeit, zu der trotzdem geöffnet wird. Nachgesehen: gab es
+nicht. Die Zeitfenster (`_area_window`) und die Sonnengrenzen (`_sun_bound_ok`)
+**erlauben** eine Fahrt nur, ausgelöst hat immer allein der Lux-Wert. Der
+einzige Nachholmechanismus war `pending_up` – und der hängt weiter am Sensor.
+
+**Der Punkt, der den Aufbau bestimmt hat:** `brightness.py` war rein
+ereignisgetrieben, es hing allein an `async_track_state_change_event` des
+Sensors. Meldet der Sensor in der Dämmerung minutenlang denselben Wert, feuert
+kein Event – eine Prüfung „ist es jetzt 09:00?" im vorhandenen Pfad wäre nie
+gelaufen. Der Modus hängt jetzt zusätzlich am gemeinsamen Minutentakt
+(`register_minute_callback(data, "brightness", …)`), aber nur, wenn überhaupt
+eine Frist eingeschaltet ist.
+
+Dafür mussten die beiden Fahrblöcke aus `_process_brightness` heraus:
+`_run_down()` und `_run_up()` sind jetzt Funktionen, die Lux-Pfad und
+Uhrzeit-Pfad gemeinsam benutzen. Der Umbau ist reine Umstellung – die 442
+Tests von 2.10.3 blieben unverändert grün, *bevor* die neuen dazukamen. Genau
+deshalb in dieser Reihenfolge gemacht.
+
+Drei Entscheidungen, die man kennen muss:
+
+* **Abschaltbar, Vorgabe aus** (ausdrücklicher Wunsch). Eine Frist, die
+  ungefragt gilt, bewegt in jeder zufriedenen Anlage Rollläden.
+* **Der Tagesmerker wird auch gesetzt, wenn nichts gefahren wurde.** `t >=
+  deadline` bleibt bis Mitternacht wahr; ohne Merker führe die Frist jede
+  Minute erneut auf – und höbe abends den Rollladen wieder hoch, den der
+  Lux-Wert eben geschlossen hat. Muster von `fired_today` im Scheduler.
+* **Beim Setup wird eine schon vergangene Frist als erledigt markiert**, sonst
+  fährt ein Reload um 23 Uhr alles hoch, weil „spätestens 09:00" längst vorbei
+  ist. Ebenfalls aus `scheduler.py` abgeschrieben, dort für den Zeitmodus.
+
+Die Wochenendwerte fallen wie überall auf die Wochentagswerte zurück
+(`b_we_latest_up` leer = `b_latest_up`). Vier neue i18n-Schlüssel; die
+Zeitfeld-Beschriftungen `f_latest_up`/`f_we_latest_up` gab es schon aus den
+Zeitklammern des Sonnenmodus und werden mitbenutzt.
+
+**Verifiziert:** `pytest` 455 Tests grün (13 neue), beide Gegenproben gemacht
+(ohne den Tagesmerker fällt „einmal am Tag", ohne die Setup-Markierung fällt
+„kein Nachholen nach Neustart"), i18n 295/295 in allen elf Sprachen, Panel in
+Node gerendert. **Nicht im Browser geprüft.**
+
+**Testfalle, neu:** `setup_brightness_listener` steigt bei einem falsy
+Laufzeit-Dict sofort aus – ein frisch hingestelltes `{}` ist falsy, und der
+Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
+`{"master_enabled": True}` drin.
+
+**Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
+aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
+man Felder, die nur zugeklappt sind.

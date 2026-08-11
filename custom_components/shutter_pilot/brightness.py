@@ -19,7 +19,15 @@ from .const import (
     CONF_AREA_MODE,
     AREA_MODE_BRIGHTNESS,
     CONF_AREA_B_DOWN_AFTER_SUNSET,
+    CONF_AREA_B_LATEST_DOWN,
+    CONF_AREA_B_LATEST_DOWN_ENABLED,
+    CONF_AREA_B_LATEST_UP,
+    CONF_AREA_B_LATEST_UP_ENABLED,
     CONF_AREA_B_UP_BEFORE_SUNRISE,
+    CONF_AREA_B_WE_LATEST_DOWN,
+    CONF_AREA_B_WE_LATEST_UP,
+    DEFAULT_AREA_B_LATEST_DOWN,
+    DEFAULT_AREA_B_LATEST_UP,
     CONF_AREA_BRIGHTNESS_SENSOR,
     CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
     CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
@@ -50,6 +58,7 @@ from .helpers import (
     get_tilt_for_role,
     is_auto_enabled,
     is_shutter_automation_enabled,
+    register_minute_callback,
     remember_drive_after_close,
     resolve_close_role,
     set_cover_position,
@@ -115,6 +124,36 @@ def _sun_bound_ok(
     return now_local >= today - timedelta(minutes=offset)
 
 
+def _latest_deadline(
+    hass: HomeAssistant | None, area: dict, now: datetime, direction: str
+) -> time | None:
+    """The clock time this direction runs at regardless of the lux value.
+
+    None means no deadline: the option is off, which is the default. The
+    weekend value falls back to the weekday one when left empty, like every
+    other weekend value in this integration.
+    """
+    if direction == "up":
+        enabled_key = CONF_AREA_B_LATEST_UP_ENABLED
+        week_key, we_key = CONF_AREA_B_LATEST_UP, CONF_AREA_B_WE_LATEST_UP
+        default = DEFAULT_AREA_B_LATEST_UP
+    else:
+        enabled_key = CONF_AREA_B_LATEST_DOWN_ENABLED
+        week_key, we_key = CONF_AREA_B_LATEST_DOWN, CONF_AREA_B_WE_LATEST_DOWN
+        default = DEFAULT_AREA_B_LATEST_DOWN
+    if not bool(area.get(enabled_key, False)):
+        return None
+
+    raw = ""
+    if is_weekend_schedule(hass, area, now):
+        raw = str(area.get(we_key) or "").strip()
+    if not raw:
+        raw = str(area.get(week_key) or "").strip()
+    if not raw:
+        raw = default
+    return parse_time(raw, parse_time(default))
+
+
 def _area_window(
     area: dict, now: datetime, direction: str, hass: HomeAssistant | None = None
 ) -> bool:
@@ -164,6 +203,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             brightness_areas.append(a)
     if not brightness_areas:
         _LOGGER.debug("No brightness areas configured, skipping")
+        register_minute_callback(data, "brightness", None)
         return
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
@@ -195,6 +235,122 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             tilt_position=tilt,
             area_id=area_id,
         )
+
+    def _delay_for(area: dict) -> int:
+        try:
+            return max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
+        except (TypeError, ValueError):
+            return DEFAULT_AREA_DRIVE_DELAY
+
+    def _run_down(area: dict, area_id: str, reason: str) -> bool:
+        """Close every shutter of this area that is not closed already."""
+        drive_delay = _delay_for(area)
+        idx = 0
+        moved = False
+        down_covers: list[str] = []
+        for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
+            cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+            if not cover_entity:
+                continue
+            if cover_entity in covers_driven_down:
+                continue
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                continue
+            # Same decision as the scheduler: a shutter that must not
+            # freeze shut, or only close part way on a mild evening,
+            # has to behave that way here too.
+            close_role = resolve_close_role(hass, area, shutter, data)
+            pos = get_position_for_role(shutter, close_role)
+            tilt = get_tilt_for_role(shutter, close_role)
+            drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
+            if drive_after and is_window_open_or_tilted(hass, shutter):
+                remember_drive_after_close(
+                    hass, entry, data, cover_entity,
+                    position=pos, tilt=tilt,
+                    reason=reason, shutter=shutter,
+                )
+                # Wie im Scheduler: die Fahrt gilt als erledigt, sie
+                # wartet nur noch aufs Fenster. Sonst ueberspringt der
+                # naechste Morgen genau diesen Rollladen – und der
+                # Merker wuerde hier jede Minute neu geschrieben.
+                covers_driven_down.add(cover_entity)
+                covers_driven_up.discard(cover_entity)
+                continue
+            pos = get_effective_close_position(hass, shutter, pos)
+            down_covers.append(cover_entity)
+            hass.async_create_task(
+                _set_cover_position_with_delay(
+                    cover_entity, pos, reason, drive_delay, idx,
+                    tilt=tilt, area_id=area_id,
+                )
+            )
+            idx += 1
+            covers_driven_down.add(cover_entity)
+            covers_driven_up.discard(cover_entity)
+            moved = True
+
+        if moved:
+            hass.async_create_task(
+                clear_manual_override_for_covers(hass, entry, down_covers)
+            )
+            hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
+        return moved
+
+    def _run_up(area: dict, area_id: str, reason: str, within_up_window: bool) -> bool:
+        """Open every shutter of this area that shading and manual use allow."""
+        # Shading is judged per shutter inside the loop. Asking the
+        # area aggregate here as well held back every window of the
+        # room as soon as a single one was shaded – rooms whose windows
+        # face different ways are exactly the case that has its own
+        # sensors and its own direction.
+        drive_delay = _delay_for(area)
+        idx = 0
+        moved = False
+        up_covers: list[str] = []
+        for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
+            cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+            if not cover_entity:
+                continue
+            if cover_entity in covers_driven_up:
+                continue
+            if not is_shutter_automation_enabled(hass, entry, shutter):
+                continue
+            if should_skip_automated_up(
+                hass,
+                entry,
+                shutter,
+                data,
+                sun_protect_area_ids,
+                within_up_window=within_up_window,
+                area=area,
+            ):
+                _LOGGER.info(
+                    "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
+                    cover_entity,
+                )
+                continue
+            pos = get_position_for_role(shutter, ROLE_OPEN)
+            tilt = get_tilt_for_role(shutter, ROLE_OPEN)
+            _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
+            up_covers.append(cover_entity)
+            hass.async_create_task(
+                _set_cover_position_with_delay(
+                    cover_entity, pos, reason, drive_delay, idx,
+                    tilt=tilt, area_id=area_id,
+                )
+            )
+            idx += 1
+            covers_driven_up.add(cover_entity)
+            covers_driven_down.discard(cover_entity)
+            clear_stale_window_cycle_after_automated_up(data, cover_entity)
+            moved = True
+
+        if moved:
+            hass.async_create_task(
+                clear_manual_override_for_covers(hass, entry, up_covers)
+            )
+            hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
+        return moved
 
     def _process_brightness(entity_id: str, new_state) -> None:
         if new_state is None:
@@ -234,68 +390,13 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             except (TypeError, ValueError):
                 up_threshold = DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD
 
-            try:
-                drive_delay = max(0, int(area.get(CONF_AREA_DRIVE_DELAY, DEFAULT_AREA_DRIVE_DELAY)))
-            except (TypeError, ValueError):
-                drive_delay = DEFAULT_AREA_DRIVE_DELAY
-
             _LOGGER.info(
                 "Brightness eval: area=%s sensor=%s lux=%.1f up_thresh=%d down_thresh=%d",
                 area_id, sensor_id, lux, up_threshold, down_threshold,
             )
 
-            moved_down = False
-            moved_up = False
-
             if _area_window(area, now, "down", hass) and lux <= down_threshold:
-                idx = 0
-                down_covers: list[str] = []
-                for shutter in [s for s in shutters if str(s.get(CONF_AREA_DOWN_ID) or "") == area_id]:
-                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
-                    if not cover_entity:
-                        continue
-                    if cover_entity in covers_driven_down:
-                        continue
-                    if not is_shutter_automation_enabled(hass, entry, shutter):
-                        continue
-                    # Same decision as the scheduler: a shutter that must not
-                    # freeze shut, or only close part way on a mild evening,
-                    # has to behave that way here too.
-                    close_role = resolve_close_role(hass, area, shutter, data)
-                    pos = get_position_for_role(shutter, close_role)
-                    tilt = get_tilt_for_role(shutter, close_role)
-                    drive_after = shutter.get(CONF_DRIVE_AFTER_CLOSE, False)
-                    if drive_after and is_window_open_or_tilted(hass, shutter):
-                        remember_drive_after_close(
-                            hass, entry, data, cover_entity,
-                            position=pos, tilt=tilt,
-                            reason="Brightness down", shutter=shutter,
-                        )
-                        # Wie im Scheduler: die Fahrt gilt als erledigt, sie
-                        # wartet nur noch aufs Fenster. Sonst ueberspringt der
-                        # naechste Morgen genau diesen Rollladen – und der
-                        # Merker wuerde hier jede Minute neu geschrieben.
-                        covers_driven_down.add(cover_entity)
-                        covers_driven_up.discard(cover_entity)
-                        continue
-                    pos = get_effective_close_position(hass, shutter, pos)
-                    down_covers.append(cover_entity)
-                    hass.async_create_task(
-                        _set_cover_position_with_delay(
-                            cover_entity, pos, "Brightness down", drive_delay, idx,
-                            tilt=tilt, area_id=area_id,
-                        )
-                    )
-                    idx += 1
-                    covers_driven_down.add(cover_entity)
-                    covers_driven_up.discard(cover_entity)
-                    moved_down = True
-
-                if moved_down:
-                    hass.async_create_task(
-                        clear_manual_override_for_covers(hass, entry, down_covers)
-                    )
-                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
+                _run_down(area, area_id, "Brightness down")
 
             is_pending = pending_up.get(area_id) == today
             within_up = _area_window(area, now, "up", hass)
@@ -307,58 +408,11 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     area_id, lux, up_threshold,
                 )
             elif (within_up or is_pending) and lux > up_threshold:
-                # Shading is judged per shutter inside the loop. Asking the
-                # area aggregate here as well held back every window of the
-                # room as soon as a single one was shaded – rooms whose windows
-                # face different ways are exactly the case that has its own
-                # sensors and its own direction.
-                idx = 0
-                up_covers: list[str] = []
-                for shutter in [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]:
-                    cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
-                    if not cover_entity:
-                        continue
-                    if cover_entity in covers_driven_up:
-                        continue
-                    if not is_shutter_automation_enabled(hass, entry, shutter):
-                        continue
-                    if should_skip_automated_up(
-                        hass,
-                        entry,
-                        shutter,
-                        data,
-                        sun_protect_area_ids,
-                        within_up_window=within_up or is_pending,
-                        area=area,
-                    ):
-                        _LOGGER.info(
-                            "Brightness up: %s übersprungen (Sonnenschutz/manuelle Position)",
-                            cover_entity,
-                        )
-                        continue
-                    pos = get_position_for_role(shutter, ROLE_OPEN)
-                    tilt = get_tilt_for_role(shutter, ROLE_OPEN)
-                    _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
-                    up_covers.append(cover_entity)
-                    hass.async_create_task(
-                        _set_cover_position_with_delay(
-                            cover_entity, pos, "Brightness up", drive_delay, idx,
-                            tilt=tilt, area_id=area_id,
-                        )
-                    )
-                    idx += 1
-                    covers_driven_up.add(cover_entity)
-                    covers_driven_down.discard(cover_entity)
-                    clear_stale_window_cycle_after_automated_up(data, cover_entity)
-                    moved_up = True
-
-                if moved_up:
-                    hass.async_create_task(
-                        clear_manual_override_for_covers(hass, entry, up_covers)
-                    )
-                    hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
-                    if is_pending:
-                        pending_up.pop(area_id, None)
+                if _run_up(
+                    area, area_id, "Brightness up",
+                    within_up_window=within_up or is_pending,
+                ) and is_pending:
+                    pending_up.pop(area_id, None)
 
     @callback
     def _on_brightness_change(event) -> None:
@@ -376,3 +430,70 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         if unsub:
             data["_brightness_unsubs"].append(unsub)
         _LOGGER.info("Brightness listener registered: %s (area=%s)", sensor_id, area.get(CONF_AREA_ID))
+
+    # --- Uhrzeit-Notnagel, unabhaengig vom Lux-Wert -------------------------
+    #
+    # Der Helligkeitsmodus haengt sonst allein am State-Change des Sensors.
+    # Eine Uhrzeit braucht den Minutentakt: meldet der Sensor in der Daemmerung
+    # minutenlang denselben Wert, feuert kein Event – und genau dann soll die
+    # Frist greifen.
+    fired_latest: dict[str, Any] = data.setdefault("_b_latest_fired", {})
+
+    setup_now = dt_util.as_local(dt_util.now())
+    for area in brightness_areas:
+        area_id = str(area.get(CONF_AREA_ID) or "").strip()
+        if not area_id:
+            continue
+        for direction in ("up", "down"):
+            deadline = _latest_deadline(hass, area, setup_now, direction)
+            # Wie im Scheduler: eine Frist, die heute schon vorbei ist, gilt
+            # nach einem Neustart als erledigt. Sonst faehrt ein Reload um
+            # 23 Uhr die Rollladen hoch, weil "spaetestens 09:00" laengst
+            # ueberschritten ist.
+            if deadline is not None and setup_now.time() >= deadline:
+                fired_latest[f"{direction}_{area_id}"] = setup_now.date()
+
+    @callback
+    def _latest_tick(now: datetime) -> None:
+        now_local = dt_util.as_local(now)
+        today = now_local.date()
+        t = now_local.time()
+        for area in brightness_areas:
+            area_id = str(area.get(CONF_AREA_ID) or "").strip()
+            if not area_id:
+                continue
+            for direction in ("up", "down"):
+                deadline = _latest_deadline(hass, area, now_local, direction)
+                if deadline is None or t < deadline:
+                    continue
+                key = f"{direction}_{area_id}"
+                if fired_latest.get(key) == today:
+                    continue
+                # Der Merker wird auch gesetzt, wenn nichts zu fahren war:
+                # die Frist ist damit fuer heute abgehandelt. Sonst liefe sie
+                # jede Minute bis Mitternacht erneut auf – und faehrt einen
+                # Rollladen wieder hoch, den der Lux-Wert eben geschlossen hat.
+                fired_latest[key] = today
+                if not is_auto_enabled(hass, entry, area):
+                    continue
+                _LOGGER.info(
+                    "[brightness-latest] area=%s: %s um %s erreicht – fahre ohne Lux-Wert",
+                    area_id, direction, deadline.strftime("%H:%M"),
+                )
+                if direction == "up":
+                    # Die Vormerkung ist mit der Frist erledigt, egal ob
+                    # gefahren wurde – sonst faehrt der Lux-Wert am Abend
+                    # ausserhalb des Zeitfensters noch einmal hoch.
+                    pending_up.pop(area_id, None)
+                    _run_up(area, area_id, "Brightness latest up", within_up_window=True)
+                else:
+                    _run_down(area, area_id, "Brightness latest down")
+
+    if any(
+        _latest_deadline(hass, area, setup_now, direction) is not None
+        for area in brightness_areas
+        for direction in ("up", "down")
+    ):
+        register_minute_callback(data, "brightness", _latest_tick)
+    else:
+        register_minute_callback(data, "brightness", None)

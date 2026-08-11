@@ -4,6 +4,14 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.11.0]
+
+Aus dem Forum, hollizone: im Helligkeitsmodus fehlte eine Uhrzeit, zu der
+gefahren wird, wenn der Lux-Wert nie hoch genug steigt.
+
+### Neu
+- **„Spätestens hochfahren um" und „Spätestens runterfahren um" im Helligkeitsmodus.** In der dunklen Jahreszeit bleibt es tagelang trüb und die Hoch-Schwelle wird nie überschritten – die Zeitfenster helfen dagegen nicht, sie *erlauben* eine Fahrt nur und lösen keine aus. Die neuen Fristen fahren einmal am Tag unabhängig vom Helligkeitswert. **Beide sind standardmäßig aus**, damit sich in bestehenden Anlagen nichts von selbst bewegt. Für das Wochenende gibt es je einen eigenen Wert; bleibt er leer, gilt der Wert der Woche. Ein Rollladen, der bereits in diese Richtung gefahren ist, bleibt stehen – Beschattung und eine manuelle Position haben weiterhin Vorrang, und eine bereits vergangene Frist wird nach einem Neustart nicht nachgeholt. (Forum, hollizone)
+
 ## [2.10.3]
 
 Wieder aus Wolfs Export – diesmal aus einer Zeile, über die niemand gestolpert

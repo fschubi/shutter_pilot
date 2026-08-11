@@ -372,6 +372,21 @@ Example: sunset at 21:10 with "60" means closing starts at 20:10 at the earliest
 
 Empty means no bound. The value `0` is not the same as empty — it means "exactly at sunset".
 
+## Fixed time when the lux threshold is never reached
+
+In the dark half of the year it stays overcast for days and the up threshold is never crossed. The clock windows do not help: they only **permit** a drive, they never trigger one.
+
+Each area therefore has two deadlines that can be switched on:
+
+| Setting | Effect |
+|---|---|
+| Open at the latest at | Opens at this time regardless of the brightness value |
+| Close at the latest at | Closes at this time regardless of the brightness value |
+
+Both are **off by default**. Switched on they run once a day, outside the clock windows as well. Each has its own weekend value; left empty, the weekday value applies.
+
+What a deadline does **not** do: move a shutter that already went that way. If the lux value opened it in the morning, nothing happens at 09:00. Shading and a manual position still win, and a deadline that has already passed is not caught up after a restart.
+
 ## Chasing clouds up and down
 
 Sensor noise is already handled: separate on and off thresholds, hysteresis per condition, and only one movement per direction and phase. A drifting cloud is not noise though — it genuinely ends the condition, and the shutter opened right away.

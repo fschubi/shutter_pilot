@@ -372,6 +372,21 @@ Beispiel: Sonnenuntergang 21:10 und „60" bedeutet, dass frühestens ab 20:10 g
 
 Leer heißt: keine Grenze. Der Wert `0` ist etwas anderes als leer – er bedeutet „genau ab Sonnenuntergang".
 
+## Feste Zeit, wenn die Lux-Schwelle nie erreicht wird
+
+In der dunklen Jahreszeit bleibt es tagelang trüb, und die Hoch-Schwelle wird nie überschritten. Die Uhrzeitfenster helfen nicht: Sie **erlauben** eine Fahrt nur, sie lösen keine aus.
+
+Dafür gibt es je Bereich zwei abschaltbare Fristen:
+
+| Einstellung | Wirkung |
+|---|---|
+| Spätestens hochfahren um | Zu dieser Uhrzeit wird geöffnet, unabhängig vom Helligkeitswert |
+| Spätestens runterfahren um | Zu dieser Uhrzeit wird geschlossen, unabhängig vom Helligkeitswert |
+
+Beide sind **standardmäßig aus** – eingeschaltet fahren sie einmal am Tag, auch außerhalb der Zeitfenster. Für das Wochenende gibt es je einen eigenen Wert; bleibt er leer, gilt der Wert der Woche.
+
+Was die Frist **nicht** tut: einen Rollladen bewegen, der bereits in diese Richtung gefahren ist. Wurde morgens per Lux geöffnet, passiert um 09:00 nichts mehr. Beschattung und eine manuelle Position haben weiterhin Vorrang, und nach einem Neustart wird eine bereits vergangene Frist nicht nachgeholt.
+
 ## Ständiges Hoch und Runter bei Wolken
 
 Gegen Rauschen am Sensor ist vorgesorgt: getrennte Schwellen für Ein und Aus, eine Hysterese je Bedingung, und pro Phase wird nur einmal in dieselbe Richtung gefahren. Eine durchziehende Wolke ist aber kein Rauschen – sie beendet die Bedingung wirklich, und der Rollladen fuhr sofort auf.

@@ -286,6 +286,7 @@ de:{
   f_blind_drive:"Antrieb meldet keine Position (blind fahren)",f_blind_drive_hint:"Für einseitigen Funk wie Somfy RTS. Shutter Pilot rechnet dann mit der zuletzt gesendeten Position, statt aufzugeben – nur so funktionieren Fenstertrigger und automatisches Lüften auch bei solchen Antrieben.",
   f_copy_from:"Einstellungen übernehmen von",f_copy_pick:"– Rollladen wählen –",f_copy_btn:"Übernehmen",f_copy_hint:"Kopiert Positionen, Lamellen, Beschattung, Bedingungen und Fenster-Einstellungen. Cover-Entität, Name, Bereiche und Fenstersensoren bleiben unverändert.",
   f_sunbound_title:"Zusätzliche Sonnengrenzen",f_sunbound_hint:"Verhindert Fahrten am helllichten Tag, etwa wenn ein Gewitter die Helligkeit einbrechen lässt. Leer = keine Grenze.",f_b_down_sunset:"Runter frühestens X Min. vor Sonnenuntergang",f_b_up_sunrise:"Hoch frühestens X Min. vor Sonnenaufgang",
+  f_blatest_title:"Feste Zeit ohne Lux-Wert",f_blatest_hint:"In der dunklen Jahreszeit wird die Lux-Schwelle manchmal nie erreicht – die Zeitfenster oben erlauben eine Fahrt nur, sie lösen keine aus. Diese Zeit fährt unabhängig vom Helligkeitswert, einmal am Tag. Wochenende leer = Wert der Woche.",f_blatest_up_enabled:"Spätestens hochfahren um",f_blatest_down_enabled:"Spätestens runterfahren um",
   f_shade_hold:"Beschattung halten (Min.)",f_shade_hold_hint:"Zieht eine Wolke durch, endet die Bedingung sofort und der Rollladen fährt auf. So lange bleibt die Beschattung trotzdem stehen. 0 = sofort auffahren.",
   sec_drive:"Fahrbefehle",sec_drive_sub:"Abstand zwischen zwei Befehlen",f_min_gap:"Mindestabstand zwischen Fahrbefehlen",f_min_gap_hint:"Funk-Empfänger (433 MHz, HmIP) verschlucken Befehle, die gleichzeitig ankommen. Die Verzögerung im Bereich hilft dort nicht: jeder Bereich fährt für sich. Hier wird jeder Fahrbefehl gedrosselt – automatisch wie von Hand. 0 = aus.",f_min_gap_off:"aus",
   f_frost_cond_sensor:"Tipp: Bei hinterlegter Wetter-Entität stellt Shutter Pilot dafür den Sensor „Shutter Pilot Vorhersage Tiefsttemperatur\" bereit.",
@@ -495,6 +496,7 @@ en:{
   f_blind_drive:"Drive reports no position (blind)",f_blind_drive_hint:"For one-way radio such as Somfy RTS. Shutter Pilot then reasons with the position it last sent instead of giving up – that is what makes window triggers and automatic ventilation work with such drives.",
   f_copy_from:"Copy settings from",f_copy_pick:"– choose a shutter –",f_copy_btn:"Apply",f_copy_hint:"Copies positions, slats, shading, conditions and window settings. Cover entity, name, areas and window sensors are left alone.",
   f_sunbound_title:"Extra sun bounds",f_sunbound_hint:"Prevents movements in broad daylight, e.g. when a thunderstorm drops the brightness. Empty = no bound.",f_b_down_sunset:"Down no earlier than X min. before sunset",f_b_up_sunrise:"Up no earlier than X min. before sunrise",
+  f_blatest_title:"Fixed time, regardless of lux",f_blatest_hint:"In the dark half of the year the lux threshold is sometimes never reached – the windows above only permit a drive, they never trigger one. This time drives regardless of brightness, once a day. Weekend empty = weekday value.",f_blatest_up_enabled:"Open at the latest at",f_blatest_down_enabled:"Close at the latest at",
   f_shade_hold:"Hold shading (min.)",f_shade_hold_hint:"A passing cloud ends the condition at once and the shutter opens. This keeps the shading up for that long anyway. 0 = open immediately.",
   sec_drive:"Drive commands",sec_drive_sub:"Spacing between two commands",f_min_gap:"Minimum gap between drive commands",f_min_gap_hint:"Radio receivers (433 MHz, HmIP) swallow commands that arrive together. The per-area delay does not help: each area drives on its own. This throttles every drive command, automated or manual. 0 = off.",f_min_gap_off:"off",
   f_frost_cond_sensor:"Tip: with a weather entity configured, Shutter Pilot provides the sensor \"Shutter Pilot Vorhersage Tiefsttemperatur\" for exactly this.",
@@ -650,6 +652,7 @@ fr:{
   f_blind_drive:"Le moteur ne renvoie pas de position (à l’aveugle)",f_blind_drive_hint:"Pour la radio unidirectionnelle comme Somfy RTS. Shutter Pilot utilise alors la dernière position envoyée.",
   f_copy_from:"Reprendre les réglages de",f_copy_pick:"– choisir un volet –",f_copy_btn:"Appliquer",f_copy_hint:"Copie positions, lamelles, ombrage, conditions et réglages de fenêtre. Entité, nom, zones et capteurs restent inchangés.",
   f_sunbound_title:"Limites solaires supplémentaires",f_sunbound_hint:"Empêche les mouvements en plein jour, par ex. lors d’un orage. Vide = aucune limite.",f_b_down_sunset:"Descente au plus tôt X min. avant le coucher",f_b_up_sunrise:"Montée au plus tôt X min. avant le lever",
+  f_blatest_title:"Heure fixe, sans le lux",f_blatest_hint:"En hiver le seuil de luminosité n’est parfois jamais atteint – les plages ci-dessus autorisent seulement, elles ne déclenchent rien. Cette heure agit indépendamment de la luminosité, une fois par jour. Week-end vide = valeur de semaine.",f_blatest_up_enabled:"Monter au plus tard à",f_blatest_down_enabled:"Descendre au plus tard à",
   f_shade_hold:"Maintenir l’ombrage (min.)",f_shade_hold_hint:"Un nuage met fin à la condition immédiatement. L’ombrage est malgré tout maintenu pendant cette durée. 0 = ouvrir tout de suite.",
   sec_drive:"Commandes",sec_drive_sub:"Espacement entre deux commandes",f_min_gap:"Écart minimal entre commandes",f_min_gap_hint:"Les récepteurs radio ignorent les commandes simultanées. Le délai par zone n’y suffit pas. Ici chaque commande est espacée. 0 = désactivé.",f_min_gap_off:"désactivé",
   f_frost_cond_sensor:"Astuce : avec une entité météo configurée, Shutter Pilot fournit le capteur « Shutter Pilot Vorhersage Tiefsttemperatur ».",
@@ -801,6 +804,7 @@ es:{
   f_blind_drive:"El motor no informa posición (a ciegas)",f_blind_drive_hint:"Para radio unidireccional como Somfy RTS. Shutter Pilot usa entonces la última posición enviada.",
   f_copy_from:"Copiar ajustes de",f_copy_pick:"– elegir persiana –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posiciones, lamas, sombreado, condiciones y ajustes de ventana. Entidad, nombre, áreas y sensores no cambian.",
   f_sunbound_title:"Límites solares adicionales",f_sunbound_hint:"Evita movimientos a plena luz del día, p. ej. con una tormenta. Vacío = sin límite.",f_b_down_sunset:"Bajar como pronto X min. antes del ocaso",f_b_up_sunrise:"Subir como pronto X min. antes del amanecer",
+  f_blatest_title:"Hora fija, sin valor lux",f_blatest_hint:"En la estación oscura el umbral de lux a veces no se alcanza nunca; las franjas de arriba solo permiten, no activan nada. Esta hora actúa con independencia del brillo, una vez al día. Fin de semana vacío = valor entre semana.",f_blatest_up_enabled:"Subir a más tardar a las",f_blatest_down_enabled:"Bajar a más tardar a las",
   f_shade_hold:"Mantener sombreado (min.)",f_shade_hold_hint:"Una nube termina la condición al instante. El sombreado se mantiene igualmente ese tiempo. 0 = abrir enseguida.",
   sec_drive:"Órdenes de marcha",sec_drive_sub:"Separación entre dos órdenes",f_min_gap:"Separación mínima entre órdenes",f_min_gap_hint:"Los receptores de radio pierden órdenes que llegan a la vez. El retardo por área no basta. Aquí se espacia cada orden. 0 = desactivado.",f_min_gap_off:"desactivado",
   f_frost_cond_sensor:"Consejo: con una entidad meteorológica configurada, Shutter Pilot ofrece el sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -952,6 +956,7 @@ it:{
   f_blind_drive:"Il motore non riporta la posizione (alla cieca)",f_blind_drive_hint:"Per radio unidirezionale come Somfy RTS. Shutter Pilot usa allora l’ultima posizione inviata.",
   f_copy_from:"Copia impostazioni da",f_copy_pick:"– scegli tapparella –",f_copy_btn:"Applica",f_copy_hint:"Copia posizioni, lamelle, ombreggiatura, condizioni e impostazioni finestra. Entità, nome, aree e sensori restano invariati.",
   f_sunbound_title:"Limiti solari aggiuntivi",f_sunbound_hint:"Evita movimenti in pieno giorno, ad es. durante un temporale. Vuoto = nessun limite.",f_b_down_sunset:"Giù non prima di X min. dal tramonto",f_b_up_sunrise:"Su non prima di X min. dall’alba",
+  f_blatest_title:"Orario fisso, senza il lux",f_blatest_hint:"Nella stagione buia la soglia lux a volte non viene mai raggiunta: le finestre sopra permettono soltanto, non attivano nulla. Questo orario agisce indipendentemente dalla luminosità, una volta al giorno. Weekend vuoto = valore feriale.",f_blatest_up_enabled:"Salire al più tardi alle",f_blatest_down_enabled:"Scendere al più tardi alle",
   f_shade_hold:"Mantieni ombreggiatura (min.)",f_shade_hold_hint:"Una nuvola interrompe subito la condizione. L’ombreggiatura resta comunque per questo tempo. 0 = apri subito.",
   sec_drive:"Comandi di marcia",sec_drive_sub:"Distanza tra due comandi",f_min_gap:"Distanza minima tra i comandi",f_min_gap_hint:"I ricevitori radio perdono i comandi che arrivano insieme. Il ritardo per area non basta. Qui ogni comando viene distanziato. 0 = disattivato.",f_min_gap_off:"disattivato",
   f_frost_cond_sensor:"Suggerimento: con un\u2019entità meteo configurata, Shutter Pilot fornisce il sensore «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1104,6 +1109,7 @@ nl:{
   f_blind_drive:"Motor meldt geen positie (blind)",f_blind_drive_hint:"Voor eenrichtingsradio zoals Somfy RTS. Shutter Pilot rekent dan met de laatst verzonden positie.",
   f_copy_from:"Instellingen overnemen van",f_copy_pick:"– rolluik kiezen –",f_copy_btn:"Toepassen",f_copy_hint:"Kopieert posities, lamellen, zonwering, voorwaarden en raaminstellingen. Entiteit, naam, gebieden en sensoren blijven ongewijzigd.",
   f_sunbound_title:"Extra zonnegrenzen",f_sunbound_hint:"Voorkomt bewegingen op klaarlichte dag, bijv. bij onweer. Leeg = geen grens.",f_b_down_sunset:"Omlaag niet eerder dan X min. voor zonsondergang",f_b_up_sunrise:"Omhoog niet eerder dan X min. voor zonsopgang",
+  f_blatest_title:"Vaste tijd, zonder luxwaarde",f_blatest_hint:"In het donkere seizoen wordt de luxdrempel soms nooit gehaald – de vensters hierboven staan een rit alleen toe, ze starten er geen. Deze tijd rijdt onafhankelijk van de helderheid, eens per dag. Weekend leeg = waarde doordeweeks.",f_blatest_up_enabled:"Uiterlijk omhoog om",f_blatest_down_enabled:"Uiterlijk omlaag om",
   f_shade_hold:"Zonwering vasthouden (min.)",f_shade_hold_hint:"Een wolk beëindigt de voorwaarde meteen. De zonwering blijft toch zo lang staan. 0 = direct openen.",
   sec_drive:"Rijcommando’s",sec_drive_sub:"Afstand tussen twee commando’s",f_min_gap:"Minimale afstand tussen commando’s",f_min_gap_hint:"Radio-ontvangers missen commando’s die tegelijk aankomen. De vertraging per gebied helpt daar niet. Hier wordt elk commando gespreid. 0 = uit.",f_min_gap_off:"uit",
   f_frost_cond_sensor:"Tip: met een weer-entiteit ingesteld levert Shutter Pilot de sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1256,6 +1262,7 @@ da:{
   f_blind_drive:"Motoren melder ingen position (blind)",f_blind_drive_hint:"Til envejsradio som Somfy RTS. Shutter Pilot regner så med den sidst sendte position.",
   f_copy_from:"Kopiér indstillinger fra",f_copy_pick:"– vælg rullegardin –",f_copy_btn:"Anvend",f_copy_hint:"Kopierer positioner, lameller, afskærmning, betingelser og vinduesindstillinger. Entitet, navn, områder og sensorer ændres ikke.",
   f_sunbound_title:"Ekstra solgrænser",f_sunbound_hint:"Forhindrer kørsel ved højlys dag, f.eks. ved tordenvejr. Tom = ingen grænse.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Op tidligst X min. før solopgang",
+  f_blatest_title:"Fast tidspunkt, uden lux",f_blatest_hint:"I den mørke tid nås lux-grænsen nogle gange aldrig – vinduerne ovenfor tillader kun en kørsel, de udløser ingen. Dette tidspunkt kører uafhængigt af lysstyrken, én gang om dagen. Weekend tom = hverdagsværdi.",f_blatest_up_enabled:"Senest op kl.",f_blatest_down_enabled:"Senest ned kl.",
   f_shade_hold:"Fasthold afskærmning (min.)",f_shade_hold_hint:"En sky afslutter betingelsen med det samme. Afskærmningen bliver alligevel stående så længe. 0 = åbn straks.",
   sec_drive:"Kørselskommandoer",sec_drive_sub:"Afstand mellem to kommandoer",f_min_gap:"Mindste afstand mellem kommandoer",f_min_gap_hint:"Radiomodtagere taber kommandoer, der ankommer samtidig. Forsinkelsen pr. område hjælper ikke. Her spredes hver kommando. 0 = fra.",f_min_gap_off:"fra",
   f_frost_cond_sensor:"Tip: med en vejr-entitet angivet leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1408,6 +1415,7 @@ sv:{
   f_blind_drive:"Motorn rapporterar ingen position (blint)",f_blind_drive_hint:"För envägsradio som Somfy RTS. Shutter Pilot räknar då med den senast skickade positionen.",
   f_copy_from:"Kopiera inställningar från",f_copy_pick:"– välj jalusi –",f_copy_btn:"Använd",f_copy_hint:"Kopierar positioner, lameller, solskydd, villkor och fönsterinställningar. Entitet, namn, områden och sensorer lämnas orörda.",
   f_sunbound_title:"Extra solgränser",f_sunbound_hint:"Förhindrar körningar mitt på dagen, t.ex. vid åska. Tomt = ingen gräns.",f_b_down_sunset:"Ner tidigast X min. före solnedgång",f_b_up_sunrise:"Upp tidigast X min. före soluppgång",
+  f_blatest_title:"Fast tid, utan luxvärde",f_blatest_hint:"Under den mörka årstiden nås lux-tröskeln ibland aldrig – fönstren ovan tillåter bara en körning, de utlöser ingen. Den här tiden kör oberoende av ljusstyrkan, en gång per dag. Helg tom = vardagsvärde.",f_blatest_up_enabled:"Senast upp kl.",f_blatest_down_enabled:"Senast ner kl.",
   f_shade_hold:"Behåll solskydd (min.)",f_shade_hold_hint:"Ett moln avslutar villkoret direkt. Solskyddet står kvar så länge ändå. 0 = öppna genast.",
   sec_drive:"Körkommandon",sec_drive_sub:"Avstånd mellan två kommandon",f_min_gap:"Minsta avstånd mellan kommandon",f_min_gap_hint:"Radiomottagare tappar kommandon som kommer samtidigt. Fördröjningen per område räcker inte. Här sprids varje kommando ut. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en väderentitet angiven ger Shutter Pilot sensorn «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1560,6 +1568,7 @@ pl:{
   f_blind_drive:"Napęd nie zgłasza pozycji (na ślepo)",f_blind_drive_hint:"Dla radia jednokierunkowego jak Somfy RTS. Shutter Pilot używa wtedy ostatnio wysłanej pozycji.",
   f_copy_from:"Skopiuj ustawienia z",f_copy_pick:"– wybierz roletę –",f_copy_btn:"Zastosuj",f_copy_hint:"Kopiuje pozycje, lamele, zacienienie, warunki i ustawienia okna. Encja, nazwa, obszary i czujniki pozostają bez zmian.",
   f_sunbound_title:"Dodatkowe granice słoneczne",f_sunbound_hint:"Zapobiega jazdom w biały dzień, np. podczas burzy. Puste = bez granicy.",f_b_down_sunset:"W dół nie wcześniej niż X min. przed zachodem",f_b_up_sunrise:"W górę nie wcześniej niż X min. przed wschodem",
+  f_blatest_title:"Stała godzina, bez luksów",f_blatest_hint:"W ciemnej porze roku próg luksów bywa nigdy nieosiągnięty – okna powyżej tylko zezwalają, same niczego nie wyzwalają. Ta godzina działa niezależnie od jasności, raz dziennie. Weekend pusty = wartość z tygodnia.",f_blatest_up_enabled:"Najpóźniej w górę o",f_blatest_down_enabled:"Najpóźniej w dół o",
   f_shade_hold:"Utrzymuj zacienienie (min.)",f_shade_hold_hint:"Chmura natychmiast kończy warunek. Zacienienie mimo to pozostaje przez ten czas. 0 = otwórz od razu.",
   sec_drive:"Polecenia jazdy",sec_drive_sub:"Odstęp między dwoma poleceniami",f_min_gap:"Minimalny odstęp między poleceniami",f_min_gap_hint:"Odbiorniki radiowe gubią polecenia docierające jednocześnie. Opóźnienie w obszarze nie wystarcza. Tutaj każde polecenie jest rozdzielane. 0 = wyłączone.",f_min_gap_off:"wyłączone",
   f_frost_cond_sensor:"Wskazówka: po wskazaniu encji pogodowej Shutter Pilot udostępnia czujnik „Shutter Pilot Vorhersage Tiefsttemperatur\".",
@@ -1712,6 +1721,7 @@ pt:{
   f_blind_drive:"O motor não reporta posição (às cegas)",f_blind_drive_hint:"Para rádio unidirecional como Somfy RTS. O Shutter Pilot usa então a última posição enviada.",
   f_copy_from:"Copiar definições de",f_copy_pick:"– escolher estore –",f_copy_btn:"Aplicar",f_copy_hint:"Copia posições, lâminas, sombreamento, condições e definições de janela. Entidade, nome, áreas e sensores ficam iguais.",
   f_sunbound_title:"Limites solares adicionais",f_sunbound_hint:"Evita movimentos em pleno dia, p. ex. durante uma trovoada. Vazio = sem limite.",f_b_down_sunset:"Descer no mínimo X min. antes do pôr do sol",f_b_up_sunrise:"Subir no mínimo X min. antes do nascer do sol",
+  f_blatest_title:"Hora fixa, sem valor lux",f_blatest_hint:"Na estação escura o limiar de lux por vezes nunca é atingido – as janelas acima apenas permitem, não desencadeiam nada. Esta hora atua independentemente da luminosidade, uma vez por dia. Fim de semana vazio = valor da semana.",f_blatest_up_enabled:"Subir o mais tardar às",f_blatest_down_enabled:"Descer o mais tardar às",
   f_shade_hold:"Manter sombreamento (min.)",f_shade_hold_hint:"Uma nuvem termina a condição de imediato. O sombreamento fica na mesma durante esse tempo. 0 = abrir logo.",
   sec_drive:"Comandos de marcha",sec_drive_sub:"Espaçamento entre dois comandos",f_min_gap:"Intervalo mínimo entre comandos",f_min_gap_hint:"Os recetores de rádio perdem comandos que chegam ao mesmo tempo. O atraso por área não chega. Aqui cada comando é espaçado. 0 = desligado.",f_min_gap_off:"desligado",
   f_frost_cond_sensor:"Dica: com uma entidade meteorológica definida, o Shutter Pilot fornece o sensor «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -1864,6 +1874,7 @@ nb:{
   f_blind_drive:"Motoren melder ingen posisjon (blindt)",f_blind_drive_hint:"For enveisradio som Somfy RTS. Shutter Pilot regner da med sist sendte posisjon.",
   f_copy_from:"Kopier innstillinger fra",f_copy_pick:"– velg rullegardin –",f_copy_btn:"Bruk",f_copy_hint:"Kopierer posisjoner, lameller, solskjerming, betingelser og vindusinnstillinger. Entitet, navn, områder og sensorer endres ikke.",
   f_sunbound_title:"Ekstra solgrenser",f_sunbound_hint:"Hindrer kjøring midt på dagen, f.eks. ved tordenvær. Tom = ingen grense.",f_b_down_sunset:"Ned tidligst X min. før solnedgang",f_b_up_sunrise:"Opp tidligst X min. før soloppgang",
+  f_blatest_title:"Fast klokkeslett, uten lux",f_blatest_hint:"I den mørke årstiden nås lux-grensen noen ganger aldri – vinduene over tillater bare en kjøring, de utløser ingen. Dette klokkeslettet kjører uavhengig av lysstyrken, én gang per dag. Helg tom = verdien for ukedag.",f_blatest_up_enabled:"Senest opp kl.",f_blatest_down_enabled:"Senest ned kl.",
   f_shade_hold:"Behold solskjerming (min.)",f_shade_hold_hint:"En sky avslutter betingelsen med en gang. Solskjermingen blir likevel stående så lenge. 0 = åpne straks.",
   sec_drive:"Kjørekommandoer",sec_drive_sub:"Avstand mellom to kommandoer",f_min_gap:"Minste avstand mellom kommandoer",f_min_gap_hint:"Radiomottakere mister kommandoer som kommer samtidig. Forsinkelsen per område hjelper ikke. Her spres hver kommando. 0 = av.",f_min_gap_off:"av",
   f_frost_cond_sensor:"Tips: med en vær-entitet angitt leverer Shutter Pilot sensoren «Shutter Pilot Vorhersage Tiefsttemperatur».",
@@ -2917,7 +2928,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -3005,7 +3016,20 @@ class ShutterPilotPanel extends PanelBase {
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}
           <div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>
           ${numOpt("b_down_after_sunset",T("f_b_down_sunset"))}
-          ${numOpt("b_up_before_sunrise",T("f_b_up_sunrise"))}`}
+          ${numOpt("b_up_before_sunrise",T("f_b_up_sunrise"))}
+          ${/* Die Zeitfenster oben erlauben nur, sie lösen nie aus. In der
+               dunklen Jahreszeit wird die Hoch-Schwelle nie erreicht – dafür
+               diese Frist. Abschaltbar, weil sie sonst in jeder zufriedenen
+               Anlage anfinge, Rollläden zu bewegen. */""}
+          <div class="hint" style="margin-top:10px"><b>${T("f_blatest_title")}</b><br>${T("f_blatest_hint")}</div>
+          <div class="field"><label><input type="checkbox" .checked=${!!a.b_latest_up_enabled}
+            @change=${e=>{a.b_latest_up_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_blatest_up_enabled")}</label></div>
+          ${a.b_latest_up_enabled?html`${tm("b_latest_up",T("f_latest_up"))}
+            ${bd("b_we_latest_up",T("f_we_latest_up"),"09:00")}`:""}
+          <div class="field"><label><input type="checkbox" .checked=${!!a.b_latest_down_enabled}
+            @change=${e=>{a.b_latest_down_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_blatest_down_enabled")}</label></div>
+          ${a.b_latest_down_enabled?html`${tm("b_latest_down",T("f_latest_down"))}
+            ${bd("b_we_latest_down",T("f_we_latest_down"),"18:00")}`:""}`}
 
       `)}${this._sec("mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
