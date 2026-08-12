@@ -175,6 +175,17 @@ DEFAULT_AREA_AZIMUTH_MAX = 270.0
 #   numeric sensor -> satisfied at value >= on_above, released below off_below
 # An unset, unknown or unavailable sensor never blocks shading (fail open).
 SUN_CONDITION_SLOTS = ("a", "b", "c", "d")
+# Domains whose state is on/off and nothing else, so they answer a condition
+# directly instead of being read as a number. Helpers belong here: a house mode
+# or a cleaning-service flag is an input_boolean, and without this it fell into
+# the numeric branch, failed to parse and was *ignored* – a fail-open that
+# looks exactly like a satisfied condition from the outside.
+BOOLEAN_CONDITION_DOMAINS = (
+    "binary_sensor.",
+    "input_boolean.",
+    "switch.",
+    "schedule.",
+)
 CONF_SUN_COND_ENTITY = "sun_cond_{slot}_entity"
 CONF_SUN_COND_ON_ABOVE = "sun_cond_{slot}_on_above"
 CONF_SUN_COND_OFF_BELOW = "sun_cond_{slot}_off_below"

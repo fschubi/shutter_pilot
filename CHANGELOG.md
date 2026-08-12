@@ -4,6 +4,19 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.14.0]
+
+Aus dem Forum (DocSpider): „Hausmodus", „Kino Modus" und „Reinigungsdienst"
+liegen bei ihm als Helfer vor – und ließen sich als Bedingung nicht auswählen.
+
+### Behoben
+- **Helfer waren als Bedingung nicht auswählbar – und wurden, wenn doch eingetragen, stillschweigend ignoriert.** Die Auswahl bot nur `binary_sensor`, `sensor` und `weather` an. Ein `input_boolean` fiel im Hintergrund zusätzlich in den Zahlen-Zweig, ließ sich nicht als Zahl lesen und galt damit als **erfüllt** – die schlechtestmögliche Antwort: beschattet wurde ausgerechnet durch den Zustand hindurch, der es verhindern sollte. Ein an/aus-Helfer wird jetzt wie ein Binärsensor gelesen (`input_boolean`, `switch`, `schedule`), und das gilt für alle Bedingungsfelder – Beschattung, Abweichendes Schließen, Frost, Lüften und den Markisenschutz.
+
+### Neu
+- **Helfer stehen in jedem Bedingungsfeld zur Auswahl**: Schalter (`input_boolean`), Auswahl (`input_select`), Zahl (`input_number`), dazu `switch`, `number` und `schedule`. Damit lassen sich Haus-, Anwesenheits- oder Kinomodus ohne einen einzigen Template-Sensor als Bedingung nutzen.
+- **Ein Auswahl-Helfer bietet seine eigenen Möglichkeiten als Knöpfe an.** Bisher zeigte das Formular nur den gerade gemeldeten Zustand, alles andere musste man abtippen – und „Urlaub" gegen „urlaub" ging dabei daneben. Jetzt stehen alle hinterlegten Optionen da; ausgewählt werden dürfen mehrere („Urlaub **oder** Abwesend").
+- **Der Export zeigt bei einem an/aus-Helfer „an = erfüllt"** statt „ab – / auf unter –". Der Strich las sich wie eine vergessene Schwelle.
+
 ## [2.13.0]
 
 Aus GitHub-Diskussion #5 (Fireblade900rr): das Kinderzimmer soll in den

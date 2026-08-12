@@ -318,14 +318,17 @@ steht einmal als Warnung im Log.
 
 Höhenwinkel und Himmelsrichtung sagen nur, **wo** die Sonne steht – nicht, ob sie tatsächlich scheint oder ob es überhaupt warm genug ist. Im Frühjahr und Herbst ist die Sonnenwärme im Zimmer ja oft erwünscht.
 
-Deshalb lassen sich pro Bereich bis zu **zwei Zusatzbedingungen** hinterlegen. Beschattet wird nur, wenn alle erfüllt sind:
+Deshalb lassen sich pro Bereich bis zu **vier Zusatzbedingungen** hinterlegen. Beschattet wird nur, wenn alle erfüllt sind:
 
-| Sensortyp | Verhalten |
-|-----------|-----------|
-| **Binärsensor** (z. B. „hohe Sonneneinstrahlung") | Beschattet, solange er `on` ist. Die Hysterese steckt in deinem Sensor |
-| **Zahlensensor** (Lux, Watt/m², °C) | Beschattet ab „Beschatten ab", aufgehoben erst unter „Aufheben unter" |
+| Quelle | Verhalten |
+|--------|-----------|
+| **Binärsensor oder Schalter** (`binary_sensor`, `input_boolean`, `switch`, `schedule`) | Erfüllt, solange er `on` ist. Keine Schwellen nötig – die Hysterese steckt in deinem Sensor |
+| **Zahlensensor** (Lux, Watt/m², °C – auch `input_number`) | Erfüllt ab „Beschatten ab", aufgehoben erst unter „Aufheben unter" |
+| **Textzustand** (`weather.*`, `input_select`, Scrape-Sensor) | Erfüllt, wenn der gemeldete Zustand einer der ausgewählten ist. Mehrere sind erlaubt |
 
 Der Abstand zwischen den beiden Schwellen verhindert, dass die Rollläden bei durchziehenden Wolken ständig hin- und herfahren. Lässt du „Aufheben unter" leer, gilt derselbe Wert.
+
+**Helfer gehen genauso.** „Hausmodus" als `input_select` (Zuhause / Abwesend / Urlaub), „Reinigungsdienst" als `input_boolean` – beides steht in der Auswahl und braucht keinen Template-Sensor. Bei einem Auswahl-Helfer bietet das Formular direkt seine hinterlegten Möglichkeiten als Knöpfe an.
 
 Ein leeres Feld bedeutet: keine Bedingung. Ein nicht verfügbarer oder defekter Sensor blockiert die Beschattung nie.
 

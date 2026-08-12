@@ -316,14 +316,17 @@ tracking do not work on such a drive – that is logged once as a warning.
 
 Elevation and compass direction only tell you **where** the sun is – not whether it is actually shining, or whether it is warm enough to matter. In spring and autumn the solar warmth is usually welcome.
 
-That is why each area can carry up to **two extra conditions**. Shading only runs while all of them hold:
+That is why each area can carry up to **four extra conditions**. Shading only runs while all of them hold:
 
-| Sensor type | Behaviour |
-|-------------|-----------|
-| **Binary sensor** (e.g. "high solar radiation") | Shades while it is `on`. The hysteresis lives in your sensor |
-| **Numeric sensor** (lux, W/m², °C) | Shades from "Shade above", releases only below "Release below" |
+| Source | Behaviour |
+|--------|-----------|
+| **Binary sensor or switch** (`binary_sensor`, `input_boolean`, `switch`, `schedule`) | Satisfied while it is `on`. No thresholds needed – the hysteresis lives in your sensor |
+| **Numeric sensor** (lux, W/m², °C – `input_number` too) | Satisfied from "Shade above", releases only below "Release below" |
+| **Text state** (`weather.*`, `input_select`, scrape sensor) | Satisfied when the reported state is one of those you picked. Several are allowed |
 
 The gap between the two thresholds stops the shutters from bouncing when clouds pass. Leave "Release below" empty to use the same value.
+
+**Helpers work just as well.** A house mode as an `input_select` (home / away / holiday), a cleaning-service flag as an `input_boolean` – both appear in the picker and need no template sensor. For a select helper the form offers its own options as buttons.
 
 An empty field means no condition. An unavailable or broken sensor never blocks shading.
 

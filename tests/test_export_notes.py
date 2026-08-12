@@ -383,3 +383,43 @@ class TestAwningReport:
         await async_build_export(hass, awning_entry)
 
         assert "_awning_guard" not in hass.data[DOMAIN][awning_entry.entry_id]
+
+
+# --- Helfer als Bedingung im Bericht -----------------------------------------
+
+
+class TestHelperConditionInTheReport:
+    """Ein an/aus-Helfer hat keine Schwellen – und das muss dastehen.
+
+    Sonst zeigt die Spalte „ab – / auf unter –" und liest sich wie eine
+    vergessene Einstellung; genau die Sorte Fehldeutung, gegen die der Export
+    seit 2.8.0 gebaut ist.
+    """
+
+    async def test_an_on_off_helper_shows_no_thresholds(self, hass, entry):
+        hass.states.async_set("input_boolean.reinigungsdienst", "on")
+        area = dict(AREA)
+        area["sun_cond_a_entity"] = "input_boolean.reinigungsdienst"
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_AREAS: [area]},
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+        assert "an = erfüllt" in md
+        assert "ab – / auf unter –" not in md
+
+    async def test_a_numeric_sensor_still_shows_its_thresholds(self, hass, entry):
+        hass.states.async_set("sensor.lux", "45000")
+        area = dict(AREA)
+        area["sun_cond_a_entity"] = "sensor.lux"
+        area["sun_cond_a_on_above"] = 30000
+        area["sun_cond_a_off_below"] = 20000
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_AREAS: [area]},
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+        assert "ab 30000 / auf unter 20000" in md
+        assert "an = erfüllt" not in md

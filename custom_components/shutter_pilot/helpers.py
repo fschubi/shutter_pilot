@@ -24,6 +24,7 @@ from .const import (
     CONF_AREA_ELEVATION_ENABLED,
     CONF_AREA_ELEVATION_MIN,
     CONF_AREA_ELEVATION_THRESHOLD,
+    BOOLEAN_CONDITION_DOMAINS,
     CLOSE_CONDITION_SLOTS,
     FROST_CONDITION_SLOT,
     GUARD_REASON_UNAVAILABLE,
@@ -358,10 +359,12 @@ def _condition_slot_met(
 ) -> bool:
     """Evaluate one extra shading condition, remembering it for hysteresis.
 
-    A binary sensor answers directly. A numeric sensor becomes satisfied at
-    `on_above` and stays satisfied until it drops below `off_below`, so a
-    passing cloud does not make the shutters bounce. Anything unusable – no
-    sensor, unknown, unavailable, non-numeric – never blocks shading.
+    An on/off entity answers directly – see BOOLEAN_CONDITION_DOMAINS, which
+    covers helpers too, not just binary sensors. A numeric sensor becomes
+    satisfied at `on_above` and stays satisfied until it drops below
+    `off_below`, so a passing cloud does not make the shutters bounce.
+    Anything unusable – no sensor, unknown, unavailable, non-numeric – never
+    blocks shading.
     """
     entity_key, on_key, off_key, states_key = sun_condition_keys(slot)
     entity_id = str(area.get(entity_key) or "").strip()
@@ -388,7 +391,7 @@ def _condition_slot_met(
         memory[slot] = met
         return met
 
-    if entity_id.startswith("binary_sensor."):
+    if entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
         met = str(state.state).lower() in ("on", "true", "1")
         memory[slot] = met
         return met

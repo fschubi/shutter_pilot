@@ -70,6 +70,19 @@ const COMPASS_PRESETS = [
 ];
 const REFRESH_MS = 30000;
 const COND_SLOTS = ["a","b","c","d"];
+/* Domänen, die in einem Bedingungsfeld zur Auswahl stehen. Helfer gehören
+   ausdrücklich dazu: "Hausmodus", "Kino" oder "Reinigungsdienst" legt man in
+   Home Assistant als input_boolean bzw. input_select an, und wer die hier
+   nicht findet, hält die ganze Bedingungsmechanik für unbrauchbar. Weich
+   vorsortiert wird über HINTS, ausgeblendet wird nichts. */
+const COND_DOMAINS = ["binary_sensor","sensor","weather","input_boolean",
+  "input_select","input_number","number","switch","schedule"];
+/* Zustand ist an/aus und sonst nichts – die Bedingung ist damit direkt
+   beantwortet, ohne Schwellen. Spiegelt BOOLEAN_CONDITION_DOMAINS in
+   const.py; laufen die beiden Listen auseinander, zeigt das Formular
+   Zahlenfelder für etwas, das das Backend als Schalter liest. */
+const BOOL_COND_DOMAINS = ["binary_sensor","input_boolean","switch","schedule"];
+const isBoolEntity = eid => BOOL_COND_DOMAINS.some(d => String(eid||"").startsWith(d+"."));
 const WEATHER_CONDITIONS = ["sunny","partlycloudy","cloudy","rainy","pouring",
   "snowy","snowy-rainy","fog","hail","lightning","lightning-rainy","windy",
   "windy-variant","clear-night","exceptional"];
@@ -233,7 +246,7 @@ de:{
   btn_export_copy:"Kopieren",
   btn_export_copied:"Kopiert ✓",
   btn_export_download:"Herunterladen",
-  f_sun_cond_bin_hint:"Binärsensor: beschattet wird, solange er „an“ ist.",
+  f_sun_cond_bin_hint:"Schalter oder Binärsensor: erfüllt, solange er „an“ ist – keine Schwellen nötig.",
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -514,7 +527,7 @@ en:{
   btn_export_copy:"Copy",
   btn_export_copied:"Copied ✓",
   btn_export_download:"Download",
-  f_sun_cond_bin_hint:"Binary sensor: shading runs while it is on.",
+  f_sun_cond_bin_hint:"Switch or binary sensor: satisfied while it is on – no thresholds needed.",
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -750,7 +763,7 @@ fr:{
   f_cond_num_hint:"« Annuler en dessous de » peut être inférieur à « S'applique à partir de » – l'écart évite les oscillations autour du seuil. Vide = même valeur.",
   f_close_cond_both_hint:"Si les deux conditions sont renseignées, les deux doivent être remplies le soir.",
   f_sun_cond_num_hint:"L'écart entre les deux seuils évite les oscillations. Vide = même valeur.",
-  f_sun_cond_bin_hint:"Capteur binaire : ombrage tant qu'il est actif.",
+  f_sun_cond_bin_hint:"Interrupteur ou capteur binaire : rempli tant qu'il est actif – aucun seuil nécessaire.",
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -973,7 +986,7 @@ es:{
   f_cond_num_hint:"«Anular por debajo de» puede ser menor que «Se aplica a partir de»: la diferencia evita oscilaciones alrededor del umbral. Vacío = mismo valor.",
   f_close_cond_both_hint:"Si se rellenan ambas condiciones, por la tarde deben cumplirse las dos.",
   f_sun_cond_num_hint:"La diferencia entre umbrales evita oscilaciones. Vacío = mismo valor.",
-  f_sun_cond_bin_hint:"Sensor binario: sombrea mientras esté activo.",
+  f_sun_cond_bin_hint:"Interruptor o sensor binario: se cumple mientras esté activo, sin umbrales.",
   filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -1196,7 +1209,7 @@ it:{
   f_cond_num_hint:"«Annulla sotto» può essere inferiore a «Vale a partire da»: la distanza evita oscillazioni attorno alla soglia. Vuoto = stesso valore.",
   f_close_cond_both_hint:"Se sono indicate entrambe le condizioni, la sera devono valere tutte e due.",
   f_sun_cond_num_hint:"Il divario tra le soglie evita oscillazioni. Vuoto = stesso valore.",
-  f_sun_cond_bin_hint:"Sensore binario: ombreggia finché è attivo.",
+  f_sun_cond_bin_hint:"Interruttore o sensore binario: soddisfatta finché è attivo, senza soglie.",
   filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -1419,7 +1432,7 @@ nl:{
   f_cond_num_hint:"«Opheffen onder» mag lager liggen dan «Geldt vanaf» – het verschil voorkomt pendelen rond de drempel. Leeg = zelfde waarde.",
   f_close_cond_both_hint:"Zijn beide voorwaarden ingevuld, dan moeten 's avonds ook beide gelden.",
   f_sun_cond_num_hint:"Het verschil tussen de drempels voorkomt pendelen. Leeg = zelfde waarde.",
-  f_sun_cond_bin_hint:"Binaire sensor: beschaduwt zolang deze aan is.",
+  f_sun_cond_bin_hint:"Schakelaar of binaire sensor: voldaan zolang deze aan is – geen drempels nodig.",
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -1643,7 +1656,7 @@ da:{
   f_cond_num_hint:"«Ophæv under» må ligge lavere end «Gælder fra» – afstanden forhindrer flakken omkring tærsklen. Tom = samme værdi.",
   f_close_cond_both_hint:"Er begge betingelser udfyldt, skal begge også være opfyldt om aftenen.",
   f_sun_cond_num_hint:"Afstanden mellem tærsklerne forhindrer svingninger. Tom = samme værdi.",
-  f_sun_cond_bin_hint:"Binær sensor: skygger så længe den er aktiv.",
+  f_sun_cond_bin_hint:"Kontakt eller binær sensor: opfyldt så længe den er aktiv – ingen grænser nødvendige.",
   filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -1867,7 +1880,7 @@ sv:{
   f_cond_num_hint:"«Upphäv under» får ligga lägre än «Gäller från» – avståndet hindrar fladder kring tröskeln. Tomt = samma värde.",
   f_close_cond_both_hint:"Är båda villkoren ifyllda måste båda gälla på kvällen.",
   f_sun_cond_num_hint:"Avståndet mellan trösklarna förhindrar pendling. Tomt = samma värde.",
-  f_sun_cond_bin_hint:"Binär sensor: skuggar så länge den är aktiv.",
+  f_sun_cond_bin_hint:"Brytare eller binär sensor: uppfylld så länge den är aktiv – inga trösklar behövs.",
   filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -2091,7 +2104,7 @@ pl:{
   f_cond_num_hint:"„Anuluj poniżej” może być niższe niż „Obowiązuje od” – odstęp zapobiega migotaniu wokół progu. Puste = ta sama wartość.",
   f_close_cond_both_hint:"Gdy wpisane są oba warunki, wieczorem muszą być spełnione oba.",
   f_sun_cond_num_hint:"Odstęp między progami zapobiega oscylacjom. Puste = ta sama wartość.",
-  f_sun_cond_bin_hint:"Czujnik binarny: zacienia, gdy jest włączony.",
+  f_sun_cond_bin_hint:"Przełącznik lub czujnik binarny: spełniony, gdy jest włączony – bez progów.",
   filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -2315,7 +2328,7 @@ pt:{
   f_cond_num_hint:"«Anular abaixo de» pode ser inferior a «Aplica-se a partir de» – a diferença evita oscilações em torno do limiar. Vazio = mesmo valor.",
   f_close_cond_both_hint:"Se ambas as condições estiverem preenchidas, à noite têm de se verificar as duas.",
   f_sun_cond_num_hint:"A diferença entre limiares evita oscilações. Vazio = mesmo valor.",
-  f_sun_cond_bin_hint:"Sensor binário: sombreia enquanto estiver ativo.",
+  f_sun_cond_bin_hint:"Interruptor ou sensor binário: cumprido enquanto estiver ativo, sem limiares.",
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -2539,7 +2552,7 @@ nb:{
   f_cond_num_hint:"«Opphev under» kan ligge lavere enn «Gjelder fra» – avstanden hindrer flakking rundt terskelen. Tom = samme verdi.",
   f_close_cond_both_hint:"Er begge vilkårene fylt ut, må begge også gjelde om kvelden.",
   f_sun_cond_num_hint:"Avstanden mellom tersklene hindrer pendling. Tom = samme verdi.",
-  f_sun_cond_bin_hint:"Binær sensor: skjermer så lenge den er aktiv.",
+  f_sun_cond_bin_hint:"Bryter eller binær sensor: oppfylt så lenge den er aktiv – ingen grenser nødvendig.",
   filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
@@ -3185,7 +3198,7 @@ class ShutterPilotPanel extends PanelBase {
       // stehen vier leere Auswahlfelder im Formular herum.
       if(i>0&&!a[`sun_cond_${COND_SLOTS[i-1]}_entity`]&&!eid)break;
       out.push(html`
-        ${ep(ek,T("f_sun_cond_n").replace("{n}",i+1),["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${ep(ek,T("f_sun_cond_n").replace("{n}",i+1),COND_DOMAINS,HINTS.condition)}
         ${eid?this._renderCondDetail(a,slot,eid,f):""}`);
       if(!eid)break;
     }
@@ -3205,11 +3218,15 @@ class ShutterPilotPanel extends PanelBase {
   _renderCondDetail(a,slot,eid,f,inverted){
     const T=k=>this.t(k);
     const L=this._condLabels(slot,inverted);
-    if(eid.startsWith("binary_sensor."))
+    /* Reihenfolge wie in _condition_slot_met(): eine eingetragene Zustands-
+       liste gewinnt, danach entscheidet die Domäne. Andersherum stünde hier
+       „an = erfüllt“, während das Backend die Liste auswertet. */
+    const sk=`sun_cond_${slot}_states`;
+    const hasStates=this._condStates(a,sk).length>0;
+    if(!hasStates&&isBoolEntity(eid))
       return html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`;
 
-    const sk=`sun_cond_${slot}_states`;
-    const useStates=this._condStates(a,sk).length>0||this._isStateEntity(eid);
+    const useStates=hasStates||this._isStateEntity(eid);
     if(!useStates){
       /* Frost fragt "kälter als", alles andere "wärmer/heller als" – nur die
          Beschriftung dreht sich, die Schlüssel bleiben dieselben. */
@@ -3239,9 +3256,15 @@ class ShutterPilotPanel extends PanelBase {
     // gemeldeten Zustand – abtippen ist fehleranfällig, und die übrigen kennt
     // niemand im Voraus.
     const isWeather=eid.startsWith("weather.")||eid.includes("wetterlage");
+    /* Ein Auswahl-Helfer kennt seine Möglichkeiten selbst und schreibt sie als
+       `options` mit. Genau der Fall, für den das Freitextfeld gebaut wurde –
+       nur muss ihn hier niemand abtippen, und „Urlaub" gegen „urlaub" kann
+       nicht mehr danebengehen. */
+    const options=this.hass?.states?.[eid]?.attributes?.options;
     const known=isWeather
       ? WEATHER_CONDITIONS
-      : [...new Set([...chosen,String(this.hass?.states?.[eid]?.state||"")].filter(Boolean))];
+      : [...new Set([...(Array.isArray(options)?options.map(String):[]),
+          ...chosen,String(this.hass?.states?.[eid]?.state||"")].filter(Boolean))];
     /* Bei einem Textsensor sieht man immer nur den Zustand, den er gerade
        meldet – auf "rainy" müsste man bis zum nächsten Regen warten. Deshalb
        lässt sich hier zusätzlich einer von Hand eintragen. */
@@ -3899,19 +3922,19 @@ class ShutterPilotPanel extends PanelBase {
 
       `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       <div class="hint">${T("f_close_cond_hint")}</div>
-      ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",["binary_sensor","sensor","weather"],HINTS.condition)}
+      ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",COND_DOMAINS,HINTS.condition)}
       ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
       ${/* Die zweite erst anbieten, wenn die erste steht – zwei leere Felder
            uebereinander sehen nach Pflicht aus. Beide muessen zutreffen. */""}
       ${a.sun_cond_close_entity?html`
-        ${ep("sun_cond_close_b_entity",T("f_close_cond")+" 2",["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${ep("sun_cond_close_b_entity",T("f_close_cond")+" 2",COND_DOMAINS,HINTS.condition)}
         ${a.sun_cond_close_b_entity?this._renderCondDetail(a,"close_b",a.sun_cond_close_b_entity,f):""}
         <div class="hint">${T("f_close_cond_both_hint")}</div>`:""}
 
       `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
-      ${ep("sun_cond_frost_entity",T("f_frost_cond"),["binary_sensor","sensor","weather"],HINTS.condition)}
+      ${ep("sun_cond_frost_entity",T("f_frost_cond"),COND_DOMAINS,HINTS.condition)}
       ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,f,true):""}
 
       `)}${this._sec("mdi:air-filter","sec_vent","sec_vent_sub",html`
@@ -3919,10 +3942,10 @@ class ShutterPilotPanel extends PanelBase {
         @change=${e=>{a.vent_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_vent_enabled")}</label>
         <div class="hint">${T("f_vent_hint")}</div></div>
       ${a.vent_enabled?html`
-        ${ep("sun_cond_vent_a_entity",T("f_vent_cond")+" 1",["binary_sensor","sensor","weather"],HINTS.condition)}
+        ${ep("sun_cond_vent_a_entity",T("f_vent_cond")+" 1",COND_DOMAINS,HINTS.condition)}
         ${a.sun_cond_vent_a_entity?this._renderCondDetail(a,"vent_a",a.sun_cond_vent_a_entity,f):""}
         ${a.sun_cond_vent_a_entity?html`
-          ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",["binary_sensor","sensor","weather"],HINTS.condition)}
+          ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",COND_DOMAINS,HINTS.condition)}
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
 
       `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
@@ -4269,16 +4292,16 @@ class ShutterPilotPanel extends PanelBase {
     const T=k=>this.t(k);
     const ek=`sun_cond_${slot}_entity`;
     const eid=obj[ek]||"";
-    const domains=slot==="rain"?["binary_sensor","sensor","weather"]:["sensor","binary_sensor"];
+    const isBool=isBoolEntity(eid);
     return html`
       <div class="guard-slot">
-        ${ep(ek,T("f_guard_"+slot),domains,slot==="ice"?HINTS.temperature:null)}
+        ${ep(ek,T("f_guard_"+slot),COND_DOMAINS,slot==="ice"?HINTS.temperature:null)}
         ${perAwning&&!eid?html`<div class="hint">${T("f_guard_inherits")}</div>`:""}
-        ${eid&&!eid.startsWith("binary_sensor.")?html`
+        ${eid&&!isBool?html`
           ${f(`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")),"number")}
           ${f(`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")),"number")}
           <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
-        ${eid&&eid.startsWith("binary_sensor.")?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
+        ${eid&&isBool?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
         ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
         ${eid?html`<div class="hint">${T("f_guard_lockout_hint")}</div>`:""}
       </div>`;

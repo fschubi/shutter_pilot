@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (551 Tests)
+tests/               pytest-Suite (562 Tests)
 ```
 
 ## Funktionsumfang
@@ -175,7 +175,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.13.0: je 366 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.14.0: je 366 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -204,7 +204,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 551 Tests, ~9 s
+.venv/bin/pytest            # 562 Tests, ~9 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -230,7 +230,7 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.13.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.14.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
@@ -1031,6 +1031,66 @@ Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
 **Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
 aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
 man Felder, die nur zugeklappt sind.
+
+### 2026-08-11 – 2.14.0: der Helfer, der als erfüllt galt
+
+DocSpider im Forum: „Hausmodus", „Kino Modus" und „Reinigungsdienst" liegen bei
+ihm als Helfer vor, und das Bedingungsfeld fand sie nicht. Die Frage klang nach
+Bedienung, war aber ein Fehler – und zwar der gefährlichere von zweien.
+
+**Sichtbar war nur die Auswahl.** `_entityField` bekam an allen sechs
+Bedingungsstellen `["binary_sensor","sensor","weather"]`, `input_boolean` und
+`input_select` fielen also raus. Das allein wäre eine Unbequemlichkeit gewesen.
+
+**Der eigentliche Fund lag dahinter:** Hätte er den Helfer doch eintragen
+können – über einen Import, ein altes Backup, eine umbenannte Entität –, dann
+prüft `_condition_slot_met()` auf `binary_sensor.` und sonst nichts. Ein
+`input_boolean` fiel damit in den Zahlen-Zweig, `float("off")` scheitert, und
+der Zweig endet mit **`return True`**. Fail open heißt hier: die Bedingung, die
+das Beschatten verhindern sollte, meldet „erfüllt". Genau die Klasse, die
+2.10.1 schon einmal hatte (`sun_cond_sun_cond_a_entity` – Slot gilt als
+unkonfiguriert, also True). **Merke: in dieser Funktion sieht jeder Fehlerpfad
+wie ein bestandener Test aus.**
+
+Behoben an einer Stelle: `BOOLEAN_CONDITION_DOMAINS` in `const.py`
+(`binary_sensor`, `input_boolean`, `switch`, `schedule`), und weil
+`guard_slot_danger()` und die eigenen Slots durch dieselbe Funktion laufen,
+gilt es sofort für Beschattung, Schließen, Frost, Lüften und Markisenschutz.
+
+Drei Dinge, die dazugehören:
+
+* **Die JS-Liste ist die zweite Hälfte des Vertrags.** `BOOL_COND_DOMAINS` im
+  Panel muss `BOOLEAN_CONDITION_DOMAINS` spiegeln, sonst zeigt das Formular
+  Zahlenfelder für etwas, das das Backend als Schalter liest. Steht als
+  Kommentar an beiden Listen – dieselbe Sorte Vertrag wie der Schlüssel-Tupel
+  in `resolve_sun_geometry()` aus 2.10.3.
+* **Reihenfolge in `_renderCondDetail` an die des Backends angeglichen.** Dort
+  gewinnt eine eingetragene Zustandsliste vor der Domänenprüfung; das Panel
+  prüfte zuerst die Domäne. Bei einem Binärsensor mit gespeicherter Liste
+  hätte das Formular „an = erfüllt" behauptet, während das Backend die Liste
+  auswertet.
+* **`input_select` bringt seine Optionen selbst mit** (`attributes.options`).
+  Das Freitextfeld aus 2.7.2 bleibt, wird hier aber nicht mehr gebraucht – und
+  „Urlaub" gegen „urlaub" kann nicht mehr danebengehen (das Backend vergleicht
+  ohnehin kleingeschrieben, aber niemand sieht das dem Formular an).
+
+Am Export nachgezogen: bei einem an/aus-Helfer stand in der Schwellenspalte
+„ab – / auf unter –", was sich wie eine vergessene Einstellung liest.
+
+**Was nicht gebaut wurde, obwohl gefragt:** DocSpiders andere drei Fälle
+brauchen keinen Code. Hausmodus und Kino sind „soll dieser Rollladen überhaupt
+automatisch fahren" – das ist der Schalter je Rollladen aus 2.5.0, und
+`elevation.py:268` beschreibt in seinem Kommentar genau diesen Ablauf (weder
+beschatten noch freigeben, Merker bleibt stehen, sauberer Wiedereinstieg).
+**Nicht über die manuelle Übersteuerung lösen**: die Beschattung fragt sie
+nirgends ab und fährt binnen einer Minute zurück auf die Beschattungsposition.
+
+**Verifiziert:** `pytest` 562 Tests grün (11 neue), Gegenprobe gemacht – ohne
+die eine Zeile in `_condition_slot_met` fallen 4 der 7 neuen Helfer-Tests, die
+übrigen drei beschreiben Verhalten, das schon vorher stimmte. i18n 366/366 in
+allen elf Sprachen (kein neuer Schlüssel, `f_sun_cond_bin_hint` in allen elf
+umformuliert). Panel in Node gerendert, sieben Bedingungsarten plus die
+Auswahlliste. **Nicht im Browser geprüft.**
 
 ### 2026-08-11 – 2.13.0: die Uhrzeit, die der Beschattung fehlte
 

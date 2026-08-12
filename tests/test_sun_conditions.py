@@ -182,3 +182,71 @@ class TestGeometryStillApplies:
         assert sun_extra_conditions_met(hass, area, data) is True
         # Sun far too high – geometry alone already says no.
         assert sun_protect_conditions_met(40.0, 180.0, area) is False
+
+
+class TestHelperEntities:
+    """Helpers as a condition (DocSpider).
+
+    A house mode, a cinema flag or a cleaning-service switch is an
+    `input_boolean` / `input_select`, not a sensor. Before 2.14.0 those fell
+    into the numeric branch, failed to parse and were silently ignored – the
+    condition then read as satisfied, which is the worst possible answer: the
+    shutters shaded straight through the very state that was meant to stop
+    them.
+    """
+
+    @pytest.mark.parametrize(
+        "entity_id",
+        [
+            "input_boolean.shading_allowed",
+            "switch.shading_allowed",
+            "schedule.shading_allowed",
+        ],
+    )
+    async def test_on_off_helper_decides(self, hass, data, entity_id):
+        area = _area(**{A_ENTITY: entity_id})
+        hass.states.async_set(entity_id, "on")
+        assert sun_extra_conditions_met(hass, area, data) is True
+        hass.states.async_set(entity_id, "off")
+        assert sun_extra_conditions_met(hass, area, data) is False
+
+    async def test_switched_off_helper_needs_no_thresholds(self, hass, data):
+        """No on_above/off_below configured, and none needed."""
+        area = _area(**{A_ENTITY: "input_boolean.cleaning_done"})
+        hass.states.async_set("input_boolean.cleaning_done", "off")
+        assert sun_extra_conditions_met(hass, area, data) is False
+        assert data["sun_cond_state"]["living"]["a"] is False
+
+    async def test_select_helper_matches_one_of_its_options(self, hass, data):
+        area = _area(
+            **{A_ENTITY: "input_select.house_mode", A_STATES: ["Urlaub", "Abwesend"]}
+        )
+        hass.states.async_set("input_select.house_mode", "Urlaub")
+        assert sun_extra_conditions_met(hass, area, data) is True
+        hass.states.async_set("input_select.house_mode", "Zuhause")
+        assert sun_extra_conditions_met(hass, area, data) is False
+
+    async def test_select_helper_ignores_case(self, hass, data):
+        """The panel stores the option verbatim, HA reports it verbatim."""
+        area = _area(**{A_ENTITY: "input_select.house_mode", A_STATES: ["urlaub"]})
+        hass.states.async_set("input_select.house_mode", "Urlaub")
+        assert sun_extra_conditions_met(hass, area, data) is True
+
+    async def test_select_helper_without_states_stays_fail_open(self, hass, data):
+        """Nothing to compare against – it must not block, but it warns."""
+        area = _area(**{A_ENTITY: "input_select.house_mode"})
+        hass.states.async_set("input_select.house_mode", "Zuhause")
+        assert sun_extra_conditions_met(hass, area, data) is True
+
+    async def test_state_list_wins_over_the_on_off_domain(self, hass, data):
+        """Mirrors the order the panel renders – list first, domain second."""
+        area = _area(**{A_ENTITY: "input_boolean.movie", A_STATES: ["off"]})
+        hass.states.async_set("input_boolean.movie", "off")
+        assert sun_extra_conditions_met(hass, area, data) is True
+        hass.states.async_set("input_boolean.movie", "on")
+        assert sun_extra_conditions_met(hass, area, data) is False
+
+    async def test_unavailable_helper_still_fails_open(self, hass, data):
+        area = _area(**{A_ENTITY: "input_boolean.shading_allowed"})
+        hass.states.async_set("input_boolean.shading_allowed", "unavailable")
+        assert sun_extra_conditions_met(hass, area, data) is True

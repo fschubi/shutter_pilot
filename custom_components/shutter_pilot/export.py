@@ -60,6 +60,7 @@ from .const import (
     CONF_SHUTTERS,
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_WINDOW_ENTITY_ID,
+    BOOLEAN_CONDITION_DOMAINS,
     DOMAIN,
     INVERTED_BY_DEFAULT_SLOTS,
     ROLE_OPEN,
@@ -222,11 +223,14 @@ def _condition_rows(
         met = _condition_slot_met(hass, cfg, slot, memory)
         all_met = all_met and met
         allowed = cfg.get(states_key)
-        limits = (
-            f"Zustände: {_fmt(allowed)}"
-            if _is_set(allowed)
-            else f"ab {_fmt(cfg.get(on_key))} / auf unter {_fmt(cfg.get(off_key))}"
-        )
+        if _is_set(allowed):
+            limits = f"Zustände: {_fmt(allowed)}"
+        elif entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
+            # Ohne diesen Zweig stünde hier „ab – / auf unter –" und sähe nach
+            # einer vergessenen Einstellung aus. An/aus braucht keine Schwelle.
+            limits = "an = erfüllt"
+        else:
+            limits = f"ab {_fmt(cfg.get(on_key))} / auf unter {_fmt(cfg.get(off_key))}"
         rows.append(
             f"| {slot} | `{entity_id}` | {_state_of(hass, entity_id)} | "
             f"{limits} | {'✅' if met else '❌'} | "
