@@ -4,6 +4,34 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.15.0]
+
+Zwei Wochen Forum in einem Zug: vier Fehler und vier Wünsche, dazu drei
+Antworten, für die es keinen Code brauchte.
+
+### Neu
+- **Sonnenschutz je Bereich abschaltbar** (MartyBr). Ein eigener Schalter `switch.shutter_pilot_sonnenschutz_<Bereich>`, dazu ein Schalter auf der Dashboard-Karte. Bewusst getrennt vom Automatik-Schalter: 35 °C heute und 20 °C morgen ist ein Grund, die Beschattung zu lassen – kein Grund, die Rollläden morgens unten zu lassen. Bisher blieb dafür nur der Beschattungszeitraum in Monaten, und ein Monat ist für einen Wetterumschwung viel zu grob. **Abschalten gibt frei, was gerade beschattet ist** – wer wegen kühlerem Wetter ausschaltet, will nicht bis zum Abend auf halber Höhe sitzen.
+- **Am Wochenende gar nicht hochfahren** (c.radi, Linos, hollsten). Ein Haken je Bereich. Er hängt am selben Wochenendbegriff wie alles andere: **ist ein Sondertage-Sensor eingetragen, entscheidet der** – damit gilt der Haken auch für Feiertage, Ferien und Schichtdienst. Wer samstags arbeitet und nur sonntags ausschlafen will, trägt einen Workday-Sensor mit `excludes: [sun]` ein; dann ist Sonnabend ein Arbeitstag. Nur das Hochfahren ist betroffen, Runterfahren und Beschattung laufen weiter.
+- **Bedingung „nicht hochfahren"** (Vorschlag von Linos). Ein Bedingungs-Slot je Bereich, gebaut wie alle anderen: an/aus-Helfer, Zeitplan-Helfer, Auswahlliste oder Zahl mit Hysterese. Solange sie zutrifft, bleiben die Rollläden morgens unten – Ferien, Urlaub, Feiertag, Homeoffice, was immer der eigene Helfer weiß. **Ein nicht lesbarer Sensor blockiert nicht**: andersherum bliebe jeder Rollladen unten, bis es jemand merkt.
+- **Nur beschatten, was schon offen ist** (charly166, Linos). Beschatten und Öffnen ist derselbe Fahrbefehl mit einer anderen Zahl – ein nachts geschlossener Rollladen wurde von der Beschattung deshalb **hochgefahren**, auf die Beschattungshöhe. Angehakt bleibt er unten, bis er regulär geöffnet hat. Vorgabe aus, damit sich für niemanden ungefragt etwas ändert.
+- **Am Ende des Beschattungstags wieder öffnen** (bjoerg). Sinkt die Sonne unter den eingestellten Bereich, blieb der Rollladen bisher auf Beschattungshöhe stehen, bis der Abendplan ihn schließt. Im Sonnenmodus sind das Minuten – im Helligkeits- und Zeitmodus können es Stunden sein, und genau das wurde als „der Sonnenschutz wird nie zurückgesetzt" gemeldet. Angehakt fährt er stattdessen sofort auf. Vorgabe aus.
+- **Zweiter Fensterkontakt je Rollladen** (Thsu). Für Doppelflügelfenster mit einem Kontakt pro Flügel. Beide werden zusammen gelesen: das Fenster gilt als offen, sobald einer der beiden es meldet – damit greifen Aussperrschutz, Lüftungsposition und das Nachholen der Fahrt auch dann, wenn nur der zweite Flügel offen steht.
+
+### Behoben
+- **Die Markisenschutz-Einstellungen standen nach dem Speichern wieder leer im Formular** (bjoerg, charly166). Gespeichert und angewendet waren sie – der Export zeigte sie ja –, zurückgeschickt wurden sie nie: das Panel bekam nur sechs fest verdrahtete Schlüssel. Wer eine Windschwelle korrigieren wollte, musste raten, was drinsteht. Jetzt kommt alles zurück, was gespeichert ist. **Das ist auch die Ursache hinter einem zweiten Bericht**: eine Markise, die „nie ausfährt", weil beim Neueintragen versehentlich ein Shutter-Pilot-eigener Schalter als Windsensor stand – der meldet dauerhaft „on", also gilt dauerhaft Sturm. Der Export benennt das jetzt ausdrücklich.
+- **Der Hinweis zur Sperrzeit stand bei Wind, Regen und Frost derselbe da** (bjoerg). Bei Frost beschrieb der Satz über die Bö sogar das Gegenteil dessen, was die Sperrzeit dort tut. Jetzt drei eigene Texte, in allen elf Sprachen.
+- **Der Export widersprach sich in der Zeile „Fensterrichtung"** (in bjoergs Bericht aufgefallen). Sie las die Geometrieprüfung *insgesamt* – also Höhe **und** Richtung. Bei tiefstehender Sonne stand deshalb ein ❌ an einer Richtung, die passte, und der Wert in derselben Klammer sagte das Gegenteil. Die Zeile prüft jetzt nur noch, was sie behauptet.
+- **Das Anlegen des neuen Bereichsschalters hätte einen zusätzlichen Neuladen des Config-Entrys während des Starts ausgelöst.** Beim Testen fiel auf, dass der mitten in die erste Beschattungsauswertung fallen kann. Der Schalter schreibt sich deshalb als einziger nicht in die Optionen zurück – gebraucht wird die ID nur im laufenden Prozess.
+
+### Geändert
+- **Der Export nennt, warum heute nicht hochgefahren wird** – Wochenende, Sondertag oder Bedingung. Beide Sperren wirken sonst lautlos und hinterlassen keine Spur in den Merkern; da stünde nur, dass nichts gefahren ist.
+- **Der Export zeigt den Zustand des Sonnenschutz-Schalters** in der Bereichszeile, getrennt von „nicht eingerichtet".
+
+### Ohne Codeänderung beantwortet
+- **Beschattung erst, wenn die Dachfenster zu sind** (hollizone): Das kann die Integration seit 2.6.0. Am Rollladen einen Fensterkontakt eintragen und **„Fahrt nach dem Schließen nachholen"** anhaken – die Beschattung ist einer der Fahrwege, die das benutzen. Steht dann ein Fenster offen, wird die Beschattungsfahrt vorgemerkt und läuft, sobald geschlossen wird. Drei Tests halten das jetzt fest, damit es nicht bei einer Behauptung bleibt.
+- **Sonnabend und Sonntag getrennt** (hollsten): Der Sondertage-Sensor kann das. Ein Workday-Sensor mit `excludes: [sun]` macht Sonnabend zum Arbeitstag – dann gelten samstags die Wochentagszeiten und nur sonntags die Wochenendzeiten. Der neue Wochenend-Haken oben richtet sich nach demselben Sensor.
+- **Rollläden, die überhaupt nicht automatisch fahren sollen** (DocSpiders Hausmodus, wieder aufgetaucht): dafür gibt es seit 2.5.0 den Auto-Schalter je Rollladen.
+
 ## [2.14.0]
 
 Aus dem Forum (DocSpider): „Hausmodus", „Kino Modus" und „Reinigungsdienst"

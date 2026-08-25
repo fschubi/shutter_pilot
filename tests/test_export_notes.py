@@ -423,3 +423,141 @@ class TestHelperConditionInTheReport:
         md = (await async_build_export(hass, entry))["markdown"]
         assert "ab 30000 / auf unter 20000" in md
         assert "an = erfüllt" not in md
+
+
+# --- Der Bericht, der sich selbst widersprach --------------------------------
+
+
+class TestAzimuthRowIsItsOwnCheck:
+    """bjoergs Export: „Fensterrichtung: ❌ (295,4° in [225° – 315°])".
+
+    Die Zeile las `geometry_ok` – das ist Hoehe *und* Richtung zusammen. Bei
+    tiefstehender Sonne stand deshalb ein ❌ an einer Richtung, die passte,
+    und der Wert in derselben Klammer sagte das Gegenteil. Ein Bericht, dessen
+    Zeilen einander widersprechen, kostet mehr Zeit, als er spart.
+    """
+
+    @staticmethod
+    def _entry(hass, elevation, azimuth):
+        hass.states.async_set(
+            "sun.sun",
+            "above_horizon",
+            {"elevation": elevation, "azimuth": azimuth},
+        )
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                CONF_AREAS: [
+                    {
+                        **AREA,
+                        CONF_AREA_ELEVATION_MIN: 4,
+                        CONF_AREA_ELEVATION_MAX: 90,
+                        CONF_AREA_AZIMUTH_ENABLED: True,
+                        CONF_AREA_AZIMUTH_MIN: 225,
+                        CONF_AREA_AZIMUTH_MAX: 315,
+                    }
+                ],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: COVER,
+                        CONF_NAME: "Wohnzimmer rechts",
+                        CONF_AREA_UP_ID: "vorne",
+                        CONF_AREA_DOWN_ID: "vorne",
+                    }
+                ],
+            },
+        )
+        config_entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "_runtime_started": dt_util.utcnow(),
+        }
+        return config_entry
+
+    async def test_the_direction_fits_even_when_the_sun_is_low(self, hass):
+        entry = self._entry(hass, elevation=0.1, azimuth=295.4)
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "- Fensterrichtung: ✅ (295.4° in [225° – 315°])" in md
+        # Die Hoehe ist es, die nicht passt – und die steht in ihrer Zeile.
+        assert "- Elevation 0.1° in [4.0° – 90.0°]: ❌" in md
+
+    async def test_a_direction_outside_the_range_still_says_so(self, hass):
+        entry = self._entry(hass, elevation=42.0, azimuth=90.0)
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "- Fensterrichtung: ❌ (90.0° in [225° – 315°])" in md
+
+
+class TestOwnEntityAsGuardSensor:
+    """bjoerg hatte `switch.shutter_pilot_auto_balkon` als Windsensor.
+
+    Der steht dauerhaft auf „on", die Gefahr gilt also dauerhaft als
+    vorliegend – die Markise faehrt nie wieder aus, und von aussen sieht das
+    aus wie ein defekter Antrieb. Entstanden ist der Fehlklick, weil das
+    Formular die gespeicherten Werte nicht mehr anzeigte.
+    """
+
+    async def test_the_report_names_it(self, hass):
+        hass.states.async_set("switch.shutter_pilot_auto_balkon", "on")
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                "sun_cond_wind_entity": "switch.shutter_pilot_auto_balkon",
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: "cover.markise",
+                        CONF_NAME: "Markise Balkon",
+                        CONF_AREA_DOWN_ID: "vorne",
+                        "device_kind": "awning",
+                        "position_open": 0,
+                        "position_sun_protect": 100,
+                    }
+                ],
+            },
+        )
+        config_entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "_runtime_started": dt_util.utcnow(),
+        }
+
+        md = (await async_build_export(hass, config_entry))["markdown"]
+
+        assert "Entität von Shutter Pilot selbst" in md
+        assert "nie wieder\naus" in md or "nie wieder" in md
+
+    async def test_a_real_sensor_gets_no_such_note(self, hass):
+        hass.states.async_set("sensor.wind", "12", {"unit_of_measurement": "km/h"})
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                "sun_cond_wind_entity": "sensor.wind",
+                "sun_cond_wind_on_above": 25,
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: "cover.markise",
+                        CONF_AREA_DOWN_ID: "vorne",
+                        "device_kind": "awning",
+                        "position_open": 0,
+                        "position_sun_protect": 100,
+                    }
+                ],
+            },
+        )
+        config_entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "_runtime_started": dt_util.utcnow(),
+        }
+
+        md = (await async_build_export(hass, config_entry))["markdown"]
+
+        assert "Entität von Shutter Pilot selbst" not in md

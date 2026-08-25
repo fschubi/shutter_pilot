@@ -105,6 +105,7 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 
 - **Cover-Entity** – deine `cover.*` Entity
 - **Fenstersensor** – optionaler `binary_sensor.*` für Fenster-Offen/Kipp-Erkennung
+- **Zweiter Fensterkontakt** – für Doppelflügelfenster mit einem Kontakt pro Flügel. Beide werden zusammen gelesen: das Fenster gilt als offen, sobald einer der beiden es meldet. Damit greifen Aussperrschutz, Lüftungsposition und die Nachholfunktion auch dann, wenn nur der zweite Flügel offen steht. Es gelten dieselben Zustände wie beim ersten Kontakt – zwei Flügel eines Fensters sind dieselbe Hardware zweimal
 - **Zusätzlicher Sensor für „gekippt"** – nur nötig, wenn dein Fenster zwei getrennte Entitäten meldet, eine für offen und eine für gekippt. Bei einem Kontakt mit drei Zuständen bleibt das Feld leer
 - **Fenster-Status „offen"** – welcher Zustand der Entität „Fenster ist offen" bedeutet. Ein `binary_sensor` kennt nur `on` und `off`; welcher davon offen heißt, hängt vom Kontakt ab, deshalb steht der gerade gemeldete Zustand unter dem Feld. Die gängigen Schreibweisen (`on`/`open`/`offen`/`true`) gelten als gleichbedeutend, ebenso `off`/`closed`/`geschlossen`. Ein `sensor` mit drei Zuständen wird direkt gelesen
 - **Bereich Hoch / Bereich Runter** – welcher Bereich diesen Rollladen für Hoch-/Runter-Fahrten steuert
@@ -143,6 +144,7 @@ Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dash
 |---------|-------------|
 | `switch.shutter_pilot_system` | Master-Schalter für die gesamte Automatik |
 | `switch.shutter_pilot_auto_<bereich>` | Automatik pro Bereich |
+| `switch.shutter_pilot_sonnenschutz_<bereich>` | Beschattung pro Bereich – nur sie, die übrige Automatik läuft weiter |
 | `switch.shutter_pilot_rollladen_<name>` | Automatik pro Rollladen (Name aus dem Feld **Name**) |
 | `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
@@ -388,6 +390,36 @@ Zwei Dinge, die man wissen sollte:
 > 💡 Für „der Rollladen soll morgens später **hochfahren**" ist nicht dieses
 > Feld zuständig, sondern der **Sondertage-Sensor** des Bereichs – siehe unten.
 
+### Gar nicht hochfahren – Wochenende, Ferien, Urlaub
+
+Der Sondertage-Sensor unten verschiebt die Uhrzeit. Manchmal soll aber
+**überhaupt nicht** geöffnet werden. Dafür gibt es zwei Wege je Bereich, beide
+im Abschnitt „Hochfahren unterbinden":
+
+| Einstellung | Wofür |
+| --- | --- |
+| Am Wochenende gar nicht hochfahren | ausschlafen statt später aufstehen |
+| Bedingung „nicht hochfahren" | Ferien, Urlaub, Feiertag, Homeoffice – was immer ein Helfer weiß |
+
+**Beide betreffen nur das Hochfahren.** Runterfahren und Beschattung laufen
+weiter – sonst stünde das Haus abends offen zur Straße.
+
+Der Wochenend-Haken hängt am selben Wochenendbegriff wie alles andere in
+Shutter Pilot: **ist ein Sondertage-Sensor eingetragen, entscheidet der.**
+Damit gilt der Haken automatisch auch für Feiertage, Ferien und Schichtdienst.
+
+> 💡 **Nur sonntags ausschlafen, samstags nicht?** Einen Workday-Sensor mit
+> `excludes: [sun]` anlegen und als Sondertage-Sensor eintragen. Dann ist
+> Sonnabend ein Arbeitstag – es gelten die Wochentagszeiten –, und nur am
+> Sonntag greift die Wochenendregel.
+
+Die Bedingung nimmt alles, was die anderen Bedingungsfelder auch nehmen: einen
+`input_boolean` (Urlaubsschalter), einen `schedule`-Helfer, eine Auswahlliste
+oder einen Zahlenwert mit Hysterese. Solange sie zutrifft, bleibt der Rollladen
+morgens unten. **Ein nicht lesbarer Sensor blockiert nicht** – andersherum
+bliebe jeder Rollladen unten, bis es jemand merkt, und aus dem Zimmer heraus
+kommt man daran nicht vorbei.
+
 ### Später hochfahren an Ferien- und Feiertagen
 
 Der **Sondertage-Sensor** je Bereich (früher „Workday-Sensor") schaltet zwischen
@@ -410,6 +442,38 @@ Soll das nur für **ein einzelnes Zimmer** gelten: dem Rollladen einen eigenen
 **Hoch-Bereich** geben und den gemeinsamen Runter-Bereich behalten. Hoch- und
 Runter-Bereich dürfen verschieden sein. Die Beschattung ändert sich dadurch
 nicht – die entscheidet der Runter-Bereich.
+
+### Beschattung ein- und ausschalten, ohne die Automatik anzufassen
+
+Jeder Bereich mit eingeschaltetem Sonnenschutz bekommt einen eigenen Schalter
+`switch.shutter_pilot_sonnenschutz_<Bereich>` – und einen Schalter auf der
+Dashboard-Karte gleich neben der Statuszeile.
+
+Er ist bewusst **getrennt** vom Automatik-Schalter des Bereichs: 35 °C heute
+und 20 °C morgen ist ein Grund, die Beschattung zu lassen. Es ist kein Grund,
+die Rollläden morgens unten zu lassen. Bisher blieb dafür nur der
+Beschattungszeitraum in Monaten – für einen Wetterumschwung viel zu grob.
+
+**Ausschalten gibt frei, was gerade beschattet ist**: die betroffenen Rollläden
+fahren auf. Sie stehenzulassen wäre die schlechtere Hälfte – wer wegen kühlerem
+Wetter abschaltet, will nicht bis zum Abend auf halber Höhe sitzen.
+
+### Zwei Haken zum Verhalten der Beschattung
+
+Beide stehen im Sonnenschutz-Block des Bereichs, beide sind **standardmäßig
+aus**, weil sie das Fahrverhalten ändern.
+
+**Am Ende des Beschattungstags wieder öffnen.** Sinkt die Sonne unter den
+eingestellten Bereich, bleibt der Rollladen sonst auf Beschattungshöhe stehen,
+bis der Abendplan ihn schließt. Im Sonnenmodus sind das Minuten – im
+Helligkeits- und Zeitmodus können es Stunden sein, und dann sitzt man den
+ganzen Nachmittag hinter halb geschlossenen Rollläden. Angehakt fährt er
+stattdessen sofort auf.
+
+**Nur beschatten, was schon offen ist.** Beschatten und Öffnen ist derselbe
+Fahrbefehl mit einer anderen Zahl – ein nachts geschlossener Rollladen wird von
+der Beschattung deshalb *hochgefahren*, auf die Beschattungshöhe. Wer das nicht
+will, hakt es an: dann bleibt er unten, bis er regulär geöffnet hat.
 
 ### Sensoren pro Fenster statt pro Bereich
 

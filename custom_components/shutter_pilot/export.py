@@ -70,6 +70,9 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    automated_up_blocked,
+    azimuth_in_sun_protect_range,
+    is_sun_protect_enabled,
     elevation_used,
     get_azimuth_bounds,
     get_cover_current_position,
@@ -326,6 +329,25 @@ def _guard_rows(
     # Ein Windwert in m/s neben einer Schwelle in km/h ist der W/m²-Fehler noch
     # einmal, nur gefaehrlicher: Faktor 3,6 daneben heisst, dass die Markise
     # nie einfaehrt. Der Wert allein sagt es nicht – die Einheit schon.
+    # Eine Shutter-Pilot-eigene Entität als Schutzsensor ist immer ein
+    # Fehlklick, und ein folgenschwerer: der Auto-Schalter eines Bereichs steht
+    # dauerhaft auf "on", also gilt die Gefahr als dauerhaft vorliegend und die
+    # Markise fährt nie wieder aus. Von aussen sieht das aus wie ein defekter
+    # Antrieb. Die Domäne `switch` bleibt zulässig – ein eigener Sperrschalter
+    # ist ein sinnvoller Windwächter-Ersatz –, nur die eigenen nicht.
+    own_prefixes = ("switch.shutter_pilot_", "sensor.shutter_pilot_")
+    for slot in AWNING_GUARD_SLOTS:
+        entity_id = str(config.get(sun_condition_keys(slot)[0]) or "").strip()
+        if entity_id.startswith(own_prefixes):
+            out += [
+                f"> ⚠️ Als **{slot}**-Sensor steht `{entity_id}` – das ist eine "
+                "Entität von Shutter Pilot selbst, kein Messwert. Ein "
+                "Auto-Schalter steht dauerhaft auf \u201eon\u201c, die Gefahr gilt damit "
+                "als dauerhaft vorliegend und die Markise fährt **nie wieder "
+                "aus**. Hier gehört der Sensor der Wetterstation hin.",
+                "",
+            ]
+
     wind_entity = str(
         config.get(sun_condition_keys(AWNING_GUARD_WIND)[0]) or ""
     ).strip()
@@ -449,9 +471,14 @@ def _shading_verdict(
             f"- Elevation {elev_txt} in [{e_min:.1f}° – {e_max:.1f}°]: "
             f"{'✅' if elev is not None and e_min <= elev <= e_max else '❌'}"
         ),
+        # Die eigene Prüfung, nicht geometry_ok: das ist Höhe *und* Richtung
+        # zusammen, also stand hier abends ein ❌ an einer Richtung, die
+        # tagsüber gepasst hatte – und daneben, in derselben Klammer, der Wert
+        # samt Bereich, der das Gegenteil zeigte. Ein Bericht, dessen Zeilen
+        # sich widersprechen, kostet mehr Zeit als er spart.
         "- Fensterrichtung: "
         + (
-            f"{'✅' if geometry_ok else '❌'} "
+            f"{'✅' if azimuth_in_sun_protect_range(azim, geo) else '❌'} "
             f"({'–' if azim is None else f'{azim:.1f}°'} in "
             f"[{a_min:.0f}° – {a_max:.0f}°])"
             if az_used
@@ -570,13 +597,36 @@ async def async_build_export(
             f"Modus: `{_fmt(area.get(CONF_AREA_MODE))}` · "
             f"Automatik: {'an' if is_auto_enabled(hass, entry, area) else '**aus**'} · "
             f"Sonnenschutz: "
-            f"{'an' if area.get(CONF_AREA_SUN_PROTECT_ENABLED) else 'aus'}",
+            + (
+                "aus (nicht eingerichtet)"
+                if not area.get(CONF_AREA_SUN_PROTECT_ENABLED)
+                else (
+                    "an"
+                    if is_sun_protect_enabled(hass, entry, area)
+                    else "**per Schalter abgeschaltet**"
+                )
+            ),
             "",
             *_settings_table(area),
         ]
         rows, _ = _condition_rows(hass, area, _memory_copy(data, area_id))
         if rows:
             out += ["Bedingungen des Bereichs, Werte von jetzt:", "", *rows]
+        # "Warum ist der Rollladen heute unten geblieben" ist sonst nirgends
+        # ablesbar: beide Sperren wirken lautlos und lassen keine Spur in den
+        # Merkern – da steht dann nur, dass nichts gefahren ist.
+        blocked_up = automated_up_blocked(hass, area, data, now)
+        if blocked_up:
+            out += [
+                "> ℹ️ Automatisches **Hochfahren ist heute gesperrt** "
+                + (
+                    "(Wochenende bzw. Sondertag)."
+                    if blocked_up == "weekend"
+                    else "(Bedingung \u201enicht hochfahren\u201c trifft zu)."
+                )
+                + " Runterfahren und Beschattung laufen weiter.",
+                "",
+            ]
 
     # Derselbe Rollladen zweimal angelegt: seit 2.11.1 laesst das Panel es
     # nicht mehr zu, bestehende Konfigurationen tragen es aber weiter. Mit

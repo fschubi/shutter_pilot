@@ -52,6 +52,7 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
+    automated_up_blocked,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     get_position_for_role,
@@ -301,6 +302,16 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
 
     def _run_up(area: dict, area_id: str, reason: str, within_up_window: bool) -> bool:
         """Open every shutter of this area that shading and manual use allow."""
+        # Both up paths – the lux threshold and the deadline – come through
+        # here, so the holiday and weekend gates cannot drift apart between
+        # them. Closing is untouched on purpose.
+        blocked = automated_up_blocked(hass, area, data)
+        if blocked:
+            _LOGGER.info(
+                "Brightness up: area %s blocked (%s) – shutters stay down",
+                area_id, blocked,
+            )
+            return False
         # Shading is judged per shutter inside the loop. Asking the
         # area aggregate here as well held back every window of the
         # room as soon as a single one was shaded – rooms whose windows

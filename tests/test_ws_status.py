@@ -155,3 +155,51 @@ class TestAreaTriggers:
         assert len(result["shutters"]) == 1
         assert result["master_enabled"] is True
         assert "version" in result
+
+
+class TestSettingsSurviveTheRoundTrip:
+    """bjoerg und charly166: die Markisen-Einstellungen standen wieder leer da.
+
+    `save_settings` schreibt alles, was das Panel schickt – aber `get_status`
+    schickte nur sechs fest verdrahtete Schluessel zurueck. Gespeichert und
+    angewendet waren die Werte also, sichtbar nie; wer eine Windschwelle
+    korrigieren wollte, musste raten, was drinstand.
+
+    Deshalb jetzt eine Ausschlussliste. Eine Erlaubnisliste gilt immer nur
+    fuer die Felder, an die jemand gedacht hat – derselbe Vertrag, an dem der
+    Elevations-Haken zwei Versionen lang wirkungslos hing.
+    """
+
+    GUARD = {
+        "sun_cond_wind_entity": "sensor.wind",
+        "sun_cond_wind_on_above": 25,
+        "sun_cond_wind_off_below": 15,
+        "guard_wind_lockout": 20,
+        "sun_cond_rain_entity": "binary_sensor.regen",
+        "guard_rain_lockout": 30,
+        "sun_cond_ice_entity": "sensor.aussen",
+        "sun_cond_ice_on_above": -2,
+        "awning_sensor_grace": 10,
+    }
+
+    async def test_the_awning_protection_comes_back(self, hass, hass_ws_client):
+        result = await _status(
+            hass, hass_ws_client, {**_options(TIME_AREA), **self.GUARD}
+        )
+
+        for key, value in self.GUARD.items():
+            assert result["settings"].get(key) == value, key
+
+    async def test_the_known_defaults_are_still_filled_in(self, hass, hass_ws_client):
+        """Ein frisch eingerichtetes System hat nichts davon gespeichert."""
+        result = await _status(hass, hass_ws_client, _options(TIME_AREA))
+
+        assert result["settings"]["verify_enabled"] is False
+        assert result["settings"]["min_drive_gap"] == 0.0
+
+    async def test_areas_and_shutters_stay_out_of_settings(self, hass, hass_ws_client):
+        """Sie haben eigene Felder – doppelt waere nur mehr zu uebertragen."""
+        result = await _status(hass, hass_ws_client, _options(TIME_AREA))
+
+        assert CONF_AREAS not in result["settings"]
+        assert CONF_SHUTTERS not in result["settings"]

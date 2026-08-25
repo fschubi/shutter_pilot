@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (562 Tests)
+tests/               pytest-Suite (599 Tests)
 ```
 
 ## Funktionsumfang
@@ -56,6 +56,13 @@ dürfen verschieden sein (morgens raumweise, abends alle zusammen).
 | `brightness` | Helligkeitssensor mit Schwellen, nur in erlaubten Zeitfenstern |
 | `sun` | Sonnenauf-/-untergang plus Offset, optional in Zeitklammern |
 
+Zwei Sperren je Bereich unterbinden das **Hochfahren** ganz (Runterfahren und
+Beschattung laufen weiter): ein Wochenendhaken, der an `is_weekend_schedule()`
+hängt und damit auch Feiertage und Ferien erfasst, und der Bedingungs-Slot
+`no_up` – ausgewertet über `_own_slot_met()`, also „nicht gesetzt = nein, toter
+Sensor = nein". Beide fragt `automated_up_blocked()` an genau zwei Stellen ab:
+`scheduler._run_up_async` und `brightness._run_up`.
+
 Wochenendwerte fallen immer auf die Wochentagswerte zurück, wenn sie leer
 bleiben. Statt Samstag/Sonntag kann ein **Workday-Sensor** entscheiden
 (Feiertage, Schichtdienst). Eine **Präsenzsimulation** streut die Zeiten um bis
@@ -66,7 +73,10 @@ zu N Minuten; der Wert ist pro Tag stabil, nicht pro Fahrt.
 Je Rollladen: Positionen für offen, geschlossen und Sonnenschutz, optional eine
 **abweichende Schließposition** für laue Abende und eine **Frostposition**,
 optional **Lamellenwinkel** (Raffstore). Fenstersensor mit Aussperrschutz, dazu
-optional ein zweiter Kontakt, wenn „gekippt" als eigene Entität gemeldet wird,
+optional ein **zweiter Fensterkontakt** (Doppelflügel, ODER-verknüpft, der
+offenere gewinnt) und ein zweiter Kontakt, wenn „gekippt" als eigene Entität
+gemeldet wird (der behält Vorrang und wird *nicht* mitgerankt – er ist ein
+Modifikator, kein zweiter Flügel),
 und eine **Entprellung** (0–30 s), bevor auf „geschlossen" reagiert wird.
 
 ### Beschattung
@@ -84,6 +94,18 @@ Aktiv, wenn **alle** Bedingungen zugleich gelten:
    einzeln optional, je Bereich und je Rollladen). Die einzige der fünf
    Prüfungen, die nicht die Sonne beschreibt, sondern den Haushalt – und
    bewusst **ohne** Wrap über Mitternacht
+
+Dazu drei Einstellungen, die nicht die Sonne beschreiben, sondern das
+Verhalten – alle je Bereich, alle mit Vorgabe „wie bisher":
+
+* **Sonnenschutz-Schalter** (`switch.shutter_pilot_sonnenschutz_<bereich>`),
+  getrennt vom Automatik-Schalter. Ausschalten *gibt frei*, es friert nicht ein.
+* **Am Ende des Beschattungstags öffnen** – sonst steht der Rollladen bei
+  `elev < e_min` bis zum Abendplan auf Beschattungshöhe. Im Sonnenmodus sind
+  das Minuten, sonst Stunden.
+* **Nur beschatten, was schon offen ist** – `set_cover_position(50)` ist von
+  unten derselbe Befehl wie von oben; die Richtung steht nur in der aktuellen
+  Position.
 
 Geometrie und Bedingungen lassen sich **pro Rollladen** überschreiben. Der
 Rückfall wirkt je Bedingungs-Slot: gesetzt am Rollladen ersetzt den Slot,
@@ -149,7 +171,7 @@ Wiederholungen.
 
 | Art | Entität |
 | --- | --- |
-| Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter |
+| Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter, je Bereich mit Beschattung ein Sonnenschutz-Schalter |
 | Sensor | je Bereich „nächste Fahrt"; Vorhersage Höchst-/Tiefsttemperatur und Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
 | Binärsensor | je Bereich „Sonnenschutz aktiv"; je Markise „Sperre" mit Grund und Restzeit |
 
@@ -175,7 +197,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.14.0: je 366 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.15.0: je 382 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -184,7 +206,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 | --- | --- |
 | `shutter_pilot/get_status` | alle (lesend) |
 | `save_area`, `delete_area`, `save_shutter`, `delete_shutter` | **Admin** |
-| `save_settings`, `set_master_enabled`, `set_auto_mode`, `set_shutter_automation` | **Admin** |
+| `save_settings`, `set_master_enabled`, `set_auto_mode`, `set_shutter_automation`, `set_sun_protect` | **Admin** |
 
 Alle ändernden Befehle tragen `@websocket_api.require_admin` (außen, darunter
 `websocket_command` – Reihenfolge wie in HA Core). Kommt ein neuer schreibender
@@ -204,7 +226,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 562 Tests, ~9 s
+.venv/bin/pytest            # 599 Tests, ~15 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -230,10 +252,120 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.14.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.15.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-25 – 2.15.0: zwei Wochen Forum am Stück
+
+Nach dem Urlaub lagen acht Beiträge da. Vier Fehler, vier Wünsche und drei
+Antworten, für die es keinen Code brauchte. Aufgearbeitet wurde in dieser
+Reihenfolge: erst alles gegen den Code gerechnet, dann gebaut.
+
+**Der Fehler, der die anderen erzeugt hat.** `_ws_get_status` schickte die
+globalen Einstellungen als **Erlaubnisliste von sechs Schlüsseln**. Der
+Markisenschutz kam nie dazu – gespeichert wurde er (`save_settings` nimmt
+alles), angewendet auch, angezeigt nie. bjoerg und charly166 haben unabhängig
+dasselbe gemeldet: „die Entitäten verschwinden beim Speichern".
+
+Und der Folgeschaden steckt in bjoergs Export: als Windsensor stand dort
+`switch.shutter_pilot_auto_balkon` – ein **Schalter der Integration selbst**.
+Der meldet dauerhaft `on`, also gilt dauerhaft Sturm, also fährt die Markise
+nie wieder aus. Wer in ein leeres Formular tippt, tippt irgendwas hinein.
+Deshalb jetzt **Ausschlussliste statt Erlaubnisliste** – dieselbe Klasse
+Vertrag wie der Schlüssel-Tupel in `resolve_sun_geometry()` (2.10.3) und
+`BOOL_COND_DOMAINS` im Panel (2.14.0). **Merke: eine Erlaubnisliste gilt immer
+nur für die Felder, an die jemand gedacht hat.**
+
+**Der Export widersprach sich selbst.** „Fensterrichtung: ❌ (295,4° in
+[225° – 315°])" – der Wert liegt sichtbar im Bereich. Die Zeile las
+`geometry_ok`, und das ist Höhe **und** Richtung zusammen. Abends zog die
+Elevation die Richtungszeile mit ins Nein. Ein Bericht, dessen Zeilen einander
+widersprechen, kostet mehr Zeit als er spart – und dieser Bericht ist das
+Werkzeug, mit dem hier alle Forumsfälle beantwortet werden.
+
+**Die Beschattung wurde bei sinkender Sonne nie aufgelöst** (bjoerg). Der
+`elev < e_min`-Zweig löscht seit jeher den Merker und **fährt nicht** – mit der
+Begründung, der Abendplan komme gleich. Das stimmt im Sonnenmodus. Im
+Helligkeitsmodus wartet er auf einen Lux-Wert, im Zeitmodus auf eine Uhr; bei
+bjoerg (Helligkeit, lux_down 199) waren das Stunden auf halber Höhe. Neuer
+Haken je Bereich, **Vorgabe aus**: eine Verhaltensänderung, die ungefragt in
+jeder zufriedenen Anlage abends Rollläden bewegt, wäre schlimmer als der
+Status quo.
+
+**Beschatten öffnet.** charly166 und Linos, unabhängig: Rollläden, die noch gar
+nicht hochgefahren sind, fahren in die Beschattungsposition. Das ist kein
+Fehler, sondern die Folge davon, dass `set_cover_position(50)` von unten wie
+von oben derselbe Befehl ist – dem Code fehlt die Information, aus welcher
+Richtung er kommt. Sie steht aber in der aktuellen Position, und genau das
+prüft `shading_would_open_cover()`. Richtungsblind formuliert wie bei den
+Markisen (`extends_upward`), damit es an einer Markise nicht falsch herum
+greift; Markisen sind zusätzlich ausgenommen, weil dort Beschatten *immer*
+Ausfahren heißt.
+
+**Der Sonnenschutz-Schalter je Bereich** (MartyBr) ist bewusst **nicht** in
+`is_auto_enabled` gefaltet. Beschattung und Zeitplan sind zwei Fragen; wer die
+Bereichsautomatik ausschaltet, um die Beschattung loszuwerden, hält morgens auch
+das Öffnen an. Und: **Ausschalten gibt frei**, es friert nicht ein – in
+`elevation.py` läuft „abgeschaltet" durch denselben Zweig wie eine weggefallene
+Bedingung, nur ohne Haltezeit (wie Saisonende und Uhrzeitgrenze).
+
+**Der Schalter, der beinahe einen Reload im Start ausgelöst hätte.** Master,
+Bereich und Rollladen schreiben ihre entity_id beim ersten Start in die
+Optionen zurück – jedes `async_update_entry` lädt den Entry neu. Ein vierter
+Schreiber ließ den Reload mitten in die erste Beschattungsauswertung fallen;
+aufgefallen ist es daran, dass `tests/test_shade_hours.py` plötzlich rot war,
+weil sein `data`-Dict nach dem Reload tot war. **Der neue Schalter schreibt
+sich deshalb als einziger nicht zurück** und legt seine ID in
+`data["sun_protect_entities"]` ab – gebraucht wird sie nur im Prozess.
+Die drei älteren blieben unverändert; sie zu ändern hieße, an Bestandsdaten zu
+rühren.
+
+**Hochfahren unterbinden**, zwei Wege, ein Aufruf. `automated_up_blocked()`
+fasst Wochenendhaken und `no_up`-Bedingung zusammen und wird an **beiden**
+Hochfahr-Wegen gefragt: `scheduler._run_up_async` und `brightness._run_up` –
+letzteres deckt Lux-Pfad *und* Frist ab, weil beide durch dieselbe Funktion
+laufen. Zwei Aufrufstellen statt vier, sonst vergisst der nächste Pfad die
+Prüfung. Der `no_up`-Slot braucht **keine vierte Polarität**: `_own_slot_met()`
+liefert genau „nicht gesetzt = nein, toter Sensor = nein", und das ist hier die
+sichere Antwort (fahren).
+
+**Der Wochenendhaken hängt an `is_weekend_schedule()`**, nicht am Kalender.
+Damit erledigt er hollstens Sonnabend/Sonntag-Wunsch mit: ein Workday-Sensor
+mit `excludes: [sun]` macht Sonnabend zum Arbeitstag. **Das war die Antwort auf
+seine Frage, nicht ein drittes Zeitschema.**
+
+**Der zweite Fensterkontakt** (Thsu) ist eine ODER-Verknüpfung mit Rangfolge
+open > tilted > closed. Der separate **Kipp**-Kontakt behält seinen Vorrang und
+wird *nicht* mitgerankt: er ist ein Modifikator des Hauptkontakts (bei Kipp
+melden beide „offen"), kein zweiter Flügel. `window_trigger.py` muss auf alle
+drei hören – ein Kontakt, den niemand abonniert, fällt erst eine Minute später
+jemand anderem auf.
+
+**Drei Antworten ohne Code**, alle mit Test hinterlegt statt behauptet:
+
+| Frage | Antwort |
+| --- | --- |
+| Beschattung erst bei geschlossenem Fenster (hollizone) | „Fahrt nach dem Schließen nachholen" – die Beschattung ist einer ihrer Fahrwege, seit 2.6.0 |
+| Sonnabend/Sonntag getrennt (hollsten) | Sondertage-Sensor mit `excludes: [sun]` |
+| Rollladen soll gar nicht mitfahren | Auto-Schalter je Rollladen, seit 2.5.0 |
+
+**Verifiziert:** `pytest` 599 Tests grün (37 neue), **sieben Gegenproben**
+gemacht – jede einzelne Änderung zurückgedreht, jedes Mal fiel genau ihr Test.
+i18n 382/382 in allen elf Sprachen (17 neu, `f_guard_lockout_hint` durch drei
+slot-eigene ersetzt: bei Frost beschrieb der Bö-Satz das Gegenteil dessen, was
+die Sperrzeit dort tut – gemeldet als Textfehler, war einer). Panel in Node
+gerendert, fünf Ansichten plus zwölf Inhaltsprüfungen. **Nicht im Browser
+geprüft.**
+
+**Testfalle, neu:** Der Scheduler markiert beim Aufbau jede heute schon
+vergangene Uhrzeit als erledigt (sonst holt ein Reload um 23 Uhr den ganzen Tag
+nach). Im Test heißt das: mit `time_up: "00:01"` fährt **nie** etwas, bis
+`data["_scheduler_fired"]` geleert wird. Dafür steht `_rearm_scheduler()` in
+`tests/test_forum_2_15.py`.
+
+
 
 ### 2026-08-02 – 2.4.1: Hauptschalter und Menü-Knopf
 

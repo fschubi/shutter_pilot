@@ -14,6 +14,8 @@ from .const import (
     CONF_AREAS,
     CONF_AREA_ID,
     CONF_AREA_SHADE_HOLD,
+    CONF_AREA_SHADE_ONLY_WHEN_OPEN,
+    CONF_AREA_SHADE_RELEASE_OPENS,
     CONF_AREA_SUN_PROTECT_ENABLED,
     DEFAULT_AREA_SHADE_HOLD,
     MAX_AREA_SHADE_HOLD,
@@ -43,7 +45,9 @@ from .helpers import (
     get_tilt_for_role,
     is_auto_enabled,
     is_shutter_automation_enabled,
+    is_sun_protect_enabled,
     is_cover_sun_protected,
+    shading_would_open_cover,
     register_minute_callback,
     remember_drive_after_close,
     resolve_shading_config,
@@ -267,6 +271,12 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
 
             if not is_auto_enabled(hass, entry, area):
                 continue
+            # Shading switched off for this area – not the whole automation.
+            # Handled below like a condition that dropped out, so a shutter
+            # already shaded is released instead of being left hanging at
+            # 50%: switching it off in a cool week is exactly the moment
+            # somebody wants their shutters back up.
+            protect_on = is_sun_protect_enabled(hass, entry, area)
             # Automation switched off at this shutter: neither shade nor
             # release it. The sun protection flag keeps its value, so a
             # shutter that was shaded before is released properly once the
@@ -285,8 +295,31 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # exists for ("the child's room stays dark until nine during the
             # holidays") is about one window, not about the whole area.
             window_ok = shading_time_window_ok(geo)
-            should_protect = geometry_ok and conditions_ok and season_ok and window_ok
+            should_protect = (
+                protect_on and geometry_ok and conditions_ok and season_ok and window_ok
+            )
             was_active = is_cover_sun_protected(data, cover)
+
+            # "Shading" a shutter that is still shut for the night *opens* it –
+            # the drive is the same call with a different number. Asked only
+            # for a shutter that is not shaded yet: once it is, the position
+            # standing at the shading height is the expected reading, not a
+            # reason to give up on it.
+            if (
+                should_protect
+                and not was_active
+                and not is_awning(shutter)
+                and bool(area.get(CONF_AREA_SHADE_ONLY_WHEN_OPEN, False))
+                and shading_would_open_cover(
+                    hass, shutter, get_position_for_role(shutter, ROLE_SUN_PROTECT)
+                )
+            ):
+                _LOGGER.debug(
+                    "[sun-protect] %s: shading due, but the shutter is still "
+                    "closed – not opening it (shade_only_when_open)",
+                    cover,
+                )
+                continue
 
             if should_protect:
                 # Die Wolke ist weitergezogen – die Haltezeit beginnt bei der
@@ -310,10 +343,23 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
 
             uses_elevation = elevation_used(geo)
             e_min, e_max = get_elevation_bounds(geo)
-            if uses_elevation and elev < e_min:
+            if (
+                protect_on
+                and uses_elevation
+                and elev < e_min
+                and not bool(area.get(CONF_AREA_SHADE_RELEASE_OPENS, False))
+            ):
                 # Below the range the shutters belong to the evening
                 # schedule, not to shading. Drop the flag, do not drive, and
                 # do not wait out a hold time – the day is simply over.
+                #
+                # That reasoning holds in sun mode, where the evening drive
+                # follows within minutes. In brightness and time mode it can
+                # be hours, and the room sits at the shading height through
+                # the whole dusk – reported as "the shading is never released"
+                # more than once. Hence the switch above; the old behaviour
+                # stays the default so nobody's shutters start moving at dusk
+                # after an update they did not ask for.
                 set_cover_sun_protected(data, cover, False)
                 release_since.pop(cover, None)
                 _LOGGER.debug(
@@ -329,7 +375,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # leaves the room dark for up to two hours – and, because this
             # shutter then still counts as shaded, blocks the scheduled opening
             # on top of it.
-            if uses_elevation and elev > e_max:
+            if not protect_on:
+                # Switched off by hand. Like the season ending and unlike a
+                # cloud: it does not come back within the hold time, and
+                # leaving the shutter counted as shaded would block the
+                # scheduled opening on top of leaving the room dark.
+                reason = "sun protection switched off"
+            elif uses_elevation and elev < e_min:
+                reason = "sun below range"
+            elif uses_elevation and elev > e_max:
                 reason = "sun above range"
             elif not geometry_ok:
                 a_min, a_max = get_azimuth_bounds(geo)

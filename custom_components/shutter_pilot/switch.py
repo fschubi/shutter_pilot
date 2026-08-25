@@ -17,6 +17,7 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_NAME,
     CONF_AREA_AUTO_ENTITY_ID,
+    CONF_AREA_SUN_PROTECT_ENABLED,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
     CONF_NAME,
@@ -84,6 +85,19 @@ async def async_setup_entry(
                 name=f"Auto {name}",
             )
         )
+        # Only where shading is configured at all. A switch for something the
+        # area does not do is a switch that decides nothing, and the panel
+        # would still list it – the class of setting this project keeps
+        # digging back out of exports.
+        if bool(area.get(CONF_AREA_SUN_PROTECT_ENABLED, False)):
+            entities.append(
+                ShutterPilotSunProtectSwitch(
+                    hass=hass,
+                    entry=entry,
+                    area_id=area_id,
+                    name=f"Sonnenschutz {name}",
+                )
+            )
 
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
@@ -242,6 +256,76 @@ class ShutterPilotAutoModeSwitch(RestoreEntity, SwitchEntity):
         auto_state = data.setdefault("auto_modes", {})
         auto_state[self._area_id] = self._attr_is_on
         self.async_write_ha_state()
+
+
+class ShutterPilotSunProtectSwitch(RestoreEntity, SwitchEntity):
+    """Switch to enable/disable the sun protection of one area.
+
+    Separate from the area's automation switch on purpose: 35 °C today and 20 °C
+    tomorrow is a reason to stop shading, not a reason to stop the shutters
+    opening in the morning. The season months are the only thing that came
+    close before, and a month is far too coarse for a change of weather.
+
+    Switching it off *releases* what is currently shaded rather than freezing
+    it in place – see elevation.py, where "switched off" is handled like a
+    condition that dropped out, minus the hold time.
+    """
+
+    _attr_has_entity_name = False
+    _attr_icon = "mdi:weather-sunny-off"
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        area_id: str,
+        name: str,
+    ) -> None:
+        self._hass = hass
+        self._entry = entry
+        self._area_id = area_id
+        self._attr_name = f"Shutter Pilot {name}"
+        self._attr_unique_id = f"{entry.entry_id}_sun_protect_area_{area_id}"
+        self._attr_is_on = True
+        self._attr_extra_state_attributes = {ATTR_ENTRY_ID: entry.entry_id}
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        self._attr_is_on = _restored_is_on(last_state, self._entry.entry_id)
+        self._publish()
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self._attr_is_on)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._set_state(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._set_state(False)
+
+    def _set_state(self, value: bool) -> None:
+        self._attr_is_on = bool(value)
+        self._publish()
+        self.async_write_ha_state()
+
+    def _publish(self) -> None:
+        """Mirror state and entity id into runtime data.
+
+        Deliberately *not* written back into the options the way the three
+        older switches do theirs. Every one of those writes fires an
+        async_update_entry during setup, and each of those reloads the entry –
+        a fourth one made a reload land in the middle of the first shading
+        evaluation. Nothing outside this process needs the id: the panel talks
+        to the WebSocket command, and that has the runtime data in hand.
+        """
+        data = self._hass.data.setdefault(DOMAIN, {}).setdefault(
+            self._entry.entry_id, {}
+        )
+        data.setdefault("sun_protect_modes", {})[self._area_id] = self._attr_is_on
+        data.setdefault("sun_protect_entities", {})[self._area_id] = self.entity_id
 
 
 class ShutterPilotShutterAutomationSwitch(RestoreEntity, SwitchEntity):

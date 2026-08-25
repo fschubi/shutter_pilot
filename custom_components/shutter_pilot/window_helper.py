@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_WINDOW_ENTITY_ID,
+    CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_OPEN_STATE,
     CONF_WINDOW_TILTED_ENTITY_ID,
     CONF_WINDOW_TILTED_ENTITY_STATE,
@@ -102,23 +103,52 @@ def has_tilt_state(shutter: dict) -> bool:
     return bool(tilted) and str(tilted).lower() != "none"
 
 
+# open beats tilted beats closed. Used to fold two leaf contacts into one
+# answer: one leaf wide open makes the window open, whatever the other says.
+_STATE_RANK = {"closed": 0, "tilted": 1, "open": 2}
+
+
 def get_window_state(hass: HomeAssistant, shutter: dict) -> str:
     """
     Return: "closed" | "tilted" | "open"
     Supports both binary_sensor and sensor domain:
     - binary_sensor: uses window_open_state / window_tilted_state (e.g. on/off, tilted)
     - sensor: uses state directly - "open", "tilted", "closed" (or similar variants)
+
+    A double-casement window has one contact per leaf, and neither alone
+    answers the question. The second contact is ORed onto the first: the most
+    open of the two wins, so the lock protection and the catch-up drive stay in
+    force while either leaf stands open.
     """
     # A dedicated tilt contact wins: some hardware reports "open" and "tilted"
-    # as two separate entities, and while tilted both may read as open.
+    # as two separate entities, and while tilted both may read as open. It is a
+    # modifier on the main contact, not a second leaf – which is why it is
+    # asked before the two leaves are combined, and not ranked among them.
     if _separate_tilt_active(hass, shutter):
         return "tilted"
 
-    window_id = _first_entity_id(shutter.get(CONF_WINDOW_ENTITY_ID))
-    if not window_id:
+    ids = [
+        _first_entity_id(shutter.get(CONF_WINDOW_ENTITY_ID)),
+        _first_entity_id(shutter.get(CONF_WINDOW_ENTITY_ID_2)),
+    ]
+    ids = [i for i in ids if i]
+    if not ids:
         # Only a tilt contact configured – it is not tilted, so it is closed.
         return "closed"
+    if len(ids) > 1:
+        return max(
+            (_single_window_state(hass, shutter, i) for i in ids),
+            key=lambda s: _STATE_RANK.get(s, 0),
+        )
+    return _single_window_state(hass, shutter, ids[0])
 
+
+def _single_window_state(hass: HomeAssistant, shutter: dict, window_id: str) -> str:
+    """State of one window contact, using this shutter's configured vocabulary.
+
+    Both leaves of one window are the same hardware twice, so they share the
+    open/tilted words rather than each carrying their own pair of fields.
+    """
     state = hass.states.get(window_id)
     if not state:
         return "closed"

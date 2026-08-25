@@ -98,7 +98,7 @@ const AWNING_GUARD_SLOTS = ["wind","rain","ice"];
    sichtbar und wirkungslos ist genau die Sorte Einstellung, die der Export seit
    2.10.2 anprangert. Spiegelt AWNING_UNUSED_KEYS in const.py. */
 const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt",
-  "position_closed_frost","window_entity_id","window_open_state",
+  "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
   "min_position_when_open","window_close_debounce","drive_after_close",
@@ -410,7 +410,23 @@ de:{
   f_guard_hyst_hint:"Die beiden Werte sind ein Einschaltpunkt und ein Aufhebepunkt dahinter, kein Bereich. Ohne Abstand pendelt die Markise an der Schwelle.",
   f_guard_bin_hint:"„on“ gilt als Gefahr – die Markise fährt ein.",
   f_guard_lockout:"Sperrzeit nach der letzten Überschreitung",
-  f_guard_lockout_hint:"Eine Böe ist nach zwanzig Sekunden vorbei, die Markise soll trotzdem nicht sofort wieder heraus. Jede neue Überschreitung startet die Zeit von vorn.",
+  f_guard_lockout_hint_wind:"Eine Böe ist nach zwanzig Sekunden vorbei, die Markise soll trotzdem nicht sofort wieder heraus. Jede neue Überschreitung startet die Zeit von vorn.",
+  f_guard_lockout_hint_rain:"Nach dem letzten Tropfen ist das Tuch noch nass. Diese Zeit hält die Markise drinnen, bis sie abtrocknen konnte. Jeder neue Regen startet sie von vorn.",
+  f_guard_lockout_hint_ice:"Frost kommt nicht in Böen – hier reicht meist die Schwelle allein, Vorgabe ist deshalb 0. Eine Zeit setzen nur, wenn die Markise nach dem Auftauen noch warten soll.",
+  f_shade_release_opens:"Am Ende des Beschattungstags wieder öffnen",
+  f_shade_release_opens_hint:"Sinkt die Sonne unter den eingestellten Bereich, bleibt der Rollladen sonst auf Beschattungshöhe stehen, bis der Abendplan ihn schließt. Im Sonnenmodus sind das Minuten, im Helligkeits- und Zeitmodus können es Stunden sein. Angehakt fährt er stattdessen sofort auf.",
+  f_shade_only_when_open:"Nur beschatten, was schon offen ist",
+  f_shade_only_when_open_hint:"Beschatten und Öffnen ist derselbe Fahrbefehl mit einer anderen Zahl: ein noch geschlossener Rollladen wird von der Beschattung sonst auf die Beschattungshöhe hochgefahren. Angehakt bleibt er unten, bis er regulär geöffnet hat.",
+  sec_noup:"Hochfahren unterbinden",
+  sec_noup_sub:"Wochenende, Ferien, Urlaub",
+  f_noup_intro:"Betrifft nur das automatische Hochfahren. Runterfahren und Beschattung laufen weiter – sonst stünde das Haus abends offen.",
+  f_we_no_up:"Am Wochenende gar nicht hochfahren",
+  f_we_no_up_hint:"Ausschlafen statt später aufstehen. Ist oben ein Sondertage-Sensor eingetragen, entscheidet der – damit gilt das auch für Feiertage, Ferien und Schichtdienst, und wer samstags arbeitet, kann Sonnabend zum Arbeitstag erklären.",
+  f_no_up_cond:"Bedingung „nicht hochfahren\"",
+  f_no_up_hint:"Solange das zutrifft, bleibt der Rollladen morgens unten. Passend für einen Ferien- oder Urlaubshelfer (an/aus), einen Zeitplan-Helfer oder eine Auswahlliste. Nicht eingetragen oder Sensor nicht lesbar heißt: fahren.",
+  f_window_sensor_2:"Zweiter Fensterkontakt (optional)",
+  f_window_sensor_2_hint:"Für Doppelflügelfenster mit einem Kontakt je Flügel. Beide werden zusammen gelesen: offen ist das Fenster, sobald einer der beiden es meldet. Es gelten dieselben Zustände wie oben.",
+  sun_prot_switched_off:"Beschattung abgeschaltet",
   f_guard_grace:"Karenz bei totem Sensor",
   f_guard_grace_hint:"Ausfahren ist ab der ersten Sekunde gesperrt. Erst nach dieser Zeit wird eine ausgefahrene Markise auch eingefahren – ein Sensor, der beim Neustart kurz aussetzt, soll nicht das ganze Haus einfahren.",
   f_awning_cond_hint:"Zusätzliche Bedingungen der Markise ersetzen die des Bereichs – leer heißt: der Bereichswert gilt.",
@@ -691,7 +707,23 @@ en:{
   f_guard_hyst_hint:"These two are a switch-on point and a release point behind it, not a range. Without a gap the awning oscillates at the threshold.",
   f_guard_bin_hint:"“on” counts as danger – the awning retracts.",
   f_guard_lockout:"Lockout after the last exceedance",
-  f_guard_lockout_hint:"A gust is over in twenty seconds, the awning still must not go straight back out. Every new exceedance restarts the clock.",
+  f_guard_lockout_hint_wind:"A gust is over in twenty seconds, the awning still must not go straight back out. Every new exceedance restarts the clock.",
+  f_guard_lockout_hint_rain:"The fabric is still wet after the last drop. This time keeps the awning in until it can dry. Every new shower restarts it.",
+  f_guard_lockout_hint_ice:"Frost does not gust – the threshold alone is usually the whole story, which is why the default is 0. Set a time only if the awning should wait after thawing.",
+  f_shade_release_opens:"Open again when the shading day ends",
+  f_shade_release_opens_hint:"Once the sun drops below the configured range the shutter otherwise stays at the shading height until the evening schedule closes it. In sun mode that is minutes; in brightness and time mode it can be hours. Ticked, it opens straight away instead.",
+  f_shade_only_when_open:"Only shade what is already open",
+  f_shade_only_when_open_hint:"Shading and opening are the same drive command with a different number, so a shutter still closed gets driven up to the shading height by the shading rule. Ticked, it stays down until it has opened normally.",
+  sec_noup:"Block opening",
+  sec_noup_sub:"weekend, holidays, leave",
+  f_noup_intro:"Affects the automated opening only. Closing and shading keep running – otherwise the house would stand open all evening.",
+  f_we_no_up:"Never open on a weekend",
+  f_we_no_up_hint:"Sleeping in rather than getting up later. If a special-days sensor is configured above, that one decides – which covers public holidays, school breaks and shift work, and lets anyone who works Saturdays declare it a working day.",
+  f_no_up_cond:"Condition \\u201cdo not open\\u201d",
+  f_no_up_hint:"While this holds, the shutter stays down in the morning. Suits a holiday or leave helper (on/off), a schedule helper or a select list. Not configured, or an unreadable sensor, means: drive.",
+  f_window_sensor_2:"Second window contact (optional)",
+  f_window_sensor_2_hint:"For double-casement windows with one contact per leaf. Both are read together: the window counts as open as soon as either reports it. The same states as above apply.",
+  sun_prot_switched_off:"Shading switched off",
   f_guard_grace:"Grace for a dead sensor",
   f_guard_grace_hint:"Extending is barred from the first second. Only after this time is an extended awning also pulled in – a sensor blinking out during a restart should not retract the whole house.",
   f_awning_cond_hint:"Conditions set on the awning replace the area's – empty means the area value applies.",
@@ -914,7 +946,23 @@ fr:{
   f_guard_hyst_hint:"Ces deux valeurs sont un point de déclenchement et un point de libération derrière, pas une plage. Sans écart, le store oscille au seuil.",
   f_guard_bin_hint:"« on » vaut danger – le store rentre.",
   f_guard_lockout:"Délai après le dernier dépassement",
-  f_guard_lockout_hint:"Une rafale passe en vingt secondes, le store ne doit pas ressortir aussitôt. Chaque nouveau dépassement relance le délai.",
+  f_guard_lockout_hint_wind:"Une rafale passe en vingt secondes, le store ne doit pas ressortir aussitôt. Chaque nouveau dépassement relance le délai.",
+  f_guard_lockout_hint_rain:"Après la dernière goutte, la toile est encore mouillée. Ce délai garde le store rentré le temps qu'il sèche. Chaque nouvelle averse le relance.",
+  f_guard_lockout_hint_ice:"Le gel n'arrive pas en rafales – le seuil suffit généralement, d'où la valeur par défaut 0. Ne fixez un délai que si le store doit attendre après le dégel.",
+  f_shade_release_opens:"Rouvrir à la fin de la journée d'ombrage",
+  f_shade_release_opens_hint:"Quand le soleil descend sous la plage réglée, le volet reste sinon à la hauteur d'ombrage jusqu'à la fermeture du soir. En mode soleil ce sont des minutes, en mode luminosité ou horaire cela peut être des heures. Coché, il remonte aussitôt.",
+  f_shade_only_when_open:"N'ombrager que ce qui est déjà ouvert",
+  f_shade_only_when_open_hint:"Ombrager et ouvrir, c'est la même commande avec un autre chiffre : un volet encore fermé est donc remonté à la hauteur d'ombrage. Coché, il reste baissé jusqu'à son ouverture normale.",
+  sec_noup:"Empêcher l'ouverture",
+  sec_noup_sub:"week-end, vacances, congés",
+  f_noup_intro:"Ne concerne que l'ouverture automatique. La fermeture et l'ombrage continuent – sinon la maison resterait ouverte toute la soirée.",
+  f_we_no_up:"Ne jamais ouvrir le week-end",
+  f_we_no_up_hint:"Faire la grasse matinée plutôt que se lever plus tard. Si un capteur de jours particuliers est réglé plus haut, c'est lui qui décide – ce qui couvre jours fériés, vacances scolaires et travail posté, et permet à qui travaille le samedi d'en faire un jour ouvré.",
+  f_no_up_cond:"Condition « ne pas ouvrir »",
+  f_no_up_hint:"Tant qu'elle est vraie, le volet reste baissé le matin. Convient à un assistant vacances ou congés (marche/arrêt), à un planning ou à une liste de choix. Non renseignée, ou capteur illisible : on ouvre.",
+  f_window_sensor_2:"Deuxième contact de fenêtre (facultatif)",
+  f_window_sensor_2_hint:"Pour les fenêtres à deux vantaux avec un contact par vantail. Les deux sont lus ensemble : la fenêtre est ouverte dès que l'un des deux le signale. Les mêmes états qu'au-dessus s'appliquent.",
+  sun_prot_switched_off:"Ombrage désactivé",
   f_guard_grace:"Tolérance capteur muet",
   f_guard_grace_hint:"Le déploiement est bloqué dès la première seconde. Ce n'est qu'après ce délai qu'un store déployé est aussi rentré – un capteur absent au démarrage ne doit pas tout rentrer.",
   f_awning_cond_hint:"Les conditions du store remplacent celles de la zone – vide signifie que la valeur de la zone s'applique.",
@@ -1137,7 +1185,23 @@ es:{
   f_guard_hyst_hint:"Los dos valores son un punto de activación y otro de liberación detrás, no un rango. Sin separación el toldo oscila en el umbral.",
   f_guard_bin_hint:"«on» cuenta como peligro: el toldo se recoge.",
   f_guard_lockout:"Espera tras el último exceso",
-  f_guard_lockout_hint:"Una racha pasa en veinte segundos y el toldo no debe salir de nuevo enseguida. Cada exceso reinicia el tiempo.",
+  f_guard_lockout_hint_wind:"Una racha pasa en veinte segundos y el toldo no debe salir de nuevo enseguida. Cada exceso reinicia el tiempo.",
+  f_guard_lockout_hint_rain:"Tras la última gota la lona sigue mojada. Este tiempo mantiene el toldo recogido hasta que pueda secarse. Cada nueva lluvia lo reinicia.",
+  f_guard_lockout_hint_ice:"La helada no llega a rachas: normalmente basta el umbral, por eso el valor por defecto es 0. Fije un tiempo solo si el toldo debe esperar tras el deshielo.",
+  f_shade_release_opens:"Volver a abrir al terminar el día de sombreado",
+  f_shade_release_opens_hint:"Cuando el sol baja del rango configurado, la persiana se queda si no a la altura de sombreado hasta que el plan de la tarde la cierre. En modo sol son minutos; en modo luminosidad y horario pueden ser horas. Marcado, sube de inmediato.",
+  f_shade_only_when_open:"Sombrear solo lo que ya está abierto",
+  f_shade_only_when_open_hint:"Sombrear y abrir son la misma orden con otra cifra: una persiana aún cerrada la sube el sombreado hasta la altura de sombreado. Marcado, se queda abajo hasta que abra normalmente.",
+  sec_noup:"Impedir la apertura",
+  sec_noup_sub:"fin de semana, vacaciones, permisos",
+  f_noup_intro:"Afecta solo a la apertura automática. El cierre y el sombreado siguen funcionando; de lo contrario la casa quedaría abierta toda la tarde.",
+  f_we_no_up:"No abrir nunca en fin de semana",
+  f_we_no_up_hint:"Dormir hasta tarde en lugar de levantarse más tarde. Si arriba hay un sensor de días especiales, decide ese: cubre festivos, vacaciones escolares y turnos, y quien trabaje los sábados puede declararlo laborable.",
+  f_no_up_cond:"Condición «no abrir»",
+  f_no_up_hint:"Mientras se cumpla, la persiana se queda abajo por la mañana. Sirve un ayudante de vacaciones (on/off), un ayudante de horario o una lista de selección. Sin configurar, o sensor ilegible: se abre.",
+  f_window_sensor_2:"Segundo contacto de ventana (opcional)",
+  f_window_sensor_2_hint:"Para ventanas de dos hojas con un contacto por hoja. Se leen juntos: la ventana está abierta en cuanto uno de los dos lo indica. Se aplican los mismos estados de arriba.",
+  sun_prot_switched_off:"Sombreado desactivado",
   f_guard_grace:"Margen con sensor mudo",
   f_guard_grace_hint:"Extender queda bloqueado desde el primer segundo. Solo después de este tiempo se recoge también un toldo extendido: un sensor que falla al arrancar no debe recogerlo todo.",
   f_awning_cond_hint:"Las condiciones del toldo sustituyen a las de la zona; vacío significa que vale el valor de la zona.",
@@ -1360,7 +1424,23 @@ it:{
   f_guard_hyst_hint:"I due valori sono un punto di attivazione e uno di rilascio dietro, non un intervallo. Senza distacco la tenda oscilla alla soglia.",
   f_guard_bin_hint:"«on» vale come pericolo: la tenda rientra.",
   f_guard_lockout:"Attesa dopo l'ultimo superamento",
-  f_guard_lockout_hint:"Una raffica passa in venti secondi, la tenda non deve però riuscire subito. Ogni nuovo superamento riavvia il tempo.",
+  f_guard_lockout_hint_wind:"Una raffica passa in venti secondi, la tenda non deve però riuscire subito. Ogni nuovo superamento riavvia il tempo.",
+  f_guard_lockout_hint_rain:"Dopo l'ultima goccia il telo è ancora bagnato. Questo tempo tiene dentro la tenda finché non asciuga. Ogni nuova pioggia lo riavvia.",
+  f_guard_lockout_hint_ice:"Il gelo non arriva a raffiche: di norma basta la soglia, perciò il valore predefinito è 0. Impostare un tempo solo se la tenda deve attendere dopo il disgelo.",
+  f_shade_release_opens:"Riaprire alla fine della giornata di ombreggiatura",
+  f_shade_release_opens_hint:"Quando il sole scende sotto l'intervallo impostato, la tapparella resta altrimenti all'altezza di ombreggiatura finché il piano serale non la chiude. In modalità sole sono minuti, in modalità luminosità e orario possono essere ore. Spuntato, risale subito.",
+  f_shade_only_when_open:"Ombreggiare solo ciò che è già aperto",
+  f_shade_only_when_open_hint:"Ombreggiare e aprire sono lo stesso comando con un numero diverso: una tapparella ancora chiusa viene quindi alzata all'altezza di ombreggiatura. Spuntato, resta giù finché non si apre normalmente.",
+  sec_noup:"Impedire l'apertura",
+  sec_noup_sub:"weekend, vacanze, ferie",
+  f_noup_intro:"Riguarda solo l'apertura automatica. Chiusura e ombreggiatura continuano, altrimenti la casa resterebbe aperta tutta la sera.",
+  f_we_no_up:"Non aprire mai nel weekend",
+  f_we_no_up_hint:"Dormire più a lungo invece di alzarsi più tardi. Se sopra è impostato un sensore giorni speciali, decide quello: copre festivi, vacanze scolastiche e turni, e chi lavora il sabato può dichiararlo feriale.",
+  f_no_up_cond:"Condizione «non aprire»",
+  f_no_up_hint:"Finché è vera, la tapparella resta giù al mattino. Adatta a un helper vacanze o ferie (on/off), a un helper orario o a una lista di scelta. Non impostata, o sensore illeggibile: si apre.",
+  f_window_sensor_2:"Secondo contatto finestra (facoltativo)",
+  f_window_sensor_2_hint:"Per finestre a due ante con un contatto per anta. Vengono letti insieme: la finestra è aperta appena uno dei due lo segnala. Valgono gli stessi stati di sopra.",
+  sun_prot_switched_off:"Ombreggiatura disattivata",
   f_guard_grace:"Tolleranza per sensore muto",
   f_guard_grace_hint:"L'estensione è bloccata dal primo secondo. Solo dopo questo tempo una tenda estesa viene anche rientrata: un sensore assente all'avvio non deve far rientrare tutto.",
   f_awning_cond_hint:"Le condizioni della tenda sostituiscono quelle della zona; vuoto significa che vale il valore della zona.",
@@ -1584,7 +1664,23 @@ nl:{
   f_guard_hyst_hint:"De twee waarden zijn een inschakelpunt en een vrijgavepunt erachter, geen bereik. Zonder afstand pendelt het scherm op de drempel.",
   f_guard_bin_hint:"„on” geldt als gevaar – het scherm schuift in.",
   f_guard_lockout:"Wachttijd na de laatste overschrijding",
-  f_guard_lockout_hint:"Een windvlaag is na twintig seconden voorbij, het scherm mag er toch niet meteen weer uit. Elke nieuwe overschrijding start de tijd opnieuw.",
+  f_guard_lockout_hint_wind:"Een windvlaag is na twintig seconden voorbij, het scherm mag er toch niet meteen weer uit. Elke nieuwe overschrijding start de tijd opnieuw.",
+  f_guard_lockout_hint_rain:"Na de laatste druppel is het doek nog nat. Deze tijd houdt het scherm binnen tot het kan drogen. Elke nieuwe bui start hem opnieuw.",
+  f_guard_lockout_hint_ice:"Vorst komt niet in vlagen – de drempel alleen volstaat meestal, vandaar de standaard 0. Stel alleen een tijd in als het scherm na het ontdooien nog moet wachten.",
+  f_shade_release_opens:"Weer openen aan het eind van de zonweringsdag",
+  f_shade_release_opens_hint:"Zakt de zon onder het ingestelde bereik, dan blijft het rolluik anders op zonweringshoogte staan tot het avondschema het sluit. In zonmodus zijn dat minuten, in helderheids- en tijdmodus kunnen het uren zijn. Aangevinkt gaat het meteen omhoog.",
+  f_shade_only_when_open:"Alleen beschaduwen wat al open is",
+  f_shade_only_when_open_hint:"Beschaduwen en openen is hetzelfde rijcommando met een ander getal: een nog gesloten rolluik wordt door de zonwering dus omhoog gezet naar de zonweringshoogte. Aangevinkt blijft het beneden tot het normaal geopend heeft.",
+  sec_noup:"Openen verhinderen",
+  sec_noup_sub:"weekend, vakantie, verlof",
+  f_noup_intro:"Betreft alleen het automatisch openen. Sluiten en zonwering blijven werken – anders stond het huis de hele avond open.",
+  f_we_no_up:"In het weekend nooit openen",
+  f_we_no_up_hint:"Uitslapen in plaats van later opstaan. Staat hierboven een sensor voor bijzondere dagen, dan beslist die – dat dekt feestdagen, schoolvakanties en ploegendienst, en wie op zaterdag werkt kan die tot werkdag verklaren.",
+  f_no_up_cond:"Voorwaarde \\u201eniet openen\\u201d",
+  f_no_up_hint:"Zolang dit geldt, blijft het rolluik 's ochtends beneden. Past bij een vakantie- of verlofhelper (aan/uit), een schema-helper of een keuzelijst. Niet ingesteld of sensor onleesbaar betekent: rijden.",
+  f_window_sensor_2:"Tweede raamcontact (optioneel)",
+  f_window_sensor_2_hint:"Voor dubbele draairamen met één contact per vleugel. Beide worden samen gelezen: het raam is open zodra een van beide dat meldt. Dezelfde toestanden als hierboven gelden.",
+  sun_prot_switched_off:"Zonwering uitgeschakeld",
   f_guard_grace:"Tolerantie bij dode sensor",
   f_guard_grace_hint:"Uitschuiven is vanaf de eerste seconde geblokkeerd. Pas na deze tijd wordt een uitgeschoven scherm ook ingehaald – een sensor die bij het opstarten even wegvalt mag niet het hele huis inschuiven.",
   f_awning_cond_hint:"Voorwaarden op het scherm vervangen die van de zone – leeg betekent dat de zonewaarde geldt.",
@@ -1808,7 +1904,23 @@ da:{
   f_guard_hyst_hint:"De to værdier er et tilkoblingspunkt og et frigivelsespunkt bagved, ikke et interval. Uden afstand pendler markisen ved tærsklen.",
   f_guard_bin_hint:"„on” tæller som fare – markisen kører ind.",
   f_guard_lockout:"Spærretid efter sidste overskridelse",
-  f_guard_lockout_hint:"Et vindstød er ovre på tyve sekunder, men markisen må alligevel ikke straks ud igen. Hver ny overskridelse starter tiden forfra.",
+  f_guard_lockout_hint_wind:"Et vindstød er ovre på tyve sekunder, men markisen må alligevel ikke straks ud igen. Hver ny overskridelse starter tiden forfra.",
+  f_guard_lockout_hint_rain:"Efter den sidste dråbe er dugen stadig våd. Denne tid holder markisen inde, til den kan tørre. Hver ny byge starter den forfra.",
+  f_guard_lockout_hint_ice:"Frost kommer ikke i stød – tærsklen alene er som regel nok, derfor er standarden 0. Sæt kun en tid, hvis markisen skal vente efter optøning.",
+  f_shade_release_opens:"Åbn igen, når afskærmningsdagen slutter",
+  f_shade_release_opens_hint:"Falder solen under det indstillede område, bliver rullegardinet ellers stående i afskærmningshøjde, indtil aftenplanen lukker det. I soltilstand er det minutter, i lysstyrke- og tidstilstand kan det være timer. Sat flueben kører det op med det samme.",
+  f_shade_only_when_open:"Afskærm kun det, der allerede er åbent",
+  f_shade_only_when_open_hint:"Afskærmning og åbning er den samme kørselsordre med et andet tal: et endnu lukket rullegardin køres derfor op i afskærmningshøjde. Med flueben bliver det nede, til det er åbnet normalt.",
+  sec_noup:"Forhindr åbning",
+  sec_noup_sub:"weekend, ferie, fridage",
+  f_noup_intro:"Vedrører kun den automatiske åbning. Lukning og afskærmning kører videre – ellers stod huset åbent hele aftenen.",
+  f_we_no_up:"Åbn aldrig i weekenden",
+  f_we_no_up_hint:"At sove længe frem for at stå senere op. Er der sat en sensor for særlige dage ovenfor, bestemmer den – det dækker helligdage, skoleferier og skifteholdsarbejde, og den, der arbejder om lørdagen, kan gøre lørdag til arbejdsdag.",
+  f_no_up_cond:"Betingelse \\u201eåbn ikke\\u201d",
+  f_no_up_hint:"Så længe den gælder, bliver rullegardinet nede om morgenen. Passer til en ferie- eller fridagshjælper (til/fra), en tidsplanhjælper eller en valgliste. Ikke angivet eller ulæselig sensor betyder: kør.",
+  f_window_sensor_2:"Anden vindueskontakt (valgfri)",
+  f_window_sensor_2_hint:"Til todelte vinduer med én kontakt pr. ramme. Begge læses sammen: vinduet er åbent, så snart en af dem melder det. De samme tilstande som ovenfor gælder.",
+  sun_prot_switched_off:"Afskærmning slået fra",
   f_guard_grace:"Nådetid ved død sensor",
   f_guard_grace_hint:"Udkørsel er spærret fra første sekund. Først efter denne tid køres en udkørt markise også ind – en sensor, der falder ud ved genstart, skal ikke trække hele huset ind.",
   f_awning_cond_hint:"Betingelser på markisen erstatter områdets – tom betyder, at områdets værdi gælder.",
@@ -2032,7 +2144,23 @@ sv:{
   f_guard_hyst_hint:"De två värdena är en tillslagspunkt och en frisläppningspunkt bakom, inte ett intervall. Utan avstånd pendlar markisen vid tröskeln.",
   f_guard_bin_hint:"”on” räknas som fara – markisen fälls in.",
   f_guard_lockout:"Spärrtid efter senaste överskridandet",
-  f_guard_lockout_hint:"En vindby är över på tjugo sekunder, men markisen får ändå inte ut igen direkt. Varje nytt överskridande startar om tiden.",
+  f_guard_lockout_hint_wind:"En vindby är över på tjugo sekunder, men markisen får ändå inte ut igen direkt. Varje nytt överskridande startar om tiden.",
+  f_guard_lockout_hint_rain:"Efter sista droppen är väven fortfarande blöt. Den här tiden håller markisen inne tills den hinner torka. Varje ny skur startar om den.",
+  f_guard_lockout_hint_ice:"Frost kommer inte i byar – tröskeln räcker oftast, därför är standarden 0. Sätt en tid bara om markisen ska vänta efter upptining.",
+  f_shade_release_opens:"Öppna igen när solskyddsdagen tar slut",
+  f_shade_release_opens_hint:"Sjunker solen under det inställda intervallet står persiennen annars kvar i solskyddshöjd tills kvällsschemat stänger den. I solläge är det minuter, i ljus- och tidsläge kan det vara timmar. Ikryssat åker den upp direkt.",
+  f_shade_only_when_open:"Solskydda bara det som redan är öppet",
+  f_shade_only_when_open_hint:"Att solskydda och att öppna är samma körkommando med ett annat tal: en ännu stängd persienn körs alltså upp till solskyddshöjd. Ikryssat stannar den nere tills den öppnats normalt.",
+  sec_noup:"Hindra öppning",
+  sec_noup_sub:"helg, lov, ledighet",
+  f_noup_intro:"Gäller bara den automatiska öppningen. Stängning och solskydd fortsätter – annars stod huset öppet hela kvällen.",
+  f_we_no_up:"Öppna aldrig på helgen",
+  f_we_no_up_hint:"Sova ut i stället för att stiga upp senare. Finns en sensor för särskilda dagar ovan är det den som bestämmer – det täcker helgdagar, skollov och skiftarbete, och den som jobbar på lördagar kan göra lördag till arbetsdag.",
+  f_no_up_cond:"Villkor \\u201döppna inte\\u201d",
+  f_no_up_hint:"Så länge det gäller stannar persiennen nere på morgonen. Passar en semester- eller ledighetshjälpare (på/av), en schemahjälpare eller en vallista. Ej angivet eller oläslig sensor betyder: kör.",
+  f_window_sensor_2:"Andra fönsterkontakt (valfri)",
+  f_window_sensor_2_hint:"För tvåluftsfönster med en kontakt per luft. Båda läses tillsammans: fönstret är öppet så snart någon av dem rapporterar det. Samma tillstånd som ovan gäller.",
+  sun_prot_switched_off:"Solskydd avstängt",
   f_guard_grace:"Respit vid död sensor",
   f_guard_grace_hint:"Utfällning är spärrad från första sekunden. Först efter denna tid fälls även en utfälld markis in – en sensor som faller bort vid omstart ska inte dra in hela huset.",
   f_awning_cond_hint:"Villkor på markisen ersätter områdets – tomt betyder att områdets värde gäller.",
@@ -2256,7 +2384,23 @@ pl:{
   f_guard_hyst_hint:"Te dwie wartości to punkt załączenia i punkt zwolnienia za nim, a nie zakres. Bez odstępu markiza oscyluje przy progu.",
   f_guard_bin_hint:"„on” liczy się jako zagrożenie – markiza się chowa.",
   f_guard_lockout:"Blokada po ostatnim przekroczeniu",
-  f_guard_lockout_hint:"Podmuch mija w dwadzieścia sekund, a markiza i tak nie powinna od razu wyjechać. Każde nowe przekroczenie uruchamia czas od nowa.",
+  f_guard_lockout_hint_wind:"Podmuch mija w dwadzieścia sekund, a markiza i tak nie powinna od razu wyjechać. Każde nowe przekroczenie uruchamia czas od nowa.",
+  f_guard_lockout_hint_rain:"Po ostatniej kropli tkanina jest jeszcze mokra. Ten czas trzyma markizę w środku, aż zdąży wyschnąć. Każdy nowy deszcz uruchamia go od nowa.",
+  f_guard_lockout_hint_ice:"Mróz nie przychodzi w podmuchach – zwykle wystarczy sam próg, dlatego domyślnie jest 0. Czas ustaw tylko wtedy, gdy markiza ma poczekać po odmarznięciu.",
+  f_shade_release_opens:"Otworzyć ponownie po zakończeniu dnia zacieniania",
+  f_shade_release_opens_hint:"Gdy słońce spadnie poniżej ustawionego zakresu, roleta inaczej zostaje na wysokości zacieniania, aż zamknie ją plan wieczorny. W trybie słonecznym to minuty, w trybie jasności i czasowym mogą to być godziny. Zaznaczone – podnosi się od razu.",
+  f_shade_only_when_open:"Zacieniać tylko to, co już otwarte",
+  f_shade_only_when_open_hint:"Zacienianie i otwieranie to to samo polecenie z inną liczbą: jeszcze zamknięta roleta zostaje więc podniesiona do wysokości zacieniania. Zaznaczone – zostaje na dole, aż otworzy się normalnie.",
+  sec_noup:"Blokada otwierania",
+  sec_noup_sub:"weekend, ferie, urlop",
+  f_noup_intro:"Dotyczy tylko automatycznego otwierania. Zamykanie i zacienianie działają dalej – inaczej dom stałby otwarty przez cały wieczór.",
+  f_we_no_up:"W weekend w ogóle nie otwierać",
+  f_we_no_up_hint:"Pospać dłużej zamiast wstawać później. Jeśli powyżej ustawiono czujnik dni szczególnych, decyduje on – obejmuje to święta, ferie i pracę zmianową, a kto pracuje w soboty, może uznać sobotę za dzień roboczy.",
+  f_no_up_cond:"Warunek „nie otwierać\\u201d",
+  f_no_up_hint:"Dopóki jest spełniony, roleta rano zostaje na dole. Pasuje pomocnik ferii lub urlopu (wł./wył.), pomocnik harmonogramu albo lista wyboru. Brak ustawienia lub nieczytelny czujnik oznacza: jedź.",
+  f_window_sensor_2:"Drugi kontaktron okienny (opcjonalnie)",
+  f_window_sensor_2_hint:"Do okien dwuskrzydłowych z jednym kontaktronem na skrzydło. Oba są czytane razem: okno jest otwarte, gdy zgłosi to którykolwiek z nich. Obowiązują te same stany co wyżej.",
+  sun_prot_switched_off:"Zacienianie wyłączone",
   f_guard_grace:"Karencja przy martwym czujniku",
   f_guard_grace_hint:"Wysuwanie jest zablokowane od pierwszej sekundy. Dopiero po tym czasie wysunięta markiza zostaje też schowana – czujnik, który zniknie przy restarcie, nie powinien schować całego domu.",
   f_awning_cond_hint:"Warunki markizy zastępują warunki strefy – puste oznacza, że obowiązuje wartość strefy.",
@@ -2480,7 +2624,23 @@ pt:{
   f_guard_hyst_hint:"Os dois valores são um ponto de ativação e um de libertação atrás, não um intervalo. Sem distância o toldo oscila no limite.",
   f_guard_bin_hint:"«on» conta como perigo – o toldo recolhe.",
   f_guard_lockout:"Espera após a última ultrapassagem",
-  f_guard_lockout_hint:"Uma rajada passa em vinte segundos e o toldo não deve sair logo de novo. Cada nova ultrapassagem reinicia o tempo.",
+  f_guard_lockout_hint_wind:"Uma rajada passa em vinte segundos e o toldo não deve sair logo de novo. Cada nova ultrapassagem reinicia o tempo.",
+  f_guard_lockout_hint_rain:"Depois da última gota o tecido ainda está molhado. Este tempo mantém o toldo recolhido até poder secar. Cada nova chuva reinicia-o.",
+  f_guard_lockout_hint_ice:"A geada não vem em rajadas – normalmente basta o limiar, por isso a predefinição é 0. Defina um tempo só se o toldo dever esperar após o degelo.",
+  f_shade_release_opens:"Reabrir no fim do dia de sombreamento",
+  f_shade_release_opens_hint:"Quando o sol desce abaixo do intervalo definido, o estore fica de outro modo à altura de sombreamento até o plano da noite o fechar. No modo sol são minutos; nos modos luminosidade e horário podem ser horas. Assinalado, sobe de imediato.",
+  f_shade_only_when_open:"Sombrear só o que já está aberto",
+  f_shade_only_when_open_hint:"Sombrear e abrir é o mesmo comando com outro número: um estore ainda fechado é por isso subido até à altura de sombreamento. Assinalado, fica em baixo até abrir normalmente.",
+  sec_noup:"Impedir a abertura",
+  sec_noup_sub:"fim de semana, férias, folgas",
+  f_noup_intro:"Diz respeito apenas à abertura automática. O fecho e o sombreamento continuam – caso contrário a casa ficaria aberta toda a noite.",
+  f_we_no_up:"Nunca abrir ao fim de semana",
+  f_we_no_up_hint:"Dormir até tarde em vez de levantar mais tarde. Se acima estiver definido um sensor de dias especiais, é ele que decide – cobre feriados, férias escolares e turnos, e quem trabalha ao sábado pode declará-lo dia útil.",
+  f_no_up_cond:"Condição «não abrir»",
+  f_no_up_hint:"Enquanto se verificar, o estore fica em baixo de manhã. Serve um ajudante de férias ou folgas (ligado/desligado), um ajudante de horário ou uma lista de seleção. Não definido, ou sensor ilegível, significa: abrir.",
+  f_window_sensor_2:"Segundo contacto de janela (opcional)",
+  f_window_sensor_2_hint:"Para janelas de duas folhas com um contacto por folha. São lidos em conjunto: a janela está aberta assim que um deles o indicar. Aplicam-se os mesmos estados de cima.",
+  sun_prot_switched_off:"Sombreamento desligado",
   f_guard_grace:"Tolerância com sensor mudo",
   f_guard_grace_hint:"Estender está bloqueado desde o primeiro segundo. Só após este tempo um toldo estendido é também recolhido – um sensor que falha no arranque não deve recolher a casa inteira.",
   f_awning_cond_hint:"As condições do toldo substituem as da zona – vazio significa que vale o valor da zona.",
@@ -2704,7 +2864,23 @@ nb:{
   f_guard_hyst_hint:"De to verdiene er et innkoblingspunkt og et frigivelsespunkt bak, ikke et intervall. Uten avstand pendler markisen ved terskelen.",
   f_guard_bin_hint:"«on» teller som fare – markisen kjører inn.",
   f_guard_lockout:"Sperretid etter siste overskridelse",
-  f_guard_lockout_hint:"Et vindkast er over på tjue sekunder, markisen skal likevel ikke ut igjen med en gang. Hver ny overskridelse starter tiden på nytt.",
+  f_guard_lockout_hint_wind:"Et vindkast er over på tjue sekunder, markisen skal likevel ikke ut igjen med en gang. Hver ny overskridelse starter tiden på nytt.",
+  f_guard_lockout_hint_rain:"Etter siste dråpe er duken fortsatt våt. Denne tiden holder markisen inne til den får tørket. Hvert nytt regn starter den på nytt.",
+  f_guard_lockout_hint_ice:"Frost kommer ikke i kast – terskelen alene holder som regel, derfor er standarden 0. Sett en tid bare hvis markisen skal vente etter tining.",
+  f_shade_release_opens:"Åpne igjen når skjermingsdagen er over",
+  f_shade_release_opens_hint:"Synker sola under det innstilte området, blir rullegardinet ellers stående i skjermingshøyde til kveldsplanen lukker det. I solmodus er det minutter, i lysstyrke- og tidsmodus kan det være timer. Avkrysset kjører det opp med én gang.",
+  f_shade_only_when_open:"Skjerm bare det som allerede er åpent",
+  f_shade_only_when_open_hint:"Å skjerme og å åpne er samme kjørekommando med et annet tall: et ennå lukket rullegardin blir derfor kjørt opp til skjermingshøyde. Avkrysset blir det nede til det har åpnet normalt.",
+  sec_noup:"Hindre åpning",
+  sec_noup_sub:"helg, ferie, fridager",
+  f_noup_intro:"Gjelder bare den automatiske åpningen. Lukking og skjerming går videre – ellers ville huset stå åpent hele kvelden.",
+  f_we_no_up:"Aldri åpne i helgen",
+  f_we_no_up_hint:"Sove lenge i stedet for å stå opp senere. Er det satt en sensor for spesielle dager over, er det den som bestemmer – det dekker helligdager, skoleferier og skiftarbeid, og den som jobber lørdager kan gjøre lørdag til arbeidsdag.",
+  f_no_up_cond:"Betingelse \\u201eikke åpne\\u201d",
+  f_no_up_hint:"Så lenge den gjelder, blir rullegardinet nede om morgenen. Passer til en ferie- eller fridagshjelper (på/av), en tidsplanhjelper eller en valgliste. Ikke satt eller uleselig sensor betyr: kjør.",
+  f_window_sensor_2:"Andre vinduskontakt (valgfri)",
+  f_window_sensor_2_hint:"For tofløyede vinduer med én kontakt per fløy. Begge leses sammen: vinduet er åpent så snart en av dem melder det. De samme tilstandene som over gjelder.",
+  sun_prot_switched_off:"Skjerming slått av",
   f_guard_grace:"Nådetid ved død sensor",
   f_guard_grace_hint:"Utkjøring er sperret fra første sekund. Først etter denne tiden kjøres en utkjørt markise også inn – en sensor som faller ut ved omstart skal ikke trekke inn hele huset.",
   f_awning_cond_hint:"Betingelser på markisen erstatter områdets – tomt betyr at områdets verdi gjelder.",
@@ -2859,6 +3035,9 @@ class ShutterPilotPanel extends PanelBase {
     .sun-row{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:13px;color:var(--txt);flex-wrap:wrap}
     .sun-row ha-icon{--mdc-icon-size:18px;color:#ff9800;flex-shrink:0}
     .sun-off{font-size:12px;color:var(--txt2)}
+    /* Nach rechts geschoben, damit er nicht wie ein Teil des Statustexts
+       aussieht – dieselbe Kante wie der Automatik-Schalter darueber. */
+    .sun-prot-sw{margin-left:auto;--mdc-theme-secondary:#ff9800}
 
     @media (max-width:420px){
       :host{padding:12px}
@@ -3663,9 +3842,16 @@ class ShutterPilotPanel extends PanelBase {
     const azMin=st.azimuth_min??area.azimuth_min??90;
     const azMax=st.azimuth_max??area.azimuth_max??270;
     const azCur=st.current_azimuth!=null?Number(st.current_azimuth).toFixed(0)+"°":"–";
+    /* Eigener Schalter, nicht der Automatik-Schalter darueber: 35 Grad heute
+       und 20 morgen ist ein Grund, die Beschattung zu lassen – kein Grund,
+       die Rollladen morgens unten zu lassen. Aus schaltet frei, was gerade
+       beschattet ist, statt es stehenzulassen. */
+    const protOn=d.sun_protect_modes?.[id]!==false;
     return html`<div class="sun-protect-info ${active?"active":""}">
       <div class="sun-row"><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>
-        <span><b>${statusText}</b></span></div>
+        <span><b>${protOn?statusText:this.t("sun_prot_switched_off")}</b></span>
+        <ha-switch class="sun-prot-sw" .checked=${protOn} ?disabled=${!this._isAdmin()}
+          @change=${e=>this._toggleSunProtect(id,e.target.checked)}></ha-switch></div>
       <div class="sun-row"><ha-icon icon="mdi:angle-acute"></ha-icon>
         <span>${this.t("sun_prot_range")}: <b>${eMin}° – ${eMax}°</b> · ${this.t("sun_elevation")}: <b>${cur}</b></span></div>
       ${azEnabled?html`<div class="sun-row"><ha-icon icon="mdi:compass-outline"></ha-icon>
@@ -3917,6 +4103,15 @@ class ShutterPilotPanel extends PanelBase {
         ${bd("shade_from",T("f_shade_from"),"09:00")}
         ${bd("shade_to",T("f_shade_to"),"20:00")}
         <div class="hint">${T("f_shade_hours_hint")}</div>
+        ${/* Zwei Haken zum Verhalten, nicht zur Bedingung: der eine sagt, was
+             am Ende des Beschattungstags passiert, der andere, ob die
+             Beschattung einen noch geschlossenen Rollladen anfassen darf. */""}
+        <div class="field"><label><input type="checkbox" .checked=${!!a.shade_release_opens}
+          @change=${e=>{a.shade_release_opens=e.target.checked;this.requestUpdate();}}> ${T("f_shade_release_opens")}</label>
+          <div class="hint">${T("f_shade_release_opens_hint")}</div></div>
+        <div class="field"><label><input type="checkbox" .checked=${!!a.shade_only_when_open}
+          @change=${e=>{a.shade_only_when_open=e.target.checked;this.requestUpdate();}}> ${T("f_shade_only_when_open")}</label>
+          <div class="hint">${T("f_shade_only_when_open_hint")}</div></div>
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
         ${this._renderConditionSlots(a,ep,f)}`:""}
 
@@ -3947,6 +4142,15 @@ class ShutterPilotPanel extends PanelBase {
         ${a.sun_cond_vent_a_entity?html`
           ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",COND_DOMAINS,HINTS.condition)}
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
+
+      `)}${this._sec("mdi:weekend","sec_noup","sec_noup_sub",html`
+      <div class="hint">${T("f_noup_intro")}</div>
+      <div class="field"><label><input type="checkbox" .checked=${!!a.we_no_up}
+        @change=${e=>{a.we_no_up=e.target.checked;this.requestUpdate();}}> ${T("f_we_no_up")}</label>
+        <div class="hint">${T("f_we_no_up_hint")}</div></div>
+      ${ep("sun_cond_no_up_entity",T("f_no_up_cond"),COND_DOMAINS,HINTS.condition)}
+      ${a.sun_cond_no_up_entity?this._renderCondDetail(a,"no_up",a.sun_cond_no_up_entity,f):""}
+      <div class="hint">${T("f_no_up_hint")}</div>
 
       `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
@@ -4303,7 +4507,11 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
         ${eid&&isBool?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
         ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
-        ${eid?html`<div class="hint">${T("f_guard_lockout_hint")}</div>`:""}
+        ${/* Je Slot ein eigener Text. Der eine Satz ueber die Boe stand vorher
+             auch unter Regen und Frost – bei Frost beschreibt er das Gegenteil
+             dessen, was die Sperrzeit dort tut (Vorgabe 0, weil Frost nicht
+             boeig kommt). Gemeldet als Textfehler, war aber einer. */""}
+        ${eid?html`<div class="hint">${T("f_guard_lockout_hint_"+slot)}</div>`:""}
       </div>`;
   }
   /* Aus einem bestehenden Rollladen eine Markise machen. Die Schlüssel, die
@@ -4411,6 +4619,16 @@ class ShutterPilotPanel extends PanelBase {
 
       `)}${this._sec("mdi:window-open-variant","sec_window","sec_window_sub",html`
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}
+      ${/* Doppelfluegelfenster: ein Kontakt je Fluegel, und keiner der beiden
+           beantwortet allein die Frage. Der zweite wird ODER-verknuepft, der
+           offenere gewinnt. Erst anbieten, wenn der erste steht – sonst
+           stehen zwei leere Auswahlfelder uebereinander. Kein eigenes Paar
+           Zustandsfelder: zwei Fluegel eines Fensters sind dieselbe Hardware
+           zweimal, und ein zweiter Satz Woerter waere nur eine weitere Zeile
+           zum Uebersehen. */""}
+      ${s.window_entity_id?html`
+        ${ep("window_entity_id_2",T("f_window_sensor_2"),["binary_sensor","sensor"],HINTS.window)}
+        <div class="hint">${T("f_window_sensor_2_hint")}</div>`:""}
       ${s.window_entity_id||s.window_tilted_entity_id?html`
         ${ep("window_tilted_entity_id",T("f_window_tilt_sensor"),["binary_sensor","sensor"],HINTS.window)}
         <div class="hint">${T("f_window_tilt_sensor_hint")}</div>`:""}
@@ -4456,6 +4674,7 @@ class ShutterPilotPanel extends PanelBase {
     return !f||!!(f&128);
   }
   async _toggleAuto(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
+  async _toggleSunProtect(id,on){try{await this.hass.callWS({type:"shutter_pilot/set_sun_protect",area_id:id,enabled:on});await this._load();}catch(e){console.warn(e);}}
   async _toggleMaster(on){try{await this.hass.callWS({type:"shutter_pilot/set_master_enabled",enabled:on});await this._load();}catch(e){console.warn(e);}}
   /* Einzelbedienung je Rollladen. Bewusst dieselben Dienste wie die
      Bereichsknöpfe – nur die Auswahl ist eine andere. */

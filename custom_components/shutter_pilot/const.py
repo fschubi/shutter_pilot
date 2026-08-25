@@ -37,6 +37,12 @@ CONF_NAME = "name"
 CONF_SHUTTER_AUTOMATION_ENABLED = "automation_enabled"
 CONF_SHUTTER_AUTO_ENTITY_ID = "shutter_auto_entity_id"
 CONF_WINDOW_ENTITY_ID = "window_entity_id"
+# Double-casement windows have one contact per leaf, and neither of them alone
+# answers "is this window open". A second contact is ORed onto the first: the
+# most-open of the two wins, so one opened leaf keeps the lock protection and
+# the catch-up drive in force. Both read the same open/tilted vocabulary –
+# two leaves of one window are the same hardware twice.
+CONF_WINDOW_ENTITY_ID_2 = "window_entity_id_2"
 CONF_WINDOW_OPEN_STATE = "window_open_state"
 CONF_WINDOW_TILTED_STATE = "window_tilted_state"
 # Optional second contact that only reports the tilted state. Some window
@@ -138,8 +144,31 @@ CONF_AREA_B_LATEST_DOWN_ENABLED = "b_latest_down_enabled"
 CONF_AREA_B_LATEST_DOWN = "b_latest_down"
 CONF_AREA_B_WE_LATEST_DOWN = "b_we_latest_down"
 
+# Never open automatically on a weekend. Rides on is_weekend_schedule(), so a
+# configured workday sensor decides – which makes the same tick cover holidays
+# and school breaks, not just Saturday and Sunday. Closing is untouched: the
+# request is about sleeping in, not about sitting in the dark all day.
+CONF_AREA_WE_NO_UP = "we_no_up"
+
 # Per-area sun protection (elevation range: active when min <= elev <= max)
 CONF_AREA_SUN_PROTECT_ENABLED = "sun_protect_enabled"
+# Optional switch entity id for the sun protection of one area, created by the
+# integration. Separate from the area's automation switch on purpose: turning
+# shading off for a cool week must not also stop the shutters from opening in
+# the morning, and the season months are too coarse for a change of weather.
+CONF_AREA_SUN_PROTECT_ENTITY_ID = "sun_protect_entity_id"
+# What happens when shading ends because the sun has dropped below the range.
+# Off (the default, and what every version up to 2.14 did) leaves the shutter
+# where it stands, on the assumption that the evening close follows in a
+# moment. That assumption holds in sun mode and breaks everywhere else: in
+# brightness mode the lux threshold can be an hour away, in time mode the
+# close time can be three. Until then the room sits at 50% in the dusk.
+CONF_AREA_SHADE_RELEASE_OPENS = "shade_release_opens"
+# Only shade a shutter that already stands at least as open as its shading
+# position. Without it shading *opens* a shutter that is still closed for the
+# night – the drive is the same in both directions, and the code cannot tell
+# 50% "down from open" from 50% "up from closed" by the number alone.
+CONF_AREA_SHADE_ONLY_WHEN_OPEN = "shade_only_when_open"
 CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max
 CONF_AREA_ELEVATION_MIN = "elevation_min"
 CONF_AREA_ELEVATION_MAX = "elevation_max"
@@ -219,6 +248,19 @@ CLOSE_CONDITION_SLOTS = (CLOSE_CONDITION_SLOT, "close_b")
 # one drops out. Two slots cover the asked-for case (a switch AND a value).
 CONF_AREA_VENT_ENABLED = "vent_enabled"
 VENT_CONDITION_SLOTS = ("vent_a", "vent_b")
+# Blocks the automated *opening* while it holds – holidays, a late shift, a
+# weekend away. Deliberately a condition slot rather than another pair of
+# times: what people asked for is "whatever my holiday helper says", and the
+# slot mechanism already speaks binary_sensor, input_boolean, schedule, a
+# number with hysteresis and a list of states.
+#
+# Evaluated through _own_slot_met(), which is the right polarity here without
+# a fourth one being invented: unset means no block, and an unreadable sensor
+# means no block either. The opposite would leave every shutter down until
+# somebody notices, and a shutter that stays shut is the one fault nobody can
+# work around from inside the room.
+NO_UP_CONDITION_SLOT = "no_up"
+
 # Frost protection: do not close all the way, so the slats cannot freeze shut.
 FROST_CONDITION_SLOT = "frost"
 # Slots that ask "below" rather than "above" unless told otherwise. Frost is
@@ -383,6 +425,7 @@ AWNING_UNUSED_KEYS = (
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
     CONF_WINDOW_ENTITY_ID,
+    CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_OPEN_STATE,
     CONF_WINDOW_TILTED_STATE,
     CONF_WINDOW_TILTED_ENTITY_ID,

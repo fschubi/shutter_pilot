@@ -27,6 +27,7 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
+    automated_up_blocked,
     remember_drive_after_close,
     resolve_close_role,
     clear_manual_override_for_covers,
@@ -188,6 +189,15 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             return
         if not is_auto_enabled(hass, entry, area):
             _LOGGER.info("[%s] area=%s: auto disabled – skipping UP", trigger, area_id)
+            return
+        # Only opening is gated. Closing has to keep running under a holiday
+        # flag, or the house would stand open to the street all evening.
+        blocked = automated_up_blocked(hass, area, data)
+        if blocked:
+            _LOGGER.info(
+                "[%s] area=%s: UP blocked (%s) – shutters stay down",
+                trigger, area_id, blocked,
+            )
             return
         filtered = filter_shutters_by_area(
             shutters, area_id, use_up=True, include_awnings=False

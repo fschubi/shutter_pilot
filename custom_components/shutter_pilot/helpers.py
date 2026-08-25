@@ -35,6 +35,8 @@ from .const import (
     CONF_AREA_SHADE_FROM,
     CONF_AREA_SHADE_TO,
     CONF_AREA_SUN_PROTECT_ENABLED,
+    CONF_AREA_WE_NO_UP,
+    NO_UP_CONDITION_SLOT,
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
@@ -198,6 +200,42 @@ def is_shutter_automation_enabled(
             return str(state.state).lower() in ("on", "true", "1")
 
     return bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True))
+
+
+def is_sun_protect_enabled(
+    hass: HomeAssistant, entry: ConfigEntry, area: dict
+) -> bool:
+    """True if shading may run for this area right now.
+
+    Deliberately *not* folded into is_auto_enabled(): shading and the schedule
+    are two different questions. A cool week means "no shading", it does not
+    mean "leave the shutters shut all day" – switching the area's automation
+    off to stop the shading was the only workaround, and it stopped everything.
+
+    Same order as everywhere else in this integration: runtime value first,
+    then the switch entity, then the stored config. The stored value is only
+    the starting point; once the switch exists it decides, or flipping it in
+    Home Assistant would be lost on the next reload.
+
+    """
+    if not bool(area.get(CONF_AREA_SUN_PROTECT_ENABLED, False)):
+        return False
+
+    area_id = str(area.get(CONF_AREA_ID) or "")
+    domain_data = hass.data.get(DOMAIN)
+    if isinstance(domain_data, dict):
+        data = domain_data.get(entry.entry_id, {})
+        if isinstance(data, dict):
+            modes = data.get("sun_protect_modes", {})
+            if isinstance(modes, dict) and area_id in modes:
+                return bool(modes.get(area_id))
+
+    # The switch publishes its state into the runtime data above the moment it
+    # is added, so reaching this point means the switch platform has not come
+    # up (yet). Shading then runs as configured rather than staying off: a
+    # feature that silently stops working is far harder to place than one that
+    # ignores a switch nobody has touched.
+    return True
 
 
 def is_awning(shutter: dict[str, Any]) -> bool:
@@ -518,6 +556,95 @@ def vent_conditions_met(
         if not _own_slot_met(hass, area, data, slot):
             return False
     return configured
+
+
+def no_up_condition_blocks(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True while a configured condition forbids the automated opening.
+
+    "Whatever my holiday helper says" was the request, in four variants
+    (school holidays, leave, public holiday, a weekend away), so this is a
+    condition slot rather than a fourth set of times. It reads exactly what
+    every other slot reads: an on/off helper, a schedule, a number with
+    hysteresis, or a list of allowed states.
+
+    _own_slot_met() carries the right polarity without inventing a fourth one:
+    unset means no block, and an unreadable sensor means no block either. The
+    other way round a broken sensor would leave every shutter down until
+    somebody noticed – and a shutter that stays shut cannot be worked around
+    from inside the room.
+
+    Only opening is blocked. Closing keeps running, or an evening under a
+    holiday flag would leave the house wide open to the street.
+    """
+    return _own_slot_met(hass, area, data, NO_UP_CONDITION_SLOT)
+
+
+def weekend_blocks_up(
+    hass: HomeAssistant | None, area: dict[str, Any], now: datetime | None = None
+) -> bool:
+    """True if this area must not open automatically today because it is a weekend.
+
+    Rides on is_weekend_schedule(), so a configured workday sensor decides and
+    the same tick covers holidays and school breaks. Imported here rather than
+    at module level: schedule_times imports nothing from helpers today, and
+    keeping it that way is cheaper than untangling a cycle later.
+    """
+    if not bool(area.get(CONF_AREA_WE_NO_UP, False)):
+        return False
+    from .schedule_times import is_weekend_schedule
+
+    return is_weekend_schedule(hass, area, now or dt_util.as_local(dt_util.now()))
+
+
+def automated_up_blocked(
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    data: dict[str, Any],
+    now: datetime | None = None,
+) -> str | None:
+    """Reason the automated opening of this whole area is off today, or None.
+
+    One call for both gates, so the scheduler, the brightness mode and its
+    deadline cannot drift apart – the deadline was added last and is exactly
+    the kind of second path that forgets a check.
+    """
+    if weekend_blocks_up(hass, area, now):
+        return "weekend"
+    if no_up_condition_blocks(hass, area, data):
+        return "condition"
+    return None
+
+
+def shading_would_open_cover(
+    hass: HomeAssistant, shutter: dict[str, Any], target: float
+) -> bool:
+    """True if driving to `target` would *open* this cover rather than shade it.
+
+    Shading and opening are the same service call with a different number, so
+    a shutter still closed for the night is driven "up to 50%" by a rule that
+    was written to bring one down from 100%. Whether that is wanted is a
+    matter of taste – hence the option – but the code cannot tell the two
+    apart by the number alone, only by where the cover stands right now.
+
+    Uses the tracked position, so a radio cover without feedback is judged by
+    what was last sent to it rather than skipped.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover:
+        return False
+    current = get_tracked_position(hass, shutter, cover)
+    if current is None:
+        # Nothing known about this cover. Shading has always run in that case
+        # and blocking it here would silently disable the feature for anyone
+        # whose covers report nothing – fail open.
+        return False
+    pos_open = get_position_for_role(shutter, ROLE_OPEN)
+    pos_closed = get_position_for_role(shutter, ROLE_CLOSED)
+    if pos_open >= pos_closed:
+        return current < target - POSITION_TOLERANCE_PCT
+    return current > target + POSITION_TOLERANCE_PCT
 
 
 def _own_slot_met(

@@ -31,6 +31,7 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_MODE,
     CONF_AREA_AUTO_ENTITY_ID,
+    CONF_AREA_SUN_PROTECT_ENTITY_ID,
     CONF_COVER_ENTITY_ID,
     CONF_MASTER_ENTITY_ID,
     CONF_NAME,
@@ -359,7 +360,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
 
     for cmd in (
         _ws_get_status, _ws_set_auto_mode, _ws_set_master_enabled,
-        _ws_set_shutter_automation,
+        _ws_set_shutter_automation, _ws_set_sun_protect,
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter,
         _ws_save_settings, _ws_export_config,
@@ -441,6 +442,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 "areas": [],
                 "shutters": [],
                 "auto_modes": {},
+                "sun_protect_modes": {},
                 "master_enabled": True,
                 "sun_protect_status": {},
                 "settings": {},
@@ -466,6 +468,7 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 shutters_out.append(dict(s))
 
     auto_modes = data.get("auto_modes", {})
+    sun_protect_modes = data.get("sun_protect_modes", {})
     master_enabled = data.get("master_enabled", True)
     sun_protect_status = get_sun_protect_status_for_areas(hass, entry, raw_areas if isinstance(raw_areas, list) else [])
 
@@ -482,19 +485,38 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     connection.send_result(msg["id"], {
         "areas": areas_out,
         "shutters": shutters_out,
+        # An exclusion list, not an allow list. The awning protection settings
+        # were saved and applied but never sent back, so the form stood empty
+        # every time it was reopened – it looked as if nothing had been stored,
+        # and correcting a wind threshold meant guessing what was in there. An
+        # allow list only ever holds for the fields somebody remembered to add
+        # to it, which is the same contract that let the elevation switch sit
+        # dead in resolve_sun_geometry() for two releases.
         "settings": {
-            k: entry.options.get(k, d)
-            for k, d in (
-                (CONF_WEATHER_ENTITY, ""),
-                (CONF_VERIFY_ENABLED, False),
-                (CONF_VERIFY_AFTER, DEFAULT_VERIFY_AFTER),
-                (CONF_VERIFY_TOLERANCE, DEFAULT_VERIFY_TOLERANCE),
-                (CONF_VERIFY_RETRIES, DEFAULT_VERIFY_RETRIES),
-                (CONF_MIN_DRIVE_GAP, DEFAULT_MIN_DRIVE_GAP),
-            )
+            **{
+                k: d
+                for k, d in (
+                    (CONF_WEATHER_ENTITY, ""),
+                    (CONF_VERIFY_ENABLED, False),
+                    (CONF_VERIFY_AFTER, DEFAULT_VERIFY_AFTER),
+                    (CONF_VERIFY_TOLERANCE, DEFAULT_VERIFY_TOLERANCE),
+                    (CONF_VERIFY_RETRIES, DEFAULT_VERIFY_RETRIES),
+                    (CONF_MIN_DRIVE_GAP, DEFAULT_MIN_DRIVE_GAP),
+                )
+            },
+            **{
+                k: v
+                for k, v in (entry.options or {}).items()
+                # Areas and shutters have their own keys in this payload, and
+                # the master entity id is bookkeeping rather than a setting.
+                if k not in (CONF_AREAS, CONF_SHUTTERS)
+            },
         },
         "weather": dict(data.get("weather") or {}),
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
+        "sun_protect_modes": dict(sun_protect_modes)
+        if isinstance(sun_protect_modes, dict)
+        else {},
         "master_enabled": bool(master_enabled),
         "sun_protect_status": sun_protect_status,
         "sun": sun_info,
@@ -563,6 +585,47 @@ def _ws_set_auto_mode(hass: HomeAssistant, connection: websocket_api.ActiveConne
                 hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})
             )
         break
+    connection.send_result(msg["id"], {"ok": True})
+
+
+# -- set_sun_protect ----------------------------------------------------------
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/set_sun_protect",
+    vol.Required("area_id"): str,
+    vol.Required("enabled"): bool,
+})
+@callback
+def _ws_set_sun_protect(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Toggle the sun protection of one area, straight from the panel."""
+    area_id, enabled = str(msg["area_id"]).strip(), msg["enabled"]
+    entry, data = _find_entry_data(hass)
+    if not data:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    # Same order as set_auto_mode: runtime value first so the next evaluation
+    # already sees it, then the switch entity, which is the display in Home
+    # Assistant. Setting only the switch would lose the change on a reload.
+    data.setdefault("sun_protect_modes", {})[area_id] = enabled
+    # The id comes from the runtime registry, not from the options: this switch
+    # does not write itself back into the config entry, so that adding it costs
+    # no extra reload during setup.
+    eid = str((data.get("sun_protect_entities") or {}).get(area_id) or "").strip()
+    if not eid:
+        raw_areas = entry.options.get(CONF_AREAS, []) if entry else []
+        eid = next(
+            (
+                str(a.get(CONF_AREA_SUN_PROTECT_ENTITY_ID) or "").strip()
+                for a in raw_areas
+                if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id
+            ),
+            "",
+        )
+    if eid:
+        hass.async_create_task(
+            hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})
+        )
     connection.send_result(msg["id"], {"ok": True})
 
 

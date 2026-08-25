@@ -16,6 +16,7 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_ENTITY_ID,
+    CONF_WINDOW_ENTITY_ID_2,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_POSITION_CLOSED,
@@ -128,8 +129,11 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     trigger_actions = data["trigger_actions"]
 
     # Collect every watched entity and the shutters it belongs to. A shutter
-    # may register under two entities: the main contact and an optional
-    # separate tilt contact.
+    # may register under three entities: the main contact, the second leaf of
+    # a double-casement window, and an optional separate tilt contact. All of
+    # them have to wake this up – get_window_state() reads them together, but
+    # a contact nobody listens to only ever gets noticed a minute later, by
+    # somebody else's tick.
     window_to_shutters: dict[str, list[dict]] = {}
 
     def _watch(entity_id: str, shutter: dict) -> None:
@@ -144,10 +148,11 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
     # and keeps a stray leftover value from registering a listener that would
     # then drive an awning to a tilted-window position it does not have.
     for shutter in only_shutters(shutters):
-        window_id = shutter.get(CONF_WINDOW_ENTITY_ID)
-        if isinstance(window_id, list):
-            window_id = window_id[0] if window_id else ""
-        _watch(str(window_id or "").strip(), shutter)
+        for key in (CONF_WINDOW_ENTITY_ID, CONF_WINDOW_ENTITY_ID_2):
+            window_id = shutter.get(key)
+            if isinstance(window_id, list):
+                window_id = window_id[0] if window_id else ""
+            _watch(str(window_id or "").strip(), shutter)
         _watch(get_tilt_entity_id(shutter), shutter)
 
     @callback

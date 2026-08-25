@@ -105,6 +105,7 @@ Click **"Add shutter"** to assign a cover entity to an area:
 
 - **Cover entity** – your `cover.*` entity
 - **Window sensor** – optional `binary_sensor.*` for window open/tilt detection
+- **Second window contact** – for double-casement windows with one contact per leaf. Both are read together: the window counts as open as soon as either reports it, so lock protection, the ventilation position and the catch-up drive stay in force while only the second leaf is open. The same states as for the first contact apply – two leaves of one window are the same hardware twice
 - **Extra sensor for "tilted"** – only needed if your window exposes two separate entities, one for open and one for tilted. Leave empty for a single 3-state contact
 - **Window state "open"** – which state of the entity means "the window is open". A `binary_sensor` only ever reports `on` or `off`, and which of the two means open depends on the contact, so the state it currently reports is shown below the field. The usual spellings (`on`/`open`/`true`) count as the same, as do `off`/`closed`. A 3-state `sensor` is read directly
 - **Area Up / Area Down** – which area controls this shutter for up/down movements
@@ -143,6 +144,7 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 |--------|-------------|
 | `switch.shutter_pilot_system` | Master switch for all automation |
 | `switch.shutter_pilot_auto_<area>` | Automation per area |
+| `switch.shutter_pilot_sonnenschutz_<area>` | Shading per area – shading only, the rest of the automation keeps running |
 | `switch.shutter_pilot_rollladen_<name>` | Automation per shutter (named after the **Name** field) |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
@@ -385,6 +387,36 @@ Two things worth knowing:
 > 💡 For "the shutter should **open** later in the morning" this is not the
 > right field – use the area's **special-days sensor**, see below.
 
+### Not opening at all – weekends, holidays, leave
+
+The special-days sensor below shifts the *time*. Sometimes nothing should open
+**at all**. Two settings per area cover that, both in the "Block opening"
+section:
+
+| Setting | For |
+| --- | --- |
+| Never open on a weekend | sleeping in rather than getting up later |
+| Condition "do not open" | school breaks, leave, public holidays, working from home – whatever a helper knows |
+
+**Both affect opening only.** Closing and shading keep running – otherwise the
+house would stand open to the street all evening.
+
+The weekend tick rides on the same notion of "weekend" as everything else in
+Shutter Pilot: **if a special-days sensor is configured, that one decides.**
+The tick therefore covers public holidays, school breaks and shift work too.
+
+> 💡 **Sleeping in on Sunday but not on Saturday?** Create a workday sensor
+> with `excludes: [sun]` and set it as the area's special-days sensor. Saturday
+> then counts as a working day – weekday times apply – and only Sunday follows
+> the weekend rule.
+
+The condition takes whatever the other condition fields take: an
+`input_boolean` (a holiday switch), a `schedule` helper, a select list, or a
+numeric value with hysteresis. While it holds, the shutter stays down in the
+morning. **An unreadable sensor never blocks** – the other way round every
+shutter would stay down until somebody noticed, and there is no way around that
+from inside the room.
+
 ### Opening later on holidays and school breaks
 
 The **special-days sensor** per area (formerly "workday sensor") switches
@@ -406,6 +438,37 @@ evening exactly as before.
 If this should apply to **one room only**: give that shutter its own **up
 area** and keep the shared down area. Up and down areas may differ. Shading is
 unaffected – that is decided by the down area.
+
+### Turning shading on and off without touching the automation
+
+Every area with sun protection enabled gets its own switch
+`switch.shutter_pilot_sonnenschutz_<area>`, plus a switch on the dashboard card
+right next to the status line.
+
+It is deliberately **separate** from the area's automation switch: 35 °C today
+and 20 °C tomorrow is a reason to stop shading. It is not a reason to keep the
+shutters down in the morning. The only thing that came close before was the
+shading season in whole months – far too coarse for a change of weather.
+
+**Switching it off releases what is currently shaded**: the affected shutters
+open. Leaving them put would be the worse half – whoever switches shading off
+because it turned cool does not want to sit at half height until the evening.
+
+### Two ticks for how shading behaves
+
+Both live in the area's sun protection block, and both are **off by default**,
+because they change how the shutters drive.
+
+**Open again when the shading day ends.** Once the sun drops below the
+configured range, the shutter otherwise stays at the shading height until the
+evening schedule closes it. In sun mode that is minutes – in brightness and
+time mode it can be hours, and then the whole afternoon is spent behind
+half-closed shutters. Ticked, it opens straight away instead.
+
+**Only shade what is already open.** Shading and opening are the same drive
+command with a different number, so a shutter still closed for the night gets
+*raised* to the shading height by the shading rule. Ticked, it stays down until
+it has opened normally.
 
 ### Sensors per window instead of per area
 
