@@ -12,12 +12,18 @@ CONF_SHUTTERS = "shutters"
 CONF_AREAS = "areas"
 CONF_AREA_ID = "id"
 CONF_AREA_NAME = "name"
-CONF_AREA_MODE = "mode"  # "time" | "brightness" | "sun"
+CONF_AREA_MODE = "mode"  # "time" | "brightness" | "sun" | "none"
 
 AREA_MODE_TIME = "time"
 AREA_MODE_BRIGHTNESS = "brightness"
 AREA_MODE_SUN = "sun"
-AREA_MODES = [AREA_MODE_TIME, AREA_MODE_BRIGHTNESS, AREA_MODE_SUN]
+# No schedule at all: the area drives nothing by clock or lux, it only carries
+# shading (and ventilation, which never asked about the mode). Every drive path
+# filters *positively* on its own mode, so this one needs no handling there –
+# but get_next_action() must, or an unknown mode falls through to the time-mode
+# branch and reports times that will never be driven.
+AREA_MODE_NONE = "none"
+AREA_MODES = [AREA_MODE_TIME, AREA_MODE_BRIGHTNESS, AREA_MODE_SUN, AREA_MODE_NONE]
 
 # Per-area common settings
 CONF_AREA_DRIVE_DELAY = "drive_delay"  # seconds between shutters in this area

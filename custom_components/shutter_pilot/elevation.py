@@ -15,7 +15,6 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_SHADE_HOLD,
     CONF_AREA_SHADE_ONLY_WHEN_OPEN,
-    CONF_AREA_SHADE_RELEASE_OPENS,
     CONF_AREA_SUN_PROTECT_ENABLED,
     DEFAULT_AREA_SHADE_HOLD,
     MAX_AREA_SHADE_HOLD,
@@ -46,6 +45,7 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     is_sun_protect_enabled,
+    shade_release_opens,
     is_cover_sun_protected,
     shading_would_open_cover,
     register_minute_callback,
@@ -347,7 +347,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 protect_on
                 and uses_elevation
                 and elev < e_min
-                and not bool(area.get(CONF_AREA_SHADE_RELEASE_OPENS, False))
+                and not shade_release_opens(area)
             ):
                 # Below the range the shutters belong to the evening
                 # schedule, not to shading. Drop the flag, do not drive, and
@@ -359,7 +359,9 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 # the whole dusk – reported as "the shading is never released"
                 # more than once. Hence the switch above; the old behaviour
                 # stays the default so nobody's shutters start moving at dusk
-                # after an update they did not ask for.
+                # after an update they did not ask for. Without a schedule
+                # there is no evening drive at all, so there the switch is
+                # implied – see shade_release_opens().
                 set_cover_sun_protected(data, cover, False)
                 release_since.pop(cover, None)
                 _LOGGER.debug(

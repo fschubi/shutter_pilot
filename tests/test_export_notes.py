@@ -14,6 +14,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.util import dt as dt_util
 
 from custom_components.shutter_pilot.const import (
+    AREA_MODE_NONE,
     AREA_MODE_TIME,
     CONF_AREA_AZIMUTH_ENABLED,
     CONF_AREA_AZIMUTH_MAX,
@@ -561,3 +562,69 @@ class TestOwnEntityAsGuardSensor:
         md = (await async_build_export(hass, config_entry))["markdown"]
 
         assert "Entität von Shutter Pilot selbst" not in md
+
+
+# --- Bereiche ohne Zeitplan -------------------------------------------------
+
+
+def _entry_with_area(hass, area):
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Shutter Pilot",
+        options={
+            CONF_AREAS: [area],
+            CONF_SHUTTERS: [
+                {
+                    CONF_COVER_ENTITY_ID: COVER,
+                    CONF_NAME: "Küche vorne",
+                    CONF_AREA_UP_ID: "vorne",
+                    CONF_AREA_DOWN_ID: "vorne",
+                }
+            ],
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        "sun_protect_covers": set(),
+        "_runtime_started": dt_util.utcnow(),
+    }
+    return config_entry
+
+
+class TestNoScheduleIsExplained:
+    """malleYays Modus im Bericht.
+
+    Ein Bereich, der nichts faehrt, sieht Einstellung fuer Einstellung
+    plausibel aus – genau dafuer ist der Export da.
+    """
+
+    async def test_with_shading_it_is_a_note(self, hass):
+        entry = _entry_with_area(
+            hass, {**AREA, CONF_AREA_MODE: AREA_MODE_NONE}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "Kein Zeitplan" in md
+        assert "fährt nichts" not in md
+
+    async def test_without_shading_it_is_a_warning(self, hass):
+        entry = _entry_with_area(
+            hass,
+            {
+                **AREA,
+                CONF_AREA_MODE: AREA_MODE_NONE,
+                CONF_AREA_SUN_PROTECT_ENABLED: False,
+            },
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "fährt nichts" in md
+
+    async def test_a_scheduled_area_says_nothing(self, hass):
+        entry = _entry_with_area(hass, AREA)
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "Kein Zeitplan" not in md

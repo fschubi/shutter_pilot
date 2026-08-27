@@ -14,6 +14,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
+    AREA_MODE_NONE,
+    CONF_AREA_MODE,
+    CONF_AREA_SHADE_RELEASE_OPENS,
     CONF_AREA_AZIMUTH_ENABLED,
     CONF_AREA_AZIMUTH_MAX,
     CONF_AREA_AZIMUTH_MIN,
@@ -700,6 +703,19 @@ def guard_slot_danger(
 
     memory = condition_memory(data, f"guard|{slot}", cover_entity_id)
     return _condition_slot_met(hass, config, slot, memory), slot
+
+
+def shade_release_opens(area: dict[str, Any]) -> bool:
+    """True if the end of the shading day should drive the cover open.
+
+    Without a schedule this is not an option but the only way back: nothing
+    else will ever move the shutter again, so it would stand at the shading
+    height for good. The stored flag still wins where it is set – an area with
+    a schedule keeps the 2.14 behaviour unless its owner asked for otherwise.
+    """
+    if bool(area.get(CONF_AREA_SHADE_RELEASE_OPENS, False)):
+        return True
+    return str(area.get(CONF_AREA_MODE) or "") == AREA_MODE_NONE
 
 
 def season_allows_shading(area: dict[str, Any], now: datetime | None = None) -> bool:

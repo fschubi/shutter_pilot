@@ -16,6 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     AREA_MODE_BRIGHTNESS,
+    AREA_MODE_NONE,
     AREA_MODE_SUN,
     AREA_MODE_TIME,
     CONF_AREA_ID,
@@ -291,9 +292,16 @@ def get_next_action(
 
     For brightness areas the exact moment depends on the lux sensor, so the
     start of the next allowed time window is reported instead.
+
+    An area without a schedule has no next action. Saying so is the point:
+    the fall-through below would answer with the time-mode defaults, and those
+    times are never driven – a sensor that promises a drive nobody planned.
     """
     now_local = dt_util.as_local(now or dt_util.now())
     mode = str(area.get(CONF_AREA_MODE) or AREA_MODE_TIME)
+
+    if mode == AREA_MODE_NONE:
+        return None, None
 
     if mode == AREA_MODE_SUN:
         up_dt, down_dt = get_sun_mode_triggers(hass, area, now_local)

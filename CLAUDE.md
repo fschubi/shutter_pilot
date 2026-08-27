@@ -38,8 +38,8 @@ custom_components/shutter_pilot/
   group_actions.py   Folgeaktion Licht je Bereich
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
-  frontend/shutter-pilot-panel.js  Das komplette Panel (~2560 Z., ein File)
-tests/               pytest-Suite (599 Tests)
+  frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
+tests/               pytest-Suite (613 Tests)
 ```
 
 ## Funktionsumfang
@@ -55,6 +55,7 @@ dürfen verschieden sein (morgens raumweise, abends alle zusammen).
 | `time` | feste Uhrzeiten, getrennt für Woche und Wochenende |
 | `brightness` | Helligkeitssensor mit Schwellen, nur in erlaubten Zeitfenstern |
 | `sun` | Sonnenauf-/-untergang plus Offset, optional in Zeitklammern |
+| `none` | gar nichts – nur Beschattung und Lüften (2.16.0) |
 
 Zwei Sperren je Bereich unterbinden das **Hochfahren** ganz (Runterfahren und
 Beschattung laufen weiter): ein Wochenendhaken, der an `is_weekend_schedule()`
@@ -197,7 +198,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.15.0: je 382 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.16.0: je 387 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -226,7 +227,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 599 Tests, ~15 s
+.venv/bin/pytest            # 613 Tests, ~15 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -252,10 +253,90 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.15.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.16.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-27 – 2.16.0: der Bereich, der nichts faehrt
+
+Zwei Beitraege, vier Wuensche. Der interessante war der kuerzeste: malleYay
+wollte Shutter Pilot **nur zum Beschatten** benutzen. Ging nicht – und der
+naheliegende Weg ist eine Sackgasse, weil `elevation.py:272` die
+Bereichsautomatik abfragt: wer sie ausschaltet, um den Zeitplan loszuwerden,
+schaltet die Beschattung mit ab. Genau darin sass **Wolf** auch, nur anders
+erzaehlt: sein Bereich „Wohnbereich Seite" steht auf Automatik *aus* bei
+eingeschaltetem Sonnenschutz, und sein eigener Export sagt an zwei Stellen,
+dass deshalb nicht beschattet wird.
+
+**Der vierte Modus kostet in den Fahrwegen keine Zeile.** Scheduler,
+Helligkeit und der Sonnen-Zweig filtern alle *positiv* auf ihren eigenen Modus
+(`!= AREA_MODE_X → continue`), ein unbekannter Wert faellt bei ihnen also von
+selbst durch. **Genau eine Stelle macht es nicht von selbst richtig:**
+`get_next_action()` hat am Ende einen Rueckfall auf die Zeitmodus-Zeiten – ein
+Sensor, der eine Fahrt verspricht, die niemand geplant hat. Merke: bei einem
+neuen Modus nicht die Fahrwege durchsehen, sondern die Stellen, die mit
+`else` enden.
+
+**Und eine Vorgabe muss sich drehen.** Ohne Zeitplan gibt es keine Abendfahrt,
+die den Rollladen von der Beschattungshoehe holt – der `elev < e_min`-Zweig
+loescht den Merker und faehrt nicht. Dort stuende er fuer immer. Deshalb
+`shade_release_opens(area)`: der Haken aus 2.15.0 gewinnt, wo er gesetzt ist,
+und ohne Zeitplan gilt er ohnehin. Als blosse Vorbelegung im Formular waere das
+falsch gewesen – ein Nutzer haette ihn abwaehlen koennen.
+
+**Der Fund, nach dem niemand gefragt hat.** In Wolfs Export steht als
+Sondertage-Sensor `binary_sensor.shutter_pilot_wohnbereich_vorne_sonnenschutz`
+– der eigene Sonnenschutz-Sensor dieses Bereichs. `is_weekend_schedule()` liest
+`on` als Arbeitstag, die Zeitwahl kippt also mitten am Tag, sobald die
+Beschattung laeuft. Das ist bjoergs Windsensor aus 2.15.0 ein zweites Mal, und
+die Ursache ist **unsere**: `_rankEntities()` zieht Shutter-Pilot-eigene
+Entitaeten in *jedem* Auswahlfeld nach oben, gebaut war das fuer die
+Bedingungsfelder. Bei Wolf stehen rund dreissig davon vorne, und `LIMIT=40`
+verdraengt damit die echten Kandidaten aus der Liste. Jetzt: vorziehen nur in
+Bedingungs-Slots (`sun_cond_*_entity`, ohne wind/rain/ice – das *sind*
+Messfelder), Warnung unter dem Feld sonst. **Die Vorhersage-Sensoren sind
+ausgenommen**: sie stammen von der Wetter-Entitaet, nicht aus einer
+Entscheidung dieser Integration – die Grenze ist „schreibt Shutter Pilot das
+als Ergebnis einer Fahrentscheidung", nicht „gehoert Shutter Pilot".
+
+**Sticky Tabs sind nicht eine Zeile CSS.** `:host` trug `overflow-x:hidden`,
+und ein Wert ungleich `visible` setzt den anderen implizit auf `auto` – der
+Host ist damit ein Scrollport, hat aber keine Hoehe, scrollt also nie. Ein
+sticky Element darin klebt an nichts. `overflow-x:clip` schneidet genauso ab
+*ohne* Scrollport; die alte Regel bleibt als Rueckfall stehen.
+
+**Lux ohne Deckel** (Wolf): der Schieber endete bei 1000, sein Export zeigt
+`lux_up: 1000` – am Anschlag, mit `lux_down: 981` neunzehn Lux darunter. Ein
+Aussensensor meldet im Sommer Zehntausende. Schieber bleibt fuer den
+Feinbereich (0–2000), daneben ein Zahlenfeld ohne Grenze; der Schieber wird
+*geklemmt dargestellt*, ohne den Wert anzufassen.
+
+**Bewusst nicht ausgeblendet.** Ohne Zeitplan sind auch abweichendes
+Schliessen, Frost, „nicht hochfahren" und die Licht-Folgeaktion tot (alle
+haengen an `scheduler`/`brightness`). Weg sind trotzdem nur Zeitplan und
+Kalender – die *definieren* den Zeitplan. Der Rest bekommt einen Hinweis:
+etwas zu verstecken, das gespeichert ist und wirkt, sobald der Modus
+zurueckgestellt wird, waere die schlechtere Haelfte des Problems, das
+`_silent_setting_notes()` ueberhaupt erst noetig gemacht hat.
+
+**Verifiziert:** `pytest` 613 Tests gruen (14 neue), **drei Gegenproben**
+gemacht (ohne den `none`-Zweig in `get_next_action` faellt der Sensor-Test;
+ohne die Modusprüfung in `shade_release_opens` fallen zwei, darunter der
+Abend-Test gegen den echten Aufbau). i18n 387/387 in allen elf Sprachen (5
+neu). Panel in Node gerendert: fuenf Ansichten plus siebzehn
+Inhaltspruefungen. **Nicht im Browser geprueft** – und das faellt hier
+staerker ins Gewicht als sonst, weil die sticky-Regel genau die Sorte ist, die
+sich nur in echtem Home Assistant zeigt.
+
+**Offen, wartet auf Wolf:** die „My"-Position bei Somfy RTS. Der Fahrweg dafuer
+ist `_send_position()` – der Fallback von 2.12.0 kennt heute nur `open_cover`
+und `close_cover`, eine dritte Stellung waere das Stop-Kommando im Stillstand.
+Welche Integration seine RTS-Markisen fährt, muss er sagen. Nebenbefund fuer
+die Antwort: an beiden Markisen ist `awning_track_enabled` an – an einem
+Antrieb ohne Positionierung ist jede Zwischenstellung ≥ 50 schlicht
+„ganz ausfahren", und `helpers.py` schreibt dazu bei jeder Fahrt eine Warnung
+ins Log.
 
 ### 2026-08-25 – 2.15.0: zwei Wochen Forum am Stück
 

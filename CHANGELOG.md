@@ -4,6 +4,23 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.16.0]
+
+Zwei Forumsbeiträge, vier Wünsche – und ein Fund in Wolfs Export, nach dem
+niemand gefragt hatte.
+
+### Neu
+- **Vierter Betriebsmodus: „Kein Zeitplan"** (malleYay). „Ich würde Shutter Pilot gerne nur für den Sonnenschutz verwenden – gibt es eine Möglichkeit, keinen der 3 Steuerungsmodi zu verwenden?" Bisher nicht: die Bereichsautomatik auszuschalten nimmt die Beschattung mit, und ein Bereich ohne gewählten Modus fällt auf „Zeit" zurück und fährt um 07:00 und 19:00. Der neue Modus fährt weder nach Uhr noch nach Lux oder Sonnenstand – **Sonnenschutz und Lüften laufen weiter**. Wichtig dabei: **am Ende des Beschattungstags wird immer geöffnet**, ohne dass man den Haken aus 2.15.0 setzen müsste. Ohne Zeitplan gibt es keine Abendfahrt, die den Rollladen von der Beschattungshöhe holt – er stünde sonst für immer dort. Derselbe Modus ist auch die richtige Wahl für Bereiche, in denen nur Markisen hängen: Scheduler und Helligkeitsmodus filtern Markisen ohnehin aus, die Lux-Schwellen dort waren immer schon wirkungslos.
+- **Die Tab-Leiste bleibt beim Scrollen oben stehen** (Wolf). Für jeden Wechsel zwischen Dashboard, Bereichen und Einstellungen musste man vorher erst wieder ganz nach oben.
+- **Lux-Schwellen ohne Deckel** (Wolf). „Mir sind die 1000 Lux als Schwelle zum Hochfahren zu niedrig." Der Schieber endete bei 1000 – für einen Außensensor, der im Sommer Zehntausende Lux meldet, um zwei Zehnerpotenzen zu wenig. Neben dem Schieber steht jetzt ein Zahlenfeld, das jeden Wert nimmt; der Schieber deckt weiterhin den Feinbereich ab.
+
+### Behoben
+- **Shutter-Pilot-eigene Schalter und Sensoren standen in *jedem* Auswahlfeld ganz oben** – auch dort, wo sie nie hingehören. Das Vorziehen war für die Bedingungsfelder gebaut (dort ist es richtig und gewollt), galt aber für Wind-, Regen-, Frost-, Helligkeits-, Temperatur- und Sondertage-Sensor genauso. Zwei Anlagen sind dadurch schon in eine Rückkopplung gelaufen: ein Auto-Schalter als Windsensor (meldet dauerhaft „an", also dauerhaft Sturm, also fährt die Markise nie wieder aus) und der eigene Sonnenschutz-Sensor als Sondertage-Sensor (kippt mitten am Tag zwischen Wochentags- und Wochenendzeiten). In Messfeldern stehen sie jetzt nicht mehr vorne, und wer dort einen einträgt, bekommt eine Warnung unter dem Feld. Vorhersage-Sensoren sind ausgenommen: die kommen von der Wetter-Entität, nicht aus einer Entscheidung dieser Integration.
+
+### Geändert
+- **Das Bereichsformular zeigt ohne Zeitplan nur noch, was wirkt.** Zeitplan- und Kalenderabschnitt sind dann weg, die Abschnitte für abweichendes Schließen, Frost, „nicht hochfahren" und die Licht-Folgeaktion tragen einen Hinweis: sie hängen alle an einer Fahrt nach oben oder unten, die es dort nicht gibt. Gespeicherte Werte bleiben unangetastet und gelten wieder, sobald ein Modus gewählt ist.
+- **Der Export benennt Bereiche ohne Zeitplan** – und warnt, wenn dort auch der Sonnenschutz aus ist: dann fährt der Bereich gar nichts, und jede einzelne Einstellung sieht für sich plausibel aus.
+
 ## [2.15.0]
 
 Zwei Wochen Forum in einem Zug: vier Fehler und vier Wünsche, dazu drei

@@ -52,7 +52,7 @@ const PanelBase = LitElement ?? class extends HTMLElement {
   }
 };
 
-const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset"};
+const MODE_ICONS = {time:"mdi:clock-outline",brightness:"mdi:white-balance-sunny",sun:"mdi:weather-sunset",none:"mdi:calendar-remove-outline"};
 const WIN_OPEN_OPTS = ["on","off","open","true","offen"];
 const WIN_TILT_OPTS = ["none","tilted","gekippt","kipp","2"];
 // Mirrors _STATE_SYNONYMS in window_helper.py. Used only to tell the user
@@ -249,6 +249,7 @@ de:{
   f_sun_cond_bin_hint:"Schalter oder Binärsensor: erfüllt, solange er „an“ ist – keine Schwellen nötig.",
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
+  own_entity_warn:"Das ist ein Schalter bzw. Sensor von Shutter Pilot selbst – er zeigt an, was die Automatik gerade entschieden hat. Als Messwert gelesen entsteht daraus eine Rückkopplung (ein Auto-Schalter meldet dauerhaft „an\", also gälte dauerhaft Sturm). Hier gehört der echte Sensor hin.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sondertage-Sensor (optional)",
   f_workday_hint:"Ein Binärsensor, der an normalen Tagen „an\" meldet. Bei „aus\" gilt der Wochenend-Zeitplan – damit lassen sich Feiertage, Urlaub, Schichtdienst und **Schulferien** abbilden. Beispiel: Ferien-Sensor „an\" = Schule; „Hoch Wochenende\" auf 09:00 stellen und „Runter Wochenende\" leer lassen, dann bleibt der Rollladen in den Ferien bis neun unten. Ohne Sensor zählen Samstag und Sonntag.",
@@ -280,7 +281,9 @@ de:{
   tab_dashboard:"Dashboard",tab_areas:"Bereiche",tab_shutters:"Rollläden",
   subtitle:"{a} Bereiche, {s} Rollläden",
   loading:"Laden…",
-  mode_time:"Zeit",mode_brightness:"Helligkeit",mode_sun:"Sonnenstand",
+  mode_time:"Zeit",mode_brightness:"Helligkeit",mode_sun:"Sonnenstand",mode_none:"Kein Zeitplan",
+  mode_none_hint:"Der Bereich fährt weder nach Uhrzeit noch nach Helligkeit oder Sonnenstand – es gelten nur Beschattung und Lüften. Die Automatik des Bereichs muss dafür eingeschaltet bleiben. Am Ende des Beschattungstags wird immer geöffnet, sonst bliebe der Rollladen auf Beschattungshöhe stehen.",
+  f_needs_schedule:"Ohne Steuerungsmodus wirkt das hier nicht: es gibt keine Fahrt nach oben oder unten, an die es sich hängen könnte. Die Werte bleiben gespeichert und gelten wieder, sobald ein Modus gewählt ist.",
   shutter_s:"Rollladen",no_shutters:"Keine Rollläden",
   auto:"Automatik",
   btn_up:"Hoch",btn_stop:"Stop",btn_down:"Runter",btn_sun:"Sonnenschutz",
@@ -328,6 +331,7 @@ de:{
   dash_shutter_role_both:"Hoch- und Runterfahren über diesen Bereich",
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Helligkeitssensor",f_lux_up:"Lux Hoch-Schwelle",f_lux_down:"Lux Runter-Schwelle",
+  f_lux_hint:"Der Schieber deckt den Feinbereich ab; im Feld daneben steht jeder Wert. Aussensensoren melden im Sommer Zehntausende Lux – dort sind ein paar hundert als Schwelle zu niedrig.",
   f_lux_wrong_way:"Die Hoch-Schwelle sollte über der Runter-Schwelle liegen: hoch geht es oberhalb, runter unterhalb. Liegt sie darunter, gilt zwischen den beiden Werten beides gleichzeitig – überschneiden sich dann noch die Zeitfenster, pendelt der Rollladen.",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
@@ -546,6 +550,7 @@ en:{
   f_sun_cond_bin_hint:"Switch or binary sensor: satisfied while it is on – no thresholds needed.",
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
+  own_entity_warn:"This is a switch or sensor of Shutter Pilot itself – it reports what the automation just decided. Read back as a measurement it forms a feedback loop (an automation switch reports \"on\" permanently, so a storm would be permanent). The real sensor belongs here.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Special-days sensor (optional)",
   f_workday_hint:"A binary sensor that reports \"on\" on normal days. \"off\" switches to the weekend schedule – which covers public holidays, vacation, shift work and **school holidays**. Example: a holidays sensor that is \"on\" while school is on; set \"weekend up\" to 09:00 and leave \"weekend down\" empty, and the shutter stays down until nine during the holidays. Without a sensor, Saturday and Sunday count.",
@@ -577,7 +582,9 @@ en:{
   tab_dashboard:"Dashboard",tab_areas:"Areas",tab_shutters:"Shutters",
   subtitle:"{a} areas, {s} shutters",
   loading:"Loading…",
-  mode_time:"Time",mode_brightness:"Brightness",mode_sun:"Sun position",
+  mode_time:"Time",mode_brightness:"Brightness",mode_sun:"Sun position",mode_none:"No schedule",
+  mode_none_hint:"The area drives neither by clock nor by brightness or sun position – only shading and ventilation apply. Leave the area automation switched on for those. At the end of the shading day the cover always opens; nothing else would ever move it again.",
+  f_needs_schedule:"Without a control mode this has no effect: there is no upward or downward drive for it to attach to. The values stay stored and apply again as soon as a mode is chosen.",
   shutter_s:"shutter",no_shutters:"No shutters",
   auto:"Automation",
   btn_up:"Up",btn_stop:"Stop",btn_down:"Down",btn_sun:"Sun protect",
@@ -625,6 +632,7 @@ en:{
   dash_shutter_role_both:"Up and down drives via this area",
   dash_current_lux:"Current",
   f_brightness_sensor:"Brightness sensor",f_lux_up:"Lux up threshold",f_lux_down:"Lux down threshold",
+  f_lux_hint:"The slider covers the fine range; the field beside it takes any value. Outdoor sensors report tens of thousands of lux in summer, where a few hundred is far too low a threshold.",
   f_lux_wrong_way:"The up threshold belongs above the down threshold: up happens above it, down below. Put it lower and both rules hold between the two values at once – once the time windows overlap as well, the shutter starts oscillating.",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
@@ -798,6 +806,7 @@ fr:{
   f_sun_cond_bin_hint:"Interrupteur ou capteur binaire : rempli tant qu'il est actif – aucun seuil nécessaire.",
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
+  own_entity_warn:"C’est un interrupteur ou capteur de Shutter Pilot lui-même : il indique ce que l’automatisme vient de décider. Relu comme mesure, cela crée une boucle. Indiquez ici le vrai capteur.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Capteur jours particuliers (optionnel)",
   f_workday_hint:"Un capteur binaire qui indique « on » les jours normaux. « off » active l'horaire du week-end – jours fériés, vacances, travail posté et **vacances scolaires**. Exemple : capteur vacances « on » pendant l'école ; régler « montée week-end » sur 09:00 et laisser « descente week-end » vide, le volet reste baissé jusqu'à neuf heures pendant les vacances. Sans capteur, samedi et dimanche comptent.",
@@ -828,7 +837,9 @@ fr:{
   sun_prot_wrong_dir:"le soleil ne fait pas face aux fenêtres",
   tab_dashboard:"Tableau de bord",tab_areas:"Zones",tab_shutters:"Volets",
   subtitle:"{a} zones, {s} volets",loading:"Chargement…",
-  mode_time:"Horaire",mode_brightness:"Luminosité",mode_sun:"Position solaire",
+  mode_time:"Horaire",mode_brightness:"Luminosité",mode_sun:"Position solaire",mode_none:"Aucun horaire",
+  mode_none_hint:"La zone ne se déplace ni à l’heure, ni selon la luminosité ou la position du soleil – seuls l’ombrage et l’aération s’appliquent. L’automatisme de la zone doit rester activé. À la fin de la journée d’ombrage, le volet s’ouvre toujours, sinon rien ne le déplacerait plus.",
+  f_needs_schedule:"Sans mode de commande, cela n’a aucun effet : il n’y a aucune montée ni descente à laquelle se rattacher. Les valeurs restent enregistrées.",
   shutter_s:"volet",no_shutters:"Aucun volet",auto:"Automatique",
   btn_up:"Monter",btn_stop:"Stop",btn_down:"Descendre",btn_sun:"Protection solaire",
   btn_add:"Ajouter",btn_save:"Enregistrer",btn_cancel:"Annuler",
@@ -868,6 +879,7 @@ fr:{
   dash_shutter_role_both:"Montée et descente via cette zone",
   dash_current_lux:"Actuel",
   f_brightness_sensor:"Capteur luminosité",f_lux_up:"Seuil lux montée",f_lux_down:"Seuil lux descente",
+  f_lux_hint:"Le curseur couvre la plage fine ; le champ à côté accepte n’importe quelle valeur. Les capteurs extérieurs relèvent des dizaines de milliers de lux en été.",
   f_lux_wrong_way:"Le seuil de montée doit être au-dessus du seuil de descente : on monte au-dessus, on descend en dessous. S'il est plus bas, les deux règles s'appliquent en même temps entre les deux valeurs – et si les plages horaires se recoupent, le volet oscille.",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
@@ -1037,6 +1049,7 @@ es:{
   f_sun_cond_bin_hint:"Interruptor o sensor binario: se cumple mientras esté activo, sin umbrales.",
   filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
+  own_entity_warn:"Es un interruptor o sensor del propio Shutter Pilot: indica lo que la automatización acaba de decidir. Leerlo como medición crea un bucle. Aquí debe ir el sensor real.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de días especiales (opcional)",
   f_workday_hint:"Un sensor binario que indica «on» en días normales. «off» activa el horario de fin de semana: festivos, vacaciones, turnos y **vacaciones escolares**. Ejemplo: sensor de vacaciones «on» mientras hay colegio; pon «subir fin de semana» a las 09:00 y deja «bajar fin de semana» vacío, y la persiana se queda bajada hasta las nueve en vacaciones. Sin sensor cuentan sábado y domingo.",
@@ -1067,7 +1080,9 @@ es:{
   sun_prot_wrong_dir:"el sol no da a las ventanas",
   tab_dashboard:"Panel",tab_areas:"Zonas",tab_shutters:"Persianas",
   subtitle:"{a} zonas, {s} persianas",loading:"Cargando…",
-  mode_time:"Horario",mode_brightness:"Brillo",mode_sun:"Posición solar",
+  mode_time:"Horario",mode_brightness:"Brillo",mode_sun:"Posición solar",mode_none:"Sin horario",
+  mode_none_hint:"La zona no se mueve ni por hora ni por brillo o posición solar: solo se aplican sombreado y ventilación. La automatización de la zona debe seguir encendida. Al final del día de sombreado siempre se abre; de lo contrario nada volvería a moverla.",
+  f_needs_schedule:"Sin modo de control esto no tiene efecto: no hay ninguna subida o bajada a la que asociarse. Los valores siguen guardados.",
   shutter_s:"persiana",no_shutters:"Sin persianas",auto:"Automático",
   btn_up:"Subir",btn_stop:"Parar",btn_down:"Bajar",btn_sun:"Protección solar",
   btn_add:"Añadir",btn_save:"Guardar",btn_cancel:"Cancelar",
@@ -1107,6 +1122,7 @@ es:{
   dash_shutter_role_both:"Subida y bajada por esta zona",
   dash_current_lux:"Actual",
   f_brightness_sensor:"Sensor brillo",f_lux_up:"Umbral lux subida",f_lux_down:"Umbral lux bajada",
+  f_lux_hint:"El deslizador cubre el rango fino; el campo contiguo acepta cualquier valor. Los sensores exteriores miden decenas de miles de lux en verano.",
   f_lux_wrong_way:"El umbral de subida debe estar por encima del de bajada: se sube por encima y se baja por debajo. Si queda más bajo, entre ambos valores se cumplen las dos reglas a la vez, y si además se solapan las franjas horarias la persiana oscila.",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
@@ -1276,6 +1292,7 @@ it:{
   f_sun_cond_bin_hint:"Interruttore o sensore binario: soddisfatta finché è attivo, senza soglie.",
   filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
+  own_entity_warn:"È un interruttore o sensore di Shutter Pilot stesso: mostra ciò che l’automazione ha appena deciso. Letto come misura crea un anello di retroazione. Qui va il sensore reale.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensore giorni particolari (opzionale)",
   f_workday_hint:"Un sensore binario che segnala «on» nei giorni normali. «off» attiva l'orario del fine settimana: festivi, ferie, turni e **vacanze scolastiche**. Esempio: sensore vacanze «on» quando c'è scuola; imposta «salita fine settimana» alle 09:00 e lascia vuoto «discesa fine settimana», così la tapparella resta giù fino alle nove durante le vacanze. Senza sensore contano sabato e domenica.",
@@ -1306,7 +1323,9 @@ it:{
   sun_prot_wrong_dir:"il sole non è di fronte alle finestre",
   tab_dashboard:"Pannello",tab_areas:"Zone",tab_shutters:"Tapparelle",
   subtitle:"{a} zone, {s} tapparelle",loading:"Caricamento…",
-  mode_time:"Orario",mode_brightness:"Luminosità",mode_sun:"Posizione solare",
+  mode_time:"Orario",mode_brightness:"Luminosità",mode_sun:"Posizione solare",mode_none:"Nessun orario",
+  mode_none_hint:"L’area non si muove né a orario né per luminosità o posizione solare: valgono solo ombreggiamento e ventilazione. L’automazione dell’area deve restare accesa. A fine giornata di ombreggiamento si apre sempre, altrimenti nulla la muoverebbe più.",
+  f_needs_schedule:"Senza modalità di comando questo non ha effetto: non c’è alcuna corsa in salita o discesa a cui agganciarsi. I valori restano salvati.",
   shutter_s:"tapparella",no_shutters:"Nessuna tapparella",auto:"Automatico",
   btn_up:"Su",btn_stop:"Stop",btn_down:"Giù",btn_sun:"Protezione solare",
   btn_add:"Aggiungi",btn_save:"Salva",btn_cancel:"Annulla",
@@ -1346,6 +1365,7 @@ it:{
   dash_shutter_role_both:"Apertura e chiusura da questa zona",
   dash_current_lux:"Attuale",
   f_brightness_sensor:"Sensore luminosità",f_lux_up:"Soglia lux apertura",f_lux_down:"Soglia lux chiusura",
+  f_lux_hint:"Il cursore copre l’intervallo fine; il campo accanto accetta qualsiasi valore. I sensori esterni misurano decine di migliaia di lux d’estate.",
   f_lux_wrong_way:"La soglia di apertura va sopra quella di chiusura: si apre al di sopra, si chiude al di sotto. Se sta più in basso, fra i due valori valgono entrambe le regole insieme e, se si sovrappongono anche le fasce orarie, la tapparella oscilla.",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
@@ -1515,6 +1535,7 @@ nl:{
   f_sun_cond_bin_hint:"Schakelaar of binaire sensor: voldaan zolang deze aan is – geen drempels nodig.",
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
+  own_entity_warn:"Dit is een schakelaar of sensor van Shutter Pilot zelf – hij toont wat de automatisering zojuist besloot. Als meetwaarde gelezen ontstaat een terugkoppeling. Hier hoort de echte sensor.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor voor bijzondere dagen (optioneel)",
   f_workday_hint:"Een binaire sensor die op normale dagen „aan” meldt. „uit” schakelt naar het weekendschema – feestdagen, vakantie, ploegendienst en **schoolvakanties**. Voorbeeld: vakantiesensor „aan” tijdens schooltijd; zet „omhoog weekend” op 09:00 en laat „omlaag weekend” leeg, dan blijft het rolluik in de vakantie tot negen uur beneden. Zonder sensor tellen zaterdag en zondag.",
@@ -1545,7 +1566,9 @@ nl:{
   sun_prot_wrong_dir:"zon staat niet op de ramen",
   tab_dashboard:"Dashboard",tab_areas:"Zones",tab_shutters:"Rolluiken",
   subtitle:"{a} zones, {s} rolluiken",loading:"Laden…",
-  mode_time:"Tijd",mode_brightness:"Helderheid",mode_sun:"Zonnestand",
+  mode_time:"Tijd",mode_brightness:"Helderheid",mode_sun:"Zonnestand",mode_none:"Geen schema",
+  mode_none_hint:"Het gebied rijdt niet op tijd, helderheid of zonnestand – alleen zonwering en ventilatie gelden. De automatisering van het gebied moet daarvoor aan blijven. Aan het einde van de zonweringsdag gaat het rolluik altijd open, anders zou niets het nog bewegen.",
+  f_needs_schedule:"Zonder besturingsmodus heeft dit geen effect: er is geen rit omhoog of omlaag om aan te haken. De waarden blijven opgeslagen.",
   shutter_s:"rolluik",no_shutters:"Geen rolluiken",auto:"Automatisch",
   btn_up:"Omhoog",btn_stop:"Stop",btn_down:"Omlaag",btn_sun:"Zonwering",
   btn_add:"Toevoegen",btn_save:"Opslaan",btn_cancel:"Annuleren",
@@ -1586,6 +1609,7 @@ nl:{
   dash_shutter_role_both:"Omhoog en omlaag via deze zone",
   dash_current_lux:"Huidig",
   f_brightness_sensor:"Helderheidssensor",f_lux_up:"Lux omhoog drempel",f_lux_down:"Lux omlaag drempel",
+  f_lux_hint:"De schuif dekt het fijne bereik; het veld ernaast neemt elke waarde. Buitensensoren melden in de zomer tienduizenden lux.",
   f_lux_wrong_way:"De omhoog-drempel hoort boven de omlaag-drempel: omhoog gebeurt erboven, omlaag eronder. Ligt hij lager, dan gelden tussen beide waarden allebei de regels tegelijk – overlappen ook de tijdvensters, dan gaat het rolluik heen en weer.",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
@@ -1755,6 +1779,7 @@ da:{
   f_sun_cond_bin_hint:"Kontakt eller binær sensor: opfyldt så længe den er aktiv – ingen grænser nødvendige.",
   filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
+  own_entity_warn:"Dette er en kontakt eller sensor fra Shutter Pilot selv – den viser, hvad automatikken netop har besluttet. Læst som måleværdi giver det en tilbagekobling. Her hører den rigtige sensor til.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor for særlige dage (valgfri)",
   f_workday_hint:"En binær sensor, der melder „on” på normale dage. „off” bruger weekendplanen – helligdage, ferie, skiftehold og **skoleferier**. Eksempel: feriesensor „on” når der er skole; sæt „op weekend” til 09:00 og lad „ned weekend” stå tom, så bliver rullegardinet nede til klokken ni i ferien. Uden sensor tæller lørdag og søndag.",
@@ -1785,7 +1810,9 @@ da:{
   sun_prot_wrong_dir:"solen står ikke mod vinduerne",
   tab_dashboard:"Dashboard",tab_areas:"Områder",tab_shutters:"Persienner",
   subtitle:"{a} områder, {s} persienner",loading:"Indlæser…",
-  mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposition",
+  mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposition",mode_none:"Ingen tidsplan",
+  mode_none_hint:"Området kører hverken efter klokken, lysstyrke eller solposition – kun afskærmning og udluftning gælder. Områdets automatik skal blive ved med at være tændt. Ved afskærmningsdagens slutning åbnes der altid, ellers ville intet flytte rullegardinet igen.",
+  f_needs_schedule:"Uden en styringstilstand virker dette ikke: der er ingen kørsel op eller ned at hænge sig på. Værdierne forbliver gemt.",
   shutter_s:"persienne",no_shutters:"Ingen persienner",auto:"Automatik",
   btn_up:"Op",btn_stop:"Stop",btn_down:"Ned",btn_sun:"Solbeskyttelse",
   btn_add:"Tilføj",btn_save:"Gem",btn_cancel:"Annuller",
@@ -1826,6 +1853,7 @@ da:{
   dash_shutter_role_both:"Op og ned via dette område",
   dash_current_lux:"Aktuel",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux op-tærskel",f_lux_down:"Lux ned-tærskel",
+  f_lux_hint:"Skyderen dækker finområdet; feltet ved siden af tager enhver værdi. Udendørs sensorer melder titusinder af lux om sommeren.",
   f_lux_wrong_way:"Op-tærsklen hører over ned-tærsklen: op sker over den, ned under den. Ligger den lavere, gælder begge regler samtidig mellem de to værdier – og overlapper tidsrummene også, kører persiennen frem og tilbage.",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
@@ -1995,6 +2023,7 @@ sv:{
   f_sun_cond_bin_hint:"Brytare eller binär sensor: uppfylld så länge den är aktiv – inga trösklar behövs.",
   filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
+  own_entity_warn:"Detta är en brytare eller sensor från Shutter Pilot självt – den visar vad automatiken just beslutat. Läst som mätvärde uppstår en återkoppling. Här hör den riktiga givaren hemma.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor för särskilda dagar (valfri)",
   f_workday_hint:"En binär sensor som rapporterar ”on” på vanliga dagar. ”off” använder helgschemat – helgdagar, semester, skiftarbete och **skollov**. Exempel: lovsensor ”on” när det är skola; sätt ”upp helg” till 09:00 och lämna ”ner helg” tomt, så stannar persiennen nere till nio under lovet. Utan sensor räknas lördag och söndag.",
@@ -2025,7 +2054,9 @@ sv:{
   sun_prot_wrong_dir:"solen står inte mot fönstren",
   tab_dashboard:"Dashboard",tab_areas:"Områden",tab_shutters:"Persienner",
   subtitle:"{a} områden, {s} persienner",loading:"Laddar…",
-  mode_time:"Tid",mode_brightness:"Ljusstyrka",mode_sun:"Solposition",
+  mode_time:"Tid",mode_brightness:"Ljusstyrka",mode_sun:"Solposition",mode_none:"Inget schema",
+  mode_none_hint:"Området körs varken efter klocka, ljusstyrka eller solposition – endast solskydd och vädring gäller. Områdets automatik måste vara påslagen. I slutet av solskyddsdagen öppnas det alltid, annars skulle inget flytta det igen.",
+  f_needs_schedule:"Utan styrläge har detta ingen effekt: det finns ingen körning upp eller ner att haka på. Värdena förblir sparade.",
   shutter_s:"persienn",no_shutters:"Inga persienner",auto:"Automatik",
   btn_up:"Upp",btn_stop:"Stopp",btn_down:"Ner",btn_sun:"Solskydd",
   btn_add:"Lägg till",btn_save:"Spara",btn_cancel:"Avbryt",
@@ -2066,6 +2097,7 @@ sv:{
   dash_shutter_role_both:"Upp och ner via detta område",
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Ljussensor",f_lux_up:"Lux upp-tröskel",f_lux_down:"Lux ner-tröskel",
+  f_lux_hint:"Reglaget täcker finområdet; fältet bredvid tar vilket värde som helst. Utomhusgivare rapporterar tiotusentals lux på sommaren.",
   f_lux_wrong_way:"Upp-tröskeln hör hemma över ner-tröskeln: upp sker ovanför, ner nedanför. Ligger den lägre gäller båda reglerna samtidigt mellan värdena – överlappar dessutom tidsfönstren pendlar persiennen.",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
@@ -2235,6 +2267,7 @@ pl:{
   f_sun_cond_bin_hint:"Przełącznik lub czujnik binarny: spełniony, gdy jest włączony – bez progów.",
   filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
+  own_entity_warn:"To przełącznik lub sensor samego Shutter Pilota – pokazuje, co automatyka właśnie zdecydowała. Odczytany jako pomiar tworzy sprzężenie zwrotne. Tutaj należy wskazać prawdziwy czujnik.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Czujnik dni szczególnych (opcjonalnie)",
   f_workday_hint:"Czujnik binarny zgłaszający „on” w zwykłe dni. „off” włącza harmonogram weekendowy – święta, urlop, praca zmianowa i **ferie szkolne**. Przykład: czujnik ferii „on”, gdy trwa szkoła; ustaw „w górę weekend” na 09:00 i zostaw „w dół weekend” puste, wtedy roleta w ferie zostaje opuszczona do dziewiątej. Bez czujnika liczą się sobota i niedziela.",
@@ -2265,7 +2298,9 @@ pl:{
   sun_prot_wrong_dir:"słońce nie pada na okna",
   tab_dashboard:"Panel",tab_areas:"Strefy",tab_shutters:"Rolety",
   subtitle:"{a} stref, {s} rolet",loading:"Ładowanie…",
-  mode_time:"Czas",mode_brightness:"Jasność",mode_sun:"Pozycja słońca",
+  mode_time:"Czas",mode_brightness:"Jasność",mode_sun:"Pozycja słońca",mode_none:"Bez harmonogramu",
+  mode_none_hint:"Strefa nie jeździ ani według godziny, ani jasności czy pozycji słońca – obowiązują tylko zacienianie i wietrzenie. Automatyka strefy musi pozostać włączona. Na koniec dnia zacieniania roleta zawsze się otwiera, w przeciwnym razie nic by jej już nie poruszyło.",
+  f_needs_schedule:"Bez trybu sterowania to nie działa: nie ma jazdy w górę ani w dół, do której mogłoby się odnieść. Wartości pozostają zapisane.",
   shutter_s:"roleta",no_shutters:"Brak rolet",auto:"Automatyka",
   btn_up:"W górę",btn_stop:"Stop",btn_down:"W dół",btn_sun:"Osłona słoneczna",
   btn_add:"Dodaj",btn_save:"Zapisz",btn_cancel:"Anuluj",
@@ -2306,6 +2341,7 @@ pl:{
   dash_shutter_role_both:"W górę i w dół przez tę strefę",
   dash_current_lux:"Aktualnie",
   f_brightness_sensor:"Czujnik jasności",f_lux_up:"Próg lux w górę",f_lux_down:"Próg lux w dół",
+  f_lux_hint:"Suwak obejmuje zakres precyzyjny; pole obok przyjmuje dowolną wartość. Czujniki zewnętrzne latem podają dziesiątki tysięcy luksów.",
   f_lux_wrong_way:"Próg podnoszenia powinien być powyżej progu opuszczania: w górę powyżej, w dół poniżej. Jeśli jest niżej, między obiema wartościami obowiązują obie reguły naraz – a gdy nakładają się jeszcze okna czasowe, roleta zaczyna się wahać.",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
@@ -2475,6 +2511,7 @@ pt:{
   f_sun_cond_bin_hint:"Interruptor ou sensor binário: cumprido enquanto estiver ativo, sem limiares.",
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
+  own_entity_warn:"Este é um interruptor ou sensor do próprio Shutter Pilot – mostra o que a automação acabou de decidir. Lido como medição cria um ciclo de realimentação. Aqui pertence o sensor real.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor de dias especiais (opcional)",
   f_workday_hint:"Um sensor binário que indica «on» nos dias normais. «off» ativa o horário de fim de semana – feriados, férias, turnos e **férias escolares**. Exemplo: sensor de férias «on» enquanto há aulas; define «subir fim de semana» às 09:00 e deixa «descer fim de semana» vazio, e o estore fica em baixo até às nove nas férias. Sem sensor contam sábado e domingo.",
@@ -2505,7 +2542,9 @@ pt:{
   sun_prot_wrong_dir:"o sol não incide nas janelas",
   tab_dashboard:"Painel",tab_areas:"Zonas",tab_shutters:"Estores",
   subtitle:"{a} zonas, {s} estores",loading:"A carregar…",
-  mode_time:"Horário",mode_brightness:"Luminosidade",mode_sun:"Posição solar",
+  mode_time:"Horário",mode_brightness:"Luminosidade",mode_sun:"Posição solar",mode_none:"Sem horário",
+  mode_none_hint:"A área não se move por hora, luminosidade ou posição solar – aplicam-se apenas sombreamento e ventilação. A automação da área deve permanecer ligada. No fim do dia de sombreamento abre sempre; caso contrário nada mais a moveria.",
+  f_needs_schedule:"Sem um modo de comando isto não tem efeito: não há subida nem descida à qual se ligar. Os valores continuam guardados.",
   shutter_s:"estore",no_shutters:"Sem estores",auto:"Automático",
   btn_up:"Subir",btn_stop:"Parar",btn_down:"Descer",btn_sun:"Proteção solar",
   btn_add:"Adicionar",btn_save:"Guardar",btn_cancel:"Cancelar",
@@ -2546,6 +2585,7 @@ pt:{
   dash_shutter_role_both:"Subir e descer por esta zona",
   dash_current_lux:"Atual",
   f_brightness_sensor:"Sensor de luminosidade",f_lux_up:"Limiar lux subir",f_lux_down:"Limiar lux descer",
+  f_lux_hint:"O cursor cobre a faixa fina; o campo ao lado aceita qualquer valor. Sensores exteriores medem dezenas de milhares de lux no verão.",
   f_lux_wrong_way:"O limiar de subida fica acima do de descida: sobe-se acima dele e desce-se abaixo. Se ficar mais baixo, entre os dois valores valem as duas regras ao mesmo tempo – e se as janelas horárias também se sobrepuserem, a persiana oscila.",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
@@ -2715,6 +2755,7 @@ nb:{
   f_sun_cond_bin_hint:"Bryter eller binær sensor: oppfylt så lenge den er aktiv – ingen grenser nødvendig.",
   filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
+  own_entity_warn:"Dette er en bryter eller sensor fra Shutter Pilot selv – den viser hva automatikken nettopp bestemte. Lest som måleverdi gir det en tilbakekobling. Her hører den ekte sensoren hjemme.",
   /* v2.1 – Azimut, Workday, Zufalls-Offset, Lamellen, Override */
   f_workday_sensor:"Sensor for spesielle dager (valgfritt)",
   f_workday_hint:"En binærsensor som melder «on» på vanlige dager. «off» bruker helgeplanen – helligdager, ferie, skiftarbeid og **skoleferier**. Eksempel: feriesensor «on» når det er skole; sett «opp helg» til 09:00 og la «ned helg» stå tom, da blir rullegardinen nede til klokka ni i ferien. Uten sensor teller lørdag og søndag.",
@@ -2745,7 +2786,9 @@ nb:{
   sun_prot_wrong_dir:"sola står ikke mot vinduene",
   tab_dashboard:"Dashboard",tab_areas:"Områder",tab_shutters:"Persienner",
   subtitle:"{a} områder, {s} persienner",loading:"Laster…",
-  mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposisjon",
+  mode_time:"Tid",mode_brightness:"Lysstyrke",mode_sun:"Solposisjon",mode_none:"Ingen tidsplan",
+  mode_none_hint:"Området kjører verken etter klokke, lysstyrke eller solposisjon – bare solavskjerming og lufting gjelder. Områdets automatikk må stå på. Ved slutten av avskjermingsdagen åpnes det alltid, ellers ville ingenting flytte det igjen.",
+  f_needs_schedule:"Uten styringsmodus virker dette ikke: det finnes ingen kjøring opp eller ned å henge seg på. Verdiene forblir lagret.",
   shutter_s:"persienne",no_shutters:"Ingen persienner",auto:"Automatikk",
   btn_up:"Opp",btn_stop:"Stopp",btn_down:"Ned",btn_sun:"Solbeskyttelse",
   btn_add:"Legg til",btn_save:"Lagre",btn_cancel:"Avbryt",
@@ -2786,6 +2829,7 @@ nb:{
   dash_shutter_role_both:"Opp og ned via dette området",
   dash_current_lux:"Nå",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux opp-terskel",f_lux_down:"Lux ned-terskel",
+  f_lux_hint:"Glidebryteren dekker finområdet; feltet ved siden av tar enhver verdi. Utendørssensorer melder titusenvis av lux om sommeren.",
   f_lux_wrong_way:"Opp-terskelen hører over ned-terskelen: opp skjer over den, ned under den. Ligger den lavere, gjelder begge reglene samtidig mellom verdiene – overlapper tidsvinduene i tillegg, pendler rullegardinen.",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
@@ -2894,6 +2938,12 @@ class ShutterPilotPanel extends PanelBase {
   static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false},_export:{attribute:false},_exportCopied:{attribute:false}};}
   static get styles(){return css`
     :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
+    /* overflow-x:hidden macht den Host zum Scrollport (ein Wert ungleich
+       visible setzt den anderen implizit auf auto). Er hat keine Hoehe, scrollt
+       also nie – und ein sticky Element darin klebt an nichts. clip schneidet
+       genauso ab, ohne Scrollport. Der Rueckfall oben bleibt fuer alles, was
+       clip nicht kennt: dort scrollt die Tab-Leiste wie bisher mit. */
+    @supports (overflow:clip){:host{overflow-x:clip}}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     .title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;row-gap:4px;width:100%}
     .menu-btn{flex-shrink:0;margin-left:-8px;color:var(--txt);--mdc-icon-button-size:40px}
@@ -2910,7 +2960,12 @@ class ShutterPilotPanel extends PanelBase {
     .sp-ver-badge{font-size:13px;font-weight:600;color:#4caf50;flex-shrink:0;padding:3px 10px;border-radius:10px;border:2px solid #4caf50;background:rgba(76,175,80,.12);line-height:1.2}
     /* Ohne Konfigurationstabs bleibt nur eine Trennlinie über dem Dashboard. */
     .tabs-spacer{border-bottom:2px solid var(--divider);margin-bottom:20px}
-    .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin-bottom:20px;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+    /* Feststehend beim Scrollen (Wolf): sonst muss man fuer jeden Wechsel
+       erst wieder ganz nach oben. Das negative Margin holt den Streifen unter
+       dem Host-Padding mit, sonst blitzt der Inhalt links und rechts daneben
+       durch, waehrend er darunter wegscrollt. */
+    .tabs{display:flex;gap:0;border-bottom:2px solid var(--divider);margin:0 -16px 20px;padding:0 16px;max-width:none;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;
+      position:sticky;top:0;z-index:6;background:var(--primary-background-color,var(--card-background-color,#1c1c1c))}
     .tabs::-webkit-scrollbar{height:6px}
     .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:var(--txt2);border-bottom:3px solid transparent;transition:all .2s;flex:0 0 auto;scroll-snap-align:start}
     .tab:hover{color:var(--txt)}
@@ -3025,9 +3080,13 @@ class ShutterPilotPanel extends PanelBase {
     .slider-row{display:flex;align-items:center;gap:12px}
     .slider-row input[type=range]{flex:1;accent-color:var(--sp);height:6px;cursor:pointer}
     .slider-row .slider-val{min-width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--sp)}
+    .slider-row .slider-num{width:88px;flex:0 0 auto;padding:6px 8px;font-size:14px;text-align:right;
+      border:1px solid var(--divider);border-radius:6px;background:var(--card-bg);color:var(--txt)}
+    .slider-row .slider-unit{font-size:13px;color:var(--txt2);min-width:22px}
     .form-actions{display:flex;gap:8px;margin-top:16px}
     .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
     .chip.time{background:#1565c0;color:#fff} .chip.brightness{background:#f57f17;color:#fff} .chip.sun{background:#e65100;color:#fff}
+    .chip.none{background:var(--card2, rgba(127,127,127,.35));color:var(--txt)}
     .sun-info{margin:12px 0 4px;padding:10px 12px;background:rgba(255,152,0,.08);border-radius:8px;border-left:3px solid #ff9800}
     .time-info{margin:12px 0 4px;padding:10px 12px;background:rgba(33,150,243,.08);border-radius:8px;border-left:3px solid #2196f3}
     .time-info.weekend{border-left-color:#8bc34a;background:rgba(139,195,74,.08)}
@@ -3262,9 +3321,30 @@ class ShutterPilotPanel extends PanelBase {
     if(this.hass?.entities?.[id]?.platform==="shutter_pilot")return true;
     return /^[a-z_]+\.shutter_pilot_/.test(id);
   }
-  _rankEntities(ids,hint){
+  /* Die Hälfte davon ist aber das Ergebnis einer Fahrentscheidung: die
+     Auto-Schalter, der Sonnenschutz-Schalter, „Sonnenschutz aktiv", die
+     Markisensperre. Wer so etwas als *Messwert* einträgt, baut eine
+     Rückkopplung – bjoerg hatte switch.shutter_pilot_auto_balkon als
+     Windsensor (meldet dauerhaft „on", also dauerhaft Sturm, also fährt die
+     Markise nie wieder aus), Wolf den eigenen Sonnenschutz-Sensor als
+     Sondertage-Sensor. Beide Male stand die eigene Entität ganz oben in der
+     Liste, weil das Vorziehen für *alle* Felder galt statt nur für die
+     Bedingungen, für die es gebaut wurde. Die Vorhersage-Sensoren sind nicht
+     gemeint: die kommen von der Wetter-Entität, nicht aus einer Entscheidung
+     dieser Integration. */
+  _isOwnFeedbackEntity(id){
+    return this._isOwnEntity(id)&&/^(switch|binary_sensor)\./.test(id);
+  }
+  /* Bedingungs-Slots heissen alle sun_cond_<slot>_entity. Wind, Regen und
+     Frost tragen denselben Namen, sind aber Messfelder – dort war bjoergs
+     Fehler. */
+  _ownFirstAllowed(key){
+    if(!/^sun_cond_.+_entity$/.test(String(key||"")))return false;
+    return !["sun_cond_wind_entity","sun_cond_rain_entity","sun_cond_ice_entity"].includes(key);
+  }
+  _rankEntities(ids,hint,ownFirst=true){
     const own=[],rest=[];
-    for(const e of ids)(this._isOwnEntity(e)?own:rest).push(e);
+    for(const e of ids)(this._isOwnEntity(e)&&(ownFirst||!this._isOwnFeedbackEntity(e))?own:rest).push(e);
     if(!hint)return{matching:own,others:rest};
     const matching=[...own],others=[];
     for(const e of rest)(this._matchesHint(e,hint)?matching:others).push(e);
@@ -3520,7 +3600,9 @@ class ShutterPilotPanel extends PanelBase {
           ${cur?html`<button class="spin-btn" title="${this.t("clear")}"
             @click=${e=>{e.stopPropagation();obj[key]="";this.requestUpdate();}}>×</button>`:""}
           <span class="chev">▾</span></div>
-        ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}</div>`;
+        ${cur&&!this.hass?.states?.[cur]?html`<div class="hint">${this.t("entity_missing")}</div>`:""}
+        ${cur&&this._isOwnFeedbackEntity(cur)&&!this._ownFirstAllowed(key)
+          ?html`<div class="hint warn">⚠️ ${this.t("own_entity_warn")}</div>`:""}</div>`;
     }
 
     const all=this._entities(domains);
@@ -3531,7 +3613,7 @@ class ShutterPilotPanel extends PanelBase {
     const filtered=flt
       ? all.filter(e=>this._entityLabel(e).toLowerCase().includes(flt))
       : all;
-    const {matching,others}=this._rankEntities(filtered,hint);
+    const {matching,others}=this._rankEntities(filtered,hint,this._ownFirstAllowed(key));
 
     const LIMIT=40;
     let budget=LIMIT;
@@ -4005,6 +4087,24 @@ class ShutterPilotPanel extends PanelBase {
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??min} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${a[k]??min}${suffix}</span></div></div>`;
+    /* Schieber mit offenem Ende. Lux ist die einzige Zahl in diesem Formular,
+       deren sinnvoller Bereich um Zehnerpotenzen auseinanderliegt: ein paar
+       hundert an einem Innensensor, Zehntausende an der Aussenwand. Der
+       Schieber deckt den Feinbereich ab, das Feld daneben nimmt jeden Wert.
+       Vorher war bei 1000 Schluss – Wolf stand mit 1000/981 am Anschlag und
+       hat genau das gemeldet. Der Schieber selbst wird geklemmt dargestellt,
+       ohne den Wert anzufassen: 30000 bleibt 30000, auch wenn er ganz rechts
+       steht. */
+    const rngOpen=(k,lbl,min,max,step=1,suffix="")=>{
+      const raw=Number(a[k]);
+      const v=Number.isFinite(raw)?raw:min;
+      return html`<div class="field"><label>${lbl}</label><div class="slider-row">
+        <input type="range" min="${min}" max="${max}" step="${step}" .value=${Math.min(Math.max(v,min),max)}
+          @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
+        <input class="slider-num" type="number" min="${min}" step="${step}" .value=${a[k]??""}
+          @input=${e=>{const t=e.target.value.trim();a[k]=t===""?"":Number(t);this.requestUpdate();}}>
+        <span class="slider-unit">${suffix}</span></div></div>`;
+    };
     const ep=(k,lbl,domains,hint=null)=>this._entityField(a,k,lbl,domains,hint);
     return html`<div class="form"><h3>${a._isNew?T("add_area"):T("edit_area")}</h3>
 
@@ -4015,12 +4115,19 @@ class ShutterPilotPanel extends PanelBase {
         <select .value=${m} @change=${e=>{a.mode=e.target.value;this.requestUpdate();}}>
           <option value="time" ?selected=${m==="time"}>${T("mode_time")}</option>
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
-          <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option></select></div>
+          <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option>
+          <option value="none" ?selected=${m==="none"}>${T("mode_none")}</option></select></div>
+      ${m==="none"?html`<div class="hint">${T("mode_none_hint")}</div>`:""}
       ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
       ${ep("temp_sensor",T("f_temp_sensor"),["sensor"],HINTS.temperature)}
       <div class="hint">${T("f_temp_sensor_hint")}</div>
 
-      `)}${this._sec(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m,html`
+      ${/* Ohne Zeitplan bleiben Zeitplan- und Kalenderabschnitt weg: beide
+           beschreiben ausschliesslich Fahrten nach Uhr, Lux oder Sonnenstand,
+           und ein Feld, das gespeichert wird und nichts tut, ist hier schon
+           mehrfach als Fehler zurückgekommen. Die Werte selbst bleiben in den
+           Optionen stehen und gelten wieder, sobald ein Modus gewählt wird. */""}
+      `)}${m==="none"?"":this._sec(MODE_ICONS[m]||"mdi:clock-outline","sec_schedule","sec_schedule_"+m,html`
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
         m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}
           <div class="hint">${T("f_sun_off_hint")}</div>
@@ -4030,7 +4137,8 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_bounds_we_hint")}</div>
           ${bd("sun_we_earliest_up",T("f_we_earliest_up"),"08:00")}${bd("sun_we_latest_up",T("f_we_latest_up"),"09:00")}
           ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
-        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rng("lux_up",T("f_lux_up"),0,1000,1," lx")}${rng("lux_down",T("f_lux_down"),0,1000,1," lx")}
+        html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rngOpen("lux_up",T("f_lux_up"),0,2000,10,"lx")}${rngOpen("lux_down",T("f_lux_down"),0,2000,10,"lx")}
+          <div class="hint">${T("f_lux_hint")}</div>
           ${/* Hoch gilt oberhalb, Runter unterhalb. Liegt die Hoch-Schwelle
                darunter, ist dazwischen beides zugleich wahr – solange sich die
                Zeitfenster nicht überschneiden fällt das niemandem auf, danach
@@ -4055,7 +4163,7 @@ class ShutterPilotPanel extends PanelBase {
           ${a.b_latest_down_enabled?html`${tm("b_latest_down",T("f_latest_down"))}
             ${bd("b_we_latest_down",T("f_we_latest_down"),"18:00")}`:""}`}
 
-      `)}${this._sec("mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
+      `)}${m==="none"?"":this._sec("mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
       <div class="hint">${T("f_workday_hint")}</div>
       ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
@@ -4116,6 +4224,7 @@ class ShutterPilotPanel extends PanelBase {
         ${this._renderConditionSlots(a,ep,f)}`:""}
 
       `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
+      ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_close_cond_hint")}</div>
       ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",COND_DOMAINS,HINTS.condition)}
       ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
@@ -4127,6 +4236,7 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_close_cond_both_hint")}</div>`:""}
 
       `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
+      ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),COND_DOMAINS,HINTS.condition)}
@@ -4144,6 +4254,7 @@ class ShutterPilotPanel extends PanelBase {
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
 
       `)}${this._sec("mdi:weekend","sec_noup","sec_noup_sub",html`
+      ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_noup_intro")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!a.we_no_up}
         @change=${e=>{a.we_no_up=e.target.checked;this.requestUpdate();}}> ${T("f_we_no_up")}</label>
@@ -4153,6 +4264,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="hint">${T("f_no_up_hint")}</div>
 
       `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
+      ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}`)}
 

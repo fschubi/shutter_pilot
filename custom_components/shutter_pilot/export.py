@@ -37,6 +37,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     AWNING_GUARD_SLOTS,
     AWNING_GUARD_WIND,
+    AREA_MODE_NONE,
     AWNING_UNUSED_KEYS,
     CONF_AREA_AZIMUTH_ENABLED,
     CONF_AREA_AZIMUTH_MAX,
@@ -627,6 +628,26 @@ async def async_build_export(
                 + " Runterfahren und Beschattung laufen weiter.",
                 "",
             ]
+
+        # Ein Bereich ohne Zeitplan faehrt nur ueber die Beschattung. Ist auch
+        # die aus, tut er gar nichts – und das steht sonst nirgends, weil jede
+        # einzelne Einstellung fuer sich plausibel aussieht.
+        if str(area.get(CONF_AREA_MODE) or "") == AREA_MODE_NONE:
+            if area.get(CONF_AREA_SUN_PROTECT_ENABLED):
+                out += [
+                    "> ℹ️ Kein Zeitplan: dieser Bereich fährt weder nach "
+                    "Uhrzeit noch nach Helligkeit oder Sonnenstand. Es gelten nur "
+                    "Beschattung und Lüften; am Ende des Beschattungstags wird "
+                    "immer geöffnet.",
+                    "",
+                ]
+            else:
+                out += [
+                    "> ⚠️ Kein Zeitplan **und** kein Sonnenschutz – dieser "
+                    "Bereich fährt nichts. Entweder einen Steuerungsmodus wählen "
+                    "oder den Sonnenschutz einschalten.",
+                    "",
+                ]
 
     # Derselbe Rollladen zweimal angelegt: seit 2.11.1 laesst das Panel es
     # nicht mehr zu, bestehende Konfigurationen tragen es aber weiter. Mit
