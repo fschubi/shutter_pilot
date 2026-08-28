@@ -391,6 +391,46 @@ Zwei Dinge, die man wissen sollte:
 > 💡 Für „der Rollladen soll morgens später **hochfahren**" ist nicht dieses
 > Feld zuständig, sondern der **Sondertage-Sensor** des Bereichs – siehe unten.
 
+### Einen Rollladen von der Beschattung ausnehmen
+
+Manchmal soll ein einzelnes Fenster in einem sonst beschatteten Raum nie
+mitfahren – der Arbeitsplatz am Nordfenster, die Tür zur Terrasse, das
+Aquarium. Dafür gibt es im Rollladenformular den Haken **„An der Beschattung
+teilnehmen"** (Vorgabe: an).
+
+Abwählen nimmt **nur die Beschattung** heraus. Zeitplan, Lüften und
+Fensterkontakt laufen weiter, und der Rollladen fährt morgens hoch wie alle
+anderen. Steht er beim Abwählen gerade auf Beschattungshöhe, wird er
+freigegeben statt dort eingefroren.
+
+> 💡 Der **Automatik-Schalter** am Rollladen ist etwas anderes: der hält *jede*
+> automatische Fahrt an, auch das Öffnen am Morgen. Er ist für den defekten
+> Antrieb gedacht, nicht für „dieses Fenster bitte nicht beschatten".
+
+### Zweite Beschattungsposition
+
+Eine Beschattungsposition ist ein Kompromiss: tief genug gegen die Mittagshitze
+heißt an einem milden Tag unnötig dunkel. Deshalb lassen sich **zwei**
+hinterlegen.
+
+| Wo | Was |
+| --- | --- |
+| Bereich | die Bedingung, unter der die zweite gilt |
+| Rollladen | die zweite Position selbst |
+
+Dasselbe Paar wie beim abweichenden Schließen. Die Bedingung ist ein ganz
+normaler Bedingungs-Slot: ein Schalter, ein Helfer, ein Zeitplan, ein Zahlenwert
+mit Hysterese oder eine Zustandsliste. Trifft sie zu, fahren alle Rollläden mit
+hinterlegter zweiter Position dorthin – **auch mitten in einer laufenden
+Beschattung**, nicht erst beim nächsten Mal. Ohne hinterlegte Position an einem
+Rollladen ändert sich für ihn nichts.
+
+Wer es stufenlos braucht, trägt stattdessen eine **Entität** ein: ein
+`input_number`, ein Template-Sensor, irgendetwas, das eine Zahl von 0 bis 100
+liefert. Die gewinnt über beide festen Positionen. Ist der Wert unlesbar oder
+außerhalb 0–100, gilt weiter die eingestellte Position – eine Beschattung, die
+wegen eines Templates aussetzt, wäre der schlechtere Ausfall.
+
 ### Gar nicht hochfahren – Wochenende, Ferien, Urlaub
 
 Der Sondertage-Sensor unten verschiebt die Uhrzeit. Manchmal soll aber

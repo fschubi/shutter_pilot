@@ -43,8 +43,13 @@ from .const import (
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
+    CONF_POSITION_SUN_PROTECT_ALT,
+    CONF_POSITION_SUN_PROTECT_ENTITY,
+    CONF_SHADING_ENABLED,
     ROLE_CLOSED_ALT,
     ROLE_CLOSED_FROST,
+    ROLE_SUN_PROTECT_ALT,
+    SUN_PROTECT_ALT_CONDITION_SLOT,
     CONF_AREA_UP_ID,
     CONF_BLIND_DRIVE,
     CONF_COVER_ENTITY_ID,
@@ -981,6 +986,7 @@ _ROLE_POSITION_KEYS = {
     ),
     ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
     ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
+    ROLE_SUN_PROTECT_ALT: (CONF_POSITION_SUN_PROTECT_ALT, 30),
 }
 
 
@@ -1025,6 +1031,107 @@ def resolve_close_role(
         return ROLE_CLOSED_ALT
     return ROLE_CLOSED
 
+
+def has_alt_shade_position(shutter: dict[str, Any]) -> bool:
+    """True if this shutter defines a second shading position."""
+    return _has_partial_close_position(shutter, CONF_POSITION_SUN_PROTECT_ALT)
+
+
+def shade_alt_condition_met(
+    hass: HomeAssistant, area: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when the area's condition for the second shading position holds.
+
+    Fail closed like the close and frost slots: nothing configured means the
+    ordinary shading position, which is what every existing setup expects.
+    """
+    return _own_slot_met(hass, area, data, SUN_PROTECT_ALT_CONDITION_SLOT)
+
+
+def resolve_shade_role(
+    hass: HomeAssistant,
+    area: dict[str, Any] | None,
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> str:
+    """Pick which of the two shading positions this shutter uses."""
+    if area is None:
+        return ROLE_SUN_PROTECT
+    if has_alt_shade_position(shutter) and shade_alt_condition_met(hass, area, data):
+        return ROLE_SUN_PROTECT_ALT
+    return ROLE_SUN_PROTECT
+
+
+def shade_position_from_entity(
+    hass: HomeAssistant, shutter: dict[str, Any]
+) -> float | None:
+    """The shading position dictated by a helper entity, or None.
+
+    Wins over both fixed positions when it is readable and inside 0–100. An
+    unreadable or nonsensical value returns None rather than a guess: falling
+    back to the configured position keeps shading running, and a shading run
+    that stops because a template blinked would be the worse failure.
+    """
+    entity_id = str(shutter.get(CONF_POSITION_SUN_PROTECT_ENTITY) or "").strip()
+    if not entity_id:
+        return None
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        _LOGGER.debug(
+            "Shading position entity %s unreadable – using the configured position",
+            entity_id,
+        )
+        return None
+    try:
+        value = float(state.state)
+    except (TypeError, ValueError):
+        _LOGGER.warning(
+            "Shading position entity %s reports %r, which is not a number – "
+            "using the configured position.",
+            entity_id,
+            state.state,
+        )
+        return None
+    if not 0.0 <= value <= 100.0:
+        _LOGGER.warning(
+            "Shading position entity %s reports %.10g, outside 0–100 – "
+            "using the configured position.",
+            entity_id,
+            value,
+        )
+        return None
+    return value
+
+
+def resolve_shade_position(
+    hass: HomeAssistant,
+    area: dict[str, Any] | None,
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> tuple[float, str]:
+    """The shading position for this shutter right now, plus how it was picked.
+
+    Three sources, most specific first: a helper entity, the second position
+    behind its condition, the ordinary one. The reason travels with the number
+    because it is what the export has to print – "50 %" alone never told
+    anybody why it was not 25.
+    """
+    from_entity = shade_position_from_entity(hass, shutter)
+    if from_entity is not None:
+        return from_entity, "entity"
+    role = resolve_shade_role(hass, area, shutter, data)
+    return get_position_for_role(shutter, role), role
+
+
+def shading_enabled(shutter: dict[str, Any]) -> bool:
+    """True if this shutter takes part in the shading of its area.
+
+    A separate answer from the automation switch on purpose: switching that off
+    also stops the morning opening, so the window that must never be shaded
+    stops being driven at all. Missing means yes.
+    """
+    return bool(shutter.get(CONF_SHADING_ENABLED, True))
+
 _ROLE_TILT_KEYS = {
     ROLE_OPEN: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
     ROLE_CLOSED: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
@@ -1032,6 +1139,8 @@ _ROLE_TILT_KEYS = {
     ROLE_VENTILATION: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_CLOSED_ALT: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     ROLE_CLOSED_FROST: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
+    # The second shading position is still shading: same slat angle.
+    ROLE_SUN_PROTECT_ALT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
 }
 
 
@@ -1429,6 +1538,40 @@ def manual_override_still_blocks(
     return True
 
 
+def manual_position_is_a_close(shutter: dict[str, Any], position: float) -> bool:
+    """True if a hand-driven position is simply "closed", not an override.
+
+    The manual override exists for a shutter somebody parked half way and wants
+    left alone. Closing one by hand in the evening is the opposite: it is the
+    position the automation would have driven itself, and treating it as an
+    override meant the next morning skipped that shutter – for good, because
+    only an *automated* drive clears the manual marker. Whoever closes by hand
+    never got an automatic opening again.
+
+    Judged against this shutter's own closing positions, each with the usual
+    tolerance, plus anything beyond the tightest one. A value between two of
+    them stays an override: that is a position nothing here would have driven.
+    """
+    closed = get_position_for_role(shutter, ROLE_CLOSED)
+    candidates = [closed]
+    if has_alt_close_position(shutter):
+        candidates.append(get_position_for_role(shutter, ROLE_CLOSED_ALT))
+    if has_frost_close_position(shutter):
+        candidates.append(get_position_for_role(shutter, ROLE_CLOSED_FROST))
+    open_pos = get_position_for_role(shutter, ROLE_OPEN)
+    # Direction-blind, like everywhere else: on an awning "closed" is the
+    # higher number, and comparing the wrong way round would call every
+    # extended awning "closed".
+    beyond_closed = (
+        position <= closed + POSITION_TOLERANCE_PCT
+        if open_pos >= closed
+        else position >= closed - POSITION_TOLERANCE_PCT
+    )
+    return beyond_closed or any(
+        abs(position - c) <= POSITION_TOLERANCE_PCT for c in candidates
+    )
+
+
 def should_skip_automated_up(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -1471,16 +1614,60 @@ def should_skip_automated_up(
     if check_pos is None:
         return False
 
-    if check_pos < pos_open - POSITION_TOLERANCE_PCT:
-        _LOGGER.debug(
-            "Skip automated UP for %s: manual position %.0f%% (HA reports %.0f%%)",
-            cover,
-            check_pos,
-            cur if cur is not None else -1,
-        )
-        return True
+    if check_pos >= pos_open - POSITION_TOLERANCE_PCT:
+        return False
 
-    return False
+    if manual_position_is_a_close(shutter, check_pos):
+        _LOGGER.debug(
+            "Manual position %.0f%% for %s is its closing position – not an "
+            "override, the automated UP runs",
+            check_pos,
+            cover,
+        )
+        return False
+
+    _LOGGER.debug(
+        "Skip automated UP for %s: manual position %.0f%% (HA reports %.0f%%)",
+        cover,
+        check_pos,
+        cur if cur is not None else -1,
+    )
+    return True
+
+
+def note_manual_position(
+    data: dict[str, Any], shutter: dict[str, Any], position: float
+) -> None:
+    """Book a hand-driven end position into the up/down bookkeeping.
+
+    covers_driven_up / covers_driven_down are what the scheduler and the
+    brightness mode ask before they drive, and until now only their own drives
+    wrote into them. That made one blocked direction freeze the other: a
+    shutter closed in the evening stayed marked "down" for good if the morning
+    opening never ran, and the *next* evening then skipped it as well – "it
+    drives neither up nor down", reported exactly that way.
+
+    Only the two ends count. A position somewhere in between is a manual
+    override and says nothing about which half of the day the shutter is in.
+
+    Both sets are mutated in place. Re-assigning one would leave the scheduler
+    writing into a set that no longer hangs in `data` – the fault that made
+    clear_covers_driven_for_direction() silently do nothing until 2.10.0.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover:
+        return
+    up: set[str] = data.setdefault("covers_driven_up", set())
+    down: set[str] = data.setdefault("covers_driven_down", set())
+    open_pos = get_position_for_role(shutter, ROLE_OPEN)
+
+    if abs(position - open_pos) <= POSITION_TOLERANCE_PCT:
+        up.add(cover)
+        down.discard(cover)
+        return
+    if manual_position_is_a_close(shutter, position):
+        down.add(cover)
+        up.discard(cover)
 
 
 def apply_covers_driven_from_persisted(

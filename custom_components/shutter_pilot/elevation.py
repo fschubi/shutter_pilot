@@ -45,7 +45,9 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     is_sun_protect_enabled,
+    resolve_shade_position,
     shade_release_opens,
+    shading_enabled,
     is_cover_sun_protected,
     shading_would_open_cover,
     register_minute_callback,
@@ -62,6 +64,12 @@ from .helpers import (
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 
 _LOGGER = logging.getLogger(__name__)
+
+# The shading position can now follow a helper entity, and that entity may
+# creep. Below this the shutter is left where it is: a motor that corrects one
+# percent every minute is the complaint the awning tracking already has a step
+# for, and here it would run all afternoon.
+SHADE_POSITION_MIN_STEP = 2.0
 
 
 async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -147,8 +155,16 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                     )
                     continue
             else:
-                pos = get_position_for_role(shutter, ROLE_SUN_PROTECT)
+                # Which of the two shading positions – or a number a helper
+                # entity dictates. The reason travels along for the log: "50%"
+                # without it never says why it was not 25.
+                pos, why = resolve_shade_position(hass, area, shutter, data)
                 tilt = get_tilt_for_role(shutter, ROLE_SUN_PROTECT)
+                if why != ROLE_SUN_PROTECT:
+                    _LOGGER.debug(
+                        "[sun-protect] %s: shading position %d%% (%s)",
+                        cover_entity, int(pos), why,
+                    )
             if not awning and shutter.get(
                 CONF_DRIVE_AFTER_CLOSE, False
             ) and is_window_open_or_tilted(hass, shutter):
@@ -189,6 +205,8 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 shaded.append(cover_entity)
                 if awning:
                     data.setdefault("_awning_track_last", {})[cover_entity] = pos
+                else:
+                    data.setdefault("_shade_pos_last", {})[cover_entity] = pos
             else:
                 _LOGGER.warning(
                     "[sun-protect] %s: drive failed – shading not marked active, "
@@ -235,6 +253,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # goes with it, off disk too, since it was the shading drive.
             clear_stale_window_cycle_after_automated_up(data, cover_entity)
             forget_drive_after_close(hass, entry, data, cover_entity)
+            data.get("_shade_pos_last", {}).pop(cover_entity, None)
             idx += 1
             moved += 1
         return moved
@@ -283,6 +302,18 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # automation is switched back on.
             if not is_shutter_automation_enabled(hass, entry, shutter):
                 continue
+            # Taken out of the shading by hand, while the schedule keeps
+            # running for it. Released like a condition that dropped out, not
+            # frozen: unticking it in the middle of a shaded afternoon is
+            # exactly the moment somebody wants that shutter back up.
+            if not shading_enabled(shutter):
+                if is_cover_sun_protected(data, cover):
+                    release_since.pop(cover, None)
+                    set_cover_sun_protected(data, cover, False)
+                    to_release.setdefault(area_id, []).append(
+                        (shutter, "shading switched off for this shutter")
+                    )
+                continue
 
             # A room may have windows facing different ways and watching
             # different sensors, so each shutter is judged with its own
@@ -311,7 +342,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 and not is_awning(shutter)
                 and bool(area.get(CONF_AREA_SHADE_ONLY_WHEN_OPEN, False))
                 and shading_would_open_cover(
-                    hass, shutter, get_position_for_role(shutter, ROLE_SUN_PROTECT)
+                    hass, shutter, resolve_shade_position(hass, area, shutter, data)[0]
                 )
             ):
                 _LOGGER.debug(
@@ -335,6 +366,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                     wanted = awning_shade_position(shutter, elev)
                     last = data.get("_awning_track_last", {}).get(cover)
                     if last is None or abs(wanted - last) >= awning_track_step(shutter):
+                        to_shade.setdefault(area_id, []).append(shutter)
+                elif not is_awning(shutter):
+                    # Already shaded, but the second position has come into
+                    # force or the helper entity moved. Without this the switch
+                    # would only take effect at the next release – hours later,
+                    # which is not what "switch to the deeper position" means.
+                    wanted, _why = resolve_shade_position(hass, area, shutter, data)
+                    last = data.get("_shade_pos_last", {}).get(cover)
+                    if last is not None and abs(wanted - last) >= SHADE_POSITION_MIN_STEP:
                         to_shade.setdefault(area_id, []).append(shutter)
                 continue
 

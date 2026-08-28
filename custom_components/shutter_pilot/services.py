@@ -36,7 +36,9 @@ from .helpers import (
     get_tilt_for_role,
     is_awning,
     only_awnings,
+    resolve_shade_position,
     set_cover_position,
+    shading_enabled,
 )
 from .window_helper import get_effective_close_position
 
@@ -67,12 +69,40 @@ async def _drive_group(
 ) -> None:
     """Drive every shutter of a group to its own configured position for `role`."""
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    areas = entry.options.get(CONF_AREAS, [])
+    area_cfg = None
+    if isinstance(areas, list):
+        area_cfg = next(
+            (
+                a
+                for a in areas
+                if isinstance(a, dict)
+                and str(a.get(CONF_AREA_ID) or "").strip() == area_id
+            ),
+            None,
+        )
     driven = 0
     for shutter in shutters:
         cover = shutter.get(CONF_COVER_ENTITY_ID)
         if not cover:
             continue
-        position = get_position_for_role(shutter, role)
+        # The per-shutter automation switch is deliberately *not* asked here.
+        # These services are the manual path – a shutter taken out of the
+        # automation must still be drivable, or it cannot be tested after the
+        # repair. The dashboard's area buttons do skip it: there the switch sits
+        # two lines above the button, and driving it anyway read as a fault to
+        # two people independently.
+        if role == ROLE_SUN_PROTECT:
+            if not shading_enabled(shutter):
+                _LOGGER.info(
+                    "%s: %s skipped – takes no part in the shading",
+                    direction,
+                    cover,
+                )
+                continue
+            position = resolve_shade_position(hass, area_cfg, shutter, data)[0]
+        else:
+            position = get_position_for_role(shutter, role)
         # An awning that must not be out stays in, whoever asked. Judged by the
         # target rather than by the role: close_group on an awning means
         # "retract it", and refusing *that* during a storm would be absurd.
@@ -230,6 +260,9 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             f"ventilate_group({area_id})",
             _delay_for_area(area_id),
             area_id,
+            # Der Aussperrschutz galt an jedem automatisierten Fahrweg – nur
+            # hier nicht, und Lueften faehrt nach unten wie jedes Schliessen.
+            apply_lock_protection=True,
         )
 
     async def retract_awnings(call) -> None:

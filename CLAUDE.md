@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (613 Tests)
+tests/               pytest-Suite (651 Tests)
 ```
 
 ## Funktionsumfang
@@ -107,6 +107,15 @@ Verhalten – alle je Bereich, alle mit Vorgabe „wie bisher":
 * **Nur beschatten, was schon offen ist** – `set_cover_position(50)` ist von
   unten derselbe Befehl wie von oben; die Richtung steht nur in der aktuellen
   Position.
+
+Die Beschattungsposition ist nicht eine Zahl, sondern drei Quellen, spezifisch
+zuerst: eine **Entität** (0–100, unlesbar = Rückfall statt Aussetzer), eine
+**zweite feste Position** hinter dem Slot `sp_alt` (Bedingung am Bereich,
+Position am Rollladen – das Paar von `closed_alt`), sonst die normale. Sie
+greift **sofort**, auch mitten in einer laufenden Beschattung; `_shade_pos_last`
+verhindert dabei, dass der Motor jede Minute ein Prozent nachfährt. Ein
+Rollladen kann über `shading_enabled` ganz aussteigen – anders als der
+Automatik-Schalter hält das nur die Beschattung an, nicht den Zeitplan.
 
 Geometrie und Bedingungen lassen sich **pro Rollladen** überschreiben. Der
 Rückfall wirkt je Bedingungs-Slot: gesetzt am Rollladen ersetzt den Slot,
@@ -195,10 +204,17 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
   erkennt die Plattform, dann werden eigene Bedienelemente gerendert.
 - **Rechte**: Ohne Administrator zeigt das Panel nur das Dashboard mit den
   Bedienknöpfen. Das ist Bequemlichkeit – die Grenze liegt auf dem Server.
+- **Die Bedienknöpfe rufen die `cover`-Dienste direkt auf** (damit HA die Rechte
+  je Entität prüft). Sie kommen damit an *jedem* Riegel im Backend vorbei.
+  Dreimal doppelt gebaut: Mindestabstand, Markisensperre, Aussperrschutz. Bei
+  einem neuen Riegel ist die erste Frage, ob das Panel ihn kennt. Trennung:
+  **Gruppenknopf = Bereich handelt** (Rollladenschalter gilt), **Zeilenknopf und
+  Dienste = von Hand** (gilt nicht – sonst ist ein reparierter Antrieb nicht
+  prüfbar).
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.16.0: je 387 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.17.0: je 397 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -227,7 +243,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 613 Tests, ~15 s
+.venv/bin/pytest            # 651 Tests, ~16 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -253,10 +269,117 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.16.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.17.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-28 – 2.17.0: die Knoepfe, die an der Automatik vorbeifahren
+
+Vier Beitraege an einem Tag, drei Fehler. **Zwei davon sind derselbe Satz:**
+die Dashboard-Knoepfe rufen die `cover`-Dienste direkt auf (bewusst, seit
+2.7.1 – sonst verliert man die Rechtepruefung je Entitaet), und damit kommen
+sie an *allem* vorbei, was im Backend zwischen Absicht und Fahrt steht. Bisher
+war nur der Mindestabstand doppelt gebaut. Es fehlten der **Aussperrschutz**
+(Linos: „Sonnenschutz"-Knopf faehrt den Rollladen vor die offene
+Terrassentuer) und der **Rollladenschalter** (Linos und c.radi unabhaengig:
+„der linke ist defekt und deaktiviert, faehrt aber mit").
+
+**Merke: was im Backend an einem Fahrweg haengt, gilt fuer die Knoepfe nicht.**
+Die Liste ist jetzt dreimal doppelt gebaut – Mindestabstand, Markisensperre,
+Aussperrschutz – und beim naechsten Riegel ist die erste Frage, ob das Panel
+ihn auch kennt. Die Trennung, die dabei entstanden ist: **Gruppenknopf =
+Bereich handelt** (Schalter gilt), **Zeilenknopf und Dienste = von Hand**
+(Schalter gilt nicht, sonst kann man einen reparierten Antrieb nicht pruefen).
+Der Test `test_manual_service_still_drives_disabled_shutter` haelt die zweite
+Haelfte fest – er ist beim Umbau umgefallen und war das Signal, die Dienste
+in Ruhe zu lassen.
+
+**Der Fund, der Smons erklaert.** Alle seine Rollladen stehen auf 0 % mit
+Quelle `manual`, der Bereich auf `manual_override: never`. Damit ueberspringt
+`should_skip_automated_up()` jedes Hochfahren – und geloescht wird der Merker
+nur von einer *automatischen* Fahrt (`clear_manual_override_for_covers`). Wer
+abends von Hand schliesst, bekommt also **nie wieder** ein automatisches Auf.
+Und „von Hand" heisst hier auch: mit dem Runter-Knopf dieses Panels, denn der
+laeuft am Pending-Marker vorbei. Die Uebersteuerung ist fuer den Rollladen
+gedacht, den jemand auf halber Hoehe geparkt hat; von Hand zufahren ist das
+Gegenteil davon. `manual_position_is_a_close()` prueft deshalb gegen die
+*eigenen* Schliesspositionen des Rollladens (closed, closed_alt, closed_frost,
+je mit Toleranz, plus alles jenseits der engsten) – eine Position **dazwischen**
+bleibt eine Uebersteuerung, denn die faehrt hier nichts an.
+
+**Der Fund, der c.radi erklaert – und der allgemeinere.** `covers_driven_up`
+und `covers_driven_down` wurden nur von eigenen Fahrten gepflegt. Bleibt eine
+Richtung einmal aus, friert sie die andere ein: sein Rollladen stand seit Tagen
+in `covers_driven_down`, also fiel jede weitere Abendfahrt aus, und von Hand
+hochziehen half nicht, weil das niemand mitschrieb. `note_manual_position()`
+haengt jetzt im `cover_tracker` und bucht **nur die beiden Enden** – eine
+Position dazwischen sagt nichts darueber, in welcher Tageshaelfte der Rollladen
+steht. Die Sets werden **in place** veraendert; neu zuweisen war der Fehler von
+2.10.0. Die Merker heissen im Export jetzt „gilt als oben/unten", weil „heute
+schon gefahren" schon vorher nicht stimmte.
+
+**Die Gegenprobe, die zuerst nicht fiel.** Zurueckdrehen von
+`note_manual_position` liess alle 648 Tests gruen: die Tests pruefen die
+Funktion, nicht die Verdrahtung. Der Aufruf im `cover_tracker` ist die einzige
+Stelle, die eine fremde Fahrt ueberhaupt mitbekommt – **die Verdrahtung ist
+hier die Aenderung**, nicht die Funktion. Zwei Tests nachgezogen, die den
+Cover-Zustand von aussen setzen; danach fiel sie.
+
+**Der Export beantwortet die zweithaeufigste Frage jetzt selbst.** „Warum
+faehrt er morgens nicht hoch" stand nirgends: jede Sperre auf diesem Weg ist
+lautlos und hinterlaesst *keinen* Merker – zu sehen war nur, dass nichts
+gefahren ist, und das ist das Symptom. `_drive_verdict()` nennt Hauptschalter,
+Bereichs- und Rollladenautomatik, Wochenend- und `no_up`-Sperre und die
+Handposition **samt Wert**.
+
+**Dabei eine Altlast aus 2.15.0 mitgenommen:** `automated_up_blocked()` im
+Export lief gegen das echte `data` – und `_own_slot_met()` schreibt die
+Hysterese beim Auswerten mit. `_memory_copy()` schuetzt seit 2.8.0 die
+Beschattungspruefung, aber diese Funktion nimmt `data`, nicht den Merker.
+Dafuer jetzt `_shielded()`, eine Ebene hoeher. **Merke: der Schutz haengt an
+der Signatur** – wer eine Funktion in den Export holt, die `data` nimmt, muss
+ihn neu bauen.
+
+**Zwei Wuensche, beide als vorhandenes Paar gebaut.** Die zweite
+Beschattungsposition (pcsv17) ist `resolve_close_role()` noch einmal:
+**Bedingung am Bereich, Position am Rollladen**. Neu ist nur, dass sie
+**sofort** greifen muss – „binaer aktiviert" heisst nicht „beim naechsten
+Mal", also merkt sich `elevation.py` in `_shade_pos_last` die zuletzt
+gefahrene Zahl und faehrt nach, sobald sie sich um mehr als
+`SHADE_POSITION_MIN_STEP` unterscheidet. Der Schritt ist noetig, weil die
+Entitaets-Variante kriechen kann; sonst laeuft der Motor jede Minute ein
+Prozent. Die Entitaet **gewinnt ueber beide festen Positionen** und faellt bei
+unlesbarem oder ausser-Bereich-Wert zurueck statt auszusetzen – dieselbe
+Richtung wie ueberall bei der Beschattung.
+
+**`shading_enabled` ist bewusst nicht der Automatik-Schalter** (Linos). Der
+haelt jede Fahrt an, auch das Oeffnen am Morgen; gefragt war „dieses Fenster
+nie beschatten". Der Haken laeuft im `elevation.py` durch denselben Zweig wie
+eine weggefallene Bedingung, **nicht** durch den Zweig des Rollladenschalters:
+abwaehlen mitten am Nachmittag ist genau der Moment, in dem jemand diesen
+Rollladen wieder oben haben will.
+
+**Verifiziert:** `pytest` 651 Tests gruen (38 neue), **sieben Gegenproben**
+gemacht – jede Aenderung einzeln zurueckgedreht, jedes Mal fiel genau ihr Test
+(die zu `note_manual_position` erst nach den zwei nachgezogenen Tests, siehe
+oben). i18n 397/397 in allen elf Sprachen (10 neu). Panel in Node gerendert:
+sechs Ansichten plus zwoelf Pruefungen der neuen Klemm- und Filterlogik,
+darunter Linos' Fall (Sonnenschutz-Knopf klemmt bei offener Tuer auf 100).
+**Nicht im Browser geprueft.**
+
+**Beinahe-Unfall beim Arbeiten, nicht im Produkt:** `git checkout <datei>` nach
+einer Gegenprobe stellt **HEAD** wieder her, nicht den Stand von vorhin – damit
+waren alle Aenderungen an `services.py` weg. Fuer Gegenproben immer eine Kopie
+im Scratchpad anlegen und die zuruecklegen.
+
+**Offen:** Bei c.radi bleibt eine Einstellungssache, die kein Code loest: sein
+Helligkeitssensor ist die Beleuchtungsstaerke eines Bewegungsmelders. Der
+meldet nur bei Bewegung, und der Helligkeitsmodus haengt am State-Change –
+im Fenster 06:30–07:00 feuert dort morgens oft nichts. Die Frist aus 2.11.0
+faengt das ab, seine steht aber auf 07:15, also *ausserhalb* des Fensters. Das
+ist erlaubt (die Frist prueft `_area_window` bewusst nicht), sieht aber wie ein
+Fehler aus – Kandidat fuer eine Formularwarnung.
 
 ### 2026-08-27 – 2.16.0: der Bereich, der nichts faehrt
 

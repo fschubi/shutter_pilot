@@ -4,6 +4,29 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.17.0]
+
+Vier Forumsbeiträge an einem Tag. Drei davon waren Fehler – und zwei davon
+hängen zusammen: **die Knöpfe im Dashboard fahren an der halben Automatik
+vorbei**, weil sie die `cover`-Dienste direkt aufrufen.
+
+### Behoben
+- **Der Aussperrschutz galt bei den Dashboard-Knöpfen nicht** (Linos). „Ich habe den Button „Sonnenschutz" betätigt und es sind alle Rollläden gefahren, auch der mit Aussperrschutz." Genau so war es: `close_group` und `sun_protect_group` klemmen die Zielposition seit jeher, die Knöpfe im Panel aber rufen die `cover`-Dienste direkt auf – damit Home Assistant die Rechte je Entität prüft und das Panel auch für Nicht-Admins bedienbar bleibt (2.7.1). Der Aussperrschutz war damit an genau der Stelle wirkungslos, an der man ihn am ehesten auslöst: mit offener Terrassentür daneben. Jetzt klemmen **Runter, Sonnenschutz und Lüften** auch dort auf die Mindesthöhe. Zweite Stelle für dieselbe Regel, aus demselben Grund wie beim Markisenschutz – die Alternative wäre ein Loch in der Rechteprüfung.
+- **Die Gruppenknöpfe eines Bereichs fuhren abgeschaltete Rollläden mit** (Linos, c.radi). „Betätige ich den ‚hoch'-Button werden beide Rolläden bedient, obwohl der linke deaktiviert ist. Der ist aktuell defekt." Ein Gruppenknopf ist der Bereich, der handelt – der Schalter am Rollladen gilt also, und er steht zwei Zeilen über dem Knopf. **Die Knöpfe in der Rollladenzeile fahren ihn weiterhin**: genau damit prüft man ihn nach der Reparatur. Die Dienste `open_group`/`close_group` bleiben ebenfalls unverändert, sie sind der Weg „von Hand".
+- **Von Hand zufahren sperrte das automatische Hochfahren – dauerhaft** (Smons). Wer abends selbst schließt (Wandschalter, eigene Automation, der Runter-Knopf im Dashboard), erzeugt eine Position mit der Quelle „manuell". Bei der Übersteuerungs-Einstellung „nie" blockiert die das Öffnen bis zum nächsten Schließen – und gelöscht wurde der Merker nur von einer *automatischen* Fahrt. Wer immer von Hand schloss, bekam also nie wieder ein automatisches Auf. Jetzt gilt: eine Handposition, die **eine der Schließpositionen dieses Rollladens** ist, ist keine Übersteuerung, sondern das, was die Automatik selbst gefahren wäre. Eine Position dazwischen bleibt eine Übersteuerung wie bisher.
+- **Eine blockierte Fahrtrichtung fror die andere ein** (c.radi). „Der Bereich fährt weder hoch noch runter." Die Merker „gilt als oben/unten" hielten einen Rollladen von der nächsten Fahrt in dieselbe Richtung ab und wurden bisher nur von eigenen Fahrten gepflegt. Blieb das morgendliche Hochfahren einmal aus, galt der Rollladen für immer als „unten" – und die Abendfahrt fiel ab da ebenfalls aus, auch wenn man ihn zwischendurch von Hand hochzog. Fahrten von Hand werden jetzt mitgeschrieben, aber nur an den beiden Enden: eine Position dazwischen sagt nichts darüber, in welcher Tageshälfte der Rollladen steht.
+- **Lüften kannte den Aussperrschutz nicht.** `ventilate_group` fährt nach unten wie jedes Schließen, klemmte die Position aber als einziger Fahrweg nicht.
+- **Der Dateiname des Exports stand in UTC**, der Kopf des Berichts in Ortszeit. Zwei Stunden Unterschied – beim Vergleich zweier Exporte sah der neuere nach dem älteren aus.
+
+### Neu
+- **Zweite Beschattungsposition** (pcsv17). „Wäre es möglich, eine 2. Beschattungsposition anzulegen, die binär aktiviert wird, oder die eine Beschattungsposition variabel per Entität zu verändern?" Beides. Die **Bedingung** steht am Bereich, die **Position** am Rollladen – dasselbe Paar wie beim abweichenden Schließen, und dieselbe Bedingungsmechanik: Schalter, Helfer, Zeitplan, Zahlenwert mit Hysterese oder Zustandsliste. Sie greift **sofort**, auch mitten in einer laufenden Beschattung. Stufenlos geht über eine **Entität** (`input_number`, Template-Sensor, alles was 0–100 liefert); die gewinnt über beide festen Positionen. Ein unlesbarer Wert lässt die eingestellte Position gelten – eine Beschattung, die wegen eines Templates aussetzt, wäre der schlechtere Ausfall.
+- **Einen Rollladen von der Beschattung ausnehmen** (Linos). „Wie schließe ich den Rollladen generell aus dem Beschatten aus?" Bisher nur über den Automatik-Schalter – und der hält auch das Öffnen am Morgen an. Der neue Haken **„An der Beschattung teilnehmen"** nimmt nur die Beschattung heraus; Zeitplan, Lüften und Fensterkontakt laufen weiter. Wer ihn abwählt, während der Rollladen gerade beschattet ist, bekommt ihn freigegeben statt eingefroren.
+- **Der Export beantwortet „warum fährt er morgens nicht hoch"**. Bisher stand dort nichts dazu: jede Sperre auf diesem Weg ist lautlos und hinterlässt keinen Merker – zu sehen war nur, dass nichts gefahren ist, und das ist das Symptom. Der Bericht nennt jetzt je Rollladen den Hauptschalter, die Bereichs- und Rollladenautomatik, die Wochenend- und „nicht hochfahren"-Sperre und eine blockierende Handposition **samt ihrem Wert**.
+- Der Export nennt außerdem die **gerade geltende Beschattungsposition** und woher sie kommt (feste Position, zweite Position, Entität) – und warnt, wenn eine zweite Position hinterlegt ist, für die es im Bereich keine Bedingung gibt.
+
+### Geändert
+- Die Merker im Export heißen jetzt **„gilt als oben"** und **„gilt als unten"**. Sie hießen „heute schon hoch-/runtergefahren", und das stimmte schon vorher nicht ganz – sie überleben den Tageswechsel und werden seit dieser Version auch von Fahrten von Hand gesetzt.
+
 ## [2.16.0]
 
 Zwei Forumsbeiträge, vier Wünsche – und ein Fund in Wolfs Export, nach dem

@@ -421,6 +421,16 @@ de:{
   f_shade_release_opens_hint:"Sinkt die Sonne unter den eingestellten Bereich, bleibt der Rollladen sonst auf Beschattungshöhe stehen, bis der Abendplan ihn schließt. Im Sonnenmodus sind das Minuten, im Helligkeits- und Zeitmodus können es Stunden sein. Angehakt fährt er stattdessen sofort auf.",
   f_shade_only_when_open:"Nur beschatten, was schon offen ist",
   f_shade_only_when_open_hint:"Beschatten und Öffnen ist derselbe Fahrbefehl mit einer anderen Zahl: ein noch geschlossener Rollladen wird von der Beschattung sonst auf die Beschattungshöhe hochgefahren. Angehakt bleibt er unten, bis er regulär geöffnet hat.",
+  f_sp_alt_title:"Zweite Beschattungsposition",
+  f_sp_alt_hint:"Trifft diese Bedingung zu, fahren Rollläden mit hinterlegter zweiter Beschattungsposition dorthin statt auf die normale. Gedacht für „bei Hitze tiefer\" – ein Schalter, ein Zeitplan oder ein Temperaturwert genügt. Die Position selbst steht am Rollladen.",
+  f_sp_alt_cond:"Bedingung (optional)",
+  f_pos_sun_alt:"Zweite Beschattungsposition hinterlegen",
+  f_pos_sun_alt_hint:"Wird gefahren, solange die Bedingung „Zweite Beschattungsposition\" des Bereichs zutrifft. Ohne diese Bedingung bleibt sie wirkungslos.",
+  f_pos_sun_alt_val:"Position bei zweiter Beschattung",
+  f_pos_sun_entity:"Beschattungsposition aus Entität (optional)",
+  f_pos_sun_entity_hint:"Eine Zahl von 0 bis 100 aus einem Helfer oder Template. Gewinnt über beide festen Positionen und wirkt sofort, auch während beschattet wird. Ist der Wert unlesbar oder ausserhalb 0–100, gilt weiter die eingestellte Position.",
+  f_shading_enabled:"An der Beschattung teilnehmen",
+  f_shading_enabled_hint:"Abwählen nimmt nur diesen Rollladen aus der Beschattung – Zeitplan, Lüften und Fensterkontakt laufen weiter. Der Automatik-Schalter am Rollladen hält dagegen alles an, auch das morgendliche Hochfahren.",
   sec_noup:"Hochfahren unterbinden",
   sec_noup_sub:"Wochenende, Ferien, Urlaub",
   f_noup_intro:"Betrifft nur das automatische Hochfahren. Runterfahren und Beschattung laufen weiter – sonst stünde das Haus abends offen.",
@@ -722,6 +732,16 @@ en:{
   f_shade_release_opens_hint:"Once the sun drops below the configured range the shutter otherwise stays at the shading height until the evening schedule closes it. In sun mode that is minutes; in brightness and time mode it can be hours. Ticked, it opens straight away instead.",
   f_shade_only_when_open:"Only shade what is already open",
   f_shade_only_when_open_hint:"Shading and opening are the same drive command with a different number, so a shutter still closed gets driven up to the shading height by the shading rule. Ticked, it stays down until it has opened normally.",
+  f_sp_alt_title:"Second shading position",
+  f_sp_alt_hint:"While this condition holds, shutters that have a second shading position drive there instead of the ordinary one. Meant for \"go deeper when it is hot\" – a switch, a schedule or a temperature will do. The position itself lives on the shutter.",
+  f_sp_alt_cond:"Condition (optional)",
+  f_pos_sun_alt:"Set a second shading position",
+  f_pos_sun_alt_hint:"Driven while the area's \"second shading position\" condition holds. Without that condition it has no effect.",
+  f_pos_sun_alt_val:"Position for the second shading",
+  f_pos_sun_entity:"Shading position from an entity (optional)",
+  f_pos_sun_entity_hint:"A number from 0 to 100 out of a helper or a template. Wins over both fixed positions and takes effect straight away, even while shading is running. An unreadable value, or one outside 0–100, leaves the configured position in force.",
+  f_shading_enabled:"Takes part in the shading",
+  f_shading_enabled_hint:"Unticking takes only this shutter out of the shading – schedule, ventilation and window contact keep running. The automation switch on the shutter stops everything instead, the morning opening included.",
   sec_noup:"Block opening",
   sec_noup_sub:"weekend, holidays, leave",
   f_noup_intro:"Affects the automated opening only. Closing and shading keep running – otherwise the house would stand open all evening.",
@@ -965,6 +985,16 @@ fr:{
   f_shade_release_opens_hint:"Quand le soleil descend sous la plage réglée, le volet reste sinon à la hauteur d'ombrage jusqu'à la fermeture du soir. En mode soleil ce sont des minutes, en mode luminosité ou horaire cela peut être des heures. Coché, il remonte aussitôt.",
   f_shade_only_when_open:"N'ombrager que ce qui est déjà ouvert",
   f_shade_only_when_open_hint:"Ombrager et ouvrir, c'est la même commande avec un autre chiffre : un volet encore fermé est donc remonté à la hauteur d'ombrage. Coché, il reste baissé jusqu'à son ouverture normale.",
+  f_sp_alt_title:"Deuxième position d'ombrage",
+  f_sp_alt_hint:"Tant que cette condition est remplie, les volets ayant une deuxième position d'ombrage s'y placent au lieu de la position habituelle. Pensé pour « descendre plus bas quand il fait chaud » : un interrupteur, un planning ou une température suffisent. La position elle-même se règle sur le volet.",
+  f_sp_alt_cond:"Condition (optionnel)",
+  f_pos_sun_alt:"Définir une deuxième position d'ombrage",
+  f_pos_sun_alt_hint:"Utilisée tant que la condition « deuxième position d'ombrage » de la zone est remplie. Sans cette condition, elle reste sans effet.",
+  f_pos_sun_alt_val:"Position du deuxième ombrage",
+  f_pos_sun_entity:"Position d'ombrage depuis une entité (optionnel)",
+  f_pos_sun_entity_hint:"Un nombre de 0 à 100 issu d'un assistant ou d'un modèle. Prioritaire sur les deux positions fixes et pris en compte immédiatement, même pendant l'ombrage. Une valeur illisible ou hors 0–100 laisse la position configurée en vigueur.",
+  f_shading_enabled:"Participe à l'ombrage",
+  f_shading_enabled_hint:"Décocher ne retire que ce volet de l'ombrage : planning, aération et contact de fenêtre continuent. L'interrupteur d'automatisation du volet arrête tout, y compris l'ouverture du matin.",
   sec_noup:"Empêcher l'ouverture",
   sec_noup_sub:"week-end, vacances, congés",
   f_noup_intro:"Ne concerne que l'ouverture automatique. La fermeture et l'ombrage continuent – sinon la maison resterait ouverte toute la soirée.",
@@ -1208,6 +1238,16 @@ es:{
   f_shade_release_opens_hint:"Cuando el sol baja del rango configurado, la persiana se queda si no a la altura de sombreado hasta que el plan de la tarde la cierre. En modo sol son minutos; en modo luminosidad y horario pueden ser horas. Marcado, sube de inmediato.",
   f_shade_only_when_open:"Sombrear solo lo que ya está abierto",
   f_shade_only_when_open_hint:"Sombrear y abrir son la misma orden con otra cifra: una persiana aún cerrada la sube el sombreado hasta la altura de sombreado. Marcado, se queda abajo hasta que abra normalmente.",
+  f_sp_alt_title:"Segunda posición de sombreado",
+  f_sp_alt_hint:"Mientras se cumpla esta condición, las persianas con una segunda posición de sombreado van a ella en lugar de a la habitual. Pensado para «bajar más cuando hace calor»: basta un interruptor, un horario o una temperatura. La posición se define en la persiana.",
+  f_sp_alt_cond:"Condición (opcional)",
+  f_pos_sun_alt:"Definir una segunda posición de sombreado",
+  f_pos_sun_alt_hint:"Se usa mientras se cumple la condición «segunda posición de sombreado» del área. Sin esa condición no tiene efecto.",
+  f_pos_sun_alt_val:"Posición del segundo sombreado",
+  f_pos_sun_entity:"Posición de sombreado desde una entidad (opcional)",
+  f_pos_sun_entity_hint:"Un número de 0 a 100 de un ayudante o una plantilla. Tiene prioridad sobre ambas posiciones fijas y actúa de inmediato, incluso durante el sombreado. Un valor ilegible o fuera de 0–100 deja vigente la posición configurada.",
+  f_shading_enabled:"Participa en el sombreado",
+  f_shading_enabled_hint:"Desmarcar saca solo esta persiana del sombreado: horario, ventilación y contacto de ventana siguen. El interruptor de automatización de la persiana lo detiene todo, también la apertura matinal.",
   sec_noup:"Impedir la apertura",
   sec_noup_sub:"fin de semana, vacaciones, permisos",
   f_noup_intro:"Afecta solo a la apertura automática. El cierre y el sombreado siguen funcionando; de lo contrario la casa quedaría abierta toda la tarde.",
@@ -1451,6 +1491,16 @@ it:{
   f_shade_release_opens_hint:"Quando il sole scende sotto l'intervallo impostato, la tapparella resta altrimenti all'altezza di ombreggiatura finché il piano serale non la chiude. In modalità sole sono minuti, in modalità luminosità e orario possono essere ore. Spuntato, risale subito.",
   f_shade_only_when_open:"Ombreggiare solo ciò che è già aperto",
   f_shade_only_when_open_hint:"Ombreggiare e aprire sono lo stesso comando con un numero diverso: una tapparella ancora chiusa viene quindi alzata all'altezza di ombreggiatura. Spuntato, resta giù finché non si apre normalmente.",
+  f_sp_alt_title:"Seconda posizione di ombreggiatura",
+  f_sp_alt_hint:"Finché questa condizione vale, le tapparelle con una seconda posizione di ombreggiatura vanno lì invece che su quella normale. Pensato per «scendere di più quando fa caldo»: bastano un interruttore, una pianificazione o una temperatura. La posizione si imposta sulla tapparella.",
+  f_sp_alt_cond:"Condizione (opzionale)",
+  f_pos_sun_alt:"Imposta una seconda posizione di ombreggiatura",
+  f_pos_sun_alt_hint:"Usata finché vale la condizione «seconda posizione di ombreggiatura» dell'area. Senza quella condizione resta senza effetto.",
+  f_pos_sun_alt_val:"Posizione della seconda ombreggiatura",
+  f_pos_sun_entity:"Posizione di ombreggiatura da un'entità (opzionale)",
+  f_pos_sun_entity_hint:"Un numero da 0 a 100 da un helper o un template. Prevale su entrambe le posizioni fisse e agisce subito, anche durante l'ombreggiatura. Un valore illeggibile o fuori 0–100 lascia valida la posizione configurata.",
+  f_shading_enabled:"Partecipa all'ombreggiatura",
+  f_shading_enabled_hint:"Togliere la spunta esclude solo questa tapparella dall'ombreggiatura: pianificazione, ventilazione e contatto finestra restano attivi. L'interruttore di automazione della tapparella ferma invece tutto, apertura mattutina compresa.",
   sec_noup:"Impedire l'apertura",
   sec_noup_sub:"weekend, vacanze, ferie",
   f_noup_intro:"Riguarda solo l'apertura automatica. Chiusura e ombreggiatura continuano, altrimenti la casa resterebbe aperta tutta la sera.",
@@ -1695,6 +1745,16 @@ nl:{
   f_shade_release_opens_hint:"Zakt de zon onder het ingestelde bereik, dan blijft het rolluik anders op zonweringshoogte staan tot het avondschema het sluit. In zonmodus zijn dat minuten, in helderheids- en tijdmodus kunnen het uren zijn. Aangevinkt gaat het meteen omhoog.",
   f_shade_only_when_open:"Alleen beschaduwen wat al open is",
   f_shade_only_when_open_hint:"Beschaduwen en openen is hetzelfde rijcommando met een ander getal: een nog gesloten rolluik wordt door de zonwering dus omhoog gezet naar de zonweringshoogte. Aangevinkt blijft het beneden tot het normaal geopend heeft.",
+  f_sp_alt_title:"Tweede zonweringspositie",
+  f_sp_alt_hint:"Zolang deze voorwaarde geldt, rijden rolluiken met een tweede zonweringspositie daarheen in plaats van naar de gewone. Bedoeld voor «dieper bij hitte» – een schakelaar, een schema of een temperatuur volstaat. De positie zelf staat bij het rolluik.",
+  f_sp_alt_cond:"Voorwaarde (optioneel)",
+  f_pos_sun_alt:"Tweede zonweringspositie instellen",
+  f_pos_sun_alt_hint:"Wordt gereden zolang de voorwaarde «tweede zonweringspositie» van het gebied geldt. Zonder die voorwaarde blijft ze zonder effect.",
+  f_pos_sun_alt_val:"Positie bij tweede zonwering",
+  f_pos_sun_entity:"Zonweringspositie uit een entiteit (optioneel)",
+  f_pos_sun_entity_hint:"Een getal van 0 tot 100 uit een helper of template. Gaat voor op beide vaste posities en werkt meteen, ook terwijl er beschaduwd wordt. Een onleesbare waarde of een buiten 0–100 laat de ingestelde positie gelden.",
+  f_shading_enabled:"Doet mee aan de zonwering",
+  f_shading_enabled_hint:"Uitvinken haalt alleen dit rolluik uit de zonwering – schema, ventilatie en raamcontact blijven lopen. De automatiekschakelaar bij het rolluik stopt daarentegen alles, ook het openen 's ochtends.",
   sec_noup:"Openen verhinderen",
   sec_noup_sub:"weekend, vakantie, verlof",
   f_noup_intro:"Betreft alleen het automatisch openen. Sluiten en zonwering blijven werken – anders stond het huis de hele avond open.",
@@ -1939,6 +1999,16 @@ da:{
   f_shade_release_opens_hint:"Falder solen under det indstillede område, bliver rullegardinet ellers stående i afskærmningshøjde, indtil aftenplanen lukker det. I soltilstand er det minutter, i lysstyrke- og tidstilstand kan det være timer. Sat flueben kører det op med det samme.",
   f_shade_only_when_open:"Afskærm kun det, der allerede er åbent",
   f_shade_only_when_open_hint:"Afskærmning og åbning er den samme kørselsordre med et andet tal: et endnu lukket rullegardin køres derfor op i afskærmningshøjde. Med flueben bliver det nede, til det er åbnet normalt.",
+  f_sp_alt_title:"Anden afskærmningsposition",
+  f_sp_alt_hint:"Så længe denne betingelse gælder, kører rullegardiner med en anden afskærmningsposition derhen i stedet for den normale. Tænkt til «dybere når det er varmt» – en kontakt, en tidsplan eller en temperatur er nok. Selve positionen står ved rullegardinet.",
+  f_sp_alt_cond:"Betingelse (valgfri)",
+  f_pos_sun_alt:"Angiv en anden afskærmningsposition",
+  f_pos_sun_alt_hint:"Køres, så længe områdets betingelse «anden afskærmningsposition» gælder. Uden den betingelse har den ingen virkning.",
+  f_pos_sun_alt_val:"Position ved anden afskærmning",
+  f_pos_sun_entity:"Afskærmningsposition fra en entitet (valgfri)",
+  f_pos_sun_entity_hint:"Et tal fra 0 til 100 fra en hjælper eller en skabelon. Vinder over begge faste positioner og virker straks, også mens der afskærmes. En ulæselig værdi eller en uden for 0–100 lader den indstillede position gælde.",
+  f_shading_enabled:"Deltager i afskærmningen",
+  f_shading_enabled_hint:"Fjerner du fluebenet, tages kun dette rullegardin ud af afskærmningen – tidsplan, udluftning og vindueskontakt kører videre. Automatikkontakten ved rullegardinet stopper derimod alt, også åbningen om morgenen.",
   sec_noup:"Forhindr åbning",
   sec_noup_sub:"weekend, ferie, fridage",
   f_noup_intro:"Vedrører kun den automatiske åbning. Lukning og afskærmning kører videre – ellers stod huset åbent hele aftenen.",
@@ -2183,6 +2253,16 @@ sv:{
   f_shade_release_opens_hint:"Sjunker solen under det inställda intervallet står persiennen annars kvar i solskyddshöjd tills kvällsschemat stänger den. I solläge är det minuter, i ljus- och tidsläge kan det vara timmar. Ikryssat åker den upp direkt.",
   f_shade_only_when_open:"Solskydda bara det som redan är öppet",
   f_shade_only_when_open_hint:"Att solskydda och att öppna är samma körkommando med ett annat tal: en ännu stängd persienn körs alltså upp till solskyddshöjd. Ikryssat stannar den nere tills den öppnats normalt.",
+  f_sp_alt_title:"Andra solskyddsposition",
+  f_sp_alt_hint:"Så länge villkoret gäller kör persienner med en andra solskyddsposition dit i stället för till den vanliga. Tänkt för «djupare när det är varmt» – en brytare, ett schema eller en temperatur räcker. Själva positionen står vid persiennen.",
+  f_sp_alt_cond:"Villkor (valfritt)",
+  f_pos_sun_alt:"Ange en andra solskyddsposition",
+  f_pos_sun_alt_hint:"Körs så länge områdets villkor «andra solskyddsposition» gäller. Utan det villkoret har den ingen verkan.",
+  f_pos_sun_alt_val:"Position vid andra solskyddet",
+  f_pos_sun_entity:"Solskyddsposition från en entitet (valfritt)",
+  f_pos_sun_entity_hint:"Ett tal från 0 till 100 från en hjälpare eller en mall. Går före båda fasta positionerna och verkar direkt, även medan solskyddet är aktivt. Ett oläsbart värde, eller ett utanför 0–100, låter den inställda positionen gälla.",
+  f_shading_enabled:"Deltar i solskyddet",
+  f_shading_enabled_hint:"Kryssa ur så tas bara den här persiennen ur solskyddet – schema, vädring och fönsterkontakt fortsätter. Automatikbrytaren vid persiennen stoppar däremot allt, även öppningen på morgonen.",
   sec_noup:"Hindra öppning",
   sec_noup_sub:"helg, lov, ledighet",
   f_noup_intro:"Gäller bara den automatiska öppningen. Stängning och solskydd fortsätter – annars stod huset öppet hela kvällen.",
@@ -2427,6 +2507,16 @@ pl:{
   f_shade_release_opens_hint:"Gdy słońce spadnie poniżej ustawionego zakresu, roleta inaczej zostaje na wysokości zacieniania, aż zamknie ją plan wieczorny. W trybie słonecznym to minuty, w trybie jasności i czasowym mogą to być godziny. Zaznaczone – podnosi się od razu.",
   f_shade_only_when_open:"Zacieniać tylko to, co już otwarte",
   f_shade_only_when_open_hint:"Zacienianie i otwieranie to to samo polecenie z inną liczbą: jeszcze zamknięta roleta zostaje więc podniesiona do wysokości zacieniania. Zaznaczone – zostaje na dole, aż otworzy się normalnie.",
+  f_sp_alt_title:"Druga pozycja zacieniania",
+  f_sp_alt_hint:"Dopóki warunek jest spełniony, rolety z drugą pozycją zacieniania jadą do niej zamiast do zwykłej. Pomyślane pod „niżej przy upale\" – wystarczy przełącznik, harmonogram albo temperatura. Sama pozycja jest ustawiana przy rolecie.",
+  f_sp_alt_cond:"Warunek (opcjonalnie)",
+  f_pos_sun_alt:"Ustaw drugą pozycję zacieniania",
+  f_pos_sun_alt_hint:"Używana, dopóki spełniony jest warunek obszaru „druga pozycja zacieniania\". Bez tego warunku pozostaje bez efektu.",
+  f_pos_sun_alt_val:"Pozycja przy drugim zacienianiu",
+  f_pos_sun_entity:"Pozycja zacieniania z encji (opcjonalnie)",
+  f_pos_sun_entity_hint:"Liczba od 0 do 100 z pomocnika lub szablonu. Ma pierwszeństwo przed obiema stałymi pozycjami i działa od razu, także w trakcie zacieniania. Wartość nieczytelna lub spoza 0–100 pozostawia ustawioną pozycję.",
+  f_shading_enabled:"Bierze udział w zacienianiu",
+  f_shading_enabled_hint:"Odznaczenie wyłącza z zacieniania tylko tę roletę – harmonogram, wietrzenie i kontaktron okienny działają dalej. Przełącznik automatyki przy rolecie zatrzymuje natomiast wszystko, łącznie z porannym otwieraniem.",
   sec_noup:"Blokada otwierania",
   sec_noup_sub:"weekend, ferie, urlop",
   f_noup_intro:"Dotyczy tylko automatycznego otwierania. Zamykanie i zacienianie działają dalej – inaczej dom stałby otwarty przez cały wieczór.",
@@ -2671,6 +2761,16 @@ pt:{
   f_shade_release_opens_hint:"Quando o sol desce abaixo do intervalo definido, o estore fica de outro modo à altura de sombreamento até o plano da noite o fechar. No modo sol são minutos; nos modos luminosidade e horário podem ser horas. Assinalado, sobe de imediato.",
   f_shade_only_when_open:"Sombrear só o que já está aberto",
   f_shade_only_when_open_hint:"Sombrear e abrir é o mesmo comando com outro número: um estore ainda fechado é por isso subido até à altura de sombreamento. Assinalado, fica em baixo até abrir normalmente.",
+  f_sp_alt_title:"Segunda posição de sombreamento",
+  f_sp_alt_hint:"Enquanto esta condição se verificar, os estores com uma segunda posição de sombreamento vão para lá em vez da habitual. Pensado para «descer mais quando está calor» – basta um interruptor, um horário ou uma temperatura. A posição em si define-se no estore.",
+  f_sp_alt_cond:"Condição (opcional)",
+  f_pos_sun_alt:"Definir uma segunda posição de sombreamento",
+  f_pos_sun_alt_hint:"Usada enquanto a condição «segunda posição de sombreamento» da área se verificar. Sem essa condição não tem efeito.",
+  f_pos_sun_alt_val:"Posição do segundo sombreamento",
+  f_pos_sun_entity:"Posição de sombreamento a partir de uma entidade (opcional)",
+  f_pos_sun_entity_hint:"Um número de 0 a 100 vindo de um auxiliar ou de um template. Tem prioridade sobre ambas as posições fixas e actua de imediato, mesmo durante o sombreamento. Um valor ilegível ou fora de 0–100 mantém a posição configurada.",
+  f_shading_enabled:"Participa no sombreamento",
+  f_shading_enabled_hint:"Desmarcar retira apenas este estore do sombreamento – horário, ventilação e contacto de janela continuam. O interruptor de automação do estore pára tudo, incluindo a abertura de manhã.",
   sec_noup:"Impedir a abertura",
   sec_noup_sub:"fim de semana, férias, folgas",
   f_noup_intro:"Diz respeito apenas à abertura automática. O fecho e o sombreamento continuam – caso contrário a casa ficaria aberta toda a noite.",
@@ -2915,6 +3015,16 @@ nb:{
   f_shade_release_opens_hint:"Synker sola under det innstilte området, blir rullegardinet ellers stående i skjermingshøyde til kveldsplanen lukker det. I solmodus er det minutter, i lysstyrke- og tidsmodus kan det være timer. Avkrysset kjører det opp med én gang.",
   f_shade_only_when_open:"Skjerm bare det som allerede er åpent",
   f_shade_only_when_open_hint:"Å skjerme og å åpne er samme kjørekommando med et annet tall: et ennå lukket rullegardin blir derfor kjørt opp til skjermingshøyde. Avkrysset blir det nede til det har åpnet normalt.",
+  f_sp_alt_title:"Andre skjermingsposisjon",
+  f_sp_alt_hint:"Så lenge dette vilkåret gjelder, kjører rullegardiner med en andre skjermingsposisjon dit i stedet for til den vanlige. Tenkt for «dypere når det er varmt» – en bryter, en tidsplan eller en temperatur holder. Selve posisjonen står ved rullegardinen.",
+  f_sp_alt_cond:"Betingelse (valgfri)",
+  f_pos_sun_alt:"Angi en andre skjermingsposisjon",
+  f_pos_sun_alt_hint:"Kjøres så lenge områdets vilkår «andre skjermingsposisjon» gjelder. Uten det vilkåret er den uten virkning.",
+  f_pos_sun_alt_val:"Posisjon ved andre skjerming",
+  f_pos_sun_entity:"Skjermingsposisjon fra en entitet (valgfri)",
+  f_pos_sun_entity_hint:"Et tall fra 0 til 100 fra en hjelper eller en mal. Går foran begge faste posisjoner og virker med en gang, også mens det skjermes. En uleselig verdi, eller en utenfor 0–100, lar den innstilte posisjonen gjelde.",
+  f_shading_enabled:"Deltar i skjermingen",
+  f_shading_enabled_hint:"Fjerner du haken, tas bare denne rullegardinen ut av skjermingen – tidsplan, lufting og vinduskontakt går videre. Automatikkbryteren ved rullegardinen stopper derimot alt, også åpningen om morgenen.",
   sec_noup:"Hindre åpning",
   sec_noup_sub:"helg, ferie, fridager",
   f_noup_intro:"Gjelder bare den automatiske åpningen. Lukking og skjerming går videre – ellers ville huset stå åpent hele kvelden.",
@@ -3837,7 +3947,12 @@ class ShutterPilotPanel extends PanelBase {
     /* Endung .txt, nicht .md: der Bericht wird ins Forum hochgeladen, und
        Discourse laesst dort nur eine feste Liste zu (txt ja, md nein). Der
        Inhalt bleibt Markdown – wer ihn einfuegt, bekommt weiter die Tabellen. */
-    const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
+    /* Ortszeit, nicht UTC: der Bericht traegt im Kopf die lokale Uhrzeit, und
+       ein Dateiname zwei Stunden daneben laesst beim Vergleich zweier Exporte
+       den falschen als den aelteren erscheinen. */
+    const n=new Date(), p2=v=>String(v).padStart(2,"0");
+    const stamp=`${n.getFullYear()}-${p2(n.getMonth()+1)}-${p2(n.getDate())}-`
+      +`${p2(n.getHours())}-${p2(n.getMinutes())}`;
     const url=URL.createObjectURL(new Blob([this._export],{type:"text/plain;charset=utf-8"}));
     const a=document.createElement("a");
     a.href=url;a.download=`shutter-pilot-${stamp}.txt`;
@@ -3879,11 +3994,11 @@ class ShutterPilotPanel extends PanelBase {
           const autoOff=this._shutterAutoOff(s);
           return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${s.name||st?.attributes?.friendly_name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span>${this._rowButtons(s)}</span></div>`;})}</div>
       <div class="actions">
-        <button class="btn open" @click=${()=>this._coverAction(sh,"open")}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
-        <button class="btn stop" @click=${()=>this._coverAction(sh,"stop")}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
-        <button class="btn close" @click=${()=>this._coverAction(sh,"close")}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>${this.t("btn_down")}</button>
-        <button class="btn sun" @click=${()=>this._coverAction(sh,"sun")}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${this.t("btn_sun")}</button>
-        <button class="btn vent" @click=${()=>this._coverAction(sh,"vent")}><ha-icon icon="mdi:air-filter"></ha-icon>${this.t("btn_vent")}</button>
+        <button class="btn open" @click=${()=>this._coverAction(sh,"open",true)}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
+        <button class="btn stop" @click=${()=>this._coverAction(sh,"stop",true)}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
+        <button class="btn close" @click=${()=>this._coverAction(sh,"close",true)}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>${this.t("btn_down")}</button>
+        <button class="btn sun" @click=${()=>this._coverAction(sh,"sun",true)}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${this.t("btn_sun")}</button>
+        <button class="btn vent" @click=${()=>this._coverAction(sh,"vent",true)}><ha-icon icon="mdi:air-filter"></ha-icon>${this.t("btn_vent")}</button>
       </div></div>`;
   }
   /* Reine Anzeige. Der Wert kommt direkt aus Home Assistant und entscheidet
@@ -4221,7 +4336,14 @@ class ShutterPilotPanel extends PanelBase {
           @change=${e=>{a.shade_only_when_open=e.target.checked;this.requestUpdate();}}> ${T("f_shade_only_when_open")}</label>
           <div class="hint">${T("f_shade_only_when_open_hint")}</div></div>
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
-        ${this._renderConditionSlots(a,ep,f)}`:""}
+        ${this._renderConditionSlots(a,ep,f)}
+        ${/* Zweite Beschattungsposition: die Bedingung steht am Bereich, die
+             Position am Rollladen – dasselbe Paar wie beim abweichenden
+             Schliessen. Ohne hinterlegte Position an einem Rollladen bleibt
+             der Slot fuer ihn wirkungslos, deshalb der Verweis darunter. */""}
+        <div class="hint" style="margin-top:10px"><b>${T("f_sp_alt_title")}</b><br>${T("f_sp_alt_hint")}</div>
+        ${ep("sun_cond_sp_alt_entity",T("f_sp_alt_cond"),COND_DOMAINS,HINTS.condition)}
+        ${a.sun_cond_sp_alt_entity?this._renderCondDetail(a,"sp_alt",a.sun_cond_sp_alt_entity,f):""}`:""}
 
       `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
@@ -4684,6 +4806,16 @@ class ShutterPilotPanel extends PanelBase {
       ${pct("position_open",T("f_pos_open"))}
       ${pct("position_closed",T("f_pos_closed"))}
       ${pct("position_sun_protect",T("f_pos_sun"))}
+      ${/* Zweite Beschattungsposition, geschaltet ueber den Bedingungs-Slot
+           des Bereichs – dasselbe Paar wie abweichendes Schliessen: Bedingung
+           am Bereich, Position am Rollladen. Ohne Bedingung im Bereich bleibt
+           sie wirkungslos, deshalb der Hinweis. */""}
+      <div class="field"><label><input type="checkbox" .checked=${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null}
+        @change=${e=>{s.position_sun_protect_alt=e.target.checked?30:"";this.requestUpdate();}}> ${T("f_pos_sun_alt")}</label>
+        <div class="hint">${T("f_pos_sun_alt_hint")}</div></div>
+      ${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null?pct("position_sun_protect_alt",T("f_pos_sun_alt_val")):""}
+      ${ep("position_sun_protect_entity",T("f_pos_sun_entity"),["input_number","number","sensor"])}
+      <div class="hint">${T("f_pos_sun_entity_hint")}</div>
       <div class="field"><label><input type="checkbox" .checked=${s.position_closed_alt!==""&&s.position_closed_alt!=null}
         @change=${e=>{s.position_closed_alt=e.target.checked?50:"";this.requestUpdate();}}> ${T("f_pos_closed_alt")}</label>
         <div class="hint">${T("f_pos_closed_alt_hint")}</div></div>
@@ -4694,6 +4826,14 @@ class ShutterPilotPanel extends PanelBase {
       ${s.position_closed_frost!==""&&s.position_closed_frost!=null?pct("position_closed_frost",T("f_pos_closed_frost_val")):""}
 
       `)}${this._sec("mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub",html`
+      ${/* Ganz oben, vor allem anderen in diesem Block: steht der Haken aus,
+           beschreiben die Felder darunter nichts mehr. Bewusst getrennt vom
+           Automatik-Schalter am Rollladen – der haelt auch das morgendliche
+           Hochfahren an, und gefragt war „dieses Fenster nie beschatten". */""}
+      <div class="field"><label><input type="checkbox" .checked=${s.shading_enabled!==false}
+        @change=${e=>{s.shading_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_shading_enabled")}</label>
+        <div class="hint">${T("f_shading_enabled_hint")}</div></div>
+      ${s.shading_enabled===false?"":html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
         @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
         <div class="hint">${T("f_geo_override_hint")}</div></div>
@@ -4727,7 +4867,7 @@ class ShutterPilotPanel extends PanelBase {
       ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
       <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
       <div class="hint">${T("f_shutter_cond_hint")}</div>
-      ${this._renderConditionSlots(s,ep,f)}
+      ${this._renderConditionSlots(s,ep,f)}`}
 
       `)}${this._sec("mdi:window-open-variant","sec_window","sec_window_sub",html`
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}
@@ -4826,7 +4966,56 @@ class ShutterPilotPanel extends PanelBase {
 
      Gestaffelt wird auch "Stop": ein verschluckter Stopp-Befehl lässt den
      Rollladen bis zum Anschlag weiterfahren, ein um Sekunden späterer nicht. */
-  async _coverAction(shutters,action){
+  /* Der Aussperrschutz sitzt im Backend, in get_effective_close_position() –
+     und die Dashboard-Knoepfe kommen dort nicht vorbei: sie rufen die
+     cover-Dienste direkt auf, damit Home Assistant die Rechte je Entitaet
+     prueft (2.7.1). Bei aktiver Sperre fuhr der Knopf „Sonnenschutz" den
+     Rollladen also vor die offene Terrassentuer. Zweite Stelle fuer dieselbe
+     Regel, aus demselben Grund wie beim Markisenschutz.
+
+     Bewusst dieselbe Wortliste wie window_helper._STATE_SYNONYMS: ein
+     binary_sensor kennt nur on/off, im Formular steht aber „open" zur Wahl. */
+  _winCanon(v){
+    const t=String(v==null?"":v).toLowerCase().trim();
+    return ({on:"on",true:"on","1":"on",open:"on",offen:"on","geöffnet":"on",
+      geoeffnet:"on",auf:"on",off:"off",false:"off","0":"off",closed:"off",
+      geschlossen:"off",zu:"off"})[t]||t;
+  }
+  _stateOf(id){
+    const eid=String((Array.isArray(id)?id[0]:id)||"").trim();
+    return eid?this.hass?.states?.[eid]?.state:undefined;
+  }
+  _windowOpen(s){
+    const tiltId=s.window_tilted_entity_id;
+    if(String((Array.isArray(tiltId)?tiltId[0]:tiltId)||"").trim()){
+      const st=this._stateOf(tiltId);
+      if(st!=null&&this._winCanon(st)===this._winCanon(s.window_tilted_entity_state??"on"))return true;
+    }
+    const openVal=this._winCanon(s.window_open_state??"on");
+    const tiltVal=String(s.window_tilted_state??"none").toLowerCase().trim();
+    for(const id of [s.window_entity_id,s.window_entity_id_2]){
+      const eid=String((Array.isArray(id)?id[0]:id)||"").trim();
+      if(!eid)continue;
+      const raw=this.hass?.states?.[eid]?.state;
+      if(raw==null||["unknown","unavailable"].includes(String(raw)))continue;
+      const cur=String(raw).toLowerCase().trim();
+      if(eid.startsWith("sensor.")){
+        if(["open","offen","geöffnet","tilted","gekippt","kipp"].includes(cur))return true;
+        continue;
+      }
+      if(tiltVal&&tiltVal!=="none"&&this._winCanon(cur)===this._winCanon(tiltVal))return true;
+      if(this._winCanon(cur)===openVal)return true;
+    }
+    return false;
+  }
+  /* Nach unten klemmen, nie nach oben – und an einer Markise gar nicht: dort
+     ist „weniger" die eingefahrene, also die sichere Seite. */
+  _lockClamp(s,pos){
+    if(isAwning(s)||!s.lock_protection||!this._windowOpen(s))return pos;
+    const min=Number(s.min_position_when_open??20);
+    return Number.isFinite(min)&&pos<min?min:pos;
+  }
+  async _coverAction(shutters,action,group=false){
     let list=(shutters||[]).filter(s=>s?.cover_entity_id);
     /* Bei den Gruppenknoepfen eines Bereichs haengen Rollläden und Markisen
        zusammen. Zwei Aktionen bedeuten fuer eine Markise etwas anderes oder
@@ -4836,15 +5025,32 @@ class ShutterPilotPanel extends PanelBase {
     if(action==="vent")list=list.filter(s=>!isAwning(s));
     if(action==="open"||action==="sun")
       list=list.filter(s=>!isAwning(s)||!this._isAwningBarred(s));
+    /* Ein Gruppenknopf ist der Bereich, der handelt – der Rollladenschalter
+       gilt also. Ein defekter Rollladen, den jemand bewusst herausgenommen
+       hat, fuhr trotzdem mit; zweimal als Fehler gemeldet. Die Knoepfe in der
+       Zeile fahren ihn weiterhin: genau damit prueft man ihn nach der
+       Reparatur, und deshalb steht die Pruefung nicht in set_cover_position(). */
+    if(group){
+      list=list.filter(s=>!this._shutterAutoOff(s));
+      if(action==="sun")list=list.filter(s=>s.shading_enabled!==false);
+    }
     if(!list.length)return;
     const gap=Math.max(0,Number(this._data?.settings?.min_drive_gap)||0);
     const call=(s)=>{
       const eid=s.cover_entity_id;
-      if(action==="open")return this.hass.callService("cover","open_cover",{entity_id:eid});
-      if(action==="close")return this.hass.callService("cover","close_cover",{entity_id:eid});
       if(action==="stop")return this.hass.callService("cover","stop_cover",{entity_id:eid});
+      if(action==="open")return this.hass.callService("cover","open_cover",{entity_id:eid});
+      if(action==="close"){
+        /* Bei aktiver Sperre wird aus „ganz zu" eine Teilfahrt – close_cover
+           kennt keine Grenze, also muss hier eine Position gefahren werden. */
+        const closed=Number(s.position_closed??0);
+        const capped=this._lockClamp(s,closed);
+        if(capped===closed)return this.hass.callService("cover","close_cover",{entity_id:eid});
+        return this.hass.callService("cover","set_cover_position",{entity_id:eid,position:capped});
+      }
       // Lüften nutzt dieselbe Position wie ein gekipptes Fenster.
-      const pos=action==="sun"?(s.position_sun_protect??50):(s.position_when_window_tilted??50);
+      const raw=action==="sun"?(s.position_sun_protect??50):(s.position_when_window_tilted??50);
+      const pos=this._lockClamp(s,Number(raw));
       return this.hass.callService("cover","set_cover_position",{entity_id:eid,position:pos});
     };
     if(!gap){await Promise.all(list.map(call));return;}

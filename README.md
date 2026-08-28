@@ -388,6 +388,43 @@ Two things worth knowing:
 > 💡 For "the shutter should **open** later in the morning" this is not the
 > right field – use the area's **special-days sensor**, see below.
 
+### Taking one shutter out of the shading
+
+Sometimes a single window in an otherwise shaded room should never join in –
+the desk at the north window, the door to the terrace, the aquarium. The
+shutter form has a tick for it: **"Takes part in the shading"** (default: on).
+
+Unticking removes **only the shading**. Schedule, ventilation and window
+contact keep running, and the shutter opens in the morning like every other
+one. If it happens to stand at the shading height when you untick it, it is
+released rather than frozen there.
+
+> 💡 The **automation switch** on the shutter is a different thing: it stops
+> *every* automated drive, the morning opening included. It is meant for the
+> broken actuator, not for "please do not shade this window".
+
+### A second shading position
+
+One shading position is a compromise: deep enough against the midday heat means
+needlessly dark on a mild day. So **two** can be configured.
+
+| Where | What |
+| --- | --- |
+| Area | the condition under which the second one applies |
+| Shutter | the second position itself |
+
+The same pairing as the alternative closing position. The condition is an
+ordinary condition slot: a switch, a helper, a schedule, a number with
+hysteresis or a list of states. While it holds, every shutter that has a second
+position drives there – **including in the middle of a running shading run**,
+not only next time. A shutter without a second position is unaffected.
+
+If you need it continuous, point at an **entity** instead: an `input_number`, a
+template sensor, anything reporting a number from 0 to 100. It wins over both
+fixed positions. An unreadable value, or one outside 0–100, leaves the
+configured position in force – shading that stops because a template blinked
+would be the worse failure.
+
 ### Not opening at all – weekends, holidays, leave
 
 The special-days sensor below shifts the *time*. Sometimes nothing should open

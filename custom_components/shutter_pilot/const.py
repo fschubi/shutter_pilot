@@ -78,6 +78,24 @@ CONF_AREA_DOWN_ID = "area_down_id"
 CONF_POSITION_OPEN = "position_open"
 CONF_POSITION_CLOSED = "position_closed"
 CONF_POSITION_SUN_PROTECT = "position_sun_protect"
+# Second shading position, switched by its own condition slot. Asked for as
+# "a deeper position when it is really hot" – the same shape as the
+# alternative closing position, so it reads through resolve_shade_role()
+# exactly the way resolve_close_role() reads position_closed_alt.
+CONF_POSITION_SUN_PROTECT_ALT = "position_sun_protect_alt"
+# Optional entity that dictates the shading position instead of the two fixed
+# ones. A number helper or a template sensor lets the position follow anything
+# the user can compute – outside temperature, a slider, a scene. Wins over
+# both fixed positions; an unreadable or out-of-range value falls back to them,
+# because a shading run that stops because a helper blinked is worse than one
+# that uses yesterday's number.
+CONF_POSITION_SUN_PROTECT_ENTITY = "position_sun_protect_entity"
+# Take this shutter out of the shading, without taking it out of the schedule.
+# The per-shutter automation switch cannot do this: it stops every drive, so
+# a window that must not be shaded also stops opening in the morning. Missing
+# means "takes part" – anything else would silently disable shading for every
+# existing installation.
+CONF_SHADING_ENABLED = "shading_enabled"
 
 # Slat/tilt angles per shutter (venetian blinds). Disabled unless tilt_enabled.
 CONF_TILT_ENABLED = "tilt_enabled"
@@ -99,6 +117,8 @@ ROLE_VENTILATION = "ventilation"
 ROLE_CLOSED_ALT = "closed_alt"
 # Partial close against frost. Wins over closed_alt: protection beats comfort.
 ROLE_CLOSED_FROST = "closed_frost"
+# Second shading position, used while the area's own sp_alt condition holds.
+ROLE_SUN_PROTECT_ALT = "sun_protect_alt"
 
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
@@ -269,6 +289,11 @@ NO_UP_CONDITION_SLOT = "no_up"
 
 # Frost protection: do not close all the way, so the slats cannot freeze shut.
 FROST_CONDITION_SLOT = "frost"
+
+# Switches the shading over to the second position. Fail closed like the close
+# and frost slots: with nothing configured the ordinary shading position
+# applies, which is what every existing installation expects.
+SUN_PROTECT_ALT_CONDITION_SLOT = "sp_alt"
 # Slots that ask "below" rather than "above" unless told otherwise. Frost is
 # always about falling temperatures, so users should not have to say so – and
 # ice on an awning is the same question asked at the other end of the house.

@@ -15,6 +15,7 @@ from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
     is_recent_automation,
+    note_manual_position,
     positions_differ_significantly,
     set_cover_position,
 )
@@ -62,6 +63,11 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
     cover_ids = _collect_cover_entity_ids(shutters)
     if not cover_ids:
         return
+    shutter_by_cover = {
+        str(s.get(CONF_COVER_ENTITY_ID) or "").strip(): s
+        for s in shutters
+        if isinstance(s, dict) and str(s.get(CONF_COVER_ENTITY_ID) or "").strip()
+    }
 
     store = get_position_store(hass, entry.entry_id)
     last_positions: dict[str, float] = data["last_positions"]
@@ -91,6 +97,14 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             pending.discard(entity_id)
         else:
             source = SOURCE_MANUAL
+            # A shutter somebody closed or opened by hand is down or up, and
+            # the schedule has to see that. Without it one blocked direction
+            # freezes the other: the evening close is skipped because the
+            # shutter still counts as "driven down" from a morning that never
+            # came.
+            shutter = shutter_by_cover.get(entity_id)
+            if shutter is not None:
+                note_manual_position(data, shutter, position)
 
         hass.async_create_task(
             store.async_set_position(entity_id, position, source)

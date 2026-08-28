@@ -56,6 +56,8 @@ from .const import (
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
     CONF_NAME,
+    CONF_POSITION_SUN_PROTECT_ALT,
+    CONF_POSITION_SUN_PROTECT_ENTITY,
     CONF_POSITION_WHEN_WINDOW_OPEN,
     CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_SHUTTERS,
@@ -66,13 +68,21 @@ from .const import (
     INVERTED_BY_DEFAULT_SLOTS,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
+    ROLE_SUN_PROTECT_ALT,
     SUN_CONDITION_SLOTS,
+    SUN_PROTECT_ALT_CONDITION_SLOT,
     sun_condition_invert_key,
     sun_condition_keys,
 )
 from .helpers import (
     automated_up_blocked,
     azimuth_in_sun_protect_range,
+    has_alt_shade_position,
+    manual_position_is_a_close,
+    resolve_shade_position,
+    shading_enabled,
+    should_skip_automated_up,
+    sun_protect_area_ids_from_options,
     is_sun_protect_enabled,
     elevation_used,
     get_azimuth_bounds,
@@ -157,6 +167,18 @@ def _memory_copy(
     key = f"{area_id}|{cover_entity_id}" if cover_entity_id else area_id
     stored = data.get("sun_cond_state", {})
     return dict(stored.get(key, {})) if isinstance(stored, dict) else {}
+
+
+def _shielded(data: dict[str, Any], area_id: str) -> dict[str, Any]:
+    """A stand-in runtime dict whose hysteresis memory cannot be written back.
+
+    `automated_up_blocked()` and `resolve_shade_role()` run the real condition
+    evaluation, and that records whether a slot was met. Handing them the live
+    dict would let the report nudge the very state it documents – the same rule
+    _memory_copy() exists for, only one level up: these two take `data`, not the
+    memory itself.
+    """
+    return {"sun_cond_state": {area_id: _memory_copy(data, area_id)}}
 
 
 def _state_of(hass: HomeAssistant, entity_id: str) -> str:
@@ -431,6 +453,143 @@ def _silent_setting_notes(shutter: dict[str, Any]) -> list[str]:
     return [*notes, ""] if notes else []
 
 
+def _shade_position_note(
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> list[str]:
+    """Which shading position applies right now, and where it came from.
+
+    With three possible sources – a helper entity, the second position behind
+    its condition, the ordinary one – "it went to 40 %" stops being
+    self-explanatory. And a second position stored without the area ever
+    carrying its condition is the silent-setting class again: saved, visible,
+    never used.
+    """
+    if is_awning(shutter):
+        return []
+    pos, why = resolve_shade_position(
+        hass, area, shutter, _shielded(data, str(area.get(CONF_AREA_ID) or ""))
+    )
+    out: list[str] = []
+    if why == "entity":
+        entity_id = str(shutter.get(CONF_POSITION_SUN_PROTECT_ENTITY) or "").strip()
+        out.append(
+            f"Beschattungsposition jetzt: **{pos:.0f} %** – aus `{entity_id}`, "
+            "die festen Positionen gelten nicht."
+        )
+    elif why == ROLE_SUN_PROTECT_ALT:
+        out.append(
+            f"Beschattungsposition jetzt: **{pos:.0f} %** – zweite Position, "
+            "die Bedingung des Bereichs trifft zu."
+        )
+    elif has_alt_shade_position(shutter):
+        out.append(
+            f"Beschattungsposition jetzt: **{pos:.0f} %** – normale Position, "
+            "die Bedingung für die zweite trifft nicht zu."
+        )
+    if has_alt_shade_position(shutter) and not str(
+        area.get(sun_condition_keys(SUN_PROTECT_ALT_CONDITION_SLOT)[0]) or ""
+    ).strip():
+        out.append(
+            "> ⚠️ Eine zweite Beschattungsposition ist hinterlegt "
+            f"(`{CONF_POSITION_SUN_PROTECT_ALT}`), aber im Bereich steht keine "
+            "Bedingung dafür – sie wird nie gefahren."
+        )
+    if not shading_enabled(shutter):
+        out.append(
+            "> ℹ️ Dieser Rollladen ist von der Beschattung **abgemeldet** "
+            "(Haken „An der Beschattung teilnehmen\"). Zeitplan, Lüften und "
+            "Fensterkontakt laufen weiter."
+        )
+    return [*out, ""] if out else []
+
+
+def _drive_verdict(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    shutter: dict[str, Any],
+    area: dict[str, Any] | None,
+    data: dict[str, Any],
+    sun_protect_area_ids: set[str],
+    now: datetime,
+) -> list[str]:
+    """Why an automated opening would not run for this shutter right now.
+
+    "It never goes up in the morning" is the second most reported thing after
+    "it never shades", and until now nothing in this report answered it: every
+    gate on that path is silent. It leaves no trace in the runtime markers
+    either – all you saw was that nothing had been driven, which is the
+    symptom, not the cause.
+
+    Read-only throughout. should_skip_automated_up() only reads the position
+    store, and automated_up_blocked() goes through the same _memory_copy() the
+    shading check uses.
+    """
+    if is_awning(shutter):
+        return []
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover or area is None:
+        return []
+
+    lines = ["Automatisches Hochfahren, Stand jetzt:", ""]
+    reasons: list[str] = []
+
+    if not is_system_enabled(hass, entry):
+        reasons.append("Der Hauptschalter steht auf **aus**.")
+    if not is_auto_enabled(hass, entry, area):
+        reasons.append(
+            f"Die Automatik des Bereichs "
+            f"„{area.get(CONF_AREA_NAME) or area.get(CONF_AREA_ID)}\" steht auf **aus**."
+        )
+    if not is_shutter_automation_enabled(hass, entry, shutter):
+        reasons.append("Die Automatik **dieses Rollladens** steht auf aus.")
+
+    blocked = automated_up_blocked(
+        hass, area, _shielded(data, str(area.get(CONF_AREA_ID) or "")), now
+    )
+    if blocked == "weekend":
+        reasons.append(
+            "„Am Wochenende nicht hochfahren\" greift – heute gilt der "
+            "Wochenend-Zeitplan (Kalender oder Sondertage-Sensor)."
+        )
+    elif blocked == "condition":
+        reasons.append("Die Bedingung „nicht hochfahren\" trifft gerade zu.")
+
+    # The manual override, spelled out. It is the one gate that keeps working
+    # after everything else has been ruled out, and the report used to show
+    # only "Quelle: manual" – true, and no help at all.
+    if should_skip_automated_up(
+        hass, entry, shutter, data, sun_protect_area_ids, within_up_window=True,
+        area=area,
+    ):
+        if is_cover_sun_protected(data, cover):
+            reasons.append(
+                "Der Rollladen steht unter Beschattung – ganz zu öffnen würde "
+                "sie aufheben."
+            )
+        else:
+            store = get_position_store(hass, entry.entry_id)
+            pos = store.get_position_sync(cover)
+            reasons.append(
+                "Eine **von Hand gefahrene Position** "
+                + (f"({pos:.0f} %) " if pos is not None else "")
+                + "blockiert das Öffnen (Einstellung „Manuelle Übersteuerung\" "
+                "im Bereich)."
+            )
+
+    if reasons:
+        lines += [f"- ❌ {r}" for r in reasons]
+    else:
+        lines.append(
+            "- ✅ Nichts hält das Öffnen auf. Ob heute schon gefahren wurde, "
+            "steht unter „Laufender Zustand\"."
+        )
+    lines.append("")
+    return lines
+
+
 def _shading_verdict(
     hass: HomeAssistant,
     area: dict[str, Any],
@@ -547,6 +706,7 @@ async def async_build_export(
     areas_by_id = {str(a.get(CONF_AREA_ID) or ""): a for a in areas}
 
     elev, azim = get_sun_angles(hass)
+    sun_protect_area_ids = sun_protect_area_ids_from_options(areas)
     store = get_position_store(hass, entry.entry_id)
     now = dt_util.as_local(dt_util.now())
 
@@ -616,7 +776,7 @@ async def async_build_export(
         # "Warum ist der Rollladen heute unten geblieben" ist sonst nirgends
         # ablesbar: beide Sperren wirken lautlos und lassen keine Spur in den
         # Merkern – da steht dann nur, dass nichts gefahren ist.
-        blocked_up = automated_up_blocked(hass, area, data, now)
+        blocked_up = automated_up_blocked(hass, area, _shielded(data, area_id), now)
         if blocked_up:
             out += [
                 "> ℹ️ Automatisches **Hochfahren ist heute gesperrt** "
@@ -760,6 +920,14 @@ async def async_build_export(
                     fresh_runtime,
                 ),
             ]
+            out += _shade_position_note(hass, down_area, shutter, data)
+
+        # Der Fahrplan, unabhaengig von der Beschattung: auch ein Bereich ohne
+        # Sonnenschutz faehrt morgens hoch, und genau das war die Frage.
+        up_area = areas_by_id.get(up_id)
+        out += _drive_verdict(
+            hass, entry, shutter, up_area, data, sun_protect_area_ids, now
+        )
 
     out += [
         "### Laufender Zustand",
@@ -767,8 +935,8 @@ async def async_build_export(
         "| Merker | Wert |",
         "| --- | --- |",
         f"| beschattete Rollläden | {_fmt(sorted(data.get('sun_protect_covers', set())))} |",
-        f"| heute schon hochgefahren | {_fmt(sorted(data.get('covers_driven_up', set())))} |",
-        f"| heute schon runtergefahren | {_fmt(sorted(data.get('covers_driven_down', set())))} |",
+        f"| gilt als oben | {_fmt(sorted(data.get('covers_driven_up', set())))} |",
+        f"| gilt als unten | {_fmt(sorted(data.get('covers_driven_down', set())))} |",
         f"| wartende Nachhol-Fahrten | {_fmt(sorted(data.get('drive_after_close_pending', {})))} |",
         f"| Minuten-Ticker läuft | {_fmt(bool(data.get('_minute_ticker_unsub')))} |",
         "| zuletzt geladen | "
