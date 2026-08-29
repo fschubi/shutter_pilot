@@ -113,7 +113,9 @@ Klicke auf **"Rollladen hinzufügen"** um eine Cover-Entity einem Bereich zuzuwe
 - **Positions-Slider** – Offen-, Geschlossen- und Sonnenschutz-Positionen (0-100%)
 - **Aussperrschutz** – Mindest-Position bei offener Tür (verhindert Aussperren)
 - **Nachholfunktion** – holt einen verpassten Schließbefehl nach wenn das Fenster noch offen war. Der Merker übersteht seit 2.7.0 auch einen Neustart von Home Assistant; nach 24 Stunden wird er verworfen, weil eine Fahrt von vorgestern nichts mehr darüber sagt, was jetzt gelten soll
+- **Bei offenem Fenster schon auf die Lüftungsposition fahren** – erscheint nur zusammen mit der Nachholfunktion. Ohne den Haken bleibt der Rollladen stehen, wo er steht, bis das Fenster zugeht; mit ihm fährt er so weit, wie es der Aussperrschutz zulässt, und die volle Fahrt bleibt vorgemerkt. Vorgabe aus: er bewegt sonst in jeder zufriedenen Anlage abends Rollläden
 - **Antrieb meldet keine Position (blind fahren)** – für einseitigen Funk wie Somfy RTS. Solche Antriebe antworten nicht, und jede Prüfung, die eine Position braucht, gab bisher auf – damit waren Fenstertrigger und automatisches Lüften für sie stillschweigend abgeschaltet. Mit dem Haken rechnet Shutter Pilot stattdessen mit der Position, die es zuletzt gesendet hat. Die Fahrtkontrolle überspringt solche Rollläden ohnehin, weil es nichts zu prüfen gibt
+- **„My"-Position** – erscheint nur zusammen mit dem Haken darüber. Somfy RTS und Verwandte kennen eine dritte, einmal am Motor angelernte Stellung; Home Assistant bietet sie als Knopf an (Overkiz) oder man packt sie in ein Skript. Entität eintragen und angeben, welchem Prozentwert sie entspricht – jede Fahrt, die höchstens 15 % daneben liegt, drückt dann diesen Knopf, statt auf einen Endanschlag auszuweichen. Ohne sie wird an so einem Antrieb aus jeder Zwischenposition ein Endanschlag
 - **Verzögerung beim Schließen** – wie lange „geschlossen" anhalten muss, bevor der Rollladen zurückfährt (0–30 s, Standard 5 s). Beim Drehen des Griffs von „gekippt" auf „offen" läuft der Kontakt kurz durch „geschlossen"; ohne Wartezeit fährt der Rollladen sofort zurück und die Offen-Position wird nie erreicht. `0` schaltet die Wartezeit ab
 
 ### Dashboard
@@ -123,7 +125,13 @@ Das Dashboard zeigt alle Bereiche als Karten mit:
 - Raumtemperatur, wenn im Bereich ein Sensor dafür hinterlegt ist (reine Anzeige)
 - Auto-Modus-Schalter pro Bereich
 - **Sonnenstand-Info** für Sonnenstand-Bereiche: nächster Sonnenaufgang/-untergang, Offset, berechnete Trigger-Zeit, aktuelle Elevation
-- Schnellaktions-Buttons: **Hoch**, **Stop**, **Runter**, **Sonnenschutz**
+- Schnellaktions-Buttons: **Hoch**, **Stop**, **Runter**, **Sonnenschutz**, **Lüften**
+
+Über den Karten steht ein Block für alles, was für das ganze Haus gilt: dieselben
+fünf Knöpfe für alle Rollläden zugleich, Automatik und Beschattung für alle
+Bereiche an oder aus, und die Werte, die man sonst je Bereich nachsehen müsste –
+Sonnenauf- und -untergang, aktuelle Elevation und Azimut, Höchsttemperatur und
+Wetterlage von heute.
 
 ## Services
 
@@ -131,11 +139,16 @@ Das Dashboard zeigt alle Bereiche als Karten mit:
 |---------|-------------|
 | `shutter_pilot.open_group` | Alle Rollläden eines Bereichs öffnen |
 | `shutter_pilot.close_group` | Alle Rollläden eines Bereichs schließen |
+| `shutter_pilot.stop_group` | Alle fahrenden Rollläden und Markisen eines Bereichs anhalten |
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 | `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
-| `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung. `area_id` ist hier **optional** |
+| `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung |
 
-Alle Services außer `retract_awnings` erwarten einen `area_id` Parameter (z.B. `living`, `schlafzimmer`). Jeder Rollladen fährt dabei auf seine eigene konfigurierte Position.
+`area_id` (z. B. `living`, `schlafzimmer`) ist bei **allen** Diensten **optional**:
+ohne Bereich gilt der Dienst für alle Bereiche – „alle Rollläden hoch" ist damit
+ein Aufruf und nicht einer je Bereich. Jeder Rollladen fährt dabei auf seine
+eigene konfigurierte Position, und keiner fährt doppelt: der Hoch-Dienst filtert
+über den Hoch-Bereich, die Runter-Dienste über den Runter-Bereich.
 
 ## Entitäten
 
@@ -149,6 +162,7 @@ Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dash
 | `switch.shutter_pilot_rollladen_<name>` | Automatik pro Rollladen (Name aus dem Feld **Name**) |
 | `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
+| `sensor.shutter_pilot_status` | Das Haus auf einen Blick: Zustand `open` / `closed` / `partial`, Attribute `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `shading_active`, `shading_areas`, `shading_covers`. Markisen zählen getrennt – eine eingefahrene Markise ist in Ruhe, nicht „das Haus ist zu" |
 | `switch.shutter_pilot_markise_<name>` | Automatik pro Markise (der Wind- und Regenschutz gilt trotzdem) |
 | `binary_sensor.shutter_pilot_<name>_sperre` | `on`, solange die Markise nicht ausfahren darf. Attribute: `reasons`, `release_in_seconds` |
 
@@ -313,9 +327,17 @@ stehengelassen, und die beiden Positionen auf die Markisen-Vorgabe gesetzt.
 ### Antriebe ohne Positionsmeldung
 
 Viele Markisenmotoren kennen nur auf, stop und zu. Shutter Pilot weicht dort
-selbstständig auf „ganz auf" bzw. „ganz zu" aus. Teilpositionen und die
-Ausfahrlänge nach Sonnenhöhe funktionieren an solchen Antrieben nicht – das
-steht einmal als Warnung im Log.
+selbstständig auf `cover.open_cover` bzw. `cover.close_cover` aus, und der
+Export nennt, welches der beiden Kommandos deine Positionen jeweils ergeben –
+„sie fährt verkehrt herum" lässt sich aus den Positionen allein nicht
+beantworten, denn welches Kommando „ausfahren" heißt, entscheidet die
+Verdrahtung.
+
+Teilpositionen und die Ausfahrlänge nach Sonnenhöhe funktionieren an solchen
+Antrieben nur mit einer **„My"-Position** (siehe Rollladen-Einstellungen oben):
+die angelernte dritte Stellung ist die einzige Zwischenposition, die so ein
+Motor anfahren kann. Ohne sie wird aus jedem Wert ab 50 % „ganz ausfahren" –
+das steht einmal als Warnung im Log und im Export.
 
 ## Sonnenschutz nur bei echter Sonne und Wärme
 

@@ -73,6 +73,26 @@ CONF_MIN_POSITION_WHEN_OPEN = "min_position_when_open"
 CONF_WINDOW_CLOSE_DEBOUNCE = "window_close_debounce"
 DEFAULT_WINDOW_CLOSE_DEBOUNCE = 5
 MAX_WINDOW_CLOSE_DEBOUNCE = 30
+
+# Drive to the ventilation position at the scheduled closing time even though
+# the window is still open, and catch the full drive up afterwards. Without it
+# a shutter with drive_after_close does *nothing* at all in that situation –
+# reported as "the shutter did not move, not even to the tilted position".
+# Off by default: it moves shutters in installations that are happy as they are.
+CONF_WINDOW_VENT_WHILE_OPEN = "window_vent_while_open"
+
+# The third stop of a one-way radio drive. Somfy RTS and relatives know up,
+# down and "My" – a position the motor was taught once. Home Assistant exposes
+# it as a button (Overkiz) or as a scene/script; pressing it is the only way to
+# reach anything between the two end stops on such a drive, where every other
+# target degenerates into open_cover or close_cover.
+CONF_MY_POSITION_ENTITY = "my_position_entity"
+CONF_MY_POSITION_PCT = "my_position_pct"
+DEFAULT_MY_POSITION_PCT = 50
+# How far a target may sit from the taught position and still be driven as
+# "My". Wide on purpose: the taught position is a guess to a few percent
+# anyway, and the alternative is the full end stop.
+MY_POSITION_TOLERANCE_PCT = 15
 CONF_AREA_UP_ID = "area_up_id"
 CONF_AREA_DOWN_ID = "area_down_id"
 CONF_POSITION_OPEN = "position_open"
@@ -466,6 +486,7 @@ AWNING_UNUSED_KEYS = (
     CONF_LOCK_PROTECTION,
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_TILT_ENABLED,
     CONF_TILT_OPEN,

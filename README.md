@@ -113,7 +113,9 @@ Click **"Add shutter"** to assign a cover entity to an area:
 - **Position sliders** – open, closed, and sun protection positions (0-100%)
 - **Lock protection** – minimum position when a door is open (prevents lockout)
 - **Drive after close** – catches up a missed close command when the window was still open. Since 2.7.0 the note survives a Home Assistant restart; it is discarded after 24 hours, because a drive from two days ago says nothing about what should happen now
+- **Move to the ventilation position while the window is open** – only shown with the option above. Without it the shutter stays exactly where it is until the window closes; with it, it already moves as far as the lock protection allows, and the full drive stays pending. Off by default: it moves shutters every evening in installations nobody complained about
 - **Drive reports no position (blind)** – for one-way radio such as Somfy RTS. Those drives never answer, and every check that needs a position used to give up, which silently disabled window triggers and automatic ventilation for them. With this ticked, Shutter Pilot reasons with the position it last sent instead. Verification skips such shutters anyway, since there is nothing to verify
+- **"My" position** – only shown with the option above. Somfy RTS and relatives know a third stop, taught once on the motor; Home Assistant exposes it as a button (Overkiz) or you wrap it in a script. Name the entity and the percentage it stands for, and any target within 15 % of it is driven by pressing that button instead of falling back to an end stop. Without it every intermediate position on such a drive becomes fully open or fully closed
 - **Close delay** – how long "closed" has to hold before the shutter drives back (0–30 s, default 5 s). Turning the handle from tilted to open drags the contact through "closed"; without a wait the shutter drives back immediately and never reaches the open position. `0` disables the wait
 
 ### Dashboard
@@ -123,7 +125,12 @@ The Dashboard tab shows all areas as cards with:
 - Room temperature, if the area has a sensor set for it (display only)
 - Auto-mode toggle per area
 - **Sun info panel** for sun-mode areas: next sunrise/sunset, offset, calculated trigger time, current elevation
-- Quick action buttons: **Up**, **Stop**, **Down**, **Sun protection**
+- Quick action buttons: **Up**, **Stop**, **Down**, **Sun protection**, **Ventilate**
+
+Above the cards sits one block for everything that applies house-wide: the same
+five buttons for all shutters at once, automation and shading on or off for every
+area, and the figures nobody wants to look up per area – sunrise, sunset, current
+elevation and azimuth, today's forecast high and condition.
 
 ## Services
 
@@ -131,11 +138,15 @@ The Dashboard tab shows all areas as cards with:
 |---------|-------------|
 | `shutter_pilot.open_group` | Open all shutters in an area |
 | `shutter_pilot.close_group` | Close all shutters in an area |
+| `shutter_pilot.stop_group` | Stop every moving shutter and awning in an area |
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 | `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
-| `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning. `area_id` is **optional** here |
+| `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning |
 
-All services except `retract_awnings` accept an `area_id` parameter (e.g. `living`, `bedroom`). Every shutter moves to its own configured position.
+`area_id` (e.g. `living`, `bedroom`) is **optional on every service**: left out, the
+service walks all areas – "all shutters up" is one call, not one per area. Every
+shutter moves to its own configured position. No shutter is driven twice: the up
+service filters on the up area, the down ones on the down area.
 
 ## Entities
 
@@ -149,6 +160,7 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 | `switch.shutter_pilot_rollladen_<name>` | Automation per shutter (named after the **Name** field) |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
+| `sensor.shutter_pilot_status` | The house at a glance: state `open` / `closed` / `partial`, attributes `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `shading_active`, `shading_areas`, `shading_covers`. Awnings are counted apart – a retracted awning is at rest, not "the house is shut" |
 | `switch.shutter_pilot_markise_<name>` | Automation per awning (wind and rain protection still applies) |
 | `binary_sensor.shutter_pilot_<name>_sperre` | `on` while the awning must not extend. Attributes: `reasons`, `release_in_seconds` |
 
@@ -312,8 +324,16 @@ set to the awning defaults.
 ### Drives without position feedback
 
 Many awning motors only know open, stop and close. Shutter Pilot falls back to
-"fully open" / "fully closed" by itself there. Partial positions and sun
-tracking do not work on such a drive – that is logged once as a warning.
+`cover.open_cover` / `cover.close_cover` by itself there, and the export names
+which of the two each of your positions ends up as – "it drives the wrong way"
+cannot be answered from the positions alone, because which command means
+"extend" is a property of the wiring.
+
+Partial positions and sun tracking do not work on such a drive unless you give
+it a **"My" position** (see the shutter settings above): the taught third stop
+is the only intermediate position such a motor can reach. Without one, every
+value from 50 % up becomes "fully extended" – that is logged once as a warning
+and named in the export.
 
 ## Shade only on real sun and real warmth
 

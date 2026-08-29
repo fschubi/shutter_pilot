@@ -478,6 +478,10 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
         sun_attrs = sun_state.attributes or {}
         sun_info = {
             "elevation": sun_attrs.get("elevation"),
+            # Der Kompasswinkel stand im Panel nur je Bereich, gerechnet aus
+            # der Beschattungspruefung. Fuer den Kopfblock ist er eine Angabe
+            # ueber den Himmel, nicht ueber einen Bereich.
+            "azimuth": sun_attrs.get("azimuth"),
             "next_rising": sun_attrs.get("next_rising"),
             "next_setting": sun_attrs.get("next_setting"),
         }

@@ -17,8 +17,6 @@ from .const import (
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
-    CONF_POSITION_WHEN_WINDOW_OPEN,
-    CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_POSITION_CLOSED,
     DEFAULT_WINDOW_CLOSE_DEBOUNCE,
     MAX_WINDOW_CLOSE_DEBOUNCE,
@@ -26,6 +24,7 @@ from .const import (
 from .helpers import (
     forget_drive_after_close,
     get_tracked_position,
+    positions_differ_significantly,
     is_cover_sun_protected,
     is_shutter_automation_enabled,
     is_system_enabled,
@@ -34,6 +33,7 @@ from .helpers import (
 )
 from .window_helper import (
     get_effective_close_position,
+    get_position_for_window_state,
     get_tilt_entity_id,
     get_window_state,
     has_tilt_state,
@@ -87,20 +87,9 @@ def cancel_all_window_close(data: dict[str, Any]) -> None:
 _has_tilt_state = has_tilt_state
 
 
-def _get_target_position_for_window_state(
-    shutter: dict, state_str: str
-) -> float | None:
-    """Return target position for window state. None = restore."""
-    if state_str == "closed":
-        return None
-    if state_str == "tilted":
-        return shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
-    if state_str == "open":
-        if not _has_tilt_state(shutter):
-            # 2-state contact: open and tilt are indistinguishable -> ventilation position
-            return shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
-        return shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN, 100)
-    return None
+# Lives in window_helper since the schedule asks the same question when it
+# meets an open window at closing time.
+_get_target_position_for_window_state = get_position_for_window_state
 
 
 async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -273,6 +262,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     trigger_actions.pop(cover_entity, None)
                     trigger_heights.pop(cover_entity, None)
                     continue
+                # Der Aussperrschutz galt an jedem automatisierten Fahrweg –
+                # ausser an diesem, dem einzigen, der ausschliesslich bei
+                # offenem Fenster faehrt. Eine Kipp-Position unterhalb der
+                # Mindesthoehe schloss den Rollladen damit vor der offenen
+                # Terrassentuer, genau was die Einstellung verhindern soll.
+                target_pos = get_effective_close_position(hass, shutter, target_pos)
                 # Shading counts as a reason to react, whatever the position.
                 # The order is window contact > shading > ventilation, but the
                 # contact could not reach a shaded shutter at all: shading
@@ -280,8 +275,22 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 # the check below sent it away. Opening the terrace door in the
                 # afternoon then left the shutter hanging in front of it.
                 shaded = is_cover_sun_protected(data, cover_entity)
-                if not cycle_active and not shaded and not _is_cover_effectively_closed(
-                    shutter, current_pos
+                # Die Pruefung war richtungsblind, und das war der Fehler: sie
+                # soll verhindern, dass ein offenes Fenster einen offenen
+                # Rollladen herunterzieht. Nach *oben* faehrt hier aber nur der
+                # Aussperrschutz, und der ist der Grund, aus dem jemand diesen
+                # Haken setzt. Ein von Hand auf halber Hoehe geparkter
+                # Rollladen blieb damit vor der offenen Terrassentuer stehen –
+                # dieselbe Blindheit wie bei shading_would_open_cover() (2.15.0),
+                # nur an der anderen Seite.
+                opens_cover = target_pos > current_pos and positions_differ_significantly(
+                    target_pos, current_pos
+                )
+                if (
+                    not cycle_active
+                    and not shaded
+                    and not opens_cover
+                    and not _is_cover_effectively_closed(shutter, current_pos)
                 ):
                     # Not in "closed" state -> no window-trigger cycle active.
                     # Clear stale cycle markers so a later "closed" event cannot restore/close.
@@ -301,12 +310,6 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     reason = "Window opened (2-state ventilation)"
                 else:
                     reason = "Window opened"
-                # Der Aussperrschutz galt an jedem automatisierten Fahrweg –
-                # ausser an diesem, dem einzigen, der ausschliesslich bei
-                # offenem Fenster faehrt. Eine Kipp-Position unterhalb der
-                # Mindesthoehe schloss den Rollladen damit vor der offenen
-                # Terrassentuer, genau was die Einstellung verhindern soll.
-                target_pos = get_effective_close_position(hass, shutter, target_pos)
                 hass.async_create_task(
                     set_cover_position(hass, entry, cover_entity, target_pos, reason)
                 )

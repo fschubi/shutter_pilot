@@ -47,7 +47,11 @@ from .schedule_times import (
     get_time_mode_triggers,
     parse_time,
 )
-from .window_helper import get_effective_close_position, is_window_open_or_tilted
+from .window_helper import (
+    get_deferred_close_position,
+    get_effective_close_position,
+    is_window_open_or_tilted,
+)
 from .group_actions import run_group_light_action
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,6 +138,19 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     "%s: %s Fenster offen – Fahrt wird nach Schließen ausgeführt (drive_after_close)",
                     direction, cover,
                 )
+                # Optional: schon so weit fahren, wie das offene Fenster es
+                # zulaesst. Die volle Fahrt bleibt vorgemerkt.
+                vent_pos = get_deferred_close_position(hass, shutter)
+                if vent_pos is not None:
+                    if moved > 0 and delay > 0:
+                        await asyncio.sleep(delay)
+                    if await set_cover_position(
+                        hass, entry, cover, vent_pos,
+                        f"{direction} (Fenster offen – Lüftungsposition)",
+                        area_id=area_id,
+                    ):
+                        driven_covers.append(cover)
+                        moved += 1
                 continue
             eff_pos = position
             if apply_lock_protection:

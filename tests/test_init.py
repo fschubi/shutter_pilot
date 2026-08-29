@@ -19,11 +19,25 @@ async def test_switch_entities_created(hass, entry):
 
 async def test_next_action_sensor_created(hass, entry):
     """The next-action sensor exists and reports a direction."""
-    sensors = [s for s in hass.states.async_all("sensor") if "shutter_pilot" in s.entity_id]
+    sensors = [
+        s
+        for s in hass.states.async_all("sensor")
+        if "shutter_pilot" in s.entity_id and "area_id" in s.attributes
+    ]
     assert len(sensors) == 1
     state = sensors[0]
     assert state.attributes["area_id"] == "living"
     assert state.attributes["direction"] in ("up", "down")
+
+
+async def test_status_sensor_created(hass, entry):
+    """One house-wide status sensor, whatever the areas look like."""
+    sensors = [
+        s
+        for s in hass.states.async_all("sensor")
+        if "shutter_pilot" in s.entity_id and "shading_active" in s.attributes
+    ]
+    assert len(sensors) == 1
 
 
 async def test_sun_protection_binary_sensor_created(hass, entry):
@@ -36,7 +50,13 @@ async def test_sun_protection_binary_sensor_created(hass, entry):
 
 
 async def test_services_registered(hass, entry):
-    for service in ("open_group", "close_group", "sun_protect_group"):
+    for service in (
+        "open_group",
+        "close_group",
+        "stop_group",
+        "sun_protect_group",
+        "ventilate_group",
+    ):
         assert hass.services.has_service(DOMAIN, service)
 
 

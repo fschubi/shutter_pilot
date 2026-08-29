@@ -628,3 +628,185 @@ class TestNoScheduleIsExplained:
         md = (await async_build_export(hass, entry))["markdown"]
 
         assert "Kein Zeitplan" not in md
+
+
+# --- Der Export sagt jetzt, welches Kommando wirklich gesendet wird ----------
+
+
+class TestDriveCommandNote:
+    """bjoerg: „an der Fahrtrichtung ändert es nichts".
+
+    Aus den Positionen allein lässt sich das nicht beantworten: an einem
+    Antrieb ohne Positionierung sendet Shutter Pilot keine Zahl, sondern
+    `open_cover` oder `close_cover` – und welches der beiden „ausfahren"
+    bedeutet, entscheidet die Verdrahtung, nicht diese Konfiguration.
+    """
+
+    @pytest.fixture
+    def awning_entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            CONF_AWNING_TRACK_ENABLED,
+            CONF_DEVICE_KIND,
+            CONF_MY_POSITION_ENTITY,
+            CONF_MY_POSITION_PCT,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+        )
+
+        def _build(**shutter_extra):
+            config_entry = MockConfigEntry(
+                domain=DOMAIN,
+                title="Shutter Pilot",
+                options={
+                    CONF_AREAS: [AREA],
+                    CONF_SHUTTERS: [
+                        {
+                            CONF_COVER_ENTITY_ID: "cover.markise",
+                            CONF_NAME: "Markise",
+                            CONF_DEVICE_KIND: KIND_AWNING,
+                            CONF_AREA_DOWN_ID: "vorne",
+                            CONF_POSITION_OPEN: 0,
+                            CONF_POSITION_SUN_PROTECT: 100,
+                            **shutter_extra,
+                        }
+                    ],
+                },
+            )
+            config_entry.add_to_hass(hass)
+            hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+                "sun_protect_covers": set(),
+                "covers_driven_up": set(),
+                "covers_driven_down": set(),
+                "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+            }
+            return config_entry
+
+        return _build
+
+    async def test_a_drive_without_positioning_names_both_commands(
+        self, hass, awning_entry
+    ):
+        # OPEN|CLOSE|STOP, kein SET_POSITION (4)
+        hass.states.async_set("cover.markise", "open", {"supported_features": 11})
+        md = (await async_build_export(hass, awning_entry()))["markdown"]
+
+        assert "meldet keine Positionierung" in md
+        assert "**Einfahren** (0 %) = `cover.close_cover`" in md
+        assert "**Ausfahren** (100 %) = `cover.open_cover`" in md
+
+    async def test_a_drive_that_can_position_says_nothing(self, hass, awning_entry):
+        hass.states.async_set("cover.markise", "open", {"supported_features": 15})
+        md = (await async_build_export(hass, awning_entry()))["markdown"]
+
+        assert "meldet keine Positionierung" not in md
+
+    async def test_sun_tracking_on_such_a_drive_is_flagged(self, hass, awning_entry):
+        """Wolfs Fall: Nachführung 50–100 % an einem Antrieb ohne Zwischenstopp."""
+        from custom_components.shutter_pilot.const import CONF_AWNING_TRACK_ENABLED
+
+        hass.states.async_set("cover.markise", "open", {"supported_features": 11})
+        entry = awning_entry(**{CONF_AWNING_TRACK_ENABLED: True})
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "keine Zwischenstellung anfahren" in md
+
+    async def test_a_my_position_replaces_that_warning(self, hass, awning_entry):
+        from custom_components.shutter_pilot.const import (
+            CONF_AWNING_TRACK_ENABLED,
+            CONF_MY_POSITION_ENTITY,
+            CONF_MY_POSITION_PCT,
+        )
+
+        hass.states.async_set("cover.markise", "open", {"supported_features": 11})
+        entry = awning_entry(
+            **{
+                CONF_AWNING_TRACK_ENABLED: True,
+                CONF_MY_POSITION_ENTITY: "button.markise_my_position",
+                CONF_MY_POSITION_PCT: 50,
+            }
+        )
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "keine Zwischenstellung anfahren" not in md
+        assert "35–65 %" in md
+        assert "button.markise_my_position" in md
+
+
+class TestGuardSensorWithoutNumbers:
+    """bjoerg: „Mein Regensensor liefert nur nass und trocken".
+
+    In `guard_slot_danger()` ist ein nicht auswertbarer Wert die Gefahr – die
+    Markise fährt ein und nie wieder aus, während in der Tabelle daneben eine
+    Schwelle steht, die so aussieht, als würde sie geprüft.
+    """
+
+    @pytest.fixture
+    def entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            AWNING_GUARD_RAIN,
+            CONF_DEVICE_KIND,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+            sun_condition_keys,
+        )
+
+        keys = sun_condition_keys(AWNING_GUARD_RAIN)
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: "cover.markise",
+                        CONF_NAME: "Markise",
+                        CONF_DEVICE_KIND: KIND_AWNING,
+                        CONF_AREA_DOWN_ID: "vorne",
+                        CONF_POSITION_OPEN: 0,
+                        CONF_POSITION_SUN_PROTECT: 100,
+                    }
+                ],
+                keys[0]: "sensor.regensensor",
+                keys[1]: 1,
+                keys[2]: 0,
+            },
+        )
+        config_entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "covers_driven_up": set(),
+            "covers_driven_down": set(),
+            "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+        }
+        return config_entry
+
+    async def test_a_text_state_without_a_state_list_is_named(self, hass, entry):
+        hass.states.async_set("cover.markise", "open", {"supported_features": 15})
+        hass.states.async_set("sensor.regensensor", "trocken")
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "meldet **trocken**" in md
+        assert "gilt hier als **Gefahr**" in md
+
+    async def test_a_configured_state_list_keeps_quiet(self, hass, entry):
+        from custom_components.shutter_pilot.const import (
+            AWNING_GUARD_RAIN,
+            sun_condition_keys,
+        )
+
+        hass.states.async_set("cover.markise", "open", {"supported_features": 15})
+        hass.states.async_set("sensor.regensensor", "trocken")
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                **entry.options,
+                sun_condition_keys(AWNING_GUARD_RAIN)[3]: ["nass"],
+            },
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "gilt hier als **Gefahr**" not in md

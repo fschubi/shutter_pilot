@@ -4,6 +4,29 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.18.0]
+
+Vier Beiträge, und drei davon beschreiben dieselbe Stelle: **der Fensterkontakt
+erreichte nur den (nahezu) geschlossenen Rollladen.** Die Prüfung dahinter war
+richtungsblind – sie soll verhindern, dass ein offenes Fenster mittags einen
+offenen Rollladen herunterzieht, sperrte damit aber auch den Aussperrschutz
+aus. Und der ist auf diesem Weg das Einzige, was überhaupt nach *oben* fährt.
+
+### Behoben
+- **Der Aussperrschutz griff nicht, wenn der Rollladen halb offen stand** (pcsv17, in Wolfs Export ebenso). „Das Rollo fährt nur in diese Position, wenn es vorher ganz geschlossen war. Wurde es manuell auf z. B. 45 % gefahren und ich öffne dann die Tür, passiert nichts." Genau so war es. Die Prüfung fragt jetzt zusätzlich, in welche **Richtung** die Fahrt ginge: würde sie den Rollladen öffnen – und mehr macht der Aussperrschutz nicht –, wird gefahren, egal wo er steht. Ihr eigentlicher Zweck bleibt: ohne Aussperrschutz zieht ein offenes Fenster einen offenen Rollladen weiterhin nicht herunter.
+- **Die Kontrollkästchen im Formular sahen aus wie Eingabefelder** (bjoerg). „Bei einigen Anhaak-Kästchen ist es ein wenig schwierig die Zugehörigkeit zu erkennen." Das war kein Geschmacksurteil, sondern eine Regel zu viel: `width:100%` galt samt Rahmen und Polsterung auch für Kontrollkästchen, aus dem Haken wurde ein formularbreiter Kasten, das Häkchen stand mittig darin und die Beschriftung rutschte in die Zeile darunter. Haken und Text stehen jetzt nebeneinander, und zwischen den Einstellungen liegt eine feine Trennlinie – genau das Gewünschte.
+- **Ein Schutzsensor mit Textzuständen sperrte die Markise dauerhaft** (bjoerg). „Mein Regensensor liefert nur ‚nass' und ‚trocken'." Das Formular bot dafür nur Zahlenfelder an, und im Markisenschutz gilt ein Wert, der sich nicht mit der Schwelle vergleichen lässt, als **Gefahr** – die Markise fährt ein und nie wieder aus, während daneben eine Schwelle steht, die so aussieht, als würde sie geprüft. Die Zustandsliste, die es bei den Beschattungsbedingungen längst gibt, steht jetzt auch hier; der Export benennt den Fall zusätzlich.
+- **Die festgestellten Reiter blieben auf manchen Android-Tablets nicht stehen** (Wolf). Der Rückfall `overflow-x:hidden` macht das Panel selbst zum Scrollbereich, und ein „sticky" Element darin klebt an nichts. Auf Browsern, die `overflow:clip` kennen, fiel das nicht auf – auf älteren WebViews schon, und deshalb funktionierte dasselbe Panel auf dem Telefon und auf dem Tablet nicht. Der Rückfall ist weg; breite Inhalte scrollen ohnehin in ihrem eigenen Rahmen.
+- **Das Lux-Zahlenfeld ließ sich auf dem Tablet nicht ändern** (Wolf). Das Feld zeichnete sich bei jedem Tastendruck neu; auf manchen Android-WebViews springt dabei der Cursor oder das Zeichen geht verloren. Der Wert wird weiterhin bei jedem Tastendruck übernommen, neu gezeichnet wird erst beim Verlassen des Feldes.
+
+### Neu
+- **Ein Block für alle Bereiche oben im Dashboard** (Smons, Linos). Alle Rollläden hoch, Stop, runter, Sonnenschutz und Lüften mit einem Klick; Automatik und Beschattung für alle Bereiche an oder aus; und die Werte, die man sonst je Bereich nachschlägt: Sonnenauf- und -untergang, aktuelle Elevation und Azimut, Höchsttemperatur und Wetterlage von heute.
+- **`area_id` ist bei allen Gruppen-Diensten optional** (Smons, Linos – „für das HA-Dashboard"). Ohne Bereich gilt der Dienst für alle Bereiche, „alle Rollläden hoch" ist damit **ein** Aufruf statt einer je Bereich. Dazu neu: `shutter_pilot.stop_group`.
+- **`sensor.shutter_pilot_status`** (Linos). Der Primärstatus als Zustand – `open`, `closed` oder `partial` –, alles Weitere als Attribute: die Zahlen je Gruppe und, als Sekundärstatus, `shading_active` und `shading_areas` mit den Namen der gerade beschatteten Bereiche. Markisen zählen getrennt: eine eingefahrene Markise ist in Ruhe, nicht „das Haus ist zu".
+- **„Bei offenem Fenster schon auf die Lüftungsposition fahren"** (bjoerg). „Müsste dann aber nicht die Jalousie auf die Position für ‚gekippt' fahren? Im Schlafzimmer hat sich gar nichts bewegt." Richtig – bisher blieb der Rollladen mit vorgemerkter Nachholfahrt einfach stehen. Der neue Haken je Rollladen fährt ihn so weit, wie es der Aussperrschutz zulässt; die volle Fahrt bleibt vorgemerkt und läuft, sobald das Fenster zugeht. **Vorgabe aus.**
+- **„My"-Position für Antriebe ohne Positionierung** (Wolf). Somfy RTS und Verwandte kennen eine dritte, am Motor angelernte Stellung; Overkiz bietet sie als `button.<markise>_my_position` an. Entität eintragen und angeben, welchem Prozentwert sie entspricht – jede Fahrt, die höchstens 15 % daneben liegt, drückt dann diesen Knopf. Erst damit bedeutet „Ausfahrlänge nach Sonnenhöhe" an so einem Antrieb überhaupt etwas: ohne sie wird aus jedem Wert ab 50 % „ganz ausfahren".
+- **Der Export nennt das Fahrkommando** (bjoerg). „An der Fahrtrichtung ändert es nichts." Aus den Positionen allein ist das nicht zu beantworten: an einem Antrieb ohne Positionierung sendet Shutter Pilot keine Zahl, sondern `open_cover` oder `close_cover` – und welches der beiden „ausfahren" heißt, entscheidet die Verdrahtung. Der Bericht schreibt beide Kommandos samt Position hin, und warnt, wenn die Sonnennachführung an einem Antrieb läuft, der keine Zwischenstellung anfahren kann.
+
 ## [2.17.0]
 
 Vier Forumsbeiträge an einem Tag. Drei davon waren Fehler – und zwei davon

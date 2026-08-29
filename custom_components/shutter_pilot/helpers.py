@@ -53,6 +53,11 @@ from .const import (
     CONF_AREA_UP_ID,
     CONF_BLIND_DRIVE,
     CONF_COVER_ENTITY_ID,
+    CONF_MY_POSITION_ENTITY,
+    CONF_MY_POSITION_PCT,
+    CONF_SHUTTERS,
+    DEFAULT_MY_POSITION_PCT,
+    MY_POSITION_TOLERANCE_PCT,
     CONF_AWNING_TRACK_ENABLED,
     CONF_AWNING_TRACK_HIGH_ELEV,
     CONF_AWNING_TRACK_HIGH_POS,
@@ -267,6 +272,26 @@ def only_shutters(shutters: list[Any]) -> list[Any]:
     the next morning.
     """
     return [s for s in shutters if isinstance(s, dict) and not is_awning(s)]
+
+
+def find_shutter_by_cover(entry: ConfigEntry, entity_id: str) -> dict[str, Any] | None:
+    """The configured entry for one cover entity, or None.
+
+    Looked up rather than passed along: set_cover_position() has a dozen
+    callers and only one of them – the drive itself – needs the configuration.
+    Duplicate entries are barred at save time (2.11.1), so the first hit is the
+    only hit.
+    """
+    shutters = entry.options.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        return None
+    wanted = str(entity_id or "").strip()
+    for shutter in shutters:
+        if isinstance(shutter, dict) and str(
+            shutter.get(CONF_COVER_ENTITY_ID) or ""
+        ).strip() == wanted:
+            return shutter
+    return None
 
 
 def only_awnings(shutters: list[Any]) -> list[Any]:
@@ -1842,7 +1867,9 @@ async def set_cover_position(
     try:
         if not urgent:
             await _respect_min_drive_gap(hass, entry)
-        await _send_position(hass, entity_id, position)
+        await _send_position(
+            hass, entity_id, position, find_shutter_by_cover(entry, entity_id)
+        )
         _LOGGER.info("%s: %s -> %d%%", reason, entity_id, int(position))
 
         if tilt_position is not None:
@@ -1898,7 +1925,51 @@ def _supported_features(hass: HomeAssistant, entity_id: str) -> int:
         return 0
 
 
-async def _send_position(hass: HomeAssistant, entity_id: str, position: float) -> None:
+def my_position_target(
+    shutter: dict[str, Any] | None, position: float
+) -> tuple[str, float] | None:
+    """The taught "My" stop, when this target is close enough to it.
+
+    Returns (entity_id, taught position) or None. A one-way radio drive has
+    three stops, not two: up, down and the position the motor was taught. Every
+    target in between degenerates into a full end stop without it – which is
+    what makes "extend further as the sun sinks" meaningless on such a drive.
+    """
+    if not isinstance(shutter, dict):
+        return None
+    entity_id = str(shutter.get(CONF_MY_POSITION_ENTITY) or "").strip()
+    if not entity_id:
+        return None
+    try:
+        my_pct = float(shutter.get(CONF_MY_POSITION_PCT, DEFAULT_MY_POSITION_PCT))
+    except (TypeError, ValueError):
+        my_pct = float(DEFAULT_MY_POSITION_PCT)
+    if abs(position - my_pct) > MY_POSITION_TOLERANCE_PCT:
+        return None
+    return entity_id, my_pct
+
+
+async def _press_my_position(hass: HomeAssistant, entity_id: str) -> None:
+    """Trigger the My entity, whichever domain it lives in."""
+    domain = entity_id.split(".", 1)[0]
+    service = {
+        "button": "press",
+        "input_button": "press",
+        "scene": "turn_on",
+        "script": "turn_on",
+        "switch": "turn_on",
+    }.get(domain, "turn_on")
+    await hass.services.async_call(
+        domain, service, {"entity_id": entity_id}, blocking=True
+    )
+
+
+async def _send_position(
+    hass: HomeAssistant,
+    entity_id: str,
+    position: float,
+    shutter: dict[str, Any] | None = None,
+) -> None:
     """Drive a cover to a position, falling back to open/close where needed.
 
     Many awning drives – and plenty of older shutter motors – only know up,
@@ -1918,6 +1989,19 @@ async def _send_position(hass: HomeAssistant, entity_id: str, position: float) -
         )
         return
 
+    # Asked only on the drives that cannot position: on everything else the
+    # position itself is the more precise instruction, and pressing My would
+    # throw that precision away.
+    my = my_position_target(shutter, position)
+    if my is not None:
+        my_entity, my_pct = my
+        _LOGGER.info(
+            "%s: %d%% is driven as the taught My position (%s, %d%%)",
+            entity_id, int(position), my_entity, int(my_pct),
+        )
+        await _press_my_position(hass, my_entity)
+        return
+
     if position >= 50:
         service = "open_cover"
     else:
@@ -1925,8 +2009,8 @@ async def _send_position(hass: HomeAssistant, entity_id: str, position: float) -
     if 0 < position < 100:
         _LOGGER.warning(
             "%s cannot be positioned – %d%% is driven as %s. Configure only 0 "
-            "or 100 for this cover, or switch it to a drive that reports a "
-            "position.",
+            "or 100 for this cover, teach it a My position, or switch it to a "
+            "drive that reports a position.",
             entity_id,
             int(position),
             service,

@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from .const import (
     DOMAIN,
+    CONF_MIN_DRIVE_GAP,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_AREAS,
@@ -18,6 +19,8 @@ from .const import (
     CONF_AREA_DOWN_ID,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
+    DEFAULT_MIN_DRIVE_GAP,
+    MAX_MIN_DRIVE_GAP,
     ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
@@ -45,13 +48,19 @@ from .window_helper import get_effective_close_position
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_OPEN_GROUP = "open_group"
+SERVICE_STOP_GROUP = "stop_group"
 SERVICE_CLOSE_GROUP = "close_group"
 SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 SERVICE_VENTILATE_GROUP = "ventilate_group"
 SERVICE_RETRACT_AWNINGS = "retract_awnings"
 
+# area_id is optional throughout: "all shutters up" is the button people build
+# their dashboard around, and building it out of one call per area means the
+# card has to be rewritten every time an area is added. Left out, the service
+# walks every area – each shutter still lands in exactly one of them, because
+# the up services filter on area_up_id and the down ones on area_down_id.
 SERVICE_SCHEMA = vol.Schema(
-    {vol.Required("area_id"): str}
+    {vol.Optional("area_id"): str}
 )
 # "Storm warning received" is a house-wide event, not an area one.
 RETRACT_SCHEMA = vol.Schema({vol.Optional("area_id"): str})
@@ -168,102 +177,116 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 return DEFAULT_AREA_DRIVE_DELAY
         return DEFAULT_AREA_DRIVE_DELAY
 
-    async def open_group(call) -> None:
+    def _target_area_ids(call) -> list[str]:
+        """The areas this call addresses – the named one, or all of them."""
         area_id = str(call.data.get("area_id") or "").strip()
-        if not area_id:
-            return
+        if area_id:
+            return [area_id]
+        return [
+            str(a.get(CONF_AREA_ID) or "").strip()
+            for a in areas
+            if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "").strip()
+        ]
+
+    def _shutter_list() -> list:
         shutters = entry.options.get(CONF_SHUTTERS, [])
         if not isinstance(shutters, list):
             _LOGGER.warning(
-                "Invalid shutters options type in open_group service: %r – resetting to empty list",
+                "Invalid shutters options type in group service: %r – resetting to empty list",
                 type(shutters),
             )
-            shutters = []
-        shutters = filter_shutters_by_area(shutters, area_id, use_up=True)
-        await _drive_group(
-            hass,
-            entry,
-            shutters,
-            ROLE_OPEN,
-            f"open_group({area_id})",
-            _delay_for_area(area_id),
-            area_id,
-        )
+            return []
+        return shutters
+
+    async def _run_group(
+        call,
+        role: str,
+        label: str,
+        use_up: bool,
+        *,
+        include_awnings: bool = True,
+        apply_lock_protection: bool = False,
+    ) -> None:
+        for area_id in _target_area_ids(call):
+            picked = filter_shutters_by_area(
+                _shutter_list(), area_id, use_up=use_up, include_awnings=include_awnings
+            )
+            if not picked:
+                continue
+            await _drive_group(
+                hass,
+                entry,
+                picked,
+                role,
+                f"{label}({area_id})",
+                _delay_for_area(area_id),
+                area_id,
+                apply_lock_protection=apply_lock_protection,
+            )
+
+    async def open_group(call) -> None:
+        await _run_group(call, ROLE_OPEN, "open_group", use_up=True)
 
     async def close_group(call) -> None:
-        area_id = str(call.data.get("area_id") or "").strip()
-        if not area_id:
-            return
-        shutters = entry.options.get(CONF_SHUTTERS, [])
-        if not isinstance(shutters, list):
-            _LOGGER.warning(
-                "Invalid shutters options type in close_group service: %r – resetting to empty list",
-                type(shutters),
-            )
-            shutters = []
-        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
-        await _drive_group(
-            hass,
-            entry,
-            shutters,
-            ROLE_CLOSED,
-            f"close_group({area_id})",
-            _delay_for_area(area_id),
-            area_id,
-            apply_lock_protection=True,
+        await _run_group(
+            call, ROLE_CLOSED, "close_group", use_up=False, apply_lock_protection=True
         )
 
     async def sun_protect_group(call) -> None:
-        area_id = str(call.data.get("area_id") or "").strip()
-        if not area_id:
-            return
-        shutters = entry.options.get(CONF_SHUTTERS, [])
-        if not isinstance(shutters, list):
-            _LOGGER.warning(
-                "Invalid shutters options type in sun_protect_group service: %r – resetting to empty list",
-                type(shutters),
-            )
-            shutters = []
-        shutters = filter_shutters_by_area(shutters, area_id, use_up=False)
-        await _drive_group(
-            hass,
-            entry,
-            shutters,
+        await _run_group(
+            call,
             ROLE_SUN_PROTECT,
-            f"sun_protect_group({area_id})",
-            _delay_for_area(area_id),
-            area_id,
+            "sun_protect_group",
+            use_up=False,
             apply_lock_protection=True,
         )
 
     async def ventilate_group(call) -> None:
         """Move a group to its ventilation position (tilted-window position)."""
-        area_id = str(call.data.get("area_id") or "").strip()
-        if not area_id:
-            return
-        shutters = entry.options.get(CONF_SHUTTERS, [])
-        if not isinstance(shutters, list):
-            _LOGGER.warning(
-                "Invalid shutters options type in ventilate_group service: %r – resetting to empty list",
-                type(shutters),
-            )
-            shutters = []
-        # Awnings have no ventilation position – it is the tilted-window one.
-        shutters = filter_shutters_by_area(
-            shutters, area_id, use_up=False, include_awnings=False
-        )
-        await _drive_group(
-            hass,
-            entry,
-            shutters,
+        await _run_group(
+            call,
             ROLE_VENTILATION,
-            f"ventilate_group({area_id})",
-            _delay_for_area(area_id),
-            area_id,
+            "ventilate_group",
+            use_up=False,
+            # Awnings have no ventilation position – it is the tilted-window one.
+            include_awnings=False,
             # Der Aussperrschutz galt an jedem automatisierten Fahrweg – nur
             # hier nicht, und Lueften faehrt nach unten wie jedes Schliessen.
             apply_lock_protection=True,
         )
+
+    async def stop_group(call) -> None:
+        """Halt everything that is moving, area by area.
+
+        No position and no role: a stop is the one command that means the same
+        thing whichever way the cover was going, awnings included. Staggered
+        like the rest all the same – a swallowed stop lets a shutter run to the
+        end stop, one that arrives a second later does not.
+        """
+        try:
+            gap = float(entry.options.get(CONF_MIN_DRIVE_GAP, DEFAULT_MIN_DRIVE_GAP) or 0)
+        except (TypeError, ValueError):
+            gap = 0.0
+        seen: set[str] = set()
+        covers: list[str] = []
+        for area_id in _target_area_ids(call):
+            for use_up in (True, False):
+                for shutter in filter_shutters_by_area(
+                    _shutter_list(), area_id, use_up=use_up
+                ):
+                    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+                    if cover and cover not in seen:
+                        seen.add(cover)
+                        covers.append(cover)
+        for i, cover in enumerate(covers):
+            if i and gap > 0:
+                await asyncio.sleep(min(gap, MAX_MIN_DRIVE_GAP))
+            try:
+                await hass.services.async_call(
+                    "cover", "stop_cover", {"entity_id": cover}, blocking=True
+                )
+            except Exception as e:  # pragma: no cover - one cover must not stop the rest
+                _LOGGER.warning("Failed stop %s: %s", cover, e)
 
     async def retract_awnings(call) -> None:
         """Pull every awning in at once, for an announced storm.
@@ -291,6 +314,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     def _unregister() -> None:
         hass.services.async_remove(DOMAIN, SERVICE_RETRACT_AWNINGS)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_GROUP)
+        hass.services.async_remove(DOMAIN, SERVICE_STOP_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_CLOSE_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_SUN_PROTECT_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_VENTILATE_GROUP)
@@ -298,6 +322,9 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     hass.services.async_register(
         DOMAIN, SERVICE_OPEN_GROUP, open_group, schema=SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_STOP_GROUP, stop_group, schema=SERVICE_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_CLOSE_GROUP, close_group, schema=SERVICE_SCHEMA
@@ -313,6 +340,6 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
     entry.async_on_unload(_unregister)
     _LOGGER.info(
-        "Services registered: open_group, close_group, sun_protect_group, "
-        "ventilate_group, retract_awnings"
+        "Services registered: open_group, close_group, stop_group, "
+        "sun_protect_group, ventilate_group, retract_awnings"
     )

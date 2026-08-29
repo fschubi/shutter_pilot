@@ -1,42 +1,76 @@
 open_group:
   name: Gruppe öffnen
-  description: Öffnet alle Rollläden des angegebenen Bereichs.
+  description: >-
+    Öffnet alle Rollläden eines Bereichs. Ohne Bereich gilt der Dienst für alle
+    Bereiche – also für das ganze Haus.
   fields:
     area_id:
       name: Bereich-ID
-      description: ID des Bereichs (z. B. living, schlafzimmer, kueche).
+      description: >-
+        Optional. ID des Bereichs (z. B. living, schlafzimmer, kueche). Leer
+        lassen für alle Bereiche.
+      required: false
       selector:
         text:
 
 close_group:
   name: Gruppe schließen
-  description: Schließt alle Rollläden des angegebenen Bereichs.
+  description: >-
+    Schließt alle Rollläden eines Bereichs. Ohne Bereich gilt der Dienst für
+    alle Bereiche – also für das ganze Haus.
   fields:
     area_id:
       name: Bereich-ID
-      description: ID des Bereichs (z. B. living, schlafzimmer, kueche).
+      description: >-
+        Optional. ID des Bereichs (z. B. living, schlafzimmer, kueche). Leer
+        lassen für alle Bereiche.
+      required: false
+      selector:
+        text:
+
+stop_group:
+  name: Gruppe anhalten
+  description: >-
+    Hält alle fahrenden Rollläden und Markisen eines Bereichs an. Ohne Bereich
+    gilt der Dienst für alle Bereiche – also für das ganze Haus.
+  fields:
+    area_id:
+      name: Bereich-ID
+      description: >-
+        Optional. ID des Bereichs (z. B. living, schlafzimmer, kueche). Leer
+        lassen für alle Bereiche.
+      required: false
       selector:
         text:
 
 sun_protect_group:
   name: Sonnenschutz Gruppe
-  description: Fährt alle Rollläden des Bereichs in Sonnenschutz-Position.
+  description: >-
+    Fährt alle Rollläden eines Bereichs in Sonnenschutz-Position. Ohne Bereich
+    gilt der Dienst für alle Bereiche.
   fields:
     area_id:
       name: Bereich-ID
-      description: ID des Bereichs (z. B. living, schlafzimmer, kueche).
+      description: >-
+        Optional. ID des Bereichs (z. B. living, schlafzimmer, kueche). Leer
+        lassen für alle Bereiche.
+      required: false
       selector:
         text:
 
 ventilate_group:
   name: Gruppe lüften
   description: >-
-    Fährt alle Rollläden des Bereichs in die Lüftungsposition, also auf die
-    Position, die auch bei gekipptem Fenster angefahren wird.
+    Fährt alle Rollläden eines Bereichs in die Lüftungsposition, also auf die
+    Position, die auch bei gekipptem Fenster angefahren wird. Ohne Bereich gilt
+    der Dienst für alle Bereiche.
   fields:
     area_id:
       name: Bereich-ID
-      description: ID des Bereichs (z. B. living, schlafzimmer, kueche).
+      description: >-
+        Optional. ID des Bereichs (z. B. living, schlafzimmer, kueche). Leer
+        lassen für alle Bereiche.
+      required: false
       selector:
         text:
 

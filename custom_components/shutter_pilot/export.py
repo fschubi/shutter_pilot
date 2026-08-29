@@ -66,6 +66,13 @@ from .const import (
     BOOLEAN_CONDITION_DOMAINS,
     DOMAIN,
     INVERTED_BY_DEFAULT_SLOTS,
+    BOOLEAN_CONDITION_DOMAINS,
+    CONF_AWNING_TRACK_ENABLED,
+    CONF_MY_POSITION_ENTITY,
+    CONF_MY_POSITION_PCT,
+    DEFAULT_MY_POSITION_PCT,
+    MY_POSITION_TOLERANCE_PCT,
+    ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT,
@@ -323,6 +330,33 @@ def _guard_rows(
         "",
     ]
 
+    # Ein Wort statt einer Zahl und keine Zustandsliste dahinter: in dieser
+    # Funktion ist "nicht auswertbar" die Gefahr, die Markise faehrt also ein
+    # und nie wieder aus – und in der Tabelle daneben steht eine Schwelle, die
+    # so aussieht, als wuerde sie geprueft. Gemeldet als "mein Regensensor
+    # liefert nur nass und trocken".
+    for slot in AWNING_GUARD_SLOTS:
+        entity_key, _on, _off, states_key = sun_condition_keys(slot)
+        entity_id = str(config.get(entity_key) or "").strip()
+        if not entity_id or _is_set(config.get(states_key)):
+            continue
+        if entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
+            continue
+        state = hass.states.get(entity_id)
+        if state is None or state.state in ("unknown", "unavailable"):
+            continue
+        try:
+            float(state.state)
+        except (TypeError, ValueError):
+            out += [
+                f"> ⚠️ `{entity_id}` meldet **{state.state}** – keine Zahl, und "
+                f"für **{slot}** ist keine Zustandsliste hinterlegt. Ein Wert, "
+                "der sich nicht mit der Schwelle vergleichen lässt, gilt hier "
+                "als **Gefahr**: die Markise fährt ein und bleibt drin. Im "
+                "Formular die Zustände ankreuzen, die Gefahr bedeuten.",
+                "",
+            ]
+
     if not status:
         out += [
             "> ℹ️ Der Schutz hat in diesem Lauf noch nicht ausgewertet – nach "
@@ -393,6 +427,72 @@ def _guard_rows(
                 "",
             ]
     return out
+
+
+def _drive_command_note(
+    hass: HomeAssistant, shutter: dict[str, Any]
+) -> list[str]:
+    """Which cover service this drive actually receives.
+
+    "It goes the wrong way" is a question nobody can answer from the positions
+    alone: on a drive without positioning Shutter Pilot cannot send a number,
+    it sends open_cover or close_cover – and which of the two ends up meaning
+    "extend" is a property of the wiring, not of this configuration. Naming the
+    two commands turns the question into something the reporter can check in
+    two clicks under Developer Tools.
+    """
+    entity_id = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not entity_id:
+        return []
+    state = hass.states.get(entity_id)
+    try:
+        features = int((state.attributes.get("supported_features") if state else 0) or 0)
+    except (TypeError, ValueError):
+        features = 0
+    # CoverEntityFeature.SET_POSITION == 4. Unknown (no state) is treated as
+    # "can position": that is what _send_position() does too.
+    if not state or features & 4:
+        return []
+
+    awning = is_awning(shutter)
+    rest = get_position_for_role(shutter, ROLE_OPEN)
+    active = get_position_for_role(
+        shutter, ROLE_SUN_PROTECT if awning else ROLE_CLOSED
+    )
+
+    def _service(pos: float) -> str:
+        return "cover.open_cover" if pos >= 50 else "cover.close_cover"
+
+    rest_word = "Einfahren" if awning else "Öffnen"
+    active_word = "Ausfahren" if awning else "Schließen"
+    lines = [
+        f"> ℹ️ `{entity_id}` meldet keine Positionierung. Gefahren wird deshalb "
+        f"nicht die Zahl, sondern ein Kommando: **{rest_word}** "
+        f"({rest:.0f} %) = `{_service(rest)}`, **{active_word}** "
+        f"({active:.0f} %) = `{_service(active)}`. Fährt der Antrieb "
+        "verkehrt herum, sind die beiden Positionen zu tauschen – oder das "
+        "Kommando stimmt schon und die Verdrahtung dreht es um; das lässt sich "
+        "unter Werkzeuge ▸ Aktionen mit beiden Diensten einzeln prüfen.",
+    ]
+    my_entity = str(shutter.get(CONF_MY_POSITION_ENTITY) or "").strip()
+    if my_entity:
+        try:
+            my_pct = float(shutter.get(CONF_MY_POSITION_PCT, DEFAULT_MY_POSITION_PCT))
+        except (TypeError, ValueError):
+            my_pct = float(DEFAULT_MY_POSITION_PCT)
+        lines.append(
+            f"> ℹ️ Zwischenstellungen im Bereich {my_pct - MY_POSITION_TOLERANCE_PCT:.0f}"
+            f"–{my_pct + MY_POSITION_TOLERANCE_PCT:.0f} % werden über "
+            f"`{my_entity}` als angelernte „My\"-Position gefahren."
+        )
+    elif awning and shutter.get(CONF_AWNING_TRACK_ENABLED):
+        lines.append(
+            "> ⚠️ „Ausfahrlänge nach Sonnenhöhe\" ist eingeschaltet, aber dieser "
+            "Antrieb kann keine Zwischenstellung anfahren – jeder Wert ab 50 % "
+            "wird zu „ganz ausfahren\". Entweder eine „My\"-Position "
+            "hinterlegen oder die Nachführung ausschalten."
+        )
+    return [*lines, ""]
 
 
 def _awning_silent_notes(shutter: dict[str, Any]) -> list[str]:
@@ -892,6 +992,7 @@ async def async_build_export(
 
         out += _settings_table(shutter)
         out += _silent_setting_notes(shutter)
+        out += _drive_command_note(hass, shutter)
 
         if awning:
             # Vor die Beschattung, nicht dahinter: die haeufigste Frage an einer

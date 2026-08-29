@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (651 Tests)
+tests/               pytest-Suite (677 Tests)
 ```
 
 ## Funktionsumfang
@@ -79,6 +79,15 @@ offenere gewinnt) und ein zweiter Kontakt, wenn „gekippt" als eigene Entität
 gemeldet wird (der behält Vorrang und wird *nicht* mitgerankt – er ist ein
 Modifikator, kein zweiter Flügel),
 und eine **Entprellung** (0–30 s), bevor auf „geschlossen" reagiert wird.
+Optional fährt eine vorgemerkte Nachholfahrt schon jetzt auf die
+Lüftungsposition (`window_vent_while_open`, Vorgabe aus) – ohne den Haken
+passiert bei offenem Fenster gar nichts.
+
+An einem Antrieb ohne Positionierung gibt es eine dritte Stellung: die am Motor
+angelernte **„My"-Position** (`my_position_entity` + `my_position_pct`, RTS über
+Overkiz als `button.*`). `my_position_target()` greift **nur im Rückfallzweig**
+von `_send_position()`; wo Positionen gehen, ist die Zahl die genauere
+Anweisung.
 
 ### Beschattung
 
@@ -182,11 +191,12 @@ Wiederholungen.
 | Art | Entität |
 | --- | --- |
 | Schalter | `switch.shutter_pilot_system` (Hauptschalter), je Bereich und je Rollladen ein Auto-Schalter, je Bereich mit Beschattung ein Sonnenschutz-Schalter |
-| Sensor | je Bereich „nächste Fahrt"; Vorhersage Höchst-/Tiefsttemperatur und Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
+| Sensor | je Bereich „nächste Fahrt"; **einer fürs ganze Haus** (`shutter_pilot_status`: offen/geschlossen/teilweise, dazu Zahlen je Gruppe und die beschatteten Bereiche); Vorhersage Höchst-/Tiefsttemperatur und Wetterlage nur, wenn eine Wetter-Entität hinterlegt ist |
 | Binärsensor | je Bereich „Sonnenschutz aktiv"; je Markise „Sperre" mit Grund und Restzeit |
 
 Dienste: `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`,
-`retract_awnings` (Bereich optional, ohne Staffelung).
+`stop_group`, `retract_awnings`. **Bereich überall optional** – ohne ihn gelten
+sie fürs ganze Haus.
 Events: `shutter_pilot_cover_moved`, `shutter_pilot_cover_failed`,
 `shutter_pilot_awning_retracted`.
 
@@ -204,6 +214,11 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
   erkennt die Plattform, dann werden eigene Bedienelemente gerendert.
 - **Rechte**: Ohne Administrator zeigt das Panel nur das Dashboard mit den
   Bedienknöpfen. Das ist Bequemlichkeit – die Grenze liegt auf dem Server.
+- **Über den Bereichskarten steht ein Block fürs ganze Haus** (2.18.0): dieselben
+  fünf Fahrknöpfe für alle Rollläden, Automatik und Beschattung für alle Bereiche,
+  dazu Sonnenauf-/-untergang, Elevation, Azimut und die Tagesvorhersage. Die
+  Schalter laufen über die WebSocket-Befehle und sind deshalb Admin-only, die
+  Fahrknöpfe nicht – dieselbe Trennung wie auf den Karten.
 - **Die Bedienknöpfe rufen die `cover`-Dienste direkt auf** (damit HA die Rechte
   je Entität prüft). Sie kommen damit an *jedem* Riegel im Backend vorbei.
   Dreimal doppelt gebaut: Mindestabstand, Markisensperre, Aussperrschutz. Bei
@@ -214,7 +229,7 @@ Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.17.0: je 397 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.18.0: je 413 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -243,7 +258,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 651 Tests, ~16 s
+.venv/bin/pytest            # 677 Tests, ~16 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -269,10 +284,113 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.17.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.18.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-29 – 2.18.0: der Kontakt, der nur den geschlossenen Rollladen fand
+
+Vier Beitraege, drei davon an derselben Zeile. `window_trigger.py` faehrt nur,
+wenn der Rollladen (nahezu) geschlossen ist oder beschattet wird. Die Pruefung
+soll verhindern, dass ein offenes Fenster mittags einen offenen Rollladen
+herunterzieht – sie war aber **richtungsblind**, und nach *oben* faehrt auf
+diesem Weg nur der Aussperrschutz. Genau der Haken also, wegen dem jemand ihn
+ueberhaupt setzt: pcsv17 („Rollo manuell auf 45 %, Tuer auf, es passiert
+nichts"), und in Wolfs Export steht derselbe Fall an „Kueche vorne"
+(Mindesthoehe 90, Kipp-Position 0). Behoben mit `opens_cover` – **dieselbe
+Blindheit wie `shading_would_open_cover()` aus 2.15.0, nur an der anderen
+Seite.** Der Aussperrschutz-Deckel wird dafuer *vor* die Pruefung gezogen; die
+Richtung entscheidet sich am geklemmten Ziel, nicht am rohen.
+
+**Der Haken, den 2.10.0 als „Offen" notiert hatte.** bjoerg: „Muesste dann aber
+nicht die Jalousie auf die Position fuer gekippt fahren? Im Schlafzimmer hat
+sich gar nichts bewegt." Mit `drive_after_close` und offenem Fenster fuhr die
+Abendfahrt **nichts** – nicht einmal die Teilfahrt, die der Fensterkontakt
+gefahren haette. `window_vent_while_open`, Vorgabe **aus**: eine
+Verhaltensaenderung, die ungefragt jeden Abend Rollladen bewegt, ist schlimmer
+als der Status quo (dieselbe Begruendung wie `shade_release_opens` in 2.15.0).
+`get_position_for_window_state()` ist dafuer nach `window_helper.py` gewandert
+– Scheduler und Fensterkontakt stellen dieselbe Frage, und zwei Antworten
+haetten geheissen, dass der Rollladen woanders steht, je nachdem ob ihn die Uhr
+oder der Kontakt hingefahren hat.
+
+**Der CSS-Fehler, der wie eine Geschmacksfrage aussah.** bjoerg meldete
+„schwierig, die Zugehoerigkeit der Anhaak-Kaestchen zu erkennen" und schlug
+Trennlinien vor. Ursache war `.field input{width:100%;padding;border;background}`
+– das galt auch fuer `type=checkbox`. Der Haken wurde damit ein formularbreiter
+Kasten mit dem Glyph mittendrin, die Beschriftung rutschte in die Zeile
+darunter. **Merke: eine Sammelregel auf `input` trifft immer auch die
+Kaestchen.** `:not([type=checkbox])` plus Flexzeile; die Trennlinie gibt es
+zusaetzlich, sie war der Wunsch.
+
+**Die dritte Polaritaet schlaegt zurueck.** bjoergs Regensensor meldet „nass"/
+„trocken". Das Formular bot fuer den Markisenschutz nur Zahlenfelder an – die
+Zustandsliste gab es nur bei den Beschattungsbedingungen. Und in
+`guard_slot_danger()` bedeutet „nicht auswertbar" **Gefahr**: `float("nass")`
+scheitert, `_condition_slot_met()` gibt `True` zurueck, die Markise faehrt ein
+und nie wieder aus. Der Zustandsblock ist jetzt `_renderCondStates()` und wird
+von beiden Formularen benutzt. **Merke: jeder Zweig, den die Bedingungslogik
+neu bekommt, muss durch alle drei Polaritaeten gedacht werden** – hier war der
+Ausgang „fail closed", also lautlos in die falsche Richtung.
+
+**Zwei Tablet-Meldungen, beide dieselbe Klasse.** Wolf: die festgestellten
+Reiter und das Lux-Zahlenfeld gehen auf dem Android-Telefon, auf dem Tablet
+nicht. Fuer die Reiter war der `overflow-x:hidden`-Rueckfall aus 2.16.0 die
+Ursache: er macht den Host zum Scrollport, und darin klebt sticky an nichts –
+auf einer WebView **ohne** `overflow:clip` also gar nicht. Rueckfall ersatzlos
+weg. Beim Lux-Feld ist es das `requestUpdate()` im `@input`: Lit schreibt
+`.value` mitten im Tippen neu. Jetzt Wert bei jedem Tastendruck uebernehmen,
+neu zeichnen erst bei `@change`. **Beides nicht auf dem Geraet nachgestellt** –
+die Diagnose passt zum Symptom, mehr ist von hier aus nicht zu sagen.
+
+**Was Wolf beantwortet hat, ohne gefragt zu werden:** die „My"-Position aus
+2.16.0. Er hat die Entitaet genannt – `button.terasse_markise_hinten_my_position`
+(Overkiz). Damit ist die dritte Stellung kein Stop-im-Stillstand mehr, sondern
+ein Knopfdruck. `my_position_target()` sitzt **nur im Rueckfallzweig** von
+`_send_position()`: an einem Antrieb, der positionieren kann, waere My nur
+ungenauer. Erst damit bedeutet `awning_track_enabled` an so einem Antrieb
+ueberhaupt etwas – vorher wurde aus jedem Wert ab 50 % `open_cover`.
+
+**`set_cover_position()` bekommt die Konfiguration jetzt per Nachschlagen**
+(`find_shutter_by_cover`), nicht als Parameter. Ein Dutzend Aufrufstellen, und
+genau eine davon braucht sie.
+
+**bjoergs Fahrtrichtung bleibt offen – aber nicht mehr unbeantwortbar.** Sein
+Shelly haengt mit *einem* Steuerdraht an der Markise („Phase = Hoch / Null =
+Runter, eine bischen wilde Schaltung"). Positionen zu tauschen dreht rechnerisch
+beide Wege um; er sagt, es aendert nichts. Von hier aus ist das nicht zu
+entscheiden – **also sagt der Export jetzt, welches Kommando gesendet wird**
+(`cover.open_cover` bzw. `cover.close_cover`, je Position benannt). Aus einer
+Vermutung wird damit etwas, das er unter Werkzeuge > Aktionen in zwei Klicks
+gegenpruefen kann. Eine Option „Fahrtrichtung umkehren" waere redundant gewesen:
+sie taete dasselbe wie das Tauschen der beiden Positionen.
+
+**Smons und Linos wollten dasselbe von zwei Seiten:** er einen kompakten Block
+im Panel, Linos „mit Entitaeten, fuers HA-Dashboard". Beides gebaut, aber
+getrennt – Kopfblock im Dashboard, `sensor.shutter_pilot_status` fuer HA.
+`area_id` ist bei allen Gruppen-Diensten optional geworden, plus `stop_group`;
+kein Rollladen faehrt doppelt, weil der Hoch-Dienst ueber `area_up_id` filtert
+und die Runter-Dienste ueber `area_down_id`. **Bewusst nicht gebaut: ein
+globaler Sonnenschutz-Schalter.** Der leitet seinen Zustand aus den Bereichen ab
+und muesste ihn zurueckschreiben – das ist der vierte Schreiber aus 2.15.0, der
+beinahe einen Reload in den Start gelegt haette. Eine Schaltergruppe in HA tut
+dasselbe ohne diesen Preis.
+
+**Verifiziert:** `pytest` 677 Tests gruen (26 neue), **sieben Gegenproben**
+gemacht – jede Aenderung einzeln zurueckgedreht, jedes Mal fiel genau ihr Test.
+i18n 413/413 in allen elf Sprachen (16 neu). Panel in Node gerendert: fuenf
+Ansichten plus neunzehn Inhaltspruefungen. **Nicht im Browser geprueft** – und
+bei den beiden Tablet-Punkten faellt das schwerer ins Gewicht als sonst, weil
+sich beide nur auf echter Hardware zeigen.
+
+**Offen:** Wolfs „Wohnbereich Seite" ist eine Einstellungssache, kein Fehler.
+Er will die Rollladen dort immer oben und nur zur Beschattung unten – dafuer
+ist `none` der Modus, nicht `brightness` mit `lux_up: 2000` und einem
+Aussensensor, der im Sommer Zehntausende meldet. Seine Abwesenheitsbereiche
+kann `none` dagegen wirklich nicht ersetzen: die sollen bei Abwesenheit fahren,
+nur eben dann nicht, wenn er da ist. Zwei Bereiche mit abgeschalteter Automatik
+sind dafuer der richtige Aufbau, nicht ein Umweg.
 
 ### 2026-08-28 – 2.17.0: die Knoepfe, die an der Automatik vorbeifahren
 

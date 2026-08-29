@@ -24,31 +24,51 @@
   "services": {
     "open_group": {
       "name": "Open group",
-      "description": "Opens all shutters of the given area.",
+      "description": "Opens all shutters of the given area. Without an area it applies to every area.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "ID of the area (e.g. living, sleep, children)."
+          "description": "Optional. ID of the area (e.g. living, sleep, children). Leave empty for every area."
         }
       }
     },
     "close_group": {
       "name": "Close group",
-      "description": "Closes all shutters of the given area.",
+      "description": "Closes all shutters of the given area. Without an area it applies to every area.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "ID of the area (e.g. living, sleep, children)."
+          "description": "Optional. ID of the area (e.g. living, sleep, children). Leave empty for every area."
         }
       }
     },
     "sun_protect_group": {
       "name": "Sun protection group",
-      "description": "Moves all shutters of the area to their sun protection position.",
+      "description": "Moves all shutters of the area to their sun protection position. Without an area it applies to every area.",
       "fields": {
         "area_id": {
           "name": "Area ID",
-          "description": "ID of the area (e.g. living, sleep, children)."
+          "description": "Optional. ID of the area (e.g. living, sleep, children). Leave empty for every area."
+        }
+      }
+    },
+    "stop_group": {
+      "name": "Stop group",
+      "description": "Stops every moving shutter and awning of the given area. Without an area it applies to every area.",
+      "fields": {
+        "area_id": {
+          "name": "Area ID",
+          "description": "Optional. ID of the area (e.g. living, sleep, children). Leave empty for every area."
+        }
+      }
+    },
+    "ventilate_group": {
+      "name": "Ventilate group",
+      "description": "Moves all shutters of the area to their ventilation position. Without an area it applies to every area.",
+      "fields": {
+        "area_id": {
+          "name": "Area ID",
+          "description": "Optional. ID of the area (e.g. living, sleep, children). Leave empty for every area."
         }
       }
     }
@@ -66,6 +86,9 @@
       },
       "forecast_condition": {
         "name": "Shutter Pilot forecast condition"
+      },
+      "status": {
+        "name": "Shutter Pilot status"
       }
     }
   }

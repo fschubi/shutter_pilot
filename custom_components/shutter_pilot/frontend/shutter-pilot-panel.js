@@ -101,7 +101,7 @@ const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt"
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
-  "min_position_when_open","window_close_debounce","drive_after_close",
+  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close",
   "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 
 /* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
@@ -413,6 +413,22 @@ de:{
   f_guard_off_above:"Wieder freigeben über",
   f_guard_hyst_hint:"Die beiden Werte sind ein Einschaltpunkt und ein Aufhebepunkt dahinter, kein Bereich. Ohne Abstand pendelt die Markise an der Schwelle.",
   f_guard_bin_hint:"„on“ gilt als Gefahr – die Markise fährt ein.",
+  dash_all_title:"Alle Bereiche",
+  dash_sunrise:"Sonnenaufgang",
+  dash_sunset:"Sonnenuntergang",
+  dash_temp_max:"Höchsttemperatur heute",
+  dash_condition:"Wetterlage heute",
+  dash_auto_all_on:"Automatik alle an",
+  dash_auto_all_off:"Automatik alle aus",
+  dash_prot_all_on:"Beschattung alle an",
+  dash_prot_all_off:"Beschattung alle aus",
+  f_my_position:"„My“-Position (Knopf oder Skript)",
+  f_my_position_hint:"Nur für Antriebe ohne Positionsmeldung. Somfy RTS und Verwandte kennen eine angelernte Zwischenstellung; ohne sie wird aus jeder Zwischenposition ein Endanschlag.",
+  f_my_position_pct:"Welcher Position entspricht „My“",
+  f_my_position_pct_hint:"Weicht eine Fahrt höchstens 15 % davon ab, wird dieser Knopf gedrückt statt eine Position gefahren.",
+  f_guard_states_hint:"Die gewählten Zustände gelten als Gefahr – die Markise fährt ein und bleibt drin.",
+  f_vent_while_open:"Bei offenem Fenster schon auf die Lüftungsposition fahren",
+  f_vent_while_open_hint:"Ohne diesen Haken bleibt der Rollladen bei offenem Fenster stehen, wo er ist. Mit ihm fährt er so weit, wie es der Aussperrschutz zulässt; die volle Fahrt bleibt vorgemerkt.",
   f_guard_lockout:"Sperrzeit nach der letzten Überschreitung",
   f_guard_lockout_hint_wind:"Eine Böe ist nach zwanzig Sekunden vorbei, die Markise soll trotzdem nicht sofort wieder heraus. Jede neue Überschreitung startet die Zeit von vorn.",
   f_guard_lockout_hint_rain:"Nach dem letzten Tropfen ist das Tuch noch nass. Diese Zeit hält die Markise drinnen, bis sie abtrocknen konnte. Jeder neue Regen startet sie von vorn.",
@@ -724,6 +740,22 @@ en:{
   f_guard_off_above:"Release again above",
   f_guard_hyst_hint:"These two are a switch-on point and a release point behind it, not a range. Without a gap the awning oscillates at the threshold.",
   f_guard_bin_hint:"“on” counts as danger – the awning retracts.",
+  dash_all_title:"All areas",
+  dash_sunrise:"Sunrise",
+  dash_sunset:"Sunset",
+  dash_temp_max:"High today",
+  dash_condition:"Condition today",
+  dash_auto_all_on:"Automation all on",
+  dash_auto_all_off:"Automation all off",
+  dash_prot_all_on:"Shading all on",
+  dash_prot_all_off:"Shading all off",
+  f_my_position:"“My” position (button or script)",
+  f_my_position_hint:"Only for drives that report no position. Somfy RTS and relatives know one taught intermediate stop; without it every intermediate position becomes an end stop.",
+  f_my_position_pct:"Which position “My” stands for",
+  f_my_position_pct_hint:"When a drive is no more than 15 % away from it, this button is pressed instead of a position being sent.",
+  f_guard_states_hint:"The selected states count as danger – the awning retracts and stays in.",
+  f_vent_while_open:"Move to the ventilation position while the window is open",
+  f_vent_while_open_hint:"Without this the shutter stays where it is while the window is open. With it, it moves as far as the lock protection allows; the full drive stays pending.",
   f_guard_lockout:"Lockout after the last exceedance",
   f_guard_lockout_hint_wind:"A gust is over in twenty seconds, the awning still must not go straight back out. Every new exceedance restarts the clock.",
   f_guard_lockout_hint_rain:"The fabric is still wet after the last drop. This time keeps the awning in until it can dry. Every new shower restarts it.",
@@ -977,6 +1009,22 @@ fr:{
   f_guard_off_above:"Libérer au-dessus de",
   f_guard_hyst_hint:"Ces deux valeurs sont un point de déclenchement et un point de libération derrière, pas une plage. Sans écart, le store oscille au seuil.",
   f_guard_bin_hint:"« on » vaut danger – le store rentre.",
+  dash_all_title:"Toutes les zones",
+  dash_sunrise:"Lever du soleil",
+  dash_sunset:"Coucher du soleil",
+  dash_temp_max:"Maximum aujourd'hui",
+  dash_condition:"Temps aujourd'hui",
+  dash_auto_all_on:"Automatisme tout activé",
+  dash_auto_all_off:"Automatisme tout désactivé",
+  dash_prot_all_on:"Ombrage tout activé",
+  dash_prot_all_off:"Ombrage tout désactivé",
+  f_my_position:"Position « My » (bouton ou script)",
+  f_my_position_hint:"Uniquement pour les moteurs qui ne renvoient pas de position. Somfy RTS et apparentés connaissent une position intermédiaire apprise ; sans elle, toute position intermédiaire devient une butée.",
+  f_my_position_pct:"À quelle position correspond « My »",
+  f_my_position_pct_hint:"Si une course s'en écarte de 15 % au plus, ce bouton est actionné au lieu d'envoyer une position.",
+  f_guard_states_hint:"Les états choisis valent danger – le store rentre et y reste.",
+  f_vent_while_open:"Aller à la position d'aération quand la fenêtre est ouverte",
+  f_vent_while_open_hint:"Sans cette option, le volet reste où il est tant que la fenêtre est ouverte. Avec elle, il descend autant que la protection anti-enfermement le permet ; la course complète reste en attente.",
   f_guard_lockout:"Délai après le dernier dépassement",
   f_guard_lockout_hint_wind:"Une rafale passe en vingt secondes, le store ne doit pas ressortir aussitôt. Chaque nouveau dépassement relance le délai.",
   f_guard_lockout_hint_rain:"Après la dernière goutte, la toile est encore mouillée. Ce délai garde le store rentré le temps qu'il sèche. Chaque nouvelle averse le relance.",
@@ -1230,6 +1278,22 @@ es:{
   f_guard_off_above:"Liberar por encima de",
   f_guard_hyst_hint:"Los dos valores son un punto de activación y otro de liberación detrás, no un rango. Sin separación el toldo oscila en el umbral.",
   f_guard_bin_hint:"«on» cuenta como peligro: el toldo se recoge.",
+  dash_all_title:"Todas las zonas",
+  dash_sunrise:"Amanecer",
+  dash_sunset:"Atardecer",
+  dash_temp_max:"Máxima de hoy",
+  dash_condition:"Tiempo de hoy",
+  dash_auto_all_on:"Automatización toda activada",
+  dash_auto_all_off:"Automatización toda desactivada",
+  dash_prot_all_on:"Sombreado todo activado",
+  dash_prot_all_off:"Sombreado todo desactivado",
+  f_my_position:"Posición «My» (botón o script)",
+  f_my_position_hint:"Solo para motores que no informan de la posición. Somfy RTS y similares conocen una posición intermedia memorizada; sin ella, cualquier posición intermedia acaba en un tope.",
+  f_my_position_pct:"A qué posición corresponde «My»",
+  f_my_position_pct_hint:"Si un recorrido se desvía como mucho un 15 %, se pulsa este botón en lugar de enviar una posición.",
+  f_guard_states_hint:"Los estados elegidos cuentan como peligro: el toldo se recoge y permanece dentro.",
+  f_vent_while_open:"Ir a la posición de ventilación con la ventana abierta",
+  f_vent_while_open_hint:"Sin esta opción la persiana se queda donde está mientras la ventana esté abierta. Con ella baja hasta donde permite la protección antibloqueo; el recorrido completo queda pendiente.",
   f_guard_lockout:"Espera tras el último exceso",
   f_guard_lockout_hint_wind:"Una racha pasa en veinte segundos y el toldo no debe salir de nuevo enseguida. Cada exceso reinicia el tiempo.",
   f_guard_lockout_hint_rain:"Tras la última gota la lona sigue mojada. Este tiempo mantiene el toldo recogido hasta que pueda secarse. Cada nueva lluvia lo reinicia.",
@@ -1483,6 +1547,22 @@ it:{
   f_guard_off_above:"Liberare sopra",
   f_guard_hyst_hint:"I due valori sono un punto di attivazione e uno di rilascio dietro, non un intervallo. Senza distacco la tenda oscilla alla soglia.",
   f_guard_bin_hint:"«on» vale come pericolo: la tenda rientra.",
+  dash_all_title:"Tutte le zone",
+  dash_sunrise:"Alba",
+  dash_sunset:"Tramonto",
+  dash_temp_max:"Massima di oggi",
+  dash_condition:"Meteo di oggi",
+  dash_auto_all_on:"Automazione tutto acceso",
+  dash_auto_all_off:"Automazione tutto spento",
+  dash_prot_all_on:"Ombreggiatura tutto acceso",
+  dash_prot_all_off:"Ombreggiatura tutto spento",
+  f_my_position:"Posizione «My» (pulsante o script)",
+  f_my_position_hint:"Solo per motori che non riportano la posizione. Somfy RTS e simili conoscono una posizione intermedia memorizzata; senza di essa ogni posizione intermedia diventa un finecorsa.",
+  f_my_position_pct:"A quale posizione corrisponde «My»",
+  f_my_position_pct_hint:"Se una corsa se ne discosta al massimo del 15 %, viene premuto questo pulsante invece di inviare una posizione.",
+  f_guard_states_hint:"Gli stati scelti valgono come pericolo: la tenda rientra e ci resta.",
+  f_vent_while_open:"Andare in posizione di aerazione con la finestra aperta",
+  f_vent_while_open_hint:"Senza questa opzione la tapparella resta dov'è finché la finestra è aperta. Con essa scende quanto consente la protezione antichiusura; la corsa completa resta in attesa.",
   f_guard_lockout:"Attesa dopo l'ultimo superamento",
   f_guard_lockout_hint_wind:"Una raffica passa in venti secondi, la tenda non deve però riuscire subito. Ogni nuovo superamento riavvia il tempo.",
   f_guard_lockout_hint_rain:"Dopo l'ultima goccia il telo è ancora bagnato. Questo tempo tiene dentro la tenda finché non asciuga. Ogni nuova pioggia lo riavvia.",
@@ -1737,6 +1817,22 @@ nl:{
   f_guard_off_above:"Weer vrijgeven boven",
   f_guard_hyst_hint:"De twee waarden zijn een inschakelpunt en een vrijgavepunt erachter, geen bereik. Zonder afstand pendelt het scherm op de drempel.",
   f_guard_bin_hint:"„on” geldt als gevaar – het scherm schuift in.",
+  dash_all_title:"Alle zones",
+  dash_sunrise:"Zonsopgang",
+  dash_sunset:"Zonsondergang",
+  dash_temp_max:"Maximum vandaag",
+  dash_condition:"Weer vandaag",
+  dash_auto_all_on:"Automatisering alles aan",
+  dash_auto_all_off:"Automatisering alles uit",
+  dash_prot_all_on:"Beschaduwing alles aan",
+  dash_prot_all_off:"Beschaduwing alles uit",
+  f_my_position:"„My”-positie (knop of script)",
+  f_my_position_hint:"Alleen voor motoren die geen positie melden. Somfy RTS en verwanten kennen één aangeleerde tussenstand; zonder die wordt elke tussenpositie een eindstand.",
+  f_my_position_pct:"Met welke positie komt „My” overeen",
+  f_my_position_pct_hint:"Wijkt een rit hooguit 15 % af, dan wordt deze knop ingedrukt in plaats van een positie te sturen.",
+  f_guard_states_hint:"De gekozen toestanden gelden als gevaar – het scherm schuift in en blijft binnen.",
+  f_vent_while_open:"Bij open raam alvast naar de ventilatiestand rijden",
+  f_vent_while_open_hint:"Zonder dit vinkje blijft het rolluik staan waar het staat zolang het raam open is. Met vinkje zakt het zo ver als de buitensluitbeveiliging toelaat; de volledige rit blijft gepland.",
   f_guard_lockout:"Wachttijd na de laatste overschrijding",
   f_guard_lockout_hint_wind:"Een windvlaag is na twintig seconden voorbij, het scherm mag er toch niet meteen weer uit. Elke nieuwe overschrijding start de tijd opnieuw.",
   f_guard_lockout_hint_rain:"Na de laatste druppel is het doek nog nat. Deze tijd houdt het scherm binnen tot het kan drogen. Elke nieuwe bui start hem opnieuw.",
@@ -1991,6 +2087,22 @@ da:{
   f_guard_off_above:"Frigiv igen over",
   f_guard_hyst_hint:"De to værdier er et tilkoblingspunkt og et frigivelsespunkt bagved, ikke et interval. Uden afstand pendler markisen ved tærsklen.",
   f_guard_bin_hint:"„on” tæller som fare – markisen kører ind.",
+  dash_all_title:"Alle områder",
+  dash_sunrise:"Solopgang",
+  dash_sunset:"Solnedgang",
+  dash_temp_max:"Højeste i dag",
+  dash_condition:"Vejr i dag",
+  dash_auto_all_on:"Automatik alt til",
+  dash_auto_all_off:"Automatik alt fra",
+  dash_prot_all_on:"Solafskærmning alt til",
+  dash_prot_all_off:"Solafskærmning alt fra",
+  f_my_position:"„My“-position (knap eller script)",
+  f_my_position_hint:"Kun til motorer uden positionsmelding. Somfy RTS og slægtninge kender én indlært mellemstilling; uden den bliver enhver mellemposition til et endestop.",
+  f_my_position_pct:"Hvilken position svarer „My“ til",
+  f_my_position_pct_hint:"Afviger en kørsel højst 15 %, trykkes denne knap i stedet for at sende en position.",
+  f_guard_states_hint:"De valgte tilstande tæller som fare – markisen kører ind og bliver inde.",
+  f_vent_while_open:"Kør til udluftningsposition, mens vinduet er åbent",
+  f_vent_while_open_hint:"Uden dette flueben bliver rullegardinet stående, så længe vinduet er åbent. Med det kører det så langt, som udelukkelsesbeskyttelsen tillader; den fulde kørsel forbliver planlagt.",
   f_guard_lockout:"Spærretid efter sidste overskridelse",
   f_guard_lockout_hint_wind:"Et vindstød er ovre på tyve sekunder, men markisen må alligevel ikke straks ud igen. Hver ny overskridelse starter tiden forfra.",
   f_guard_lockout_hint_rain:"Efter den sidste dråbe er dugen stadig våd. Denne tid holder markisen inde, til den kan tørre. Hver ny byge starter den forfra.",
@@ -2245,6 +2357,22 @@ sv:{
   f_guard_off_above:"Frisläpp igen över",
   f_guard_hyst_hint:"De två värdena är en tillslagspunkt och en frisläppningspunkt bakom, inte ett intervall. Utan avstånd pendlar markisen vid tröskeln.",
   f_guard_bin_hint:"”on” räknas som fara – markisen fälls in.",
+  dash_all_title:"Alla områden",
+  dash_sunrise:"Soluppgång",
+  dash_sunset:"Solnedgång",
+  dash_temp_max:"Högsta i dag",
+  dash_condition:"Väder i dag",
+  dash_auto_all_on:"Automatik allt på",
+  dash_auto_all_off:"Automatik allt av",
+  dash_prot_all_on:"Solskydd allt på",
+  dash_prot_all_off:"Solskydd allt av",
+  f_my_position:"”My”-position (knapp eller skript)",
+  f_my_position_hint:"Endast för motorer utan positionsrapport. Somfy RTS och släktingar känner ett inlärt mellanläge; utan det blir varje mellanposition ett ändläge.",
+  f_my_position_pct:"Vilken position motsvarar ”My”",
+  f_my_position_pct_hint:"Avviker en körning högst 15 % trycks den här knappen i stället för att en position skickas.",
+  f_guard_states_hint:"De valda tillstånden räknas som fara – markisen fälls in och stannar inne.",
+  f_vent_while_open:"Kör till vädringsläget medan fönstret står öppet",
+  f_vent_while_open_hint:"Utan den här bocken står persiennen kvar så länge fönstret är öppet. Med den går den så långt som utelåsningsskyddet tillåter; hela körningen är fortfarande inplanerad.",
   f_guard_lockout:"Spärrtid efter senaste överskridandet",
   f_guard_lockout_hint_wind:"En vindby är över på tjugo sekunder, men markisen får ändå inte ut igen direkt. Varje nytt överskridande startar om tiden.",
   f_guard_lockout_hint_rain:"Efter sista droppen är väven fortfarande blöt. Den här tiden håller markisen inne tills den hinner torka. Varje ny skur startar om den.",
@@ -2499,6 +2627,22 @@ pl:{
   f_guard_off_above:"Zwolnij ponownie powyżej",
   f_guard_hyst_hint:"Te dwie wartości to punkt załączenia i punkt zwolnienia za nim, a nie zakres. Bez odstępu markiza oscyluje przy progu.",
   f_guard_bin_hint:"„on” liczy się jako zagrożenie – markiza się chowa.",
+  dash_all_title:"Wszystkie strefy",
+  dash_sunrise:"Wschód słońca",
+  dash_sunset:"Zachód słońca",
+  dash_temp_max:"Maksimum dzisiaj",
+  dash_condition:"Pogoda dzisiaj",
+  dash_auto_all_on:"Automatyka wszystko wł.",
+  dash_auto_all_off:"Automatyka wszystko wył.",
+  dash_prot_all_on:"Zacienianie wszystko wł.",
+  dash_prot_all_off:"Zacienianie wszystko wył.",
+  f_my_position:"Pozycja „My” (przycisk lub skrypt)",
+  f_my_position_hint:"Tylko dla napędów, które nie zgłaszają pozycji. Somfy RTS i pokrewne znają jedną wyuczoną pozycję pośrednią; bez niej każda pozycja pośrednia kończy się na krańcówce.",
+  f_my_position_pct:"Jakiej pozycji odpowiada „My”",
+  f_my_position_pct_hint:"Jeśli przejazd różni się najwyżej o 15 %, naciskany jest ten przycisk zamiast wysyłania pozycji.",
+  f_guard_states_hint:"Wybrane stany liczą się jako zagrożenie – markiza chowa się i zostaje schowana.",
+  f_vent_while_open:"Przy otwartym oknie zjechać do pozycji wietrzenia",
+  f_vent_while_open_hint:"Bez tej opcji roleta stoi tam, gdzie jest, dopóki okno jest otwarte. Z nią zjeżdża tak nisko, jak pozwala ochrona przed zatrzaśnięciem; pełny przejazd pozostaje zaplanowany.",
   f_guard_lockout:"Blokada po ostatnim przekroczeniu",
   f_guard_lockout_hint_wind:"Podmuch mija w dwadzieścia sekund, a markiza i tak nie powinna od razu wyjechać. Każde nowe przekroczenie uruchamia czas od nowa.",
   f_guard_lockout_hint_rain:"Po ostatniej kropli tkanina jest jeszcze mokra. Ten czas trzyma markizę w środku, aż zdąży wyschnąć. Każdy nowy deszcz uruchamia go od nowa.",
@@ -2753,6 +2897,22 @@ pt:{
   f_guard_off_above:"Libertar de novo acima de",
   f_guard_hyst_hint:"Os dois valores são um ponto de ativação e um de libertação atrás, não um intervalo. Sem distância o toldo oscila no limite.",
   f_guard_bin_hint:"«on» conta como perigo – o toldo recolhe.",
+  dash_all_title:"Todas as zonas",
+  dash_sunrise:"Nascer do sol",
+  dash_sunset:"Pôr do sol",
+  dash_temp_max:"Máxima de hoje",
+  dash_condition:"Tempo de hoje",
+  dash_auto_all_on:"Automação tudo ligado",
+  dash_auto_all_off:"Automação tudo desligado",
+  dash_prot_all_on:"Sombreamento tudo ligado",
+  dash_prot_all_off:"Sombreamento tudo desligado",
+  f_my_position:"Posição «My» (botão ou script)",
+  f_my_position_hint:"Apenas para motores que não indicam posição. Somfy RTS e semelhantes conhecem uma posição intermédia memorizada; sem ela, qualquer posição intermédia acaba num batente.",
+  f_my_position_pct:"A que posição corresponde «My»",
+  f_my_position_pct_hint:"Se um percurso se desviar no máximo 15 %, este botão é premido em vez de ser enviada uma posição.",
+  f_guard_states_hint:"Os estados escolhidos contam como perigo – o toldo recolhe e fica recolhido.",
+  f_vent_while_open:"Ir para a posição de ventilação com a janela aberta",
+  f_vent_while_open_hint:"Sem esta opção o estore fica onde está enquanto a janela estiver aberta. Com ela desce até onde a proteção anti-bloqueio permite; o percurso completo fica pendente.",
   f_guard_lockout:"Espera após a última ultrapassagem",
   f_guard_lockout_hint_wind:"Uma rajada passa em vinte segundos e o toldo não deve sair logo de novo. Cada nova ultrapassagem reinicia o tempo.",
   f_guard_lockout_hint_rain:"Depois da última gota o tecido ainda está molhado. Este tempo mantém o toldo recolhido até poder secar. Cada nova chuva reinicia-o.",
@@ -3007,6 +3167,22 @@ nb:{
   f_guard_off_above:"Frigi igjen over",
   f_guard_hyst_hint:"De to verdiene er et innkoblingspunkt og et frigivelsespunkt bak, ikke et intervall. Uten avstand pendler markisen ved terskelen.",
   f_guard_bin_hint:"«on» teller som fare – markisen kjører inn.",
+  dash_all_title:"Alle områder",
+  dash_sunrise:"Soloppgang",
+  dash_sunset:"Solnedgang",
+  dash_temp_max:"Høyeste i dag",
+  dash_condition:"Vær i dag",
+  dash_auto_all_on:"Automatikk alt på",
+  dash_auto_all_off:"Automatikk alt av",
+  dash_prot_all_on:"Solavskjerming alt på",
+  dash_prot_all_off:"Solavskjerming alt av",
+  f_my_position:"„My“-posisjon (knapp eller skript)",
+  f_my_position_hint:"Bare for motorer uten posisjonsmelding. Somfy RTS og slektninger kjenner én innlært mellomstilling; uten den blir enhver mellomposisjon en endestopp.",
+  f_my_position_pct:"Hvilken posisjon svarer „My“ til",
+  f_my_position_pct_hint:"Avviker en kjøring høyst 15 %, trykkes denne knappen i stedet for at en posisjon sendes.",
+  f_guard_states_hint:"De valgte tilstandene teller som fare – markisen kjører inn og blir inne.",
+  f_vent_while_open:"Kjør til luftestillingen mens vinduet står åpent",
+  f_vent_while_open_hint:"Uten denne haken blir rullegardinen stående så lenge vinduet er åpent. Med den kjører den så langt som utelåsingsvernet tillater; hele kjøringen forblir planlagt.",
   f_guard_lockout:"Sperretid etter siste overskridelse",
   f_guard_lockout_hint_wind:"Et vindkast er over på tjue sekunder, markisen skal likevel ikke ut igjen med en gang. Hver ny overskridelse starter tiden på nytt.",
   f_guard_lockout_hint_rain:"Etter siste dråpe er duken fortsatt våt. Denne tiden holder markisen inne til den får tørket. Hvert nytt regn starter den på nytt.",
@@ -3047,12 +3223,19 @@ nb:{
 class ShutterPilotPanel extends PanelBase {
   static get properties(){return{hass:{type:Object,hasChanged:()=>true},narrow:{type:Boolean},panel:{type:Object},_tab:{attribute:false},_data:{attribute:false},_editArea:{attribute:false},_editShutter:{attribute:false},_isMobile:{attribute:false},_export:{attribute:false},_exportCopied:{attribute:false}};}
   static get styles(){return css`
-    :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);overflow-x:hidden;touch-action:pan-y}
+    :host{display:block;padding:16px;font-family:var(--paper-font-body1_-_font-family,Roboto,sans-serif);--sp:var(--primary-color,#03a9f4);--card-bg:var(--card-background-color,#1c1c1c);--txt:var(--primary-text-color);--txt2:var(--secondary-text-color);--divider:var(--divider-color,#333);touch-action:pan-y}
     /* overflow-x:hidden macht den Host zum Scrollport (ein Wert ungleich
        visible setzt den anderen implizit auf auto). Er hat keine Hoehe, scrollt
        also nie – und ein sticky Element darin klebt an nichts. clip schneidet
        genauso ab, ohne Scrollport. Der Rueckfall oben bleibt fuer alles, was
        clip nicht kennt: dort scrollt die Tab-Leiste wie bisher mit. */
+    /* Frueher stand hier zusaetzlich overflow-x:hidden als Rueckfall. Genau
+       der macht den Host zum Scrollport, und ein sticky Element darin klebt
+       an nichts – auf einer WebView ohne overflow:clip (aeltere Android-
+       Tablets) blieben die Tabs deshalb nicht stehen, waehrend dasselbe Panel
+       auf dem Telefon funktionierte. Breites steht in .table-wrap und
+       scrollt dort selbst; ein bisschen seitliches Scrollen auf einer alten
+       Engine ist der guenstigere Preis. */
     @supports (overflow:clip){:host{overflow-x:clip}}
     .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
     .title-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;row-gap:4px;width:100%}
@@ -3113,6 +3296,12 @@ class ShutterPilotPanel extends PanelBase {
     .sec.open .sec-chev{transform:rotate(180deg)}
     .sec-body{margin-bottom:4px}
     .room-temp{margin-top:8px;font-size:13px;color:var(--txt2)}
+    /* Volle Breite ueber dem Raster, aber flach: die Bereichskarten sind das,
+       weswegen jemand das Dashboard oeffnet. */
+    .global-card{margin-bottom:16px;padding:16px 20px}
+    .global-card .card-hdr{margin-bottom:12px}
+    .global-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:2px 16px;margin-top:12px;padding-top:10px;border-top:1px solid var(--divider)}
     .room-temp b{color:var(--txt)}
     .field.open{background:var(--card2, rgba(127,127,127,.07));padding:10px;
       border-radius:8px;border:1px solid var(--sp)}
@@ -3177,7 +3366,23 @@ class ShutterPilotPanel extends PanelBase {
     .form h3{margin:0 0 16px;font-size:18px;color:var(--txt)}
     .field{margin-bottom:14px}
     .field label{display:block;font-size:13px;color:var(--txt2);margin-bottom:4px}
-    .field input,.field select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--divider);background:var(--primary-background-color,#111);color:var(--txt);font-size:14px;box-sizing:border-box}
+    /* :not([type=checkbox]) ist hier kein Feinschliff, sondern die Ursache
+       eines gemeldeten Fehlers: mit width:100% samt Rahmen und Polsterung
+       wurde aus dem Haken ein formularbreiter Kasten, das Glyph stand mittig
+       darin und die Beschriftung rutschte in die Zeile darunter. Welcher Text
+       zu welchem Haken gehoerte, war damit nicht mehr zu sehen. */
+    .field input:not([type=checkbox]),.field select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--divider);background:var(--primary-background-color,#111);color:var(--txt);font-size:14px;box-sizing:border-box}
+    /* Haken und Text in einer Zeile, der Text linksbuendig unter dem Haken
+       umbrechend – nicht darunter beginnend. */
+    .field label:has(input[type=checkbox]){display:flex;align-items:flex-start;gap:10px;
+      cursor:pointer;color:var(--txt);font-size:14px;line-height:1.35}
+    .field input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;margin:1px 0 0;
+      accent-color:var(--sp);cursor:pointer}
+    /* Jede Einstellung als eigener Block: bei einer langen Reihe von Haken war
+       nicht zu erkennen, wo eine Einstellung aufhoert und die naechste anfaengt. */
+    .field:has(input[type=checkbox]){border-top:1px dashed var(--divider);padding-top:12px}
+    .field:has(input[type=checkbox])+.field:has(input[type=checkbox]){margin-top:-2px}
+    .field:has(input[type=checkbox]) .hint{margin-left:28px}
     .field input[type=time]{cursor:pointer}
     .field select{appearance:auto}
     .field input:focus,.field select:focus{outline:none;border-color:var(--sp)}
@@ -3615,6 +3820,16 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T(L.hint)}</div>`;
     }
 
+    return this._renderCondStates(a,slot,eid);
+  }
+  /* Die Zustandsliste ist an zwei Stellen dieselbe Frage: bei den Bedingungen
+     eines Bereichs und beim Markisenschutz. Dort gab es sie nicht – ein
+     Regensensor, der "nass" und "trocken" meldet, bekam Zahlenfelder, und
+     `float("nass")` scheitert. Fuer den Schutz heisst das Ergebnis dann
+     dauerhaft "Gefahr": die Markise faehrt ein und nie wieder aus. */
+  _renderCondStates(a,slot,eid){
+    const T=k=>this.t(k);
+    const sk=`sun_cond_${slot}_states`;
     const chosen=new Set(this._condStates(a,sk));
     const toggle=v=>{
       chosen.has(v)?chosen.delete(v):chosen.add(v);
@@ -3656,6 +3871,7 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_sun_cond_add_hint")}</div>`}
         <div class="hint">${T("f_sun_cond_states_hint")}</div></div>`;
   }
+
   /* Aufklappbare Abschnitte. Zugeklappt bleibt die Kopfzeile mit ihrer kurzen
      Erklaerung stehen – so ist der Aufbau eines langen Formulars auf einen
      Blick zu lesen, statt ihn zu erscrollen. Der Zustand haengt am Abschnitt,
@@ -3972,7 +4188,81 @@ class ShutterPilotPanel extends PanelBase {
   /* ─── Dashboard ─── */
   _renderDashboard(d){
     if(!d.areas?.length)return html`<div class="empty"><ha-icon icon="mdi:window-shutter-settings"></ha-icon><p>${this.t("empty_areas")}</p></div>`;
-    return html`<div class="grid">${this._sortedAreas(d).map(a=>this._dashCard(a,d))}</div>`;
+    return html`${this._renderGlobalCard(d)}
+      <div class="grid">${this._sortedAreas(d).map(a=>this._dashCard(a,d))}</div>`;
+  }
+  /* Der Kopfblock: was fuer alle Bereiche zugleich gilt. Vorher musste man
+     dafuer jede Karte einzeln anfassen, und bei acht Bereichen ist "alle
+     runter" acht Klicks. Bewusst *ueber* den Bereichen und bewusst schmal –
+     er soll die Karten nicht vom Bildschirm schieben.
+
+     Die Fahrknoepfe rufen wie ueberall die cover-Dienste direkt auf (Rechte
+     je Entitaet, siehe 2.7.1); die Schalter laufen ueber die WebSocket-
+     Befehle und stehen deshalb nur Administratoren offen – genau wie die
+     Schalter auf den Karten darunter. */
+  _renderGlobalCard(d){
+    const T=k=>this.t(k);
+    const all=d.shutters||[];
+    const areas=d.areas||[];
+    const admin=this._isAdmin();
+    const withProt=areas.filter(a=>a.sun_protect_enabled);
+    const fmt=(iso)=>{
+      if(!iso)return "–";
+      try{return new Date(iso).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}catch(e){return "–";}
+    };
+    const num=(v,unit,digits=1)=>v==null||v===""?"–":Number(v).toFixed(digits)+unit;
+    const w=d.weather||{};
+    const sun=d.sun||{};
+    const info=[
+      ["mdi:weather-sunset-up",T("dash_sunrise"),fmt(sun.next_rising)],
+      ["mdi:weather-sunset-down",T("dash_sunset"),fmt(sun.next_setting)],
+      ["mdi:angle-acute",T("sun_elevation"),num(sun.elevation,"°")],
+      ["mdi:compass-outline",T("sun_azimuth"),num(sun.azimuth,"°",0)],
+      ["mdi:thermometer-high",T("dash_temp_max"),num(w.temp_max_peak??w.temp_max," °C")],
+      ["mdi:weather-partly-cloudy",T("dash_condition"),w.condition||"–"],
+    ].filter(([,,v])=>v!=="–");
+    return html`<div class="card global-card">
+      <div class="card-hdr"><div class="ic"><ha-icon icon="mdi:home-outline"></ha-icon></div>
+        <div class="info"><h2>${T("dash_all_title")}</h2>
+          <span>${T("subtitle").replace("{a}",areas.length).replace("{s}",all.length)}</span></div></div>
+      <div class="actions">
+        <button class="btn open" @click=${()=>this._coverAction(all,"open",true)}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${T("btn_up")}</button>
+        <button class="btn stop" @click=${()=>this._coverAction(all,"stop",true)}><ha-icon icon="mdi:stop"></ha-icon>${T("btn_stop")}</button>
+        <button class="btn close" @click=${()=>this._coverAction(all,"close",true)}><ha-icon icon="mdi:arrow-down-bold"></ha-icon>${T("btn_down")}</button>
+        <button class="btn sun" @click=${()=>this._coverAction(all,"sun",true)}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${T("btn_sun")}</button>
+        <button class="btn vent" @click=${()=>this._coverAction(all,"vent",true)}><ha-icon icon="mdi:air-filter"></ha-icon>${T("btn_vent")}</button>
+      </div>
+      ${admin?html`<div class="actions">
+        <button class="btn preset" @click=${()=>this._setAllAuto(true)}><ha-icon icon="mdi:robot"></ha-icon>${T("dash_auto_all_on")}</button>
+        <button class="btn preset" @click=${()=>this._setAllAuto(false)}><ha-icon icon="mdi:robot-off-outline"></ha-icon>${T("dash_auto_all_off")}</button>
+        ${withProt.length?html`
+          <button class="btn preset" @click=${()=>this._setAllSunProtect(true)}><ha-icon icon="mdi:sun-wireless-outline"></ha-icon>${T("dash_prot_all_on")}</button>
+          <button class="btn preset" @click=${()=>this._setAllSunProtect(false)}><ha-icon icon="mdi:weather-night"></ha-icon>${T("dash_prot_all_off")}</button>`:""}
+      </div>`:""}
+      ${info.length?html`<div class="global-info">
+        ${info.map(([icon,label,value])=>html`<div class="sun-row">
+          <ha-icon icon="${icon}"></ha-icon><span>${label}: <b>${value}</b></span></div>`)}
+      </div>`:""}
+    </div>`;
+  }
+  /* Nacheinander, nicht parallel: jedes Kommando schreibt in die Optionen und
+     loest damit ein async_reload aus. Ein Schwung gleichzeitiger Aufrufe
+     laedt den Entry mitten in den naechsten hinein. */
+  async _setAllAuto(on){
+    for(const a of (this._data?.areas||[])){
+      if(!a?.id)continue;
+      try{await this.hass.callWS({type:"shutter_pilot/set_auto_mode",area_id:a.id,enabled:on});}
+      catch(e){console.warn(e);}
+    }
+    await this._load();
+  }
+  async _setAllSunProtect(on){
+    for(const a of (this._data?.areas||[])){
+      if(!a?.id||!a.sun_protect_enabled)continue;
+      try{await this.hass.callWS({type:"shutter_pilot/set_sun_protect",area_id:a.id,enabled:on});}
+      catch(e){console.warn(e);}
+    }
+    await this._load();
   }
   _dashCard(area,d){
     const id=area.id||"",name=area.name||id,mode=area.mode||"time";
@@ -4216,8 +4506,17 @@ class ShutterPilotPanel extends PanelBase {
       return html`<div class="field"><label>${lbl}</label><div class="slider-row">
         <input type="range" min="${min}" max="${max}" step="${step}" .value=${Math.min(Math.max(v,min),max)}
           @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
-        <input class="slider-num" type="number" min="${min}" step="${step}" .value=${a[k]??""}
-          @input=${e=>{const t=e.target.value.trim();a[k]=t===""?"":Number(t);this.requestUpdate();}}>
+        ${/* Kein requestUpdate() bei jedem Tastendruck: Lit schreibt sonst
+             mitten im Tippen .value neu, und auf manchen Android-WebViews
+             springt der Cursor oder das Zeichen geht verloren – gemeldet als
+             "der Lux-Wert laesst sich auf dem Tablet nicht aendern", waehrend
+             es auf dem Telefon ging. Der Wert wird trotzdem bei jedem
+             Tastendruck uebernommen, gespeichert werden kann also auch ohne
+             Verlassen des Feldes; neu gezeichnet (und der Schieber
+             nachgezogen) wird erst beim Verlassen. */""}
+        <input class="slider-num" type="number" inputmode="numeric" min="${min}" step="${step}" .value=${a[k]??""}
+          @input=${e=>{const t=e.target.value.trim();a[k]=t===""?"":Number(t);}}
+          @change=${()=>this.requestUpdate()}>
         <span class="slider-unit">${suffix}</span></div></div>`;
     };
     const ep=(k,lbl,domains,hint=null)=>this._entityField(a,k,lbl,domains,hint);
@@ -4677,6 +4976,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
+      ${this._renderMyPosition(s,ep,pct)}
 
       `)}${this._sec("mdi:weather-windy","sec_awning_guard","sec_awning_guard_sub",html`
       <div class="hint">${T("f_guard_intro")}</div>
@@ -4726,20 +5026,47 @@ class ShutterPilotPanel extends PanelBase {
   /* Ein Schutz-Slot, entweder global in den Einstellungen oder je Markise.
      Am Formular unterscheidet sich nur, dass die Markise leer lassen darf –
      dann gilt der globale Wert. */
+  /* Die dritte Stellung eines Einweg-Funkantriebs. Somfy RTS und Verwandte
+     kennen hoch, runter und "My" – eine einmal angelernte Position. Home
+     Assistant bietet sie als Knopf an (Overkiz) oder man legt ein Skript
+     dafuer an. Ohne sie faellt an so einem Antrieb *jede* Zwischenstellung auf
+     einen Endanschlag zurueck, womit "weiter ausfahren bei tiefer Sonne" dort
+     nichts bedeutet. Nur sichtbar, wenn "meldet keine Position" gesetzt ist:
+     ein Antrieb, der positionieren kann, wird durch My nur ungenauer. */
+  _renderMyPosition(s,ep,pct){
+    const T=k=>this.t(k);
+    if(!s.blind_drive)return "";
+    return html`
+      ${ep("my_position_entity",T("f_my_position"),["button","input_button","scene","script"])}
+      <div class="hint">${T("f_my_position_hint")}</div>
+      ${s.my_position_entity?html`
+        ${pct("my_position_pct",T("f_my_position_pct"))}
+        <div class="hint">${T("f_my_position_pct_hint")}</div>`:""}`;
+  }
   _renderGuardSlot(obj,slot,ep,f,rng,perAwning){
     const T=k=>this.t(k);
     const ek=`sun_cond_${slot}_entity`;
     const eid=obj[ek]||"";
     const isBool=isBoolEntity(eid);
+    /* Reihenfolge wie im Backend: eine eingetragene Zustandsliste gewinnt vor
+       der Domaenenpruefung. Ohne diesen Zweig bekam ein Regensensor, der
+       "nass"/"trocken" meldet, Zahlenfelder – und ein Wort, das sich nicht in
+       eine Zahl verwandeln laesst, gilt in dieser Funktion als Gefahr. Die
+       Markise faehrt dann ein und nie wieder aus. */
+    const hasStates=this._condStates(obj,`sun_cond_${slot}_states`).length>0;
+    const useStates=hasStates||(!isBool&&this._isStateEntity(eid));
     return html`
       <div class="guard-slot">
         ${ep(ek,T("f_guard_"+slot),COND_DOMAINS,slot==="ice"?HINTS.temperature:null)}
         ${perAwning&&!eid?html`<div class="hint">${T("f_guard_inherits")}</div>`:""}
-        ${eid&&!isBool?html`
+        ${eid&&useStates?html`
+          ${this._renderCondStates(obj,slot,eid)}
+          <div class="hint">${T("f_guard_states_hint")}</div>`:""}
+        ${eid&&!isBool&&!useStates?html`
           ${f(`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")),"number")}
           ${f(`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")),"number")}
           <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
-        ${eid&&isBool?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
+        ${eid&&isBool&&!useStates?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
         ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
         ${/* Je Slot ein eigener Text. Der eine Satz ueber die Boe stand vorher
              auch unter Regen und Frost – bei Frost beschreibt er das Gegenteil
@@ -4901,11 +5228,20 @@ class ShutterPilotPanel extends PanelBase {
       ${s.lock_protection?pct("min_position_when_open",T("f_min_pos")):""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
         <div class="hint">${T("f_drive_after_hint")}</div></div>
+      ${/* Ohne diesen Haken passiert bei offenem Fenster gar nichts – auch
+           nicht die Teilfahrt, die der Fensterkontakt gefahren haette. Genau
+           so gemeldet: "im Schlafzimmer hat sich gar nichts bewegt". Er steht
+           unter dem Nachholen, weil er nur mit ihm zusammen etwas tut. */""}
+      ${s.drive_after_close?html`
+        <div class="field"><label><input type="checkbox" .checked=${!!s.window_vent_while_open}
+          @change=${e=>{s.window_vent_while_open=e.target.checked;this.requestUpdate();}}> ${T("f_vent_while_open")}</label>
+          <div class="hint">${T("f_vent_while_open_hint")}</div></div>`:""}
       ${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
       <div class="hint">${T("f_win_debounce_hint")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
+      ${this._renderMyPosition(s,ep,pct)}
 
       `)}${this._sec("mdi:blinds-horizontal","sec_slats","sec_slats_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>

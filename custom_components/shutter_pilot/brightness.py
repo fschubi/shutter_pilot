@@ -67,7 +67,11 @@ from .helpers import (
     should_skip_automated_up,
     sun_protect_area_ids_from_options,
 )
-from .window_helper import get_effective_close_position, is_window_open_or_tilted
+from .window_helper import (
+    get_deferred_close_position,
+    get_effective_close_position,
+    is_window_open_or_tilted,
+)
 from .group_actions import run_group_light_action
 from .schedule_times import (
     _local_sun_time,
@@ -279,6 +283,20 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 # Merker wuerde hier jede Minute neu geschrieben.
                 covers_driven_down.add(cover_entity)
                 covers_driven_up.discard(cover_entity)
+                # Optional: schon so weit fahren, wie das offene Fenster es
+                # zulaesst. Die volle Fahrt bleibt vorgemerkt.
+                vent_pos = get_deferred_close_position(hass, shutter)
+                if vent_pos is not None:
+                    down_covers.append(cover_entity)
+                    hass.async_create_task(
+                        _set_cover_position_with_delay(
+                            cover_entity, vent_pos,
+                            f"{reason} (Fenster offen – Lüftungsposition)",
+                            drive_delay, idx, area_id=area_id,
+                        )
+                    )
+                    idx += 1
+                    moved = True
                 continue
             pos = get_effective_close_position(hass, shutter, pos)
             down_covers.append(cover_entity)

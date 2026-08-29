@@ -7,6 +7,9 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    CONF_POSITION_WHEN_WINDOW_OPEN,
+    CONF_WINDOW_VENT_WHILE_OPEN,
+    CONF_POSITION_WHEN_WINDOW_TILTED,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_OPEN_STATE,
@@ -216,3 +219,56 @@ def get_effective_close_position(
     if target_position < min_pos_float:
         return min_pos_float
     return target_position
+
+
+def get_position_for_window_state(shutter: dict, state_str: str) -> float | None:
+    """Target position for one window state, or None while the window is shut.
+
+    A two-valued contact cannot tell "open" from "tilted", so both drive the
+    tilted position – the export says so too, and it is the only honest answer:
+    the contact simply does not carry the information.
+    """
+    if state_str == "tilted":
+        raw = shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
+    elif state_str == "open":
+        raw = (
+            shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN, 100)
+            if has_tilt_state(shutter)
+            else shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50)
+        )
+    else:
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def get_ventilation_position(hass: HomeAssistant, shutter: dict) -> float | None:
+    """Where this shutter belongs while its window stands open, lock cap applied.
+
+    Lives here rather than in window_trigger because the schedule asks the same
+    question: it meets an open window at closing time and has to know how far
+    it may go. Two callers, one answer – the alternative was the shutter
+    standing in one place because the contact moved it and in another because
+    the clock did.
+    """
+    state = get_window_state(hass, shutter)
+    target = get_position_for_window_state(shutter, state)
+    if target is None:
+        return None
+    return get_effective_close_position(hass, shutter, target)
+
+
+def get_deferred_close_position(hass: HomeAssistant, shutter: dict) -> float | None:
+    """How far a deferred close may already go, or None to keep waiting.
+
+    "Fahrt nach dem Schließen nachholen" used to mean the shutter did not move
+    at all while the window stood open – not even to the ventilation position,
+    which is where the window contact would have put it. Reported as "nothing
+    happened, not even down a little". Off by default all the same: this moves
+    shutters every evening in installations nobody complained about.
+    """
+    if not shutter.get(CONF_WINDOW_VENT_WHILE_OPEN, False):
+        return None
+    return get_ventilation_position(hass, shutter)
