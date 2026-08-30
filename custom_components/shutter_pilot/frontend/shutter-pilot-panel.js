@@ -3761,7 +3761,7 @@ class ShutterPilotPanel extends PanelBase {
     if(typeof raw==="string"&&raw.trim())return raw.split(",").map(x=>x.trim());
     return [];
   }
-  _renderConditionSlots(a,ep,f){
+  _renderConditionSlots(a,ep){
     const T=k=>this.t(k);
     const out=[];
     for(let i=0;i<COND_SLOTS.length;i++){
@@ -3773,7 +3773,7 @@ class ShutterPilotPanel extends PanelBase {
       if(i>0&&!a[`sun_cond_${COND_SLOTS[i-1]}_entity`]&&!eid)break;
       out.push(html`
         ${ep(ek,T("f_sun_cond_n").replace("{n}",i+1),COND_DOMAINS,HINTS.condition)}
-        ${eid?this._renderCondDetail(a,slot,eid,f):""}`);
+        ${eid?this._renderCondDetail(a,slot,eid):""}`);
       if(!eid)break;
     }
     return out;
@@ -3789,7 +3789,23 @@ class ShutterPilotPanel extends PanelBase {
       ? {on:"f_sun_cond_on", off:"f_sun_cond_off", hint:"f_sun_cond_num_hint"}
       : {on:"f_cond_on",     off:"f_cond_off",     hint:"f_cond_num_hint"};
   }
-  _renderCondDetail(a,slot,eid,f,inverted){
+  /* Zahl, die auch leer bleiben darf. Der allgemeine Feld-Helfer der drei
+     Formulare macht `Number("")` – und das ist 0, nicht "leer". Bei einer
+     Schwelle ist der Unterschied das ganze Verhalten: "Aufheben unter" leer
+     heisst laut Hinweis "gleicher Wert wie Beschatten ab", 0 dagegen heisst
+     an einem Lux- oder Windsensor "nie wieder aufheben". Genau der Fall aus
+     2.7.0, dort schon einmal fuer die Sonnengrenzen geloest – nur greifen die
+     Bedingungsfelder weiterhin auf den allgemeinen Helfer zu.
+     Neu gezeichnet wird erst beim Verlassen des Feldes: `requestUpdate()` im
+     `@input` laesst Lit mitten im Tippen `.value` neu schreiben, und auf
+     Android-WebViews springt dabei der Cursor (2.18.0, Lux-Feld). */
+  _numOpt(obj,k,lbl){
+    return html`<div class="field"><label>${lbl}</label>
+      <input type="number" inputmode="numeric" .value=${obj[k]??""}
+        @input=${e=>{const v=e.target.value.trim();obj[k]=v===""?"":Number(v);}}
+        @change=${()=>this.requestUpdate()}></div>`;
+  }
+  _renderCondDetail(a,slot,eid,inverted){
     const T=k=>this.t(k);
     const L=this._condLabels(slot,inverted);
     /* Reihenfolge wie in _condition_slot_met(): eine eingetragene Zustands-
@@ -3814,8 +3830,8 @@ class ShutterPilotPanel extends PanelBase {
         a[`sun_cond_${slot}_off_below`]!==""&&a[`sun_cond_${slot}_off_below`]!=null&&
         (inverted?off<on:off>on);
       return html`
-        ${f(`sun_cond_${slot}_on_above`,T(L.on),"number")}
-        ${f(`sun_cond_${slot}_off_below`,T(L.off),"number")}
+        ${this._numOpt(a,`sun_cond_${slot}_on_above`,T(L.on))}
+        ${this._numOpt(a,`sun_cond_${slot}_off_below`,T(L.off))}
         ${wrongWay?html`<div class="hint warn">⚠️ ${T("f_sun_cond_wrong_way")}</div>`:""}
         <div class="hint">${T(L.hint)}</div>`;
     }
@@ -4064,7 +4080,6 @@ class ShutterPilotPanel extends PanelBase {
       ${AWNING_GUARD_SLOTS.map(slot=>this._renderGuardSlot(
         s,slot,
         (k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint),
-        (k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`,
         (k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
           <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
           <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`,
@@ -4635,25 +4650,25 @@ class ShutterPilotPanel extends PanelBase {
           @change=${e=>{a.shade_only_when_open=e.target.checked;this.requestUpdate();}}> ${T("f_shade_only_when_open")}</label>
           <div class="hint">${T("f_shade_only_when_open_hint")}</div></div>
         <div class="hint" style="margin-top:10px"><b>${T("f_sun_cond_title")}</b><br>${T("f_sun_cond_hint")}</div>
-        ${this._renderConditionSlots(a,ep,f)}
+        ${this._renderConditionSlots(a,ep)}
         ${/* Zweite Beschattungsposition: die Bedingung steht am Bereich, die
              Position am Rollladen – dasselbe Paar wie beim abweichenden
              Schliessen. Ohne hinterlegte Position an einem Rollladen bleibt
              der Slot fuer ihn wirkungslos, deshalb der Verweis darunter. */""}
         <div class="hint" style="margin-top:10px"><b>${T("f_sp_alt_title")}</b><br>${T("f_sp_alt_hint")}</div>
         ${ep("sun_cond_sp_alt_entity",T("f_sp_alt_cond"),COND_DOMAINS,HINTS.condition)}
-        ${a.sun_cond_sp_alt_entity?this._renderCondDetail(a,"sp_alt",a.sun_cond_sp_alt_entity,f):""}`:""}
+        ${a.sun_cond_sp_alt_entity?this._renderCondDetail(a,"sp_alt",a.sun_cond_sp_alt_entity):""}`:""}
 
       `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_close_cond_hint")}</div>
       ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",COND_DOMAINS,HINTS.condition)}
-      ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity,f):""}
+      ${a.sun_cond_close_entity?this._renderCondDetail(a,"close",a.sun_cond_close_entity):""}
       ${/* Die zweite erst anbieten, wenn die erste steht – zwei leere Felder
            uebereinander sehen nach Pflicht aus. Beide muessen zutreffen. */""}
       ${a.sun_cond_close_entity?html`
         ${ep("sun_cond_close_b_entity",T("f_close_cond")+" 2",COND_DOMAINS,HINTS.condition)}
-        ${a.sun_cond_close_b_entity?this._renderCondDetail(a,"close_b",a.sun_cond_close_b_entity,f):""}
+        ${a.sun_cond_close_b_entity?this._renderCondDetail(a,"close_b",a.sun_cond_close_b_entity):""}
         <div class="hint">${T("f_close_cond_both_hint")}</div>`:""}
 
       `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
@@ -4661,7 +4676,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),COND_DOMAINS,HINTS.condition)}
-      ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,f,true):""}
+      ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,true):""}
 
       `)}${this._sec("mdi:air-filter","sec_vent","sec_vent_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.vent_enabled}
@@ -4669,10 +4684,10 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_vent_hint")}</div></div>
       ${a.vent_enabled?html`
         ${ep("sun_cond_vent_a_entity",T("f_vent_cond")+" 1",COND_DOMAINS,HINTS.condition)}
-        ${a.sun_cond_vent_a_entity?this._renderCondDetail(a,"vent_a",a.sun_cond_vent_a_entity,f):""}
+        ${a.sun_cond_vent_a_entity?this._renderCondDetail(a,"vent_a",a.sun_cond_vent_a_entity):""}
         ${a.sun_cond_vent_a_entity?html`
           ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",COND_DOMAINS,HINTS.condition)}
-          ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity,f):""}`:""}`:""}
+          ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity):""}`:""}`:""}
 
       `)}${this._sec("mdi:weekend","sec_noup","sec_noup_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
@@ -4681,7 +4696,7 @@ class ShutterPilotPanel extends PanelBase {
         @change=${e=>{a.we_no_up=e.target.checked;this.requestUpdate();}}> ${T("f_we_no_up")}</label>
         <div class="hint">${T("f_we_no_up_hint")}</div></div>
       ${ep("sun_cond_no_up_entity",T("f_no_up_cond"),COND_DOMAINS,HINTS.condition)}
-      ${a.sun_cond_no_up_entity?this._renderCondDetail(a,"no_up",a.sun_cond_no_up_entity,f):""}
+      ${a.sun_cond_no_up_entity?this._renderCondDetail(a,"no_up",a.sun_cond_no_up_entity):""}
       <div class="hint">${T("f_no_up_hint")}</div>
 
       `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
@@ -4988,7 +5003,7 @@ class ShutterPilotPanel extends PanelBase {
            als die Terrasse, und eine kleine Markise muss frueher rein als eine
            grosse am selben Sensor. */""}
       ${AWNING_GUARD_SLOTS.filter(slot=>slot==="wind")
-        .map(slot=>this._renderGuardSlot(s,slot,ep,f,rng,true))}
+        .map(slot=>this._renderGuardSlot(s,slot,ep,rng,true))}
       <div class="hint">${T("f_guard_global_only")}</div>
 
       `)}${this._sec("mdi:sun-compass","sec_awning_sun","sec_awning_sun_sub",html`
@@ -5017,7 +5032,7 @@ class ShutterPilotPanel extends PanelBase {
       ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
       <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
       <div class="hint">${T("f_awning_cond_hint")}</div>
-      ${this._renderConditionSlots(s,ep,f)}`)}
+      ${this._renderConditionSlots(s,ep)}`)}
 
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveShutter()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
@@ -5043,7 +5058,7 @@ class ShutterPilotPanel extends PanelBase {
         ${pct("my_position_pct",T("f_my_position_pct"))}
         <div class="hint">${T("f_my_position_pct_hint")}</div>`:""}`;
   }
-  _renderGuardSlot(obj,slot,ep,f,rng,perAwning){
+  _renderGuardSlot(obj,slot,ep,rng,perAwning){
     const T=k=>this.t(k);
     const ek=`sun_cond_${slot}_entity`;
     const eid=obj[ek]||"";
@@ -5063,8 +5078,8 @@ class ShutterPilotPanel extends PanelBase {
           ${this._renderCondStates(obj,slot,eid)}
           <div class="hint">${T("f_guard_states_hint")}</div>`:""}
         ${eid&&!isBool&&!useStates?html`
-          ${f(`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")),"number")}
-          ${f(`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")),"number")}
+          ${this._numOpt(obj,`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")))}
+          ${this._numOpt(obj,`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")))}
           <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
         ${eid&&isBool&&!useStates?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
         ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
@@ -5194,7 +5209,7 @@ class ShutterPilotPanel extends PanelBase {
       ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
       <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
       <div class="hint">${T("f_shutter_cond_hint")}</div>
-      ${this._renderConditionSlots(s,ep,f)}`}
+      ${this._renderConditionSlots(s,ep)}`}
 
       `)}${this._sec("mdi:window-open-variant","sec_window","sec_window_sub",html`
       ${ep("window_entity_id",T("f_window_sensor"),["binary_sensor","sensor"],HINTS.window)}

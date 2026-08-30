@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (677 Tests)
+tests/               pytest-Suite (691 Tests)
 ```
 
 ## Funktionsumfang
@@ -258,7 +258,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 677 Tests, ~16 s
+.venv/bin/pytest            # 691 Tests, ~16 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -284,10 +284,96 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.18.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.19.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-30 – 2.19.0: das leere Feld, das eine 0 war
+
+Ein Beitrag (bjoerg), und der interessante Fund steckte wieder nicht in der
+Frage, sondern in dem Satz daneben: „Habe ja beim zweiten Wert nichts
+eingetragen." Sein Export sagt `sun_cond_a_off_below: 0`. Beides stimmt.
+
+**`Number("") === 0`, und das war der ganze Fehler.** Die drei Formulare bauen
+je einen allgemeinen Feld-Helfer `f(k,lbl,type)`, der bei `type="number"` roh
+`Number(e.target.value)` schreibt. Ein geleertes Feld wird damit zur echten
+Schranke 0. Bei einem Aufhebepunkt ist das die Umkehrung der Bedeutung: leer
+heisst laut Hinweis „gleicher Wert wie Beschatten ab" (helpers.py faellt bei
+unlesbarem `off_below` auf `on_above` zurueck), 0 heisst an einem Lux-Sensor
+**nie wieder aufheben** – verglichen wird `value >= off_below`, und selbst
+voellige Dunkelheit ist `0 >= 0`. Genau bjoergs Gewitter: 6000 lx, Beschattung
+blieb unten.
+
+**Der Fallstrick war seit 2.7.0 bekannt und stand als Kommentar im File** – dort
+neben `numOpt`, gebaut fuer die Sonnengrenzen des Helligkeitsmodus. Die
+Bedingungsfelder griffen weiter auf den allgemeinen Helfer zu. **Merke: ein
+Fallstrick, der an einer Stelle mit einem eigenen Helfer geloest wurde, ist an
+allen anderen Stellen unveraendert da**; die Frage ist nicht „ist das bekannt",
+sondern „wer ruft den falschen Helfer".
+
+Behoben mit einer Methode `_numOpt()` auf der Klasse statt drei Lambdas in drei
+Formularen. Sie uebernimmt bei jedem Tastendruck und zeichnet erst bei
+`@change` neu – der Android-WebView-Punkt aus 2.18.0, hier gleich mitgebaut.
+Der Parameter `f` faellt damit aus `_renderCondDetail`, `_renderConditionSlots`
+und `_renderGuardSlot` heraus; toter Parameter ist dieselbe Sorte Vertrag, die
+`resolve_sun_geometry()` zwei Releases lang stillgelegt hat.
+
+**Bestandsdaten repariert das nicht** – bjoergs 0 steht in seiner
+Konfiguration. Deshalb ein Hinweis in `_condition_note()`, wenn nicht
+invertiert und `off_below <= 0 < on_above`. Bewusst nur dieser Fall: bei einem
+invertierten Slot (Frost) ist 0 als Aufhebepunkt normal, und eine Warnung, die
+an jedem Temperatursensor steht, liest bald niemand mehr.
+
+**Der zweite Fund kam aus einem Screenshot, nach dem niemand gefragt hatte.**
+Spook meldete bei ihm fuenf verwaiste Entitaeten, zwei davon mit `_2`.
+`_ws_delete_shutter` raeumte im Entitaetsregister **gar nichts** auf,
+`_ws_delete_area` nur den Automatik-Schalter – Sonnenschutz-Schalter, Sensor
+„naechste Fahrt" und Binaersensor „Sonnenschutz aktiv" blieben stehen. Der
+Folgeschaden ist nicht die Unordnung, sondern die belegte entity_id: der wieder
+angelegte Rollladen heisst `..._2`, waehrend `shutter_auto_entity_id` in den
+Optionen auf die alte zeigt – `_apply_shutter_automation_state()` schreibt dann
+an eine Entitaet, die niemand sieht. Zwei Listen (`_area_registry_uids`,
+`_shutter_registry_uids`) halten fest, was ein Bereich bzw. ein Rollladen
+besitzt; **die gehoeren bei jeder neuen Entitaet mitgepflegt.**
+
+**Zwei Meldungen waren keine Fehler**, beide gegen den Code geprueft statt
+geglaubt: sein Regensensor ist ein `binary_sensor` mit `device_class: moisture`
+– der Zustand *ist* `on`/`off`, „Nass"/„Trocken" ist die Anzeige von Home
+Assistant. `_renderGuardSlot` zeigt dort zu Recht den an/aus-Hinweis; die
+Zustandsliste aus 2.18.0 ist fuer Sensoren, deren Zustand wirklich ein Wort
+ist. Und „Manuelle Position" steht unter **Kalender & manuelle Bedienung**,
+nicht unter „Grunddaten" – die Angabe im Forum war falsch, nicht das Panel.
+
+**Offen, nicht entschieden:** in bjoergs Export tragen **alle vier** Rollladen
+`shading_enabled: nein`, sind also von der Beschattung abgemeldet – waehrend er
+schreibt, die Beschattung sei unten gewesen. Das Panel setzt den Schluessel nur
+bei einem Klick, das Backend speichert nur, was ankommt; wie alle vier dazu
+gekommen sind, ist von hier aus nicht zu klaeren. Danach fragen, bevor daraus
+ein Fix wird.
+
+**Verifiziert:** `pytest` 691 Tests gruen (14 neue), **drei Gegenproben**
+gemacht – ohne den Export-Hinweis faellt genau sein Test, ohne die
+Registerpflege in `delete_shutter` fallen zwei, ohne die in `delete_area` eine.
+Dazu eine Gegenprobe im Panel **am unveraenderten Original**: das Bereichs-
+formular gerendert, alle 77 Handler eingesammelt und das Feld geleert – vorher
+0, nachher leer. i18n 413/413 in allen elf Sprachen (kein neuer Schluessel, der
+Fix benutzt die vorhandenen Beschriftungen). Panel in Node gerendert: sieben
+Ansichten plus acht Inhaltspruefungen. **Nicht im Browser geprueft.**
+
+**Werkzeug-Notiz:** Das Forum laesst sich direkt lesen –
+`https://community-smarthome.com/raw/<topic>/<post>` liefert den Rohtext
+inklusive Zitatbloecken, und die darin als `upload://<key>.png` referenzierten
+Screenshots liegen unter `/uploads/short-url/<key>.png`. Kein Copy-and-paste
+mehr noetig.
+
+**Falle beim Pruefen, neu:** Ein Regex-Zaehler ueber die `I18N`-Bloecke zaehlt
+zu wenig – Schluessel, die in derselben Zeile hinter einem anderen stehen,
+faellt er durch, und dann melden neun Sprachen Luecken, die es nicht gibt.
+Das Objekt stattdessen auswerten: `new Function(code + ";return I18N;")()`.
+Ebenso im Test: `@websocket_api.async_response` macht aus der Coroutine einen
+**synchronen** Handler, der die Arbeit als Hintergrundtask einreiht – ein
+`await handler(...)` bekommt `None`. Aufrufen und `async_block_till_done()`.
 
 ### 2026-08-29 – 2.18.0: der Kontakt, der nur den geschlossenen Rollladen fand
 

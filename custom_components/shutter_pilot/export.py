@@ -232,6 +232,21 @@ def _condition_note(
             f"die Bedingung heißt nur noch „{'≤' if inverted else '≥'} "
             f"{on_above:.10g}\""
         )
+    # Ein Aufhebepunkt bei null oder darunter ist rechnerisch gültig und
+    # deshalb ohne Warnung – nur erreicht ihn ein Helligkeits-, Strahlungs-
+    # oder Windsensor nie, und die Bedingung bleibt nach dem ersten Auslösen
+    # bis zum Neustart erfüllt. Bis 2.18.0 entstand genau dieser Wert, wenn
+    # jemand das Feld leerte: der Feld-Helfer des Panels machte aus "" eine 0,
+    # während der Hinweis darunter „leer = gleicher Wert" versprach.
+    if not inverted and off_below <= 0 < on_above:
+        return (
+            f"⚠️ Aufhebepunkt {off_below:.10g}: einmal erfüllt, bleibt die "
+            f"Bedingung erfüllt, bis der Sensor *unter* {off_below:.10g} "
+            f"fällt – ein Helligkeits-, Strahlungs- oder Windsensor tut das "
+            f"nie. "
+            f"Für „gleicher Wert wie ab {on_above:.10g}\" das Feld leeren "
+            f"(seit 2.19.0 bleibt es leer)"
+        )
     return ""
 
 

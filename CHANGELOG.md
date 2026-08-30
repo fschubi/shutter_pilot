@@ -4,6 +4,23 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.19.0]
+
+Ein Beitrag, zwei Funde – und der eine erklärt eine Beobachtung, für die es
+bisher keine Erklärung gab: **ein leer gelassenes Schwellenfeld wurde als 0
+gespeichert.** „Leer" heißt laut dem Hinweis darunter „gleicher Wert wie
+Beschatten ab"; 0 heißt an einem Helligkeits-, Strahlungs- oder Windsensor
+etwas völlig anderes, nämlich „nie wieder aufheben".
+
+### Behoben
+- **Ein geleertes Zahlenfeld wurde zu 0** (bjoerg). „Während eines Gewitters fiel die Helligkeit auf rund 6000 lx, die Beschattung blieb trotzdem unten. Beim zweiten Wert habe ich nichts eingetragen." Beides stimmte: der Feld-Helfer des Panels machte aus einer leeren Eingabe `Number("")` – und das ist 0, nicht „leer". Damit stand als Aufhebepunkt eine echte Schwelle, die ein Lux-Sensor nie unterschreitet: einmal ausgelöst, blieb die Bedingung bis zum nächsten Neustart erfüllt. Betroffen waren **alle** Schwellenpaare, die auch leer bleiben dürfen – die vier Beschattungsbedingungen, abweichendes Schließen, Frost, Lüften, „nicht hochfahren" und der Markisenschutz. Beim Wind war es am schärfsten: „Einfahren ab 0" heißt, dass die Markise gar nicht mehr ausfährt. Leere Felder bleiben jetzt leer.
+- **Der Export benennt einen bereits gespeicherten Aufhebepunkt bei 0.** Die Reparatur oben verhindert nur neue Fälle; wer den Wert schon in der Konfiguration stehen hat, merkt sonst nichts davon. In der Bedingungstabelle steht dafür jetzt ein Hinweis samt der Zahl, die stattdessen gemeint war.
+- **Gelöschte Bereiche und Rollläden ließen ihre Entitäten stehen** (bjoerg, gemeldet über Spook: „Nicht existierende Entität registriert von: Shutter Pilot"). `delete_shutter` räumte im Entitätsregister gar nichts auf, `delete_area` nur den Automatik-Schalter – der Sonnenschutz-Schalter, der Sensor „nächste Fahrt" und der Binärsensor „Sonnenschutz aktiv" blieben zurück. Das ist nicht nur unordentlich: die entity_id bleibt belegt, ein wieder angelegter Rollladen bekommt deshalb `..._2`, und die Konfiguration zeigt weiter auf die alte. Beide Befehle räumen jetzt vollständig auf.
+
+### Unverändert, aber der Vollständigkeit halber
+- **Ein Regensensor, der „nass"/„trocken" anzeigt, braucht kein Textfeld.** Das ist ein `binary_sensor` mit `device_class: moisture`; sein Zustand *ist* `on`/`off`, „Nass"/„Trocken" ist nur die Anzeige von Home Assistant. Das Formular zeigt dort zu Recht den Hinweis „‚on' gilt als Gefahr" statt einer Zustandsliste. Die Zustandsliste aus 2.18.0 ist für Sensoren gedacht, deren Zustand wirklich ein Wort ist.
+- **„Manuelle Position" steht im Bereichsformular unter „Kalender & manuelle Bedienung"**, nicht unter „Grunddaten". Die Angabe im Forum war falsch, das Feld ist da.
+
 ## [2.18.0]
 
 Vier Beiträge, und drei davon beschreiben dieselbe Stelle: **der Fensterkontakt

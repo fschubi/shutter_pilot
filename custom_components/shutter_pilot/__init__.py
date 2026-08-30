@@ -698,6 +698,47 @@ async def _ws_save_area(hass: HomeAssistant, connection: websocket_api.ActiveCon
     connection.send_result(msg["id"], {"ok": True})
 
 
+def _drop_registry_entries(
+    hass: HomeAssistant, entry: ConfigEntry, uids: list[tuple[str, str]]
+) -> None:
+    """Remove our own entities from the registry after a delete.
+
+    Home Assistant keeps a registry entry once an entity has existed, so a
+    deleted area or shutter leaves its switches and sensors behind as
+    "restored" ghosts. That is not only untidy: the entity id stays claimed,
+    so re-adding the same shutter yields `..._2`, and the options still hold
+    the *old* id – `_apply_shutter_automation_state()` then writes to an
+    entity nobody sees while the panel shows the checkbox it wrote.
+
+    Missing entries are skipped, so this is safe for setups that never had
+    the entity in the first place (an area without sun protection, a shutter
+    that is not an awning).
+    """
+    registry = er.async_get(hass)
+    for domain, uid in uids:
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, uid)
+        if entity_id:
+            registry.async_remove(entity_id)
+
+
+def _area_registry_uids(entry: ConfigEntry, area_id: str) -> list[tuple[str, str]]:
+    """Every entity one area owns. Keep in step with switch/sensor/binary_sensor."""
+    return [
+        ("switch", f"{entry.entry_id}_auto_area_{area_id}"),
+        ("switch", f"{entry.entry_id}_sun_protect_area_{area_id}"),
+        ("sensor", f"{entry.entry_id}_next_action_{area_id}"),
+        ("binary_sensor", f"{entry.entry_id}_sun_protection_{area_id}"),
+    ]
+
+
+def _shutter_registry_uids(entry: ConfigEntry, cover: str) -> list[tuple[str, str]]:
+    """Every entity one shutter or awning owns."""
+    return [
+        ("switch", f"{entry.entry_id}_auto_shutter_{cover.replace('.', '_')}"),
+        ("binary_sensor", f"{entry.entry_id}_awning_guard_{cover}"),
+    ]
+
+
 # -- delete_area --------------------------------------------------------------
 
 @websocket_api.require_admin
@@ -717,11 +758,10 @@ async def _ws_delete_area(hass: HomeAssistant, connection: websocket_api.ActiveC
     areas = opts.setdefault(CONF_AREAS, [])
     opts[CONF_AREAS] = [a for a in areas if not (isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id)]
     _update_entry_options(hass, entry, opts)
-    registry = er.async_get(hass)
-    uid = f"{entry.entry_id}_auto_area_{area_id}"
-    entity_id = registry.async_get_entity_id("switch", DOMAIN, uid)
-    if entity_id:
-        registry.async_remove(entity_id)
+    # Bis 2.18.0 wurde hier nur der Automatik-Schalter entfernt. Der
+    # Sonnenschutz-Schalter, der Sensor "naechste Fahrt" und der Binaersensor
+    # "Sonnenschutz aktiv" blieben als Geister stehen.
+    _drop_registry_entries(hass, entry, _area_registry_uids(entry, area_id))
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 
@@ -855,9 +895,11 @@ async def _ws_delete_shutter(hass: HomeAssistant, connection: websocket_api.Acti
     idx = msg["index"]
     opts = deepcopy(dict(entry.options or {}))
     shutters = opts.setdefault(CONF_SHUTTERS, [])
-    if 0 <= idx < len(shutters):
-        shutters.pop(idx)
+    removed = shutters.pop(idx) if 0 <= idx < len(shutters) else None
     _update_entry_options(hass, entry, opts)
+    cover = str((removed or {}).get(CONF_COVER_ENTITY_ID) or "").strip()
+    if cover:
+        _drop_registry_entries(hass, entry, _shutter_registry_uids(entry, cover))
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
 
