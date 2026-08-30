@@ -1438,6 +1438,36 @@ async def clear_manual_override_for_covers(
         await store.async_set_position(cover, pos, SOURCE_AUTOMATION)
 
 
+def forget_shading_for_cover(data: dict[str, Any], cover_entity_id: str) -> None:
+    """Drop every trace of "this cover is currently shaded".
+
+    The flag is what `elevation.py` asks before it drives: while it stands,
+    the shading only follows a changed *target*, never a changed actual
+    position. That is right as long as the shading itself put the cover there
+    – but once somebody drove it away from outside, the flag describes
+    something that is no longer true, and nothing brings the cover back.
+
+    Deliberately not called automatically when a foreign drive is noticed:
+    that would haul the shutter back to the shading height a minute after
+    somebody deliberately darkened the room. Who decides when the automation
+    takes over again is the user – see the resume_automation service.
+
+    `_shade_pos_last` and the release timer go with it, so the next evaluation
+    starts from a clean slate rather than comparing against a height the cover
+    has long left.
+    """
+    cover = str(cover_entity_id or "").strip()
+    if not cover:
+        return
+    covers = data.get("sun_protect_covers")
+    if isinstance(covers, set):
+        covers.discard(cover)
+    for key in ("_shade_pos_last", "_shade_release_since", "_awning_track_last"):
+        bucket = data.get(key)
+        if isinstance(bucket, dict):
+            bucket.pop(cover, None)
+
+
 def should_skip_full_open_preserving_sun_protect(
     hass: HomeAssistant,
     shutter: dict[str, Any],

@@ -39,6 +39,10 @@ from .helpers import (
     get_tilt_for_role,
     is_awning,
     has_guard,
+    forget_shading_for_cover,
+    clear_manual_override_for_covers,
+    get_position_for_role,
+    is_cover_sun_protected,
     only_awnings,
     resolve_shade_position,
     set_cover_position,
@@ -54,6 +58,7 @@ SERVICE_CLOSE_GROUP = "close_group"
 SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 SERVICE_VENTILATE_GROUP = "ventilate_group"
 SERVICE_RETRACT_AWNINGS = "retract_awnings"
+SERVICE_RESUME_AUTOMATION = "resume_automation"
 
 # area_id is optional throughout: "all shutters up" is the button people build
 # their dashboard around, and building it out of one call per area means the
@@ -65,6 +70,15 @@ SERVICE_SCHEMA = vol.Schema(
 )
 # "Storm warning received" is a house-wide event, not an area one.
 RETRACT_SCHEMA = vol.Schema({vol.Optional("area_id"): str})
+# Resuming is usually about one room – the nursery whose shutter was darkened
+# by hand – so a single cover can be named. Without either argument it applies
+# to the whole house, like the group services.
+RESUME_SCHEMA = vol.Schema(
+    {
+        vol.Optional("area_id"): str,
+        vol.Optional("entity_id"): vol.Any(str, [str]),
+    }
+)
 
 
 async def _drive_group(
@@ -312,7 +326,80 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         for shutter in targets:
             await async_retract_awning(hass, entry, data, shutter, ["service"])
 
+    async def resume_automation(call) -> None:
+        """Hand a shutter back to the automation after an outside drive.
+
+        pcsv17's case: a helper switch darkens the nursery to 20 % while the
+        baby sleeps and drives back up afterwards. Both drives are foreign
+        ones, so the manual override blocks the next automated opening – and,
+        less obviously, the shading still counts the shutter as shaded and
+        therefore never brings it back to the shading height.
+
+        Deliberately a service and not something that happens by itself: only
+        the person in the room knows when the nap is over. Doing it
+        automatically would haul the shutter back up a minute after somebody
+        deliberately darkened the room, which is the opposite of what the
+        override is for.
+        """
+        wanted = call.data.get("entity_id")
+        if isinstance(wanted, str):
+            wanted = [wanted]
+        wanted_set = {str(x).strip() for x in (wanted or []) if str(x).strip()}
+
+        targets: list[dict] = []
+        for area_id in _target_area_ids(call):
+            for shutter in filter_shutters_by_area(
+                _shutter_list(), area_id, use_up=False
+            ):
+                cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+                if not cover or (wanted_set and cover not in wanted_set):
+                    continue
+                if not any(
+                    str(t.get(CONF_COVER_ENTITY_ID) or "") == cover for t in targets
+                ):
+                    targets.append(shutter)
+        if not targets:
+            _LOGGER.debug("resume_automation: nothing matched")
+            return
+
+        data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+        if not isinstance(data, dict):
+            return
+
+        covers = [str(s.get(CONF_COVER_ENTITY_ID) or "").strip() for s in targets]
+        await clear_manual_override_for_covers(hass, entry, covers)
+        for cover in covers:
+            forget_shading_for_cover(data, cover)
+
+        # Let the shading decide first and *wait* for it: it knows the
+        # conditions, the hysteresis and the second position, and duplicating
+        # that here would be a second answer to the same question.
+        evaluate = data.get("_elevation_evaluate")
+        if callable(evaluate):
+            await evaluate()
+
+        # Whatever the shading did not claim belongs to the half of the day the
+        # shutter is in. The scheduler's own bookkeeping says which one that is
+        # – it is kept up to date by foreign drives too, since 2.17.0.
+        down: set = data.get("covers_driven_down") or set()
+        for shutter in targets:
+            cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+            if is_cover_sun_protected(data, cover):
+                continue
+            role = ROLE_CLOSED if cover in down else ROLE_OPEN
+            position = get_position_for_role(shutter, role)
+            if role == ROLE_CLOSED:
+                position = get_effective_close_position(hass, shutter, position)
+            await set_cover_position(
+                hass, entry, cover, position, "Resume automation"
+            )
+        _LOGGER.info(
+            "resume_automation: %d cover(s) handed back to the automation",
+            len(targets),
+        )
+
     def _unregister() -> None:
+        hass.services.async_remove(DOMAIN, SERVICE_RESUME_AUTOMATION)
         hass.services.async_remove(DOMAIN, SERVICE_RETRACT_AWNINGS)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_GROUP)
         hass.services.async_remove(DOMAIN, SERVICE_STOP_GROUP)
@@ -339,8 +426,11 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_RETRACT_AWNINGS, retract_awnings, schema=RETRACT_SCHEMA
     )
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESUME_AUTOMATION, resume_automation, schema=RESUME_SCHEMA
+    )
     entry.async_on_unload(_unregister)
     _LOGGER.info(
         "Services registered: open_group, close_group, stop_group, "
-        "sun_protect_group, ventilate_group, retract_awnings"
+        "sun_protect_group, ventilate_group, retract_awnings, resume_automation"
     )

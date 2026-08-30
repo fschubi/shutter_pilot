@@ -143,6 +143,7 @@ elevation and azimuth, today's forecast high and condition.
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 | `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
 | `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning |
+| `shutter_pilot.resume_automation` | Hand shutters back to the automation after an outside drive. Clears the manual override and drives straight to the position that applies right now |
 
 `area_id` (e.g. `living`, `bedroom`) is **optional on every service**: left out, the
 service walks all areas – "all shutters up" is one call, not one per area. Every

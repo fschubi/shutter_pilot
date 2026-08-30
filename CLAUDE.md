@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (706 Tests)
+tests/               pytest-Suite (712 Tests)
 ```
 
 ## Funktionsumfang
@@ -195,8 +195,8 @@ Wiederholungen.
 | Binärsensor | je Bereich „Sonnenschutz aktiv"; je Markise „Sperre" mit Grund und Restzeit |
 
 Dienste: `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`,
-`stop_group`, `retract_awnings`. **Bereich überall optional** – ohne ihn gelten
-sie fürs ganze Haus.
+`stop_group`, `retract_awnings`, `resume_automation`. **Bereich überall
+optional** – ohne ihn gelten sie fürs ganze Haus.
 Events: `shutter_pilot_cover_moved`, `shutter_pilot_cover_failed`,
 `shutter_pilot_awning_retracted`.
 
@@ -258,7 +258,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 706 Tests, ~16 s
+.venv/bin/pytest            # 712 Tests, ~17 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -284,10 +284,68 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.20.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-30 – 2.21.0: der Merker, der nach der Fahrt stehen blieb
+
+pcsv17 wollte einen Trigger, "der die Position anfaehrt, in der die Automatik
+jetzt eigentlich waere" – sein Baby-Schalter faehrt auf 20 %, danach wieder
+hoch, und dann steht die Automatik. Erst nachgerechnet, und dabei kam ein
+Fehler heraus, nach dem niemand gefragt hatte.
+
+**`elevation.py` fragt die manuelle Uebersteuerung nirgends ab** – daran lag es
+also nicht. Der Grund steht drei Zeilen weiter: solange `was_active` gilt,
+faehrt die Beschattung nur bei geaenderter **Zielposition** nach
+(`_shade_pos_last`, aus 2.17.0). Dass der Rollladen laengst woanders steht,
+weil ihn jemand von aussen gefahren hat, prueft sie nicht. Sein Rollladen stand
+danach offen in der Sonne, waehrend der Merker "beschattet" sagte. **Das ist
+2.8.0 gespiegelt:** dort eilte ein Merker der Handlung voraus, hier haengt er
+ihr nach – beide Male sperrt derselbe Merker die Wiederholung.
+
+**Nicht automatisch aufgeloest, und das ist die eigentliche Entscheidung.** Den
+Merker bei jeder fremden Fahrt fallen zu lassen waere eine Zeile – und wuerde
+das Baby-Rollo eine Minute nach dem Abdunkeln wieder auf Beschattungshoehe
+ziehen. Wer entscheidet, wann die Automatik zurueckdarf, ist der Nutzer.
+Deshalb ein Dienst, `resume_automation`, genau wie er ihn vorgeschlagen hat.
+
+**Der Dienst rechnet die Position nicht selbst aus.** Er loescht die Merker und
+laesst dann `_evaluate()` aus `elevation.py` laufen – *awaited*, nicht ueber
+den Minutentakt, sonst wuesste der Aufrufer nicht, ob danach noch etwas zu
+fahren ist. Erst was die Beschattung nicht beansprucht, faehrt er selbst auf
+offen bzw. zu, nach `covers_driven_down`. Die Alternative waere eine zweite
+Antwort auf dieselbe Frage gewesen – derselbe Grund, aus dem
+`get_position_for_window_state()` in 2.18.0 nach `window_helper.py` gewandert
+ist. Dafuer liegt `_evaluate` jetzt als `data["_elevation_evaluate"]` bereit.
+
+**Gegenprobe B fiel zuerst nicht.** Ohne `clear_manual_override_for_covers`
+blieben alle Tests gruen – weil jede gelungene Fahrt die Quelle ohnehin auf
+`automation` schreibt und mein Test nur das Ergebnis prueft. Scharf wurde er
+erst, als **nichts** faehrt (Fahrt und Auswertung gepatcht): dann bleibt die
+Uebersteuerung stehen und sperrt das naechste Hochfahren, ohne dass es jemandem
+auffiele. **Merke: ein Test, dessen Zustand nebenbei von einer anderen Funktion
+hergestellt wird, prueft nichts** – dieselbe Klasse wie die Verdrahtungsfalle
+aus 2.17.0 und 2.20.0, nur andersherum.
+
+**Verifiziert:** `pytest` 712 Tests gruen (6 neue), **zwei Gegenproben** – ohne
+`forget_shading_for_cover` fallen zwei, ohne `clear_manual_override_for_covers`
+einer (nach dem Nachschaerfen). Der Ist-Zustand ist als eigener Test
+festgehalten, der pcsv17s Ablauf gegen die echte Beschattung faehrt. i18n
+unveraendert 436/436 (kein sichtbarer Text neu – der Dienst steht in
+`services.yaml`). **Nicht im Browser geprueft**, und ohne Panel-Aenderung ist
+das diesmal ohne Gewicht.
+
+**Testfalle, teuer:** die sechs neuen Tests fahren echtes Setup und kosteten
+zusammen **84 Sekunden**, die Suite damit 100 statt 16. Mit
+`STARTUP_RESTORE_DELAY_SEC = 0` **und** `STARTUP_RESTORE_RETRY_SEC = 0` sind es
+0,36 s. Beide Konstanten, nicht nur die erste – die Wiederholung schlaegt sonst
+allein zu Buche.
+
+**Offen:** ein Knopf im Panel, der denselben Dienst ruft, waere naheliegend –
+zurueckgestellt, weil gefragt war, was eine Automation ausloesen kann, und ein
+Knopf dafuer nichts beitraegt.
 
 ### 2026-08-30 – 2.20.0: die dritte Geraeteart
 

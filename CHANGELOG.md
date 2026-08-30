@@ -4,6 +4,37 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.0]
+
+pcsv17 im Forum: „Ich möchte tagsüber mein Baby hinlegen. Dafür habe ich mir
+einen Schalter gebaut, damit das Rollo auf circa 20 % runterfährt. Wenn ich den
+Schalter deaktiviere, fährt das Rollo wieder hoch. Danach macht die Automatik
+aber leider nicht mehr weiter."
+
+Erst nachgerechnet, und dabei kam ein Fehler heraus, der nicht in seiner Frage
+stand: **die Beschattung merkt nicht, wenn jemand den Rollladen von aussen
+wegfährt.**
+
+### Behoben
+- **Die Beschattung holte einen von aussen verstellten Rollladen nie zurück.** Solange der Merker „ist beschattet" steht, folgt sie nur einer geänderten *Zielposition* – dass der Rollladen längst woanders steht, weil ihn ein eigener Schalter oder eine eigene Automation gefahren hat, sieht sie nicht. Der Rollladen stand danach offen in der Sonne, und der Merker sagte weiterhin „beschattet". Behoben nicht dadurch, dass die Beschattung ihn eigenmächtig zurückholt – das wäre das Gegenteil dessen, was jemand will, der gerade bewusst abgedunkelt hat –, sondern über den neuen Dienst unten.
+
+### Neu
+- **`shutter_pilot.resume_automation` – „Automatik wieder übernehmen".** Genau der Trigger, nach dem pcsv17 gefragt hat: der Dienst löscht die manuelle Übersteuerung, vergisst den Beschattungs-Merker und fährt **sofort** auf die Position, die gerade gilt – die Beschattungshöhe, wenn beschattet werden soll, sonst offen oder geschlossen je nach Tageshälfte. Beide Angaben sind optional: `entity_id` für einzelne Rollläden, `area_id` für einen Bereich, ohne beides gilt er fürs ganze Haus.
+
+  ```yaml
+  action: shutter_pilot.resume_automation
+  data:
+    entity_id: cover.kinderzimmer
+  ```
+
+  Bewusst ein Dienst und nichts, was von allein geschieht: nur wer im Raum steht, weiß, wann das Nickerchen vorbei ist. Automatisch ausgelöst würde er den Rollladen eine Minute nach dem Abdunkeln wieder hochziehen.
+
+### Was ändert sich für mich?
+Nichts, solange der Dienst nicht aufgerufen wird. Wer eigene Schalter oder
+Automationen für einzelne Rollläden gebaut hat, hängt den Dienst ans Ende –
+danach macht die Automatik nahtlos weiter, ohne dass „Automatik hat Vorrang"
+in den Bereichseinstellungen umgestellt werden muss.
+
 ## [2.20.0]
 
 Ein Wunsch aus dem Forum (hollizone): **eine Regensteuerung für Dachfenster,

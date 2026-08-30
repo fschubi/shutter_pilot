@@ -89,3 +89,32 @@ retract_awnings:
       required: false
       selector:
         text:
+
+resume_automation:
+  name: Automatik wieder übernehmen
+  description: >-
+    Gibt Rollläden zurück an die Automatik, nachdem sie von aussen gefahren
+    wurden – etwa durch einen eigenen Schalter oder eine eigene Automation.
+    Löscht die manuelle Übersteuerung und fährt sofort auf die Position, die
+    gerade gilt: die Beschattungshöhe, wenn beschattet werden soll, sonst
+    offen oder geschlossen je nach Tageshälfte. Ohne Angaben gilt der Dienst
+    für alle Bereiche.
+  fields:
+    entity_id:
+      name: Rollladen
+      description: >-
+        Optional. Eine oder mehrere Cover-Entitäten. Leer lassen für alle
+        Rollläden des Bereichs.
+      required: false
+      selector:
+        entity:
+          domain: cover
+          multiple: true
+    area_id:
+      name: Bereich-ID
+      description: >-
+        Optional. ID des Bereichs (z. B. living, kinderzimmer). Leer lassen
+        für alle Bereiche.
+      required: false
+      selector:
+        text:

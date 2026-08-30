@@ -486,6 +486,13 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
     def _tick(_now) -> None:
         hass.async_create_task(_evaluate())
 
+    # Der Dienst „Automatik uebernehmen" muss die Beschattung *jetzt* rechnen
+    # lassen und auf das Ergebnis warten koennen – ueber den Minutentakt waere
+    # es bis zu sechzig Sekunden spaeter, und der Aufrufer wuesste nicht, ob
+    # danach noch etwas zu fahren ist. Als Closure hinterlegt, weil sie ihren
+    # ganzen Zustand aus diesem Setup bezieht.
+    data["_elevation_evaluate"] = _evaluate
+
     register_minute_callback(data, "elevation", _tick)
     hass.async_create_task(_evaluate())
     _LOGGER.info(

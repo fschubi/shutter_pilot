@@ -144,6 +144,7 @@ Wetterlage von heute.
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 | `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
 | `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung |
+| `shutter_pilot.resume_automation` | Rollläden an die Automatik zurückgeben, nachdem sie von aussen gefahren wurden. Löscht die manuelle Übersteuerung und fährt sofort auf die Position, die gerade gilt |
 
 `area_id` (z. B. `living`, `schlafzimmer`) ist bei **allen** Diensten **optional**:
 ohne Bereich gilt der Dienst für alle Bereiche – „alle Rollläden hoch" ist damit
