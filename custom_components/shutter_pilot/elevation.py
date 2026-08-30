@@ -30,6 +30,7 @@ from .const import (
 )
 from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
 from .helpers import (
+    is_shutter,
     awning_shade_position,
     awning_track_step,
     awning_tracks_sun,
@@ -339,7 +340,7 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if (
                 should_protect
                 and not was_active
-                and not is_awning(shutter)
+                and is_shutter(shutter)
                 and bool(area.get(CONF_AREA_SHADE_ONLY_WHEN_OPEN, False))
                 and shading_would_open_cover(
                     hass, shutter, resolve_shade_position(hass, area, shutter, data)[0]

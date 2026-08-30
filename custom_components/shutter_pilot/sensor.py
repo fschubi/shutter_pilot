@@ -30,6 +30,7 @@ from .const import (
     ROLE_OPEN,
 )
 from .helpers import (
+    is_window,
     POSITION_TOLERANCE_PCT,
     get_position_for_role,
     get_tracked_position,
@@ -322,6 +323,7 @@ class ShutterPilotStatusSensor(SensorEntity):
         names = self._area_names()
         counts = {"open": 0, "closed": 0, "partial": 0, "unknown": 0}
         awn_out = awn_in = awn_unknown = 0
+        win_open = win_closed = win_unknown = 0
         shaded_covers: list[str] = []
         shaded_areas: list[str] = []
 
@@ -338,9 +340,12 @@ class ShutterPilotStatusSensor(SensorEntity):
                     shaded_areas.append(area_name)
             pos = get_tracked_position(self.hass, shutter, cover)
             awning = is_awning(shutter)
+            window = is_window(shutter)
             if pos is None:
                 if awning:
                     awn_unknown += 1
+                elif window:
+                    win_unknown += 1
                 else:
                     counts["unknown"] += 1
                 continue
@@ -355,6 +360,14 @@ class ShutterPilotStatusSensor(SensorEntity):
                     awn_out += 1
                 continue
             closed = get_position_for_role(shutter, ROLE_CLOSED)
+            if window:
+                # Counted apart from the shutters for the same reason awnings
+                # are: a tilted roof window does not make the house "open".
+                if abs(pos - closed) <= POSITION_TOLERANCE_PCT:
+                    win_closed += 1
+                else:
+                    win_open += 1
+                continue
             if abs(pos - rest) <= POSITION_TOLERANCE_PCT:
                 counts["open"] += 1
             elif abs(pos - closed) <= POSITION_TOLERANCE_PCT:
@@ -367,6 +380,9 @@ class ShutterPilotStatusSensor(SensorEntity):
             "awnings_extended": awn_out,
             "awnings_retracted": awn_in,
             "awnings_unknown": awn_unknown,
+            "windows_open": win_open,
+            "windows_closed": win_closed,
+            "windows_unknown": win_unknown,
             "shaded_covers": shaded_covers,
             "shaded_areas": shaded_areas,
         }

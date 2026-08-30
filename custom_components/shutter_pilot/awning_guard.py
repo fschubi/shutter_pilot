@@ -1,4 +1,4 @@
-"""Wind, rain and ice protection for awnings.
+"""Wind, rain and ice protection for awnings and roof windows.
 
 The one part of awning support that is not comfort. An awning left out in a
 gust is a repair bill, so this module has priority over everything else in the
@@ -18,6 +18,13 @@ Two states, not one, and keeping them apart is the whole design:
   retracting  – must come in now. A threshold does this at once; an unreadable
                 sensor only after the grace period, so a sensor blinking out
                 during a restart does not yank every awning in the house.
+
+Since 2.20.0 a roof window uses the same engine. Nothing in the evaluation
+changes: "danger" still means danger. Only the safe position differs – an
+awning is safe when it is in, a window when it is shut – and that comes from
+guard_rest_role(), not from a constant. Everything else, the lockout after
+the last exceedance included, reads the same for rain on a window as it does
+for a gust on an awning.
 """
 
 from __future__ import annotations
@@ -42,15 +49,16 @@ from .const import (
     GUARD_REASON_UNAVAILABLE,
     MAX_AWNING_LOCKOUT,
     MAX_AWNING_SENSOR_GRACE,
-    ROLE_OPEN,
     ROLE_SUN_PROTECT,
     awning_lockout_key,
     sun_condition_keys,
 )
 from .helpers import (
     get_position_for_role,
+    guard_rest_role,
     guard_slot_danger,
-    only_awnings,
+    is_window,
+    only_guarded,
     register_minute_callback,
     set_cover_position,
     set_cover_sun_protected,
@@ -222,17 +230,20 @@ def is_barred(data: dict[str, Any], cover_entity_id: str) -> bool:
     return bool(guard_status(data, cover_entity_id).get("barred"))
 
 
-def extends_upward(shutter: dict[str, Any]) -> bool:
-    """True when a higher cover position means "further out" for this awning.
+def rest_position(shutter: dict[str, Any]) -> float:
+    """The safe position for this kind – retracted, or shut."""
+    return get_position_for_role(shutter, guard_rest_role(shutter))
 
-    Almost always true – 100 is extended, 0 is in. It is asked rather than
-    assumed because the direction is what the clamp below depends on, and an
-    actuator wired the other way round would otherwise be barred from coming
-    in instead of from going out.
+
+def extends_upward(shutter: dict[str, Any]) -> bool:
+    """True when a higher cover position means "further out" for this device.
+
+    Almost always true – 100 is extended or wide open, 0 is in or shut. It is
+    asked rather than assumed because the direction is what the clamp below
+    depends on, and an actuator wired the other way round would otherwise be
+    barred from coming in instead of from going out.
     """
-    return get_position_for_role(shutter, ROLE_SUN_PROTECT) >= get_position_for_role(
-        shutter, ROLE_OPEN
-    )
+    return get_position_for_role(shutter, ROLE_SUN_PROTECT) >= rest_position(shutter)
 
 
 def clamp_to_rest(shutter: dict[str, Any], position: float) -> float:
@@ -242,7 +253,7 @@ def clamp_to_rest(shutter: dict[str, Any], position: float) -> float:
     against 0: the roles are what tell an awning apart from a shutter, so they
     have to be what the protection reads too.
     """
-    rest = get_position_for_role(shutter, ROLE_OPEN)
+    rest = rest_position(shutter)
     if extends_upward(shutter):
         return min(position, rest)
     return max(position, rest)
@@ -264,18 +275,19 @@ async def async_retract_awning(
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
     if not cover:
         return False
-    rest = get_position_for_role(shutter, ROLE_OPEN)
+    rest = rest_position(shutter)
     reason_text = describe_reasons(reasons)
+    what = "Window protection" if is_window(shutter) else "Awning protection"
     ok = await set_cover_position(
         hass,
         entry,
         cover,
         rest,
-        f"Awning protection ({reason_text})",
+        f"{what} ({reason_text})",
         urgent=True,
     )
     if not ok:
-        _LOGGER.warning("[awning] %s: retraction failed – retrying next tick", cover)
+        _LOGGER.warning("[awning] %s: drive to safety failed – retrying next tick", cover)
         return False
 
     # Shading must let go as well. Left standing, the flag would keep the
@@ -286,7 +298,7 @@ async def async_retract_awning(
         EVENT_AWNING_RETRACTED,
         {"entity_id": cover, "reasons": list(reasons), "reason": reason_text},
     )
-    _LOGGER.warning("[awning] %s: retracted – %s", cover, reason_text)
+    _LOGGER.warning("[awning] %s: driven to safety – %s", cover, reason_text)
     return True
 
 
@@ -299,7 +311,7 @@ async def async_enforce_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not isinstance(shutters, list):
         return
 
-    for shutter in only_awnings(shutters):
+    for shutter in only_guarded(shutters):
         cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
         if not cover:
             continue
@@ -337,7 +349,7 @@ async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if not isinstance(shutters, list):
         shutters = []
-    awnings = only_awnings(shutters)
+    awnings = only_guarded(shutters)
     if not awnings:
         register_minute_callback(data, "awning_guard", None)
         return

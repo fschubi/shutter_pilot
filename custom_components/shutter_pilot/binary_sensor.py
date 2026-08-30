@@ -31,7 +31,7 @@ from .helpers import (
     get_elevation_bounds,
     get_sun_angles,
     is_sun_protect_active,
-    only_awnings,
+    only_guarded,
     sun_protect_conditions_met,
 )
 
@@ -64,7 +64,7 @@ async def async_setup_entry(
     # moments. Same shape as the per-area shading sensor above.
     shutters = entry.options.get(CONF_SHUTTERS, [])
     if isinstance(shutters, list):
-        for shutter in only_awnings(shutters):
+        for shutter in only_guarded(shutters):
             cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
             if cover:
                 entities.append(ShutterPilotAwningGuardSensor(entry, cover))

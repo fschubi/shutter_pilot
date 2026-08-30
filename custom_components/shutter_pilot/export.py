@@ -82,6 +82,9 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    guard_rest_role,
+    has_guard,
+    is_window,
     automated_up_blocked,
     azimuth_in_sun_protect_range,
     has_alt_shade_position,
@@ -202,6 +205,13 @@ def _state_of(hass: HomeAssistant, entity_id: str) -> str:
         return f"**{state.state}**"
     unit = str(state.attributes.get("unit_of_measurement") or "").strip()
     return f"{state.state} {unit}".strip()
+
+
+def _kind_word(shutter: dict[str, Any]) -> str:
+    """Wie die Geraeteart im Bericht heisst."""
+    if is_window(shutter):
+        return "Dachfenster"
+    return "Markise" if is_awning(shutter) else "Rollladen"
 
 
 def _condition_note(
@@ -469,17 +479,24 @@ def _drive_command_note(
     if not state or features & 4:
         return []
 
-    awning = is_awning(shutter)
-    rest = get_position_for_role(shutter, ROLE_OPEN)
+    guarded = has_guard(shutter)
+    rest = get_position_for_role(shutter, guard_rest_role(shutter))
     active = get_position_for_role(
-        shutter, ROLE_SUN_PROTECT if awning else ROLE_CLOSED
+        shutter, ROLE_SUN_PROTECT if guarded else ROLE_CLOSED
     )
 
     def _service(pos: float) -> str:
         return "cover.open_cover" if pos >= 50 else "cover.close_cover"
 
-    rest_word = "Einfahren" if awning else "Öffnen"
-    active_word = "Ausfahren" if awning else "Schließen"
+    # Drei Geraetearten, drei Wortpaare. Die Ruhestellung ist bei der Markise
+    # "eingefahren", beim Dachfenster "geschlossen" und beim Rollladen "offen"
+    # – dieselbe Rolle, drei Bedeutungen.
+    if is_window(shutter):
+        rest_word, active_word = "Schließen", "Öffnen"
+    elif is_awning(shutter):
+        rest_word, active_word = "Einfahren", "Ausfahren"
+    else:
+        rest_word, active_word = "Öffnen", "Schließen"
     lines = [
         f"> ℹ️ `{entity_id}` meldet keine Positionierung. Gefahren wird deshalb "
         f"nicht die Zahl, sondern ein Kommando: **{rest_word}** "
@@ -500,7 +517,7 @@ def _drive_command_note(
             f"–{my_pct + MY_POSITION_TOLERANCE_PCT:.0f} % werden über "
             f"`{my_entity}` als angelernte „My\"-Position gefahren."
         )
-    elif awning and shutter.get(CONF_AWNING_TRACK_ENABLED):
+    elif is_awning(shutter) and shutter.get(CONF_AWNING_TRACK_ENABLED):
         lines.append(
             "> ⚠️ „Ausfahrlänge nach Sonnenhöhe\" ist eingeschaltet, aber dieser "
             "Antrieb kann keine Zwischenstellung anfahren – jeder Wert ab 50 % "
@@ -642,7 +659,7 @@ def _drive_verdict(
     store, and automated_up_blocked() goes through the same _memory_copy() the
     shading check uses.
     """
-    if is_awning(shutter):
+    if has_guard(shutter):
         return []
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
     if not cover or area is None:
@@ -944,7 +961,7 @@ async def async_build_export(
         record = store.get_record(cover) or {}
 
         awning = is_awning(shutter)
-        heading = f"### {'Markise' if awning else 'Rollladen'} `{cover}`"
+        heading = f"### {_kind_word(shutter)} `{cover}`"
         if name:
             heading += f" – „{name}\""
         out += [

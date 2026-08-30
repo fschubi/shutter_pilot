@@ -24,8 +24,10 @@ from .const import (
     CONF_SHUTTERS,
     CONF_SHUTTER_AUTOMATION_ENABLED,
     CONF_SHUTTER_AUTO_ENTITY_ID,
+    KIND_AWNING,
+    KIND_WINDOW,
 )
-from .helpers import is_awning
+from .helpers import device_kind
 
 # Zustände, die keine Nutzerentscheidung sind: Die Entität war beim letzten
 # Beenden noch nicht bereit oder der Wert stammt aus einer früheren
@@ -129,13 +131,24 @@ async def async_setup_entry(
                 entry=entry,
                 index=index,
                 cover_entity_id=cover,
-                name=f"{'Markise' if is_awning(shutter) else 'Rollladen'} {name}",
+                name=f"{_kind_label(shutter)} {name}",
                 configured_on=bool(shutter.get(CONF_SHUTTER_AUTOMATION_ENABLED, True)),
             )
         )
 
     if entities:
         async_add_entities(entities)
+
+
+# Areas and shutters often carry the same name, and two switches called the
+# same thing earn one of them a `_2` in Home Assistant (2.5.1). The label is
+# part of the entity id, so it has to name the kind.
+_KIND_LABELS = {KIND_AWNING: "Markise", KIND_WINDOW: "Dachfenster"}
+
+
+def _kind_label(shutter: dict) -> str:
+    """The German word this switch is named after."""
+    return _KIND_LABELS.get(device_kind(shutter), "Rollladen")
 
 
 class ShutterPilotMasterSwitch(RestoreEntity, SwitchEntity):

@@ -16,7 +16,7 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 ## Features
 
 - **Three control modes** per area: Time-based, brightness-based (lux sensor), or sun position (sunrise/sunset)
-- **Sidebar panel** with Dashboard, Areas, Shutters and Awnings tabs for full management
+- **Sidebar panel** with Dashboard, Areas, Shutters, Awnings and Roof windows tabs for full management
 - **Window/door sensors** – automatically opens shutters when windows are opened
 - **Lock protection** – prevents full closing when a door is open
 - **Sun protection with compass direction** – shades only when the sun is within the elevation range **and** actually facing the windows
@@ -32,6 +32,7 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 - **Weekday/weekend schedules** – separate time windows for weekdays and weekends (time mode and brightness mode)
 - **Sun info on dashboard** – shows next sunrise/sunset, configured offsets, and calculated trigger times for sun-mode areas
 - **Awnings** – their own tab, shading without any schedule, with **wind, rain and frost protection** (applies even with automation switched off) and optional sun tracking of the extension
+- **Roof windows** – their own tab, opening by conditions (indoor temperature, for instance), with **rain, wind and frost protection** shutting them again
 
 ## Screenshots
 
@@ -138,7 +139,7 @@ elevation and azimuth, today's forecast high and condition.
 |---------|-------------|
 | `shutter_pilot.open_group` | Open all shutters in an area |
 | `shutter_pilot.close_group` | Close all shutters in an area |
-| `shutter_pilot.stop_group` | Stop every moving shutter and awning in an area |
+| `shutter_pilot.stop_group` | Stop every moving shutter, awning and roof window in an area |
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 | `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
 | `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning |
@@ -160,9 +161,10 @@ Besides the panel, Shutter Pilot creates entities you can use on regular dashboa
 | `switch.shutter_pilot_rollladen_<name>` | Automation per shutter (named after the **Name** field) |
 | `sensor.shutter_pilot_<area>_next_action` | Timestamp of the next scheduled movement, attribute `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<area>_sun_protection` | `on` while shading is active |
-| `sensor.shutter_pilot_status` | The house at a glance: state `open` / `closed` / `partial`, attributes `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `shading_active`, `shading_areas`, `shading_covers`. Awnings are counted apart – a retracted awning is at rest, not "the house is shut" |
+| `sensor.shutter_pilot_status` | The house at a glance: state `open` / `closed` / `partial`, attributes `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `windows_open`, `windows_closed`, `shading_active`, `shading_areas`, `shading_covers`. Awnings and roof windows are counted apart – a retracted awning is at rest, not "the house is shut", and a tilted roof window does not make the house open |
 | `switch.shutter_pilot_markise_<name>` | Automation per awning (wind and rain protection still applies) |
-| `binary_sensor.shutter_pilot_<name>_sperre` | `on` while the awning must not extend. Attributes: `reasons`, `release_in_seconds` |
+| `switch.shutter_pilot_dachfenster_<name>` | Automation per roof window (rain, wind and frost protection still applies) |
+| `binary_sensor.shutter_pilot_<name>_sperre` | `on` while the awning must not extend or the roof window must not open. Attributes: `reasons`, `release_in_seconds` |
 
 ## Switching automation off
 
@@ -334,6 +336,54 @@ it a **"My" position** (see the shutter settings above): the taught third stop
 is the only intermediate position such a motor can reach. Without one, every
 value from 50 % up becomes "fully extended" – that is logged once as a warning
 and named in the export.
+
+
+## Roof windows
+
+Since 2.20.0 there is a dedicated **Roof windows** tab. Behind it sits the very
+same engine as for awnings – only the danger points the other way: an awning
+has to come **in** when it blows, a roof window has to go **shut** when it
+rains.
+
+### It takes part in no schedule
+
+Like an awning. Clock times, brightness and sun position do not move a roof
+window, and there is no window contact, lock protection, slat angle or deferred
+drive – the cover *is* the window.
+
+It opens through the **conditions** of its area alone. Indoor temperature is
+the usual one: "tilt above 24 °C, shut again below 22 °C". Sun height and
+window direction can be switched off for that, leaving a pure condition
+control. The area mode **No schedule** fits.
+
+Three positions:
+
+| Position | Meaning | Default |
+| --- | --- | --- |
+| Shut | the safe position – this is where the protection drives | 0 % |
+| Airing gap | how far it opens while the conditions hold | 30 % |
+| Wide open | for the manual open button only | 100 % |
+
+### Rain, wind and frost protection
+
+The same three sensors as for awnings, under **Settings**, with the same
+mechanics: binary sensor, numeric value with switch-on and release thresholds,
+or a list of states, plus a **lockout** per sensor. After the last drop the
+window therefore stays shut for the configured time and only then opens again –
+provided the condition still holds.
+
+A rain sensor that stops reporting bars immediately and shuts after a grace
+period. On a window that is the right direction: "I do not know" means shut.
+
+For an Ecowitt weather station the **rain rate** is the value to use
+(`sensor.*_rain_rate`, mm/h), not the daily total – that only counts up and
+never comes back down after the rain.
+
+> ⚠️ **Do not rely on this alone.** Between the first drop and the shut window
+> sit the weather station, Home Assistant and the motor's travel time. In a
+> sudden shower there is water in the room before the window is shut. A rain
+> sensor **on the window itself** – Velux and Roto make them – shuts without
+> that chain. Shutter Pilot is the comfort on top, not a replacement for it.
 
 ## Shade only on real sun and real warmth
 

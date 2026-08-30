@@ -38,6 +38,7 @@ from .helpers import (
     get_position_for_role,
     get_tilt_for_role,
     is_awning,
+    has_guard,
     only_awnings,
     resolve_shade_position,
     set_cover_position,
@@ -115,7 +116,7 @@ async def _drive_group(
         # An awning that must not be out stays in, whoever asked. Judged by the
         # target rather than by the role: close_group on an awning means
         # "retract it", and refusing *that* during a storm would be absurd.
-        if is_awning(shutter) and is_barred(data, cover):
+        if has_guard(shutter) and is_barred(data, cover):
             if clamp_to_rest(shutter, position) != position:
                 _LOGGER.info(
                     "%s: %s skipped – awning protection active (%s)",
@@ -204,12 +205,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
         label: str,
         use_up: bool,
         *,
-        include_awnings: bool = True,
+        shutters_only: bool = False,
         apply_lock_protection: bool = False,
     ) -> None:
         for area_id in _target_area_ids(call):
             picked = filter_shutters_by_area(
-                _shutter_list(), area_id, use_up=use_up, include_awnings=include_awnings
+                _shutter_list(), area_id, use_up=use_up, shutters_only=shutters_only
             )
             if not picked:
                 continue
@@ -249,7 +250,7 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "ventilate_group",
             use_up=False,
             # Awnings have no ventilation position – it is the tilted-window one.
-            include_awnings=False,
+            shutters_only=True,
             # Der Aussperrschutz galt an jedem automatisierten Fahrweg – nur
             # hier nicht, und Lueften faehrt nach unten wie jedes Schliessen.
             apply_lock_protection=True,

@@ -74,6 +74,12 @@ from .const import (
     DEFAULT_AWNING_TRACK_STEP,
     DEFAULT_DEVICE_KIND,
     KIND_AWNING,
+    KIND_SHUTTER,
+    KIND_WINDOW,
+    GUARDED_KINDS,
+    DEFAULT_WINDOW_POSITION_CLOSED,
+    DEFAULT_WINDOW_POSITION_OPEN,
+    DEFAULT_WINDOW_POSITION_VENT,
     CONF_MASTER_ENTITY_ID,
     CONF_MIN_DRIVE_GAP,
     DEFAULT_MIN_DRIVE_GAP,
@@ -259,19 +265,56 @@ def is_awning(shutter: dict[str, Any]) -> bool:
     duplicate check – therefore keeps working without knowing the difference.
     Only the paths that drive *roles an awning does not have* ask this.
     """
-    kind = str(shutter.get(CONF_DEVICE_KIND) or DEFAULT_DEVICE_KIND).strip()
-    return kind == KIND_AWNING
+    return device_kind(shutter) == KIND_AWNING
+
+
+def device_kind(shutter: dict[str, Any]) -> str:
+    """The configured kind, with the missing key meaning "shutter"."""
+    return str(shutter.get(CONF_DEVICE_KIND) or DEFAULT_DEVICE_KIND).strip()
+
+
+def is_window(shutter: dict[str, Any]) -> bool:
+    """True if this entry is a roof window."""
+    return device_kind(shutter) == KIND_WINDOW
+
+
+def is_shutter(shutter: dict[str, Any]) -> bool:
+    """True only for an actual shutter.
+
+    Asked positively on purpose. `not is_awning()` was the old test, and it
+    answers "yes" for every kind invented afterwards – a roof window would
+    have been driven by the evening schedule and pulled shut by the window
+    contact logic without a single line changing. Same lesson as the `else`
+    branches in 2.16.0: what has to be listed is what takes part, not what
+    does not.
+    """
+    return device_kind(shutter) == KIND_SHUTTER
+
+
+def has_guard(shutter: dict[str, Any]) -> bool:
+    """True for the kinds the wind/rain/frost protection applies to."""
+    return device_kind(shutter) in GUARDED_KINDS
+
+
+def guard_rest_role(shutter: dict[str, Any]) -> str:
+    """The position the protection drives to – the safe one for this kind.
+
+    An awning is safe when it is in (`position_open`), a roof window when it
+    is shut (`position_closed`). Read from the kind rather than assumed, so
+    the clamp in awning_guard.py keeps pointing the right way.
+    """
+    return ROLE_CLOSED if is_window(shutter) else ROLE_OPEN
 
 
 def only_shutters(shutters: list[Any]) -> list[Any]:
-    """Drop awnings from a list of covers about to be driven by schedule.
+    """Keep just the shutters from a list of covers about to be driven.
 
     Filtering here rather than with a `continue` inside the drive loop is on
     purpose: a `continue` skips the bookkeeping that follows it as well, which
     is how a shutter stayed marked "raised today" in 2.10.0 and was left down
     the next morning.
     """
-    return [s for s in shutters if isinstance(s, dict) and not is_awning(s)]
+    return [s for s in shutters if isinstance(s, dict) and is_shutter(s)]
 
 
 def find_shutter_by_cover(entry: ConfigEntry, entity_id: str) -> dict[str, Any] | None:
@@ -297,6 +340,16 @@ def find_shutter_by_cover(entry: ConfigEntry, entity_id: str) -> dict[str, Any] 
 def only_awnings(shutters: list[Any]) -> list[Any]:
     """Return just the awnings, in configuration order."""
     return [s for s in shutters if isinstance(s, dict) and is_awning(s)]
+
+
+def only_windows(shutters: list[Any]) -> list[Any]:
+    """Return just the roof windows, in configuration order."""
+    return [s for s in shutters if isinstance(s, dict) and is_window(s)]
+
+
+def only_guarded(shutters: list[Any]) -> list[Any]:
+    """Everything the protection watches – awnings and roof windows."""
+    return [s for s in shutters if isinstance(s, dict) and has_guard(s)]
 
 
 def get_elevation_bounds(area: dict) -> tuple[float, float]:
@@ -1176,6 +1229,13 @@ _AWNING_ROLE_FALLBACK = {
     ROLE_OPEN: DEFAULT_AWNING_POSITION_OPEN,
     ROLE_SUN_PROTECT: DEFAULT_AWNING_POSITION_SUN_PROTECT,
 }
+# A roof window counts like a shutter – 0 is shut – but the role the
+# conditions drive to is an airing gap, not a shading height.
+_WINDOW_ROLE_FALLBACK = {
+    ROLE_OPEN: DEFAULT_WINDOW_POSITION_OPEN,
+    ROLE_CLOSED: DEFAULT_WINDOW_POSITION_CLOSED,
+    ROLE_SUN_PROTECT: DEFAULT_WINDOW_POSITION_VENT,
+}
 
 
 def get_position_for_role(shutter: dict[str, Any], role: str) -> float:
@@ -1183,6 +1243,8 @@ def get_position_for_role(shutter: dict[str, Any], role: str) -> float:
     key, fallback = _ROLE_POSITION_KEYS.get(role, (CONF_POSITION_OPEN, 100))
     if is_awning(shutter):
         fallback = _AWNING_ROLE_FALLBACK.get(role, fallback)
+    elif is_window(shutter):
+        fallback = _WINDOW_ROLE_FALLBACK.get(role, fallback)
     try:
         return float(shutter.get(key, fallback))
     except (TypeError, ValueError):
@@ -1272,18 +1334,23 @@ def get_tilt_for_role(shutter: dict[str, Any], role: str) -> float | None:
 
 
 def filter_shutters_by_area(
-    shutters: list, area_id: str, use_up: bool, include_awnings: bool = True
+    shutters: list, area_id: str, use_up: bool, shutters_only: bool = False
 ) -> list:
     """Filter shutters by area_up_id or area_down_id.
 
-    Awnings are in by default because the group services are pressed buttons –
-    "close_group" on an awning means "retract it", and refusing that would be
-    surprising. The schedule passes include_awnings=False instead: it drives
-    open and closed roles, and an awning has neither.
+    Every kind is in by default because the group services are pressed buttons
+    – "close_group" on an awning means "retract it" and on a roof window "shut
+    it", and refusing either would be surprising. The schedule passes
+    shutters_only=True instead: it drives open and closed roles by the clock,
+    and neither an awning nor a roof window belongs in a schedule.
+
+    Named the way round it is on purpose. It used to be `include_awnings`, and
+    that name stopped describing the filter the moment a third kind existed –
+    the same class of contract as the key tuple in resolve_sun_geometry().
     """
     key = CONF_AREA_UP_ID if use_up else CONF_AREA_DOWN_ID
     picked = [s for s in shutters if str(s.get(key) or "").strip() == area_id]
-    return picked if include_awnings else only_shutters(picked)
+    return only_shutters(picked) if shutters_only else picked
 
 
 def get_cover_current_position(hass: HomeAssistant, entity_id: str) -> float | None:

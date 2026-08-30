@@ -110,7 +110,7 @@ class TestSchedule:
         both = [_shutter(), _awning(**{CONF_AREA_UP_ID: "terrasse"})]
 
         picked = filter_shutters_by_area(
-            both, "terrasse", use_up=False, include_awnings=False
+            both, "terrasse", use_up=False, shutters_only=True
         )
 
         assert [s[CONF_COVER_ENTITY_ID] for s in picked] == [SHUTTER]

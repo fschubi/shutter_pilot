@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (691 Tests)
+tests/               pytest-Suite (706 Tests)
 ```
 
 ## Funktionsumfang
@@ -203,7 +203,7 @@ Events: `shutter_pilot_cover_moved`, `shutter_pilot_cover_failed`,
 ### Panel
 
 Ein einzelnes JS-File, kein Build-Schritt. Tabs: Dashboard · Bereiche ·
-Rollläden · Markisen · Einstellungen. Besonderheiten, die man kennen muss:
+Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man kennen muss:
 
 - **LitElement kommt aus der Prototypenkette** eines geladenen HA-Elements –
   Home Assistant stellt kein Modul dafür bereit. Der Resolver probiert zehn
@@ -258,7 +258,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 691 Tests, ~16 s
+.venv/bin/pytest            # 706 Tests, ~16 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -284,10 +284,78 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.19.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.20.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-30 – 2.20.0: die dritte Geraeteart
+
+hollizone im Forum wollte eine Regensteuerung fuer Dachfenster ueber eine
+Ecowitt. Erst nachgerechnet, dann gebaut: der Schutz war schon generisch –
+`guard_slot_danger()` kennt Binaersensor, Zahlenhysterese und Zustandsliste,
+dazu Sperrzeit und Karenz. Ein Dachfenster als „Markise" mit vertauschten
+Positionen funktionierte in einem Wegwerf-Test auf Anhieb. **Genau das war das
+Argument fuer die eigene Art**, nicht dagegen: wenn die Mechanik traegt, kostet
+sie nur Beschriftung – und die Alternative waere gewesen, dem Nutzer eine
+Konfiguration zu empfehlen, die er in einem halben Jahr nicht mehr versteht.
+
+**Der Fund steckte im Filter.** `only_shutters()` hiess `not is_awning(s)`. Ein
+neuer `device_kind` faellt dadurch **nicht** von selbst durch – er rutscht mit:
+das Dachfenster waere im Scheduler gelandet, abends zugefahren und vom
+Fensterkontakt behandelt worden, ohne dass eine Zeile daran erinnert haette.
+Jetzt `is_shutter()`, positiv gefragt. **Merke: was aufgezaehlt gehoert, sind
+die Teilnehmer, nicht die Ausnahmen** – dieselbe Klasse wie die `else`-Zweige
+aus 2.16.0 und die Erlaubnisliste aus 2.15.0, nur an einem Filter statt an
+einem Vertrag.
+
+Dieselbe Sorte an drei weiteren Stellen: `elevation.py` („nur beschatten, was
+schon offen ist"), `window_helper.py` (der Aussperrschutz klemmt nach unten –
+bei einem Fenster ist unten die *sichere* Seite) und `_lockClamp` im Panel.
+Alle drei fragten `is_awning`, alle drei meinen „hat einen Schutz".
+
+**Der einzige echte Unterschied ist die sichere Stellung.** Eine Markise ist
+sicher, wenn sie drin ist (`ROLE_OPEN`), ein Dachfenster, wenn es zu ist
+(`ROLE_CLOSED`). Dafuer `guard_rest_role()`; `clamp_to_rest` und
+`extends_upward` lesen sie, statt eine Konstante zu nehmen. Alles andere –
+Hysterese, Sperrzeit nach der letzten Ueberschreitung, Karenz bei totem
+Sensor – gilt fuer Regen am Fenster wortgleich wie fuer eine Boe an der
+Markise.
+
+**`include_awnings` hiess nach der dritten Art nicht mehr, was es tut.** Jetzt
+`shutters_only`, andersherum formuliert. Ein Parametername, der die Ausnahme
+nennt, ist derselbe Vertrag wie der Schluessel-Tupel in
+`resolve_sun_geometry()` aus 2.10.3.
+
+**Das Formular ist eines, nicht zwei.** `_renderAwningForm` traegt beide
+bewachten Arten ueber ein `K(markise, fenster)`; verschieden sind die Woerter,
+die Positionsrollen und zwei Bloecke, die es nur an der Markise gibt
+(Sonnennachfuehrung, „My"-Stellung). Zwei Formulare waeren zwei Stellen, an
+denen der naechste Schutz-Schalter fehlt.
+
+**Der Vorbehalt steht im Produkt, nicht nur in der Antwort.** Bei einer Markise
+kostet ein verpasster Schutz Geld, bei einem Dachfenster Wasser im Haus – und
+die Kette ist lang: Wetterstation, HA, Minutentakt, Motorlaufzeit. Der Hinweis
+auf einen Regensensor *am Fenster* steht im Formular, im README (beide
+Sprachen) und im Changelog. Dieselbe Ueberlegung wie „Der Schutz ignoriert
+Haupt- und Bereichsschalter" aus 2.12.0: sonst meldet der erste Nutzer mit
+nassem Parkett es als Fehler.
+
+**Verifiziert:** `pytest` 706 Tests gruen (15 neue), **drei Gegenproben** –
+ohne `is_shutter` fallen zwei, ohne `guard_rest_role` drei, ohne
+`only_guarded` im Schutz eine. **Die dritte fiel zuerst nicht**: die Tests
+riefen `evaluate_guard()` direkt, und die Schleife in `async_enforce_guard()`
+ist die einzige Stelle, die entscheidet, *welche* Eintraege der Schutz ansieht.
+Zwei Tests nachgezogen, die den Befehl fahren statt die Funktion – danach fiel
+sie. **Das ist `note_manual_position` aus 2.17.0 ein zweites Mal; die Falle
+wiederholt sich offenbar bei jeder neuen Art von Verdrahtung.** i18n 436/436 in
+allen elf Sprachen (24 neu). Panel in Node gerendert: drei Listen, beide
+Formulare, plus siebzehn Inhaltspruefungen. **Nicht im Browser geprueft.**
+
+**Offen:** Ob ein Dachfenster am automatischen Lueften (`ventilation.py`)
+teilnehmen sollte, ist bewusst zurueckgestellt – inhaltlich naheliegend, aber
+es waere ein zweiter Fahrweg mit eigener Rangfolge gegen den Schutz. Die
+Bedingungen des Bereichs leisten heute dasselbe ohne diesen Preis.
 
 ### 2026-08-30 – 2.19.0: das leere Feld, das eine 0 war
 

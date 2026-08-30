@@ -456,8 +456,18 @@ DEFAULT_AREA_DOWN_LIGHT_BRIGHTNESS = 40
 CONF_DEVICE_KIND = "device_kind"
 KIND_SHUTTER = "shutter"
 KIND_AWNING = "awning"
+# A roof window is the same idea once more, with the danger pointing the other
+# way: an awning must come *in* when it blows, a window must come *shut* when
+# it rains. Both therefore share the protection engine and stay out of every
+# schedule; only the resting role differs, and that is read from the roles
+# rather than hard-coded – see guard_rest_role().
+KIND_WINDOW = "window"
 # A missing key is a shutter, so no stored configuration needs migrating.
 DEFAULT_DEVICE_KIND = KIND_SHUTTER
+# Kinds that carry the wind/rain/frost protection. Asked positively: a filter
+# written as "not an awning" quietly lets every future kind through, which is
+# how only_shutters() would have driven roof windows by the evening schedule.
+GUARDED_KINDS = (KIND_AWNING, KIND_WINDOW)
 
 # Defaults when creating an awning: at rest it is retracted, shading extends it.
 # Exactly the other way round from a shutter, which is the whole trick.
@@ -467,12 +477,50 @@ DEFAULT_AWNING_POSITION_SUN_PROTECT = 100
 # complaint, and a fabric drive dislikes it more than a shutter motor does.
 DEFAULT_AWNING_SHADE_HOLD = 15
 
+# Defaults when creating a roof window. Closed is the safe position, so unlike
+# an awning the rest role is position_closed; position_open is what the manual
+# "open" button drives, and position_sun_protect is the airing gap the
+# conditions drive to. 30 rather than 100 because a roof window left wide open
+# is a draught, not ventilation.
+DEFAULT_WINDOW_POSITION_CLOSED = 0
+DEFAULT_WINDOW_POSITION_OPEN = 100
+DEFAULT_WINDOW_POSITION_VENT = 30
+# A window that opens and shuts with every degree wears the motor and slams.
+DEFAULT_WINDOW_SHADE_HOLD = 15
+
 # Keys that mean nothing on an awning. Converting a shutter deletes them
 # instead of leaving them behind: stored, visible and ineffective is exactly
 # the class of fault _silent_setting_notes() has been reporting since 2.10.2.
 AWNING_UNUSED_KEYS = (
     CONF_AREA_UP_ID,
     CONF_POSITION_CLOSED,
+    CONF_POSITION_CLOSED_ALT,
+    CONF_POSITION_CLOSED_FROST,
+    CONF_WINDOW_ENTITY_ID,
+    CONF_WINDOW_ENTITY_ID_2,
+    CONF_WINDOW_OPEN_STATE,
+    CONF_WINDOW_TILTED_STATE,
+    CONF_WINDOW_TILTED_ENTITY_ID,
+    CONF_WINDOW_TILTED_ENTITY_STATE,
+    CONF_POSITION_WHEN_WINDOW_OPEN,
+    CONF_POSITION_WHEN_WINDOW_TILTED,
+    CONF_LOCK_PROTECTION,
+    CONF_MIN_POSITION_WHEN_OPEN,
+    CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_VENT_WHILE_OPEN,
+    CONF_DRIVE_AFTER_CLOSE,
+    CONF_TILT_ENABLED,
+    CONF_TILT_OPEN,
+    CONF_TILT_CLOSED,
+    CONF_TILT_SUN_PROTECT,
+)
+
+# Keys that mean nothing on a roof window. It has no schedule, so the upward
+# area and the alternative closing positions go; the window contact keys go
+# because the cover *is* the window. Tilt stays out too: a roof window opens by
+# an angle, and that angle is its position.
+WINDOW_UNUSED_KEYS = (
+    CONF_AREA_UP_ID,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
     CONF_WINDOW_ENTITY_ID,

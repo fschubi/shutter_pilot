@@ -4,6 +4,30 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.20.0]
+
+Ein Wunsch aus dem Forum (hollizone): **eine Regensteuerung für Dachfenster,
+gerne über eine externe Wetterstation.** Gebaut nicht als zweites Datenmodell,
+sondern als dritte Geräteart neben Rollladen und Markise – denn der Schutz, der
+eine Markise bei Sturm hereinholt, ist derselbe, der ein Dachfenster bei Regen
+zuzieht. Nur die sichere Stellung liegt am anderen Ende.
+
+### Neu
+- **Dachfenster als eigene Geräteart**, mit eigenem Tab neben den Markisen. Ein Dachfenster fährt in keinem Zeitplan mit: geöffnet wird es über die Bedingungen seines Bereichs – üblich ist die Innentemperatur, „über 24 °C kippen, unter 22 °C wieder zu" –, geschlossen über den Schutz. Drei Stellungen: **geschlossen** (die sichere, dorthin fährt der Schutz), **Lüftungsstellung** (so weit öffnet es, solange die Bedingungen gelten) und **ganz offen** (nur für den Knopf von Hand). Fensterkontakt, Aussperrschutz, Lamellen und Nachholfahrt gibt es dort nicht – der Cover *ist* das Fenster.
+- **Regen-, Wind- und Frostschutz für Dachfenster.** Dieselben drei Sensoren wie bei den Markisen und dieselbe Mechanik: Binärsensor, Zahlenwert mit Ein- und Ausschaltschwelle oder Zustandsliste, dazu eine Sperrzeit je Sensor. Nach dem letzten Tropfen bleibt das Fenster die eingestellte Zeit zu und öffnet erst danach wieder – sofern die Bedingung noch gilt. Ein Sensor, der nichts mehr meldet, sperrt sofort und schließt nach einer Karenz: an einem Fenster heißt „ich weiß es nicht" zu.
+- **Ein bestehender Rollladen lässt sich übernehmen.** Trägt schon ein Eintrag dieselbe Cover-Entität, bietet das Formular an, ihn als Dachfenster zu übernehmen – und räumt dabei die Schlüssel weg, die dort nichts bedeuten.
+- **`sensor.shutter_pilot_status` zählt Dachfenster getrennt** (`windows_open`, `windows_closed`, `windows_unknown`). Ein gekipptes Dachfenster macht das Haus nicht „offen", genauso wenig wie eine eingefahrene Markise es „zu" macht.
+
+### Geändert
+- **Die Geräteart wird jetzt positiv gefragt.** Der Zeitplan-Filter hieß „alles außer Markisen" – und hätte ein Dachfenster stillschweigend mitgenommen, abends zugefahren und vom Fensterkontakt behandelt. Was aufgezählt gehört, sind die Teilnehmer, nicht die Ausnahmen. Für bestehende Anlagen ändert sich dadurch nichts: ein fehlender Schlüssel ist weiterhin ein Rollladen, es gibt keine Migration.
+
+> ⚠️ **Ein Hinweis, der zur Sache gehört:** Zwischen dem ersten Tropfen und dem
+> geschlossenen Fenster liegen die Wetterstation, Home Assistant und die
+> Laufzeit des Motors. Bei einem plötzlichen Schauer ist Wasser im Raum, bevor
+> das Fenster zu ist. Ein Regensensor **am Fenster selbst** – Velux und Roto
+> haben so etwas – schließt ohne diese Kette. Shutter Pilot ist der Komfort
+> obendrauf, nicht der Ersatz dafür. Derselbe Hinweis steht im Formular.
+
 ## [2.19.0]
 
 Ein Beitrag, zwei Funde – und der eine erklärt eine Beobachtung, für die es

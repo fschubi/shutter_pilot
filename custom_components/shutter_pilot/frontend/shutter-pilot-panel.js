@@ -90,14 +90,32 @@ const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
 /* Markisen stehen in derselben Liste wie die Rollläden – nur der Tab und das
    Formular sind getrennt. Ein fehlender Schlüssel ist ein Rollladen, damit
    kein Bestand angefasst werden muss. Spiegelt const.py. */
+const KIND_SHUTTER = "shutter";
 const KIND_AWNING = "awning";
-const isAwning = s => String(s?.device_kind||"shutter") === KIND_AWNING;
+const KIND_WINDOW = "window";
+/* Spiegelt GUARDED_KINDS in const.py: die Arten, an denen der Wind-, Regen-
+   und Frostschutz haengt. Positiv gefragt, nicht als "kein Rollladen" – ein
+   Filter, der die Ausnahme nennt statt der Teilnehmer, nimmt jede kuenftige
+   Art stillschweigend mit. */
+const kindOf = s => String(s?.device_kind||KIND_SHUTTER);
+const isAwning = s => kindOf(s) === KIND_AWNING;
+const isWindow = s => kindOf(s) === KIND_WINDOW;
+const hasGuard = s => kindOf(s) === KIND_AWNING || kindOf(s) === KIND_WINDOW;
 const AWNING_GUARD_SLOTS = ["wind","rain","ice"];
 /* Schlüssel, die an einer Markise nichts bedeuten. Beim Übernehmen eines
    bestehenden Rollladens werden sie gelöscht statt stehengelassen – gespeichert,
    sichtbar und wirkungslos ist genau die Sorte Einstellung, die der Export seit
    2.10.2 anprangert. Spiegelt AWNING_UNUSED_KEYS in const.py. */
 const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt",
+  "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
+  "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
+  "position_when_window_open","position_when_window_tilted","lock_protection",
+  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close",
+  "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
+/* Dasselbe fuer das Dachfenster. Es behaelt `position_closed` – zu ist dort
+   die Ruhestellung –, verliert aber die Fensterkontakt-Schluessel: der Cover
+   *ist* das Fenster. Spiegelt WINDOW_UNUSED_KEYS in const.py. */
+const WINDOW_UNUSED_KEYS = ["area_up_id","position_closed_alt",
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
@@ -138,6 +156,31 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  tab_windows:"Dachfenster",
+  add_window:"Dachfenster hinzufügen",
+  edit_window:"Dachfenster bearbeiten",
+  empty_windows_list:"Noch kein Dachfenster angelegt.",
+  f_cover_window:"Fenster-Entität",
+  sec_window:"Grunddaten",
+  sec_window_sub:"Entität, Name, Bereich",
+  sec_window_pos:"Stellungen",
+  sec_window_pos_sub:"geschlossen, Lüftungsweite, ganz offen",
+  f_pos_window_closed:"Geschlossen",
+  f_pos_window_closed_hint:"Die sichere Stellung. Dorthin fährt der Schutz bei Regen, Wind oder Frost.",
+  f_pos_window_vent:"Lüftungsstellung",
+  f_pos_window_vent_hint:"So weit öffnet das Fenster, solange die Bedingungen des Bereichs zutreffen.",
+  f_pos_window_open:"Ganz offen",
+  f_pos_window_open_hint:"Nur für den Auf-Knopf von Hand. Die Automatik fährt die Lüftungsstellung.",
+  f_window_auto:"Automatik für dieses Dachfenster",
+  f_window_auto_hint:"Aus heisst: nur von Hand. Der Schutz gilt trotzdem.",
+  sec_window_guard:"Regen-, Wind- und Frostschutz",
+  sec_window_guard_sub:"schliesst das Fenster, wenn es sein muss",
+  f_window_guard_intro:"Der Schutz schliesst das Fenster sofort und hält es die eingestellte Sperrzeit zu. Die Sensoren stehen unter Einstellungen; nur der Wind lässt sich je Fenster überschreiben.",
+  f_window_safety_hint:"⚠️ Verlass dich nicht allein darauf: zwischen dem ersten Tropfen und dem geschlossenen Fenster liegen Wetterstation, Home Assistant und die Laufzeit des Motors. Ein Regensensor am Fenster selbst schliesst ohne diese Kette.",
+  sec_window_sun:"Wann geöffnet wird",
+  sec_window_sun_sub:"Bedingungen, Zeitfenster",
+  f_window_cond_hint:"Ohne Bedingung öffnet das Fenster nie von selbst. Üblich ist die Innentemperatur; Höhe und Richtung der Sonne lassen sich abschalten.",
+  f_convert_to_window:"Als Dachfenster übernehmen",
   f_bound_none:"keine Grenze – zum Festlegen tippen",
   f_bounds_title:"Frühestens / spätestens",
   f_bounds_hint:"Klemmt den aus dem Sonnenstand berechneten Zeitpunkt in ein Uhrzeitfenster. Beispiel: nach Sonnenstand fahren, aber nie vor 7:30 und nie nach 9:00. Leer heisst keine Grenze.",
@@ -465,6 +508,31 @@ de:{
   btn_extend_barred:"Gesperrt – Wind- oder Regenschutz aktiv",
 },
 en:{
+  tab_windows:"Roof windows",
+  add_window:"Add roof window",
+  edit_window:"Edit roof window",
+  empty_windows_list:"No roof window configured yet.",
+  f_cover_window:"Window entity",
+  sec_window:"Basics",
+  sec_window_sub:"Entity, name, area",
+  sec_window_pos:"Positions",
+  sec_window_pos_sub:"shut, airing gap, wide open",
+  f_pos_window_closed:"Shut",
+  f_pos_window_closed_hint:"The safe position. This is where the protection drives on rain, wind or frost.",
+  f_pos_window_vent:"Airing gap",
+  f_pos_window_vent_hint:"How far the window opens while the area's conditions hold.",
+  f_pos_window_open:"Wide open",
+  f_pos_window_open_hint:"For the manual open button only. The automation drives the airing gap.",
+  f_window_auto:"Automation for this roof window",
+  f_window_auto_hint:"Off means by hand only. The protection still applies.",
+  sec_window_guard:"Rain, wind and frost protection",
+  sec_window_guard_sub:"shuts the window when it has to",
+  f_window_guard_intro:"The protection shuts the window at once and keeps it shut for the configured lockout. The sensors live under Settings; only wind can be overridden per window.",
+  f_window_safety_hint:"⚠️ Do not rely on this alone: between the first drop and the shut window sit the weather station, Home Assistant and the motor's travel time. A rain sensor on the window itself shuts without that chain.",
+  sec_window_sun:"When it opens",
+  sec_window_sun_sub:"Conditions, time window",
+  f_window_cond_hint:"Without a condition the window never opens by itself. Indoor temperature is the usual one; sun height and direction can be switched off.",
+  f_convert_to_window:"Take over as roof window",
   f_bound_none:"no limit – tap to set",
   f_bounds_title:"Earliest / latest",
   f_bounds_hint:"Clamps the moment computed from the sun position into a clock window. For example: drive by sun position, but never before 07:30 and never after 09:00. Empty means no limit.",
@@ -792,6 +860,31 @@ en:{
   btn_extend_barred:"Barred – wind or rain protection active",
 },
 fr:{
+  tab_windows:"Fenêtres de toit",
+  add_window:"Ajouter une fenêtre de toit",
+  edit_window:"Modifier la fenêtre de toit",
+  empty_windows_list:"Aucune fenêtre de toit configurée.",
+  f_cover_window:"Entité fenêtre",
+  sec_window:"Général",
+  sec_window_sub:"Entité, nom, zone",
+  sec_window_pos:"Positions",
+  sec_window_pos_sub:"fermée, entrebâillement, grande ouverte",
+  f_pos_window_closed:"Fermée",
+  f_pos_window_closed_hint:"La position sûre. C'est là que la protection l'amène en cas de pluie, de vent ou de gel.",
+  f_pos_window_vent:"Entrebâillement",
+  f_pos_window_vent_hint:"Ouverture tant que les conditions de la zone sont remplies.",
+  f_pos_window_open:"Grande ouverte",
+  f_pos_window_open_hint:"Uniquement pour le bouton manuel. L'automatisme vise l'entrebâillement.",
+  f_window_auto:"Automatisme pour cette fenêtre",
+  f_window_auto_hint:"Désactivé : commande manuelle seule. La protection reste active.",
+  sec_window_guard:"Protection pluie, vent et gel",
+  sec_window_guard_sub:"ferme la fenêtre quand il le faut",
+  f_window_guard_intro:"La protection ferme la fenêtre immédiatement et la maintient fermée pendant le délai configuré. Les capteurs sont dans les réglages ; seul le vent peut être défini par fenêtre.",
+  f_window_safety_hint:"⚠️ Ne comptez pas uniquement là-dessus : entre la première goutte et la fenêtre fermée il y a la station météo, Home Assistant et le temps de course du moteur. Un capteur de pluie sur la fenêtre ferme sans cette chaîne.",
+  sec_window_sun:"Quand elle s'ouvre",
+  sec_window_sun_sub:"Conditions, plage horaire",
+  f_window_cond_hint:"Sans condition la fenêtre ne s'ouvre jamais d'elle-même. La température intérieure est la plus courante ; hauteur et orientation du soleil sont désactivables.",
+  f_convert_to_window:"Reprendre comme fenêtre de toit",
   f_sun_cond_wrong_way:"Ces deux valeurs sont inversées. Il s’agit d’un seuil de déclenchement avec un seuil de levée EN DESSOUS, pas d’une plage de–à. Telle quelle, la seconde valeur est ignorée et la condition est remplie pratiquement en permanence. Pour une plage d’orientations, utilisez « Seulement si la fenêtre est bien orientée ».",
   f_geo_override_values_hint:"Ces deux valeurs remplacent désormais celles de la zone – même si vous n’y touchez pas.",
   sec_export:"Exporter les réglages",
@@ -1061,6 +1154,31 @@ fr:{
   btn_extend_barred:"Bloqué – protection vent ou pluie active",
 },
 es:{
+  tab_windows:"Ventanas de tejado",
+  add_window:"Añadir ventana de tejado",
+  edit_window:"Editar ventana de tejado",
+  empty_windows_list:"Todavía no hay ninguna ventana de tejado.",
+  f_cover_window:"Entidad de la ventana",
+  sec_window:"Datos básicos",
+  sec_window_sub:"Entidad, nombre, zona",
+  sec_window_pos:"Posiciones",
+  sec_window_pos_sub:"cerrada, apertura de ventilación, abierta del todo",
+  f_pos_window_closed:"Cerrada",
+  f_pos_window_closed_hint:"La posición segura. Ahí la lleva la protección con lluvia, viento o helada.",
+  f_pos_window_vent:"Apertura de ventilación",
+  f_pos_window_vent_hint:"Cuánto abre la ventana mientras se cumplen las condiciones de la zona.",
+  f_pos_window_open:"Abierta del todo",
+  f_pos_window_open_hint:"Solo para el botón manual. La automatización usa la apertura de ventilación.",
+  f_window_auto:"Automatización para esta ventana",
+  f_window_auto_hint:"Desactivado significa solo manual. La protección sigue vigente.",
+  sec_window_guard:"Protección de lluvia, viento y helada",
+  sec_window_guard_sub:"cierra la ventana cuando hace falta",
+  f_window_guard_intro:"La protección cierra la ventana de inmediato y la mantiene cerrada durante el bloqueo configurado. Los sensores están en Ajustes; solo el viento puede definirse por ventana.",
+  f_window_safety_hint:"⚠️ No confíes solo en esto: entre la primera gota y la ventana cerrada están la estación meteorológica, Home Assistant y el tiempo de recorrido del motor. Un sensor de lluvia en la propia ventana cierra sin esa cadena.",
+  sec_window_sun:"Cuándo se abre",
+  sec_window_sun_sub:"Condiciones, franja horaria",
+  f_window_cond_hint:"Sin condición la ventana nunca se abre sola. Lo habitual es la temperatura interior; la altura y la dirección del sol se pueden desactivar.",
+  f_convert_to_window:"Adoptar como ventana de tejado",
   f_sun_cond_wrong_way:"Estos dos valores están al revés. Es un punto de activación con un punto de liberación POR DEBAJO, no un rango de–a. Tal como está, el segundo valor se descarta y la condición se cumple prácticamente siempre. Para un rango de orientaciones usa «Solo con la orientación adecuada de la ventana».",
   f_geo_override_values_hint:"Estos dos valores sustituyen ahora a los de la zona, los toques o no.",
   sec_export:"Exportar ajustes",
@@ -1330,6 +1448,31 @@ es:{
   btn_extend_barred:"Bloqueado: protección de viento o lluvia activa",
 },
 it:{
+  tab_windows:"Finestre da tetto",
+  add_window:"Aggiungi finestra da tetto",
+  edit_window:"Modifica finestra da tetto",
+  empty_windows_list:"Nessuna finestra da tetto configurata.",
+  f_cover_window:"Entità finestra",
+  sec_window:"Dati di base",
+  sec_window_sub:"Entità, nome, area",
+  sec_window_pos:"Posizioni",
+  sec_window_pos_sub:"chiusa, apertura di ventilazione, tutta aperta",
+  f_pos_window_closed:"Chiusa",
+  f_pos_window_closed_hint:"La posizione sicura. È lì che la protezione la porta con pioggia, vento o gelo.",
+  f_pos_window_vent:"Apertura di ventilazione",
+  f_pos_window_vent_hint:"Quanto si apre la finestra finché valgono le condizioni dell'area.",
+  f_pos_window_open:"Tutta aperta",
+  f_pos_window_open_hint:"Solo per il pulsante manuale. L'automazione usa l'apertura di ventilazione.",
+  f_window_auto:"Automazione per questa finestra",
+  f_window_auto_hint:"Disattivata significa solo manuale. La protezione resta valida.",
+  sec_window_guard:"Protezione pioggia, vento e gelo",
+  sec_window_guard_sub:"chiude la finestra quando serve",
+  f_window_guard_intro:"La protezione chiude subito la finestra e la tiene chiusa per il blocco impostato. I sensori sono nelle impostazioni; solo il vento si può definire per finestra.",
+  f_window_safety_hint:"⚠️ Non fidarti solo di questo: tra la prima goccia e la finestra chiusa ci sono la stazione meteo, Home Assistant e il tempo di corsa del motore. Un sensore di pioggia sulla finestra stessa chiude senza questa catena.",
+  sec_window_sun:"Quando si apre",
+  sec_window_sun_sub:"Condizioni, fascia oraria",
+  f_window_cond_hint:"Senza condizione la finestra non si apre mai da sola. Di solito è la temperatura interna; altezza e direzione del sole si possono disattivare.",
+  f_convert_to_window:"Converti in finestra da tetto",
   f_sun_cond_wrong_way:"I due valori sono invertiti. È un punto di attivazione con un punto di rilascio SOTTO di esso, non un intervallo da–a. Così com’è, il secondo valore viene scartato e la condizione risulta soddisfatta praticamente sempre. Per un intervallo di orientamenti usa «Solo con l’orientamento giusto della finestra».",
   f_geo_override_values_hint:"Questi due valori valgono ora al posto di quelli della zona, che li tocchi o no.",
   sec_export:"Esporta impostazioni",
@@ -1599,6 +1742,31 @@ it:{
   btn_extend_barred:"Bloccata: protezione vento o pioggia attiva",
 },
 nl:{
+  tab_windows:"Dakramen",
+  add_window:"Dakraam toevoegen",
+  edit_window:"Dakraam bewerken",
+  empty_windows_list:"Nog geen dakraam ingesteld.",
+  f_cover_window:"Raam-entiteit",
+  sec_window:"Basis",
+  sec_window_sub:"Entiteit, naam, gebied",
+  sec_window_pos:"Standen",
+  sec_window_pos_sub:"dicht, ventilatiestand, helemaal open",
+  f_pos_window_closed:"Dicht",
+  f_pos_window_closed_hint:"De veilige stand. Daarheen rijdt de beveiliging bij regen, wind of vorst.",
+  f_pos_window_vent:"Ventilatiestand",
+  f_pos_window_vent_hint:"Hoe ver het raam opent zolang de voorwaarden van het gebied gelden.",
+  f_pos_window_open:"Helemaal open",
+  f_pos_window_open_hint:"Alleen voor de handmatige open-knop. De automatisering gebruikt de ventilatiestand.",
+  f_window_auto:"Automatisering voor dit dakraam",
+  f_window_auto_hint:"Uit betekent alleen handmatig. De beveiliging blijft gelden.",
+  sec_window_guard:"Regen-, wind- en vorstbeveiliging",
+  sec_window_guard_sub:"sluit het raam wanneer het moet",
+  f_window_guard_intro:"De beveiliging sluit het raam meteen en houdt het dicht gedurende de ingestelde blokkeertijd. De sensoren staan bij Instellingen; alleen wind is per raam in te stellen.",
+  f_window_safety_hint:"⚠️ Vertrouw hier niet alleen op: tussen de eerste druppel en het gesloten raam zitten het weerstation, Home Assistant en de looptijd van de motor. Een regensensor op het raam zelf sluit zonder die keten.",
+  sec_window_sun:"Wanneer het opent",
+  sec_window_sun_sub:"Voorwaarden, tijdvenster",
+  f_window_cond_hint:"Zonder voorwaarde gaat het raam nooit vanzelf open. Meestal is dat de binnentemperatuur; hoogte en richting van de zon kunnen uit.",
+  f_convert_to_window:"Overnemen als dakraam",
   f_sun_cond_wrong_way:"Deze twee waarden staan omgekeerd. Dit is een inschakelpunt met een opheffingspunt ERONDER, geen bereik van–tot. Zoals het er nu staat wordt de tweede waarde weggegooid en is de voorwaarde vrijwel altijd vervuld. Voor een bereik van windrichtingen is er «Alleen bij passende raamrichting».",
   f_geo_override_values_hint:"Deze twee waarden gelden nu in plaats van die van de zone – of je ze nu aanraakt of niet.",
   sec_export:"Instellingen exporteren",
@@ -1869,6 +2037,31 @@ nl:{
   btn_extend_barred:"Geblokkeerd – wind- of regenbeveiliging actief",
 },
 da:{
+  tab_windows:"Ovenlysvinduer",
+  add_window:"Tilføj ovenlysvindue",
+  edit_window:"Rediger ovenlysvindue",
+  empty_windows_list:"Intet ovenlysvindue oprettet endnu.",
+  f_cover_window:"Vinduesenhed",
+  sec_window:"Grunddata",
+  sec_window_sub:"Enhed, navn, område",
+  sec_window_pos:"Positioner",
+  sec_window_pos_sub:"lukket, udluftningsåbning, helt åben",
+  f_pos_window_closed:"Lukket",
+  f_pos_window_closed_hint:"Den sikre position. Dertil kører beskyttelsen ved regn, vind eller frost.",
+  f_pos_window_vent:"Udluftningsåbning",
+  f_pos_window_vent_hint:"Hvor langt vinduet åbner, så længe områdets betingelser gælder.",
+  f_pos_window_open:"Helt åben",
+  f_pos_window_open_hint:"Kun til den manuelle åbn-knap. Automatikken kører udluftningsåbningen.",
+  f_window_auto:"Automatik for dette ovenlysvindue",
+  f_window_auto_hint:"Fra betyder kun manuelt. Beskyttelsen gælder alligevel.",
+  sec_window_guard:"Regn-, vind- og frostbeskyttelse",
+  sec_window_guard_sub:"lukker vinduet, når det skal",
+  f_window_guard_intro:"Beskyttelsen lukker vinduet med det samme og holder det lukket i den indstillede spærretid. Sensorerne står under Indstillinger; kun vinden kan sættes per vindue.",
+  f_window_safety_hint:"⚠️ Stol ikke kun på dette: mellem den første dråbe og det lukkede vindue ligger vejrstationen, Home Assistant og motorens køretid. En regnsensor på selve vinduet lukker uden den kæde.",
+  sec_window_sun:"Hvornår det åbner",
+  sec_window_sun_sub:"Betingelser, tidsrum",
+  f_window_cond_hint:"Uden en betingelse åbner vinduet aldrig af sig selv. Indendørstemperaturen er den sædvanlige; solens højde og retning kan slås fra.",
+  f_convert_to_window:"Overtag som ovenlysvindue",
   f_sun_cond_wrong_way:"De to værdier står omvendt. Det er et tændpunkt med et ophævelsespunkt UNDER, ikke et interval fra–til. Som det står nu, kasseres den anden værdi, og betingelsen er stort set altid opfyldt. Til et interval af verdenshjørner findes «Kun ved passende vinduesretning».",
   f_geo_override_values_hint:"Disse to værdier gælder nu i stedet for områdets – uanset om du rører dem.",
   sec_export:"Eksportér indstillinger",
@@ -2139,6 +2332,31 @@ da:{
   btn_extend_barred:"Spærret – vind- eller regnbeskyttelse aktiv",
 },
 sv:{
+  tab_windows:"Takfönster",
+  add_window:"Lägg till takfönster",
+  edit_window:"Redigera takfönster",
+  empty_windows_list:"Inget takfönster är skapat än.",
+  f_cover_window:"Fönsterentitet",
+  sec_window:"Grunddata",
+  sec_window_sub:"Entitet, namn, område",
+  sec_window_pos:"Lägen",
+  sec_window_pos_sub:"stängt, vädringsglipa, helt öppet",
+  f_pos_window_closed:"Stängt",
+  f_pos_window_closed_hint:"Det säkra läget. Dit kör skyddet vid regn, vind eller frost.",
+  f_pos_window_vent:"Vädringsglipa",
+  f_pos_window_vent_hint:"Hur långt fönstret öppnar så länge områdets villkor gäller.",
+  f_pos_window_open:"Helt öppet",
+  f_pos_window_open_hint:"Endast för den manuella öppna-knappen. Automatiken kör vädringsglipan.",
+  f_window_auto:"Automatik för detta takfönster",
+  f_window_auto_hint:"Av betyder endast manuellt. Skyddet gäller ändå.",
+  sec_window_guard:"Regn-, vind- och frostskydd",
+  sec_window_guard_sub:"stänger fönstret när det behövs",
+  f_window_guard_intro:"Skyddet stänger fönstret direkt och håller det stängt under den inställda spärrtiden. Sensorerna finns under Inställningar; endast vinden kan anges per fönster.",
+  f_window_safety_hint:"⚠️ Lita inte enbart på detta: mellan första droppen och det stängda fönstret finns väderstationen, Home Assistant och motorns gångtid. En regnsensor på själva fönstret stänger utan den kedjan.",
+  sec_window_sun:"När det öppnas",
+  sec_window_sun_sub:"Villkor, tidsfönster",
+  f_window_cond_hint:"Utan villkor öppnas fönstret aldrig av sig självt. Innetemperaturen är det vanliga; solens höjd och riktning kan stängas av.",
+  f_convert_to_window:"Ta över som takfönster",
   f_sun_cond_wrong_way:"De två värdena står omvänt. Det här är en påslagspunkt med en frigöringspunkt UNDER, inte ett intervall från–till. Som det står nu kastas det andra värdet och villkoret är uppfyllt praktiskt taget hela tiden. För ett intervall av väderstreck finns «Endast vid passande fönsterriktning».",
   f_geo_override_values_hint:"De här två värdena gäller nu i stället för områdets – vare sig du rör dem eller inte.",
   sec_export:"Exportera inställningar",
@@ -2409,6 +2627,31 @@ sv:{
   btn_extend_barred:"Spärrad – vind- eller regnskydd aktivt",
 },
 pl:{
+  tab_windows:"Okna dachowe",
+  add_window:"Dodaj okno dachowe",
+  edit_window:"Edytuj okno dachowe",
+  empty_windows_list:"Nie dodano jeszcze żadnego okna dachowego.",
+  f_cover_window:"Encja okna",
+  sec_window:"Dane podstawowe",
+  sec_window_sub:"Encja, nazwa, obszar",
+  sec_window_pos:"Położenia",
+  sec_window_pos_sub:"zamknięte, szczelina wentylacyjna, całkiem otwarte",
+  f_pos_window_closed:"Zamknięte",
+  f_pos_window_closed_hint:"Położenie bezpieczne. Tam kieruje ochrona przy deszczu, wietrze lub mrozie.",
+  f_pos_window_vent:"Szczelina wentylacyjna",
+  f_pos_window_vent_hint:"Jak szeroko okno się otwiera, dopóki spełnione są warunki obszaru.",
+  f_pos_window_open:"Całkiem otwarte",
+  f_pos_window_open_hint:"Tylko dla ręcznego przycisku otwierania. Automatyka używa szczeliny wentylacyjnej.",
+  f_window_auto:"Automatyka dla tego okna dachowego",
+  f_window_auto_hint:"Wyłączone oznacza tylko ręcznie. Ochrona nadal obowiązuje.",
+  sec_window_guard:"Ochrona przed deszczem, wiatrem i mrozem",
+  sec_window_guard_sub:"zamyka okno, gdy trzeba",
+  f_window_guard_intro:"Ochrona natychmiast zamyka okno i trzyma je zamknięte przez ustawiony czas blokady. Czujniki są w Ustawieniach; tylko wiatr można ustawić osobno dla okna.",
+  f_window_safety_hint:"⚠️ Nie polegaj wyłącznie na tym: między pierwszą kroplą a zamkniętym oknem są stacja pogodowa, Home Assistant i czas pracy silnika. Czujnik deszczu na samym oknie zamyka bez tego łańcucha.",
+  sec_window_sun:"Kiedy się otwiera",
+  sec_window_sun_sub:"Warunki, okno czasowe",
+  f_window_cond_hint:"Bez warunku okno nigdy nie otworzy się samo. Zwykle jest to temperatura wewnętrzna; wysokość i kierunek słońca można wyłączyć.",
+  f_convert_to_window:"Przejmij jako okno dachowe",
   f_sun_cond_wrong_way:"Te dwie wartości są odwrócone. To punkt włączenia z punktem wyłączenia PONIŻEJ niego, a nie zakres od–do. W tej postaci druga wartość jest odrzucana, a warunek jest spełniony praktycznie zawsze. Dla zakresu kierunków świata służy «Tylko przy odpowiednim kierunku okna».",
   f_geo_override_values_hint:"Te dwie wartości obowiązują teraz zamiast wartości strefy – niezależnie od tego, czy ich dotkniesz.",
   sec_export:"Eksport ustawień",
@@ -2679,6 +2922,31 @@ pl:{
   btn_extend_barred:"Zablokowane – aktywna ochrona przed wiatrem lub deszczem",
 },
 pt:{
+  tab_windows:"Janelas de tecto",
+  add_window:"Adicionar janela de tecto",
+  edit_window:"Editar janela de tecto",
+  empty_windows_list:"Ainda não há nenhuma janela de tecto.",
+  f_cover_window:"Entidade da janela",
+  sec_window:"Dados básicos",
+  sec_window_sub:"Entidade, nome, área",
+  sec_window_pos:"Posições",
+  sec_window_pos_sub:"fechada, abertura de ventilação, totalmente aberta",
+  f_pos_window_closed:"Fechada",
+  f_pos_window_closed_hint:"A posição segura. É para lá que a proteção a leva com chuva, vento ou geada.",
+  f_pos_window_vent:"Abertura de ventilação",
+  f_pos_window_vent_hint:"Até onde a janela abre enquanto as condições da área se verificam.",
+  f_pos_window_open:"Totalmente aberta",
+  f_pos_window_open_hint:"Apenas para o botão manual de abrir. A automação usa a abertura de ventilação.",
+  f_window_auto:"Automação para esta janela de tecto",
+  f_window_auto_hint:"Desligado significa apenas manual. A proteção continua a valer.",
+  sec_window_guard:"Proteção de chuva, vento e geada",
+  sec_window_guard_sub:"fecha a janela quando é preciso",
+  f_window_guard_intro:"A proteção fecha a janela de imediato e mantém-na fechada durante o bloqueio configurado. Os sensores estão em Definições; só o vento pode ser definido por janela.",
+  f_window_safety_hint:"⚠️ Não confies só nisto: entre a primeira gota e a janela fechada estão a estação meteorológica, o Home Assistant e o tempo de percurso do motor. Um sensor de chuva na própria janela fecha sem essa cadeia.",
+  sec_window_sun:"Quando abre",
+  sec_window_sun_sub:"Condições, intervalo horário",
+  f_window_cond_hint:"Sem condição a janela nunca abre sozinha. O habitual é a temperatura interior; a altura e a direção do sol podem ser desligadas.",
+  f_convert_to_window:"Adotar como janela de tecto",
   f_sun_cond_wrong_way:"Estes dois valores estão trocados. Trata-se de um ponto de activação com um ponto de libertação ABAIXO dele, não de um intervalo de–a. Assim, o segundo valor é descartado e a condição fica praticamente sempre cumprida. Para um intervalo de orientações existe «Apenas com a orientação certa da janela».",
   f_geo_override_values_hint:"Estes dois valores passam a valer em vez dos da zona – quer lhes toque ou não.",
   sec_export:"Exportar definições",
@@ -2949,6 +3217,31 @@ pt:{
   btn_extend_barred:"Bloqueado – proteção de vento ou chuva ativa",
 },
 nb:{
+  tab_windows:"Takvinduer",
+  add_window:"Legg til takvindu",
+  edit_window:"Rediger takvindu",
+  empty_windows_list:"Ingen takvinduer er opprettet ennå.",
+  f_cover_window:"Vindusentitet",
+  sec_window:"Grunndata",
+  sec_window_sub:"Entitet, navn, område",
+  sec_window_pos:"Posisjoner",
+  sec_window_pos_sub:"lukket, lufteåpning, helt åpent",
+  f_pos_window_closed:"Lukket",
+  f_pos_window_closed_hint:"Den trygge posisjonen. Dit kjører beskyttelsen ved regn, vind eller frost.",
+  f_pos_window_vent:"Lufteåpning",
+  f_pos_window_vent_hint:"Hvor langt vinduet åpner så lenge områdets betingelser gjelder.",
+  f_pos_window_open:"Helt åpent",
+  f_pos_window_open_hint:"Bare for den manuelle åpne-knappen. Automatikken kjører lufteåpningen.",
+  f_window_auto:"Automatikk for dette takvinduet",
+  f_window_auto_hint:"Av betyr kun manuelt. Beskyttelsen gjelder likevel.",
+  sec_window_guard:"Regn-, vind- og frostbeskyttelse",
+  sec_window_guard_sub:"lukker vinduet når det må",
+  f_window_guard_intro:"Beskyttelsen lukker vinduet med en gang og holder det lukket i den innstilte sperretiden. Sensorene ligger under Innstillinger; bare vinden kan settes per vindu.",
+  f_window_safety_hint:"⚠️ Ikke stol på dette alene: mellom den første dråpen og det lukkede vinduet ligger værstasjonen, Home Assistant og motorens gangtid. En regnsensor på selve vinduet lukker uten den kjeden.",
+  sec_window_sun:"Når det åpnes",
+  sec_window_sun_sub:"Betingelser, tidsvindu",
+  f_window_cond_hint:"Uten en betingelse åpner vinduet seg aldri av seg selv. Innetemperatur er det vanlige; solens høyde og retning kan slås av.",
+  f_convert_to_window:"Overta som takvindu",
   f_sun_cond_wrong_way:"De to verdiene står omvendt. Dette er et påslagspunkt med et opphevingspunkt UNDER, ikke et intervall fra–til. Slik det står nå forkastes den andre verdien, og vilkåret er oppfylt så godt som hele tiden. For et intervall av himmelretninger finnes «Bare ved passende vindusretning».",
   f_geo_override_values_hint:"Disse to verdiene gjelder nå i stedet for områdets – enten du rører dem eller ikke.",
   sec_export:"Eksporter innstillinger",
@@ -4028,7 +4321,7 @@ class ShutterPilotPanel extends PanelBase {
     // Ohne Administratorrechte bleibt nur das Dashboard. Der Tab-Zustand wird
     // hier abgefangen, damit auch ein alter Wert aus der Sitzung nicht in ein
     // Formular führt, das sich gar nicht speichern liesse.
-    const tabs=admin?["dashboard","areas","shutters","awnings","settings"]:["dashboard"];
+    const tabs=admin?["dashboard","areas","shutters","awnings","windows","settings"]:["dashboard"];
     const tab=tabs.includes(this._tab)?this._tab:"dashboard";
     return html`
       <div class="topbar"><div style="flex:1">
@@ -4052,6 +4345,7 @@ class ShutterPilotPanel extends PanelBase {
         tab==="areas"?this._renderAreas(d):
         tab==="settings"?this._renderSettings(d):
         tab==="awnings"?this._renderAwnings(d):
+        tab==="windows"?this._renderWindows(d):
         this._renderShutters(d)}`;
   }
 
@@ -4713,13 +5007,13 @@ class ShutterPilotPanel extends PanelBase {
   /* Beide Listen tragen den Index der *vollen* Liste mit: `save_shutter` und
      `delete_shutter` arbeiten darüber, und ein Index aus einer gefilterten
      Liste zeigte auf den falschen Eintrag. */
-  _byKind(d,awning){
-    return (d.shutters||[]).map((s,i)=>({s,i})).filter(x=>isAwning(x.s)===awning);
+  _byKind(d,kind){
+    return (d.shutters||[]).map((s,i)=>({s,i})).filter(x=>kindOf(x.s)===kind);
   }
   _renderShutters(d){
     if(this._editShutter)return this._renderShutterForm(d);
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
-    const rows=this._byKind(d,false);
+    const rows=this._byKind(d,KIND_SHUTTER);
     return html`
       <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,blind_drive:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!rows.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
@@ -4767,7 +5061,18 @@ class ShutterPilotPanel extends PanelBase {
         `}`;
   }
 
-  /* ─── Markisen ─── */
+  /* ─── Markisen und Dachfenster ─── */
+  /* Ein Dachfenster zaehlt wie ein Rollladen – 0 ist zu –, aber die Stellung,
+     auf die die Bedingungen fahren, ist eine Lueftungsweite, keine
+     Beschattungshoehe. 30 statt 100: ein weit offenes Dachfenster ist Zug,
+     keine Lueftung. */
+  _newWindow(d){
+    return {cover_entity_id:"",name:"",device_kind:KIND_WINDOW,
+      area_down_id:d.areas[0]?.id||"",
+      position_closed:0,position_open:100,position_sun_protect:30,
+      sun_geometry_override:false,blind_drive:false,
+      _isNew:true,_index:null};
+  }
   _newAwning(d){
     return {cover_entity_id:"",name:"",device_kind:KIND_AWNING,
       area_down_id:d.areas[0]?.id||"",
@@ -4778,14 +5083,23 @@ class ShutterPilotPanel extends PanelBase {
       awning_track_low_elev:20,awning_track_low_pos:100,awning_track_step:10,
       _isNew:true,_index:null};
   }
-  _renderAwnings(d){
+  /* Markisen und Dachfenster teilen sich diese Liste. Die Spalten sind
+     dieselben – Bereich, Sperre, Automatik –, weil beide dieselbe Maschine
+     benutzen; verschieden sind nur Symbol und Beschriftung. */
+  _renderAwnings(d){return this._renderGuardedList(d,KIND_AWNING);}
+  _renderWindows(d){return this._renderGuardedList(d,KIND_WINDOW);}
+  _renderGuardedList(d,kind){
     if(this._editShutter)return this._renderShutterForm(d);
+    const win=kind===KIND_WINDOW;
+    const icon=win?"mdi:window-open-variant":"mdi:awning-outline";
+    const addKey=win?"add_window":"add_awning";
+    const emptyKey=win?"empty_windows_list":"empty_awnings_list";
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
-    const rows=this._byKind(d,true);
+    const rows=this._byKind(d,kind);
     const edit=(s,i)=>{this._copyFrom="";this._editShutter={...s,_isNew:false,_index:i};this.requestUpdate();};
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter=this._newAwning(d);this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_awning")}</button></div>
-      ${!rows.length?html`<div class="empty">${T("empty_awnings_list")}</div>`:
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter=win?this._newWindow(d):this._newAwning(d);this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T(addKey)}</button></div>
+      ${!rows.length?html`<div class="empty">${T(emptyKey)}</div>`:
         this._isMobile?html`
           <div class="grid">
             ${rows.map(({s,i})=>{const st=this.hass?.states?.[s.cover_entity_id];
@@ -4793,7 +5107,7 @@ class ShutterPilotPanel extends PanelBase {
               const entityId=s.cover_entity_id||"";
               return html`<div class="card">
                 <div class="card-hdr">
-                  <div class="ic"><ha-icon icon="mdi:awning-outline"></ha-icon></div>
+                  <div class="ic"><ha-icon icon="${icon}"></ha-icon></div>
                   <div class="info">
                     <h2 style="margin:0;font-size:16px">${s.name||friendly||entityId||"–"}</h2>
                     <span style="font-size:12px">${friendly||entityId||"–"}</span>
@@ -4868,9 +5182,9 @@ class ShutterPilotPanel extends PanelBase {
        brächte `position_open: 100`, Fenster- und Lamellenschlüssel mit – also
        genau die Werte, die an einer Markise nichts bedeuten und die der Export
        hinterher als Karteileichen meldet. */
-    const awning=isAwning(s);
+    const kind=kindOf(s);
     const others=(d.shutters||[]).filter(o=>o.cover_entity_id
-      &&o.cover_entity_id!==s.cover_entity_id&&isAwning(o)===awning);
+      &&o.cover_entity_id!==s.cover_entity_id&&kindOf(o)===kind);
     if(!others.length)return "";
     const pick=this._copyFrom||"";
     return html`<div class="field"><label>${T("f_copy_from")}</label>
@@ -4952,32 +5266,45 @@ class ShutterPilotPanel extends PanelBase {
     const sel=(k,lbl,opts)=>html`<div class="field"><label>${lbl}</label><select .value=${s[k]||""} @change=${e=>{s[k]=e.target.value;this.requestUpdate();}}>
       ${opts.map(o=>html`<option value="${o.v}" ?selected=${s[k]===o.v}>${o.l}</option>`)}</select></div>`;
     const dup=this._duplicateCover(s);
-    return html`<div class="form"><h3>${s._isNew?T("add_awning"):T("edit_awning")}</h3>
+    /* Ein Formular fuer beide bewachten Arten. Verschieden sind die Woerter,
+       die Positionsrollen und zwei Bloecke, die es nur an einer Markise gibt
+       (Sonnennachfuehrung und die angelernte "My"-Stellung). Zwei Formulare
+       waeren zwei Stellen, an denen der naechste Schutz-Schalter fehlt. */
+    const win=isWindow(s);
+    const K=(a,w)=>win?w:a;
+    return html`<div class="form"><h3>${s._isNew?T(K("add_awning","add_window")):T(K("edit_awning","edit_window"))}</h3>
 
-      ${this._sec("mdi:awning-outline","sec_awning","sec_awning_sub",html`
-      ${ep("cover_entity_id",T("f_cover_awning"),["cover"],null)}
-      ${dup?(isAwning(dup)
+      ${this._sec(K("mdi:awning-outline","mdi:window-open-variant"),K("sec_awning","sec_window"),K("sec_awning_sub","sec_window_sub"),html`
+      ${ep("cover_entity_id",T(K("f_cover_awning","f_cover_window")),["cover"],null)}
+      ${dup?(kindOf(dup)===kindOf(s)
         ? html`<div class="hint warn">⚠️ ${T("f_cover_dup").replace("{name}",dup.name||dup.cover_entity_id)}</div>`
         /* Ein vorhandener Rollladen mit derselben Entität ist kein Fehlklick,
            sondern der übliche Weg: erst als Rollladen angelegt, dann gemerkt,
            dass es eine Markise ist. Übernehmen statt ablehnen – und dabei die
            Rollladen-Schlüssel wegräumen, nicht stehenlassen. */
         : html`<div class="hint warn">⚠️ ${T("f_cover_is_shutter").replace("{name}",dup.name||dup.cover_entity_id)}</div>
-            <button class="btn" @click=${()=>this._convertToAwning(d,dup)}>
-              <ha-icon icon="mdi:swap-horizontal"></ha-icon>${T("f_convert_to_awning")}</button>`):""}
+            <button class="btn" @click=${()=>this._convertToAwning(d,dup,kindOf(s))}>
+              <ha-icon icon="mdi:swap-horizontal"></ha-icon>${T(K("f_convert_to_awning","f_convert_to_window"))}</button>`):""}
       ${f("name",T("f_name"))}
       <div class="field"><label><input type="checkbox" .checked=${s.automation_enabled!==false}
-        @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_awning_auto")}</label>
-        <div class="hint">${T("f_awning_auto_hint")}</div></div>
+        @change=${e=>{s.automation_enabled=e.target.checked;this.requestUpdate();}}> ${T(K("f_awning_auto","f_window_auto"))}</label>
+        <div class="hint">${T(K("f_awning_auto_hint","f_window_auto_hint"))}</div></div>
       <div class="field"><label>${T("f_area_shade")}</label>
         <select .value=${s.area_down_id||""} @change=${e=>{s.area_down_id=e.target.value;this.requestUpdate();}}>
           ${areas.map(a=>html`<option value="${a.id}" ?selected=${s.area_down_id===a.id}>${a.name||a.id}</option>`)}
         </select><div class="hint">${T("f_area_shade_hint")}</div></div>
       ${this._renderCopyFrom(d,s)}
 
-      `)}${this._sec("mdi:arrow-expand-horizontal","sec_awning_pos","sec_awning_pos_sub",html`
-      ${pct("position_open",T("f_pos_retracted"),T("f_pos_retracted_hint"))}
-      ${pct("position_sun_protect",T("f_pos_extended"),T("f_pos_extended_hint"))}
+      `)}${this._sec("mdi:arrow-expand-horizontal",K("sec_awning_pos","sec_window_pos"),K("sec_awning_pos_sub","sec_window_pos_sub"),html`
+      ${win?html`
+        ${/* Die Ruhestellung ist beim Fenster die geschlossene – dorthin faehrt
+             der Schutz. position_open ist, was der Hand-Knopf "Auf" fuehrt. */""}
+        ${pct("position_closed",T("f_pos_window_closed"),T("f_pos_window_closed_hint"))}
+        ${pct("position_sun_protect",T("f_pos_window_vent"),T("f_pos_window_vent_hint"))}
+        ${pct("position_open",T("f_pos_window_open"),T("f_pos_window_open_hint"))}`:html`
+        ${pct("position_open",T("f_pos_retracted"),T("f_pos_retracted_hint"))}
+        ${pct("position_sun_protect",T("f_pos_extended"),T("f_pos_extended_hint"))}`}
+      ${win?"":html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.awning_track_enabled}
         @change=${e=>{s.awning_track_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_track")}</label>
         <div class="hint">${T("f_track_hint")}</div></div>
@@ -4987,15 +5314,16 @@ class ShutterPilotPanel extends PanelBase {
         ${rng("awning_track_low_elev",T("f_track_low_elev"),0,60,1,"°")}
         ${pct("awning_track_low_pos",T("f_track_low_pos"))}
         ${rng("awning_track_step",T("f_track_step"),1,50,1," %")}
-        <div class="hint">${T("f_track_step_hint")}</div>`:""}
+        <div class="hint">${T("f_track_step_hint")}</div>`:""}`}
       <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
-      ${this._renderMyPosition(s,ep,pct)}
+      ${win?"":this._renderMyPosition(s,ep,pct)}
 
-      `)}${this._sec("mdi:weather-windy","sec_awning_guard","sec_awning_guard_sub",html`
-      <div class="hint">${T("f_guard_intro")}</div>
+      `)}${this._sec("mdi:weather-windy",K("sec_awning_guard","sec_window_guard"),K("sec_awning_guard_sub","sec_window_guard_sub"),html`
+      <div class="hint">${T(K("f_guard_intro","f_window_guard_intro"))}</div>
       <div class="hint warn">${T("f_guard_ignores_switches")}</div>
+      ${win?html`<div class="hint warn">${T("f_window_safety_hint")}</div>`:""}
       ${/* Nur der Wind steht je Markise zur Wahl. Regen und Frost fallen ueber
            dem ganzen Haus gleich – zwei Markisen mit verschiedenen Regensensoren
            gaebe es nicht, das Feld waere nur eine weitere Zeile zum Uebersehen.
@@ -5006,7 +5334,7 @@ class ShutterPilotPanel extends PanelBase {
         .map(slot=>this._renderGuardSlot(s,slot,ep,rng,true))}
       <div class="hint">${T("f_guard_global_only")}</div>
 
-      `)}${this._sec("mdi:sun-compass","sec_awning_sun","sec_awning_sun_sub",html`
+      `)}${this._sec("mdi:sun-compass",K("sec_awning_sun","sec_window_sun"),K("sec_awning_sun_sub","sec_window_sun_sub"),html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.sun_geometry_override}
         @change=${e=>{s.sun_geometry_override=e.target.checked;this.requestUpdate();}}> ${T("f_geo_override")}</label>
         <div class="hint">${T("f_geo_override_hint")}</div></div>
@@ -5031,7 +5359,7 @@ class ShutterPilotPanel extends PanelBase {
       ${this._timeField(s,"shade_from",T("f_shade_from"),"09:00",true)}
       ${this._timeField(s,"shade_to",T("f_shade_to"),"20:00",true)}
       <div class="hint">${T("f_shade_hours_shutter_hint")}</div>
-      <div class="hint">${T("f_awning_cond_hint")}</div>
+      <div class="hint">${T(K("f_awning_cond_hint","f_window_cond_hint"))}</div>
       ${this._renderConditionSlots(s,ep)}`)}
 
       <div class="form-actions">
@@ -5095,14 +5423,25 @@ class ShutterPilotPanel extends PanelBase {
      beiden Positionen auf die Markisen-Vorgabe gesetzt – ein übernommener
      Rollladen brächte sonst `position_open: 100` mit und stünde in Ruhe
      ausgefahren da. */
-  _convertToAwning(d,existing){
+  /* Erst als Rollladen angelegt, dann gemerkt, dass es eine Markise oder ein
+     Dachfenster ist. Uebernehmen statt ablehnen – und dabei die Schluessel
+     wegraeumen, die an der neuen Art nichts bedeuten: gespeichert, sichtbar
+     und wirkungslos ist genau die Sorte, die der Export seit 2.10.2 meldet. */
+  _convertToAwning(d,existing,kind=KIND_AWNING){
     const idx=(d.shutters||[]).indexOf(existing);
     if(idx<0)return;
+    const win=kind===KIND_WINDOW;
     const target={...existing,...this._editShutter};
-    for(const k of AWNING_UNUSED_KEYS)delete target[k];
-    target.device_kind=KIND_AWNING;
-    target.position_open=0;
-    target.position_sun_protect=100;
+    for(const k of (win?WINDOW_UNUSED_KEYS:AWNING_UNUSED_KEYS))delete target[k];
+    target.device_kind=kind;
+    if(win){
+      target.position_closed=0;
+      target.position_open=100;
+      target.position_sun_protect=30;
+    }else{
+      target.position_open=0;
+      target.position_sun_protect=100;
+    }
     target.area_down_id=this._editShutter.area_down_id||existing.area_down_id||"";
     target._isNew=false;
     target._index=idx;
@@ -5111,7 +5450,7 @@ class ShutterPilotPanel extends PanelBase {
   }
   _renderShutterForm(d){
     const s=this._editShutter;
-    if(isAwning(s))return this._renderAwningForm(d);
+    if(hasGuard(s))return this._renderAwningForm(d);
     const areas=this._sortedAreas(d);const T=k=>this.t(k);
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
@@ -5285,8 +5624,9 @@ class ShutterPilotPanel extends PanelBase {
     if(!shutter?.cover_entity_id)return "";
     const act=a=>this._coverAction([shutter],a);
     const T=k=>this.t(k);
-    if(isAwning(shutter)){
-      /* Bei einer Markise heisst "auf" ausfahren. Der Knopf wird gesperrt,
+    if(hasGuard(shutter)){
+      /* Bei einer Markise heisst "auf" ausfahren, an einem Dachfenster
+         "oeffnen" – in beiden Faellen die Richtung, die der Schutz verbietet. Der Knopf wird gesperrt,
          solange der Schutz gilt: Das Backend faengt ihn nicht ab – die Knoepfe
          rufen die cover-Dienste direkt auf, damit Home Assistant die Rechte je
          Entitaet prueft (siehe 2.7.1). Der Guard holt die Markise zwar binnen
@@ -5359,10 +5699,11 @@ class ShutterPilotPanel extends PanelBase {
     }
     return false;
   }
-  /* Nach unten klemmen, nie nach oben – und an einer Markise gar nicht: dort
-     ist „weniger" die eingefahrene, also die sichere Seite. */
+  /* Nach unten klemmen, nie nach oben – und an einer Markise oder einem
+     Dachfenster gar nicht: dort ist „weniger" die eingefahrene bzw. die
+     geschlossene, also die sichere Seite. */
   _lockClamp(s,pos){
-    if(isAwning(s)||!s.lock_protection||!this._windowOpen(s))return pos;
+    if(hasGuard(s)||!s.lock_protection||!this._windowOpen(s))return pos;
     const min=Number(s.min_position_when_open??20);
     return Number.isFinite(min)&&pos<min?min:pos;
   }
@@ -5373,9 +5714,9 @@ class ShutterPilotPanel extends PanelBase {
        nichts: "Lueften" hat sie nicht, und "auf"/"Sonnenschutz" faehrt sie
        aus – das darf bei aktiver Sperre nicht passieren. "zu" und "Stop"
        bleiben immer erlaubt, das sind die sicheren Richtungen. */
-    if(action==="vent")list=list.filter(s=>!isAwning(s));
+    if(action==="vent")list=list.filter(s=>!hasGuard(s));
     if(action==="open"||action==="sun")
-      list=list.filter(s=>!isAwning(s)||!this._isAwningBarred(s));
+      list=list.filter(s=>!hasGuard(s)||!this._isAwningBarred(s));
     /* Ein Gruppenknopf ist der Bereich, der handelt – der Rollladenschalter
        gilt also. Ein defekter Rollladen, den jemand bewusst herausgenommen
        hat, fuhr trotzdem mit; zweimal als Fehler gemeldet. Die Knoepfe in der

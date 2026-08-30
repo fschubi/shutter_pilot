@@ -16,7 +16,7 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 ## Funktionen
 
 - **Drei Steuerungsmodi** pro Bereich: Zeitbasiert, helligkeitsbasiert (Lux-Sensor) oder Sonnenstand (Sonnenauf-/untergang)
-- **Sidebar-Panel** mit Dashboard, Bereiche, Rollläden und Markisen-Tabs zur vollständigen Verwaltung
+- **Sidebar-Panel** mit Dashboard, Bereiche, Rollläden, Markisen und Dachfenster-Tabs zur vollständigen Verwaltung
 - **Fenster-/Türsensoren** – öffnet Rollläden automatisch bei geöffnetem Fenster
 - **Aussperrschutz** – verhindert vollständiges Schließen bei offener Tür
 - **Sonnenschutz mit Himmelsrichtung** – beschattet nur, wenn die Sonne im eingestellten Höhenwinkel **und** vor den Fenstern steht
@@ -32,6 +32,7 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 - **Wochentag-/Wochenend-Zeitpläne** – separate Zeitfenster für Wochentage und Wochenenden (Zeitmodus und Helligkeitsmodus)
 - **Sonnenstand-Info im Dashboard** – zeigt nächsten Sonnenaufgang/-untergang, Offset und berechnete Trigger-Zeit für Sonnenstand-Bereiche
 - **Markisen** – eigener Tab, Beschattung ohne Zeitplan, mit **Wind-, Regen- und Frostschutz** (gilt auch bei ausgeschalteter Automatik) und optionaler Ausfahrlänge nach Sonnenhöhe
+- **Dachfenster** – eigener Tab, Öffnen nach Bedingungen (z. B. Innentemperatur), **Regen-, Wind- und Frostschutz** schließt sie wieder
 
 ## Screenshots
 
@@ -139,7 +140,7 @@ Wetterlage von heute.
 |---------|-------------|
 | `shutter_pilot.open_group` | Alle Rollläden eines Bereichs öffnen |
 | `shutter_pilot.close_group` | Alle Rollläden eines Bereichs schließen |
-| `shutter_pilot.stop_group` | Alle fahrenden Rollläden und Markisen eines Bereichs anhalten |
+| `shutter_pilot.stop_group` | Alle fahrenden Rollläden, Markisen und Dachfenster eines Bereichs anhalten |
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 | `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
 | `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung |
@@ -162,9 +163,10 @@ Zusätzlich zum Panel legt Shutter Pilot Entitäten an, die du auf normalen Dash
 | `switch.shutter_pilot_rollladen_<name>` | Automatik pro Rollladen (Name aus dem Feld **Name**) |
 | `sensor.shutter_pilot_<bereich>_nächste_fahrt` | Zeitstempel der nächsten geplanten Fahrt, Attribut `direction` = `up`/`down` |
 | `binary_sensor.shutter_pilot_<bereich>_sonnenschutz` | `on`, solange die Beschattung aktiv ist |
-| `sensor.shutter_pilot_status` | Das Haus auf einen Blick: Zustand `open` / `closed` / `partial`, Attribute `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `shading_active`, `shading_areas`, `shading_covers`. Markisen zählen getrennt – eine eingefahrene Markise ist in Ruhe, nicht „das Haus ist zu" |
+| `sensor.shutter_pilot_status` | Das Haus auf einen Blick: Zustand `open` / `closed` / `partial`, Attribute `open`, `closed`, `partial`, `awnings_extended`, `awnings_retracted`, `windows_open`, `windows_closed`, `shading_active`, `shading_areas`, `shading_covers`. Markisen und Dachfenster zählen getrennt – eine eingefahrene Markise ist in Ruhe, nicht „das Haus ist zu", und ein gekipptes Dachfenster macht das Haus nicht offen |
 | `switch.shutter_pilot_markise_<name>` | Automatik pro Markise (der Wind- und Regenschutz gilt trotzdem) |
-| `binary_sensor.shutter_pilot_<name>_sperre` | `on`, solange die Markise nicht ausfahren darf. Attribute: `reasons`, `release_in_seconds` |
+| `switch.shutter_pilot_dachfenster_<name>` | Automatik pro Dachfenster (der Regen-, Wind- und Frostschutz gilt trotzdem) |
+| `binary_sensor.shutter_pilot_<name>_sperre` | `on`, solange die Markise nicht ausfahren bzw. das Dachfenster nicht öffnen darf. Attribute: `reasons`, `release_in_seconds` |
 
 ## Automatik abschalten
 
@@ -338,6 +340,56 @@ Antrieben nur mit einer **„My"-Position** (siehe Rollladen-Einstellungen oben)
 die angelernte dritte Stellung ist die einzige Zwischenposition, die so ein
 Motor anfahren kann. Ohne sie wird aus jedem Wert ab 50 % „ganz ausfahren" –
 das steht einmal als Warnung im Log und im Export.
+
+
+## Dachfenster
+
+Seit 2.20.0 gibt es einen eigenen Tab **Dachfenster**. Dahinter steckt dieselbe
+Maschine wie bei den Markisen – nur zeigt die Gefahr in die andere Richtung:
+eine Markise muss **ein**fahren, wenn es bläst, ein Dachfenster muss **zu**,
+wenn es regnet.
+
+### Es fährt in keinem Zeitplan mit
+
+Wie die Markise. Uhrzeit, Helligkeit und Sonnenstand bewegen ein Dachfenster
+nicht, und Fensterkontakt, Aussperrschutz, Lamellen und Nachholfahrt gibt es
+dort nicht – der Cover *ist* das Fenster.
+
+Geöffnet wird es allein über die **Bedingungen** seines Bereichs. Üblich ist
+die Innentemperatur: „über 24 °C kippen, unter 22 °C wieder zu". Sonnenhöhe und
+Fensterrichtung lassen sich dafür abschalten, dann bleibt eine reine
+Bedingungssteuerung. Der Bereichsmodus **Kein Zeitplan** passt dazu.
+
+Drei Stellungen:
+
+| Stellung | Bedeutung | Vorgabe |
+| --- | --- | --- |
+| Geschlossen | die sichere Stellung – dorthin fährt der Schutz | 0 % |
+| Lüftungsstellung | so weit öffnet es, solange die Bedingungen zutreffen | 30 % |
+| Ganz offen | nur für den Auf-Knopf von Hand | 100 % |
+
+### Regen-, Wind- und Frostschutz
+
+Dieselben drei Sensoren wie bei den Markisen, unter **Einstellungen**, mit
+derselben Mechanik: Binärsensor, Zahlenwert mit Ein- und Ausschaltschwelle oder
+Zustandsliste, dazu eine **Sperrzeit** je Sensor. Nach dem letzten Tropfen
+bleibt das Fenster also noch die eingestellte Zeit zu, und erst danach öffnet
+es wieder – sofern die Bedingung noch gilt.
+
+Ein Regensensor, der **nichts mehr meldet**, sperrt sofort und schließt nach
+einer Karenzzeit. An einem Fenster ist das die richtige Richtung: „ich weiß es
+nicht" heißt zu.
+
+Für eine Ecowitt-Wetterstation ist die **Regenrate** der richtige Wert
+(`sensor.*_rain_rate`, mm/h), nicht die Tagessumme – die rechnet hoch und geht
+nach dem Regen nicht mehr herunter.
+
+> ⚠️ **Verlass dich nicht allein darauf.** Zwischen dem ersten Tropfen und dem
+> geschlossenen Fenster liegen die Wetterstation, Home Assistant und die
+> Laufzeit des Motors. Bei einem plötzlichen Schauer ist Wasser im Raum, bevor
+> das Fenster zu ist. Ein Regensensor **am Fenster selbst** – Velux und Roto
+> haben so etwas – schließt ohne diese Kette. Shutter Pilot ist der Komfort
+> obendrauf, nicht der Ersatz dafür.
 
 ## Sonnenschutz nur bei echter Sonne und Wärme
 
