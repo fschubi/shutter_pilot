@@ -35,6 +35,8 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_WINDOW_TILTED_STATE,
+    WINDOW_UNUSED_KEYS,
     AWNING_GUARD_SLOTS,
     AWNING_GUARD_WIND,
     AREA_MODE_NONE,
@@ -82,7 +84,7 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
-    guard_rest_role,
+    rest_role,
     has_guard,
     is_window,
     automated_up_blocked,
@@ -111,7 +113,11 @@ from .helpers import (
     sun_protect_conditions_met,
 )
 from .position_store import get_position_store
-from .window_helper import has_tilt_state
+from .window_helper import (
+    _canonical_state,
+    _first_entity_id as _first_window_entity,
+    has_tilt_state,
+)
 
 # Geometriewerte, die ohne "Eigene Ausrichtung" stumm liegen bleiben.
 _GEOMETRY_KEYS = (
@@ -480,7 +486,7 @@ def _drive_command_note(
         return []
 
     guarded = has_guard(shutter)
-    rest = get_position_for_role(shutter, guard_rest_role(shutter))
+    rest = get_position_for_role(shutter, rest_role(shutter))
     active = get_position_for_role(
         shutter, ROLE_SUN_PROTECT if guarded else ROLE_CLOSED
     )
@@ -541,6 +547,93 @@ def _awning_silent_notes(shutter: dict[str, Any]) -> list[str]:
         "> ⚠️ An dieser Markise stehen Rollladen-Einstellungen, die hier nichts "
         f"bedeuten und nicht gelesen werden: `{'`, `'.join(leftovers)}`. "
         "Sie einmal im Formular zu speichern räumt sie weg.",
+        "",
+    ]
+
+
+def _window_silent_notes(
+    shutter: dict[str, Any], area: dict[str, Any] | None
+) -> list[str]:
+    """Warum ein frisch angelegtes Dachfenster nichts tut.
+
+    Es faehrt in keinem Zeitplan mit – geoeffnet wird es allein ueber den
+    Sonnenschutz seines Bereichs. Ist der aus oder steht dort keine Bedingung,
+    passiert schlicht nie etwas, und von aussen sieht das wie ein Defekt aus:
+    "nachdem ich ein Rollo zu Dachfenster importiert hatte gab es leider
+    keinerlei Funktion" (hollizone).
+    """
+    out: list[str] = []
+    leftovers = [key for key in WINDOW_UNUSED_KEYS if _is_set(shutter.get(key))]
+    if leftovers:
+        out.append(
+            "> ⚠️ An diesem Dachfenster stehen Rollladen-Einstellungen, die "
+            "hier nichts bedeuten und nicht gelesen werden: "
+            f"`{'`, `'.join(leftovers)}`. Sie einmal im Formular zu speichern "
+            "räumt sie weg."
+        )
+    if area is None:
+        out.append(
+            "> ⚠️ Diesem Dachfenster ist kein Bereich zugeordnet – es öffnet "
+            "nie."
+        )
+    elif not area.get(CONF_AREA_SUN_PROTECT_ENABLED, False):
+        out.append(
+            "> ⚠️ Im Bereich dieses Dachfensters ist der **Sonnenschutz aus**. "
+            "Ein Dachfenster fährt in keinem Zeitplan mit – geöffnet wird es "
+            "allein darüber. So bleibt es dauerhaft geschlossen; der Regen-, "
+            "Wind- und Frostschutz gilt weiterhin."
+        )
+    elif not any(
+        str(area.get(sun_condition_keys(slot)[0]) or "").strip()
+        for slot in SUN_CONDITION_SLOTS
+    ):
+        out.append(
+            "> ℹ️ Im Bereich dieses Dachfensters steht **keine Bedingung**. "
+            "Ohne eine – üblich ist die Innentemperatur – entscheidet nur noch "
+            "der Sonnenstand darüber, wann es öffnet."
+        )
+    return [*out, ""] if out else []
+
+
+def _window_contact_note(
+    hass: HomeAssistant, shutter: dict[str, Any]
+) -> list[str]:
+    """Ein Kipp-Zustand, den der Kontakt gar nicht melden kann.
+
+    Ein `binary_sensor` kennt nur on und off. Steht dort trotzdem ein
+    Kipp-Zustand wie „gekippt", passiert zweierlei, und beides sieht nach
+    einem Fehler der Integration aus:
+
+    * die Kipp-Position wird nie gefahren, weil der Zustand nie eintritt, und
+    * der Wechsel offen -> gekippt ist fuer den Sensor **keine Aenderung**.
+      Home Assistant feuert dann kein Ereignis, und es sieht aus, als
+      reagiere die Steuerung nicht mehr auf den Griff.
+
+    Gemeldet von bjoerg als „nur die Abfrage des Fenstergriffs scheint zu
+    haengen". Dieselbe Klasse wie heinzies `open` an einem Binaersensor in
+    2.8.1 – nur am anderen Ende der Zustandsliste.
+    """
+    entity_id = _first_window_entity(shutter.get(CONF_WINDOW_ENTITY_ID))
+    if not entity_id:
+        return []
+    tilted = str(shutter.get(CONF_WINDOW_TILTED_STATE) or "").strip()
+    if not tilted or tilted.lower() == "none":
+        return []
+    if not entity_id.startswith("binary_sensor."):
+        return []
+    if _canonical_state(tilted) in ("on", "off"):
+        return []
+    state = hass.states.get(entity_id)
+    now = f" (meldet gerade `{state.state}`)" if state is not None else ""
+    return [
+        f"> ⚠️ `{entity_id}` ist ein Binärsensor{now} und kennt nur „an“ "
+        f"und „aus“ – der eingetragene Kipp-Zustand `{tilted}` kann dort nie "
+        "eintreten. Die Kipp-Position wird deshalb nie gefahren, und der "
+        "Wechsel von offen auf gekippt ist für den Sensor **keine Änderung**: "
+        "es kommt kein Ereignis an, und es sieht aus, als reagiere die "
+        "Steuerung nicht mehr auf den Griff. Kipp-Zustand leeren (dann gilt "
+        "der Kontakt als zweiwertig) oder eine Entität eintragen, die den "
+        "Griff wirklich dreistufig meldet.",
         "",
     ]
 
@@ -1024,6 +1117,7 @@ async def async_build_export(
 
         out += _settings_table(shutter)
         out += _silent_setting_notes(shutter)
+        out += _window_contact_note(hass, shutter)
         out += _drive_command_note(hass, shutter)
 
         if awning:
@@ -1031,6 +1125,9 @@ async def async_build_export(
             # Markise ist „warum ist sie nicht draussen", und die Antwort steht
             # oefter hier als in der Geometrie darunter.
             out += _awning_silent_notes(shutter)
+            out += _guard_rows(hass, entry, data, shutter)
+        elif is_window(shutter):
+            out += _window_silent_notes(shutter, down_area)
             out += _guard_rows(hass, entry, data, shutter)
 
         if down_area is not None and down_area.get(CONF_AREA_SUN_PROTECT_ENABLED):

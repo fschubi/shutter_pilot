@@ -39,7 +39,8 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (712 Tests)
+tests/               pytest-Suite (731 Tests)
+tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
 ## Funktionsumfang
@@ -258,7 +259,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 712 Tests, ~17 s
+.venv/bin/pytest            # 731 Tests, ~17 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -267,9 +268,12 @@ ohne Argument aufrufen. Die CI ([tests.yaml](.github/workflows/tests.yaml))
 fährt dieselbe Suite bei jedem Push auf `master` mit Python 3.13.
 
 **Panel testen ohne Home Assistant:** Das JS lässt sich in Node mit einem
-Stub für `customElements`/LitElement auswerten und rendern – so fallen
-Renderfehler und Rechte-Logik auf, ohne HA zu starten. Hat sich bewährt, ist
-aber wegwerf-Werkzeug im Scratchpad, nicht im Repo.
+Stub für `customElements`/LitElement auswerten und rendern. Seit 2.21.1 liegt
+das **im Repo** (`tests/panel/`, angebunden über `tests/test_panel.py`) und
+läuft in der CI mit – vorher war es Wegwerf-Werkzeug im Scratchpad, und genau
+deshalb ging ein ReferenceError raus, den es gefunden hätte. Der Renderer
+deckt alle Ansichten, alle Formulare und alle Bereichsmodi ab, **mit zwei
+Einträgen je Geräteart**: der Kopierknopf wird erst ab dem zweiten gerendert.
 
 ## Release
 
@@ -284,10 +288,66 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-31 – 2.21.1: die Variable, die beim Umbenennen stehenblieb
+
+Vier Meldungen an einem Tag (Wolf, charly166, TanjaHH, hollizone), alle
+dieselbe: **`awning is not defined`, das Formular liess sich nicht mehr
+oeffnen.** Mein Fehler aus 2.20.0 – beim Umbenennen von `awning` auf `kind` in
+`_renderCopyFrom` blieben zwei von drei Verwendungen stehen.
+
+**Warum es niemand vorher sah, und das ist der eigentliche Punkt.** Der Block
+„Einstellungen uebernehmen von …" wird erst gerendert, wenn `others.length > 0`
+– also **ab dem zweiten Eintrag derselben Geraeteart**. Mein Panel-Test hatte
+je *einen* Rollladen, eine Markise, ein Dachfenster. Der Zweig lief nie.
+TanjaHHs Beschreibung ist der perfekte Beleg: „ab dem zweiten Rollladen".
+`node --check` findet so etwas ohnehin nicht – es ist gueltige Syntax.
+
+**Konsequenz, und die ist wichtiger als der Fix:** der Renderer liegt jetzt in
+`tests/panel/` und laeuft in der CI (`tests/test_panel.py`). Alle Tabs in
+beiden Breiten, alle Formulare, alle vier Bereichsmodi, neu und bearbeitet –
+und **zwei Eintraege je Art**. Gegenprobe: den Fehler wieder eingebaut, Test
+faellt. CLAUDE.md sagte bisher „wegwerf-Werkzeug im Scratchpad, nicht im
+Repo" – das war die Zeile, die das hier gekostet hat.
+
+**Der Fund beim Nachstellen von hollizones Fall wiegt schwerer als die
+Meldung.** Er schrieb „keinerlei Funktion". Beim Testen kam heraus: die
+Beschattung *gibt* ein Dachfenster auf `position_open` frei – bei einer Markise
+„eingefahren", bei einem Fenster **weit auf**. Sobald der Raum abkuehlte, riss
+es das Fenster auf. Bei Regen waere das Wasser im Haus gewesen, also genau der
+Schaden, gegen den die Geraeteart gebaut wurde. `guard_rest_role()` heisst
+deshalb jetzt `rest_role()` und wird an beiden Stellen gefragt – Schutz *und*
+Freigabe. **Merke: ein Name, der nur einen der beiden Aufrufer nennt, ist
+derselbe Vertrag wie `include_awnings` aus 2.20.0.** Und: 2.20.0 hatte den
+Schutz getestet, aber nicht den Fahrweg, auf dem ein Dachfenster ueberhaupt
+oeffnet – eine ganze Geraeteart mit einem ungetesteten Weg.
+
+**pcsv17s 0 %-Fall war mein Designfehler von gestern.** `resume_automation` las
+`covers_driven_down`. Der Merker sagt, wohin zuletzt *gefahren* wurde, nicht,
+wo die Automatik den Rollladen *haben will* – wer von Hand zufaehrt, landet
+darin, und resume zementierte die Uebersteuerung, die es aufheben soll. Jetzt
+`scheduled_role_now()`: steht als Naechstes eine Abwaertsfahrt an, gehoert er
+bis dahin nach oben. Bei Modus `none` gibt es bewusst **keine** Antwort – eine
+Endlage zu raten waere schlechter als nichts zu tun.
+
+**bjoergs „die Abfrage des Fenstergriffs haengt" ist kein Codefehler.** Sein
+Kontakt ist ein `binary_sensor` und kennt nur on/off; `window_tilted_state:
+gekippt` kann dort nie eintreten. Der Wechsel offen -> gekippt ist fuer den
+Sensor damit **keine Aenderung**, es feuert kein Ereignis – und von aussen
+sieht das aus, als reagiere nichts mehr. Der Export benennt das jetzt.
+Dieselbe Klasse wie heinzies `open` an einem Binaersensor in 2.8.1, nur am
+anderen Ende der Zustandsliste.
+
+**Verifiziert:** `pytest` 731 Tests gruen (19 neue), **vier Gegenproben** –
+ohne den Formular-Fix faellt der Renderer, ohne `rest_role` in der Freigabe
+einer, ohne `scheduled_role_now` drei, ohne den Kontakt-Hinweis vier. Die
+Sortierung hat einen eigenen Test, der prueft, dass der Index weiter auf die
+**volle** Liste zeigt – sonst loescht ein Klick den falschen Eintrag. i18n
+438/438 in allen elf Sprachen (2 neu). **Nicht im Browser geprueft.**
 
 ### 2026-08-30 – 2.21.0: der Merker, der nach der Fahrt stehen blieb
 

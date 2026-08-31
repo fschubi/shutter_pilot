@@ -16,6 +16,7 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_AREAS,
     CONF_AREA_ID,
+    CONF_AREA_UP_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
@@ -48,6 +49,7 @@ from .helpers import (
     set_cover_position,
     shading_enabled,
 )
+from .schedule_times import scheduled_role_now
 from .window_helper import get_effective_close_position
 
 _LOGGER = logging.getLogger(__name__)
@@ -379,14 +381,34 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             await evaluate()
 
         # Whatever the shading did not claim belongs to the half of the day the
-        # shutter is in. The scheduler's own bookkeeping says which one that is
-        # – it is kept up to date by foreign drives too, since 2.17.0.
-        down: set = data.get("covers_driven_down") or set()
+        # schedule says we are in. Asked from the schedule, not from
+        # `covers_driven_down`: that set only records where a shutter was last
+        # driven, so a shutter closed by hand at noon reads as "the automation
+        # wants it closed" and resume would cement the very override it is
+        # meant to end – reported by pcsv17 for a shutter parked at 0 %.
+        areas = {
+            str(a.get(CONF_AREA_ID) or ""): a
+            for a in (entry.options.get(CONF_AREAS) or [])
+            if isinstance(a, dict)
+        }
         for shutter in targets:
             cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
             if is_cover_sun_protected(data, cover):
                 continue
-            role = ROLE_CLOSED if cover in down else ROLE_OPEN
+            role = scheduled_role_now(
+                hass,
+                areas.get(str(shutter.get(CONF_AREA_UP_ID) or "").strip()),
+                areas.get(str(shutter.get(CONF_AREA_DOWN_ID) or "").strip()),
+            )
+            if role is None:
+                # No schedule at all (mode "none"): the shading is the only
+                # thing with an opinion, and it just had its say. Driving to a
+                # guessed end position would be inventing one.
+                _LOGGER.debug(
+                    "resume_automation: %s has no schedule – left where it is",
+                    cover,
+                )
+                continue
             position = get_position_for_role(shutter, role)
             if role == ROLE_CLOSED:
                 position = get_effective_close_position(hass, shutter, position)

@@ -30,6 +30,7 @@ from .const import (
 )
 from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
 from .helpers import (
+    rest_role,
     is_shutter,
     awning_shade_position,
     awning_track_step,
@@ -230,8 +231,13 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
             if not cover_entity:
                 continue
-            pos = get_position_for_role(shutter, ROLE_OPEN)
-            tilt = get_tilt_for_role(shutter, ROLE_OPEN)
+            # Nicht fest ROLE_OPEN: bei einer Markise heisst das "eingefahren",
+            # bei einem Dachfenster aber "weit auf" – die Freigabe haette es
+            # aufgerissen, sobald der Raum abkuehlt. Die Ruhestellung kommt
+            # deshalb aus der Geraeteart, genau wie beim Schutz.
+            role = rest_role(shutter)
+            pos = get_position_for_role(shutter, role)
+            tilt = get_tilt_for_role(shutter, role)
             _LOGGER.info(
                 "[sun-protect] area=%s: release (%s) → %s -> %d%%",
                 area_id, reason, cover_entity, int(pos),

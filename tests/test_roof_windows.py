@@ -25,11 +25,13 @@ from custom_components.shutter_pilot.awning_guard import (
 from custom_components.shutter_pilot.const import (
     CONF_AREA_DOWN_ID,
     CONF_AREA_UP_ID,
+    CONF_AREA_ID,
     CONF_COVER_ENTITY_ID,
     CONF_DEVICE_KIND,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
+    CONF_SHUTTERS,
     DOMAIN,
     KIND_AWNING,
     KIND_WINDOW,
@@ -41,7 +43,7 @@ from custom_components.shutter_pilot.const import (
 from custom_components.shutter_pilot.helpers import (
     filter_shutters_by_area,
     get_position_for_role,
-    guard_rest_role,
+    rest_role,
     has_guard,
     is_awning,
     is_shutter,
@@ -131,8 +133,8 @@ class TestKinds:
 
 class TestSafePosition:
     def test_the_rest_role_differs_by_kind(self):
-        assert guard_rest_role(AWNING) == ROLE_OPEN
-        assert guard_rest_role(WINDOW) == ROLE_CLOSED
+        assert rest_role(AWNING) == ROLE_OPEN
+        assert rest_role(WINDOW) == ROLE_CLOSED
 
     def test_rest_position_is_shut_for_a_window(self):
         assert rest_position(WINDOW) == 0
@@ -298,3 +300,169 @@ class TestTheGuardLoopActuallyReachesWindows:
             await async_enforce_guard(hass, entry)
 
         assert driven == []
+
+
+# --- Der Fahrweg, den 2.20.0 ungetestet gelassen hat -------------------------
+
+
+class TestOpeningAndClosingByConditions:
+    """hollizone: „nachdem ich ein Rollo zu Dachfenster importiert hatte gab es
+    leider keinerlei Funktion."
+
+    2.20.0 hatte den Schutz getestet, aber nicht den Weg, auf dem ein
+    Dachfenster ueberhaupt oeffnet – und genau dort steckte ein Fehler, der
+    schlimmer ist als keine Funktion: die Freigabe fuhr auf `position_open`.
+    Bei einer Markise heisst das „eingefahren", bei einem Dachfenster „weit
+    auf". Sobald der Raum abkuehlte, riss es das Fenster auf, statt es zu
+    schliessen.
+    """
+
+    @staticmethod
+    async def _setup(hass, temp: str):
+        from unittest.mock import patch as _patch
+
+        from custom_components.shutter_pilot import cover_tracker
+        from custom_components.shutter_pilot.const import (
+            AREA_MODE_NONE,
+            CONF_AREA_AZIMUTH_ENABLED,
+            CONF_AREA_DRIVE_DELAY,
+            CONF_AREA_ELEVATION_ENABLED,
+            CONF_AREA_MODE,
+            CONF_AREA_NAME,
+            CONF_AREA_SUN_PROTECT_ENABLED,
+            CONF_AREAS,
+            CONF_NAME,
+        )
+
+        cover_tracker.STARTUP_RESTORE_DELAY_SEC = 0
+        cover_tracker.STARTUP_RESTORE_RETRY_SEC = 0
+        temp_sensor = "sensor.innentemperatur"
+        hass.states.async_set(
+            "cover.dachfenster_bad",
+            "closed",
+            {"current_position": 0, "supported_features": 15},
+        )
+        hass.states.async_set(temp_sensor, temp, {"unit_of_measurement": "°C"})
+        hass.states.async_set(
+            "sun.sun", "above_horizon", {"elevation": 30.0, "azimuth": 180.0}
+        )
+        e_key, on_key, off_key, _ = sun_condition_keys("a")
+        area = {
+            CONF_AREA_ID: "bad",
+            CONF_AREA_NAME: "Bad",
+            CONF_AREA_MODE: AREA_MODE_NONE,
+            CONF_AREA_DRIVE_DELAY: 0,
+            CONF_AREA_SUN_PROTECT_ENABLED: True,
+            CONF_AREA_ELEVATION_ENABLED: False,
+            CONF_AREA_AZIMUTH_ENABLED: False,
+            e_key: temp_sensor,
+            on_key: 24,
+            off_key: 22,
+        }
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_AREAS: [area],
+                CONF_SHUTTERS: [{**WINDOW, CONF_NAME: "Dachfenster"}],
+            },
+        )
+        entry.add_to_hass(hass)
+        with _patch(
+            "custom_components.shutter_pilot._async_register_panel", return_value=None
+        ):
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+        return entry, hass.data[DOMAIN][entry.entry_id], temp_sensor
+
+    @staticmethod
+    async def _ticks(hass, data, count: int = 2):
+        from homeassistant.util import dt as dt_util
+
+        for _ in range(count):
+            now = dt_util.now()
+            for cb in list(data.get("_minute_callbacks", {}).values()):
+                cb(now)
+            await hass.async_block_till_done()
+
+    async def test_a_warm_room_opens_it_to_the_airing_gap(self, hass):
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        _entry, data, _temp = await self._setup(hass, "26.0")
+        await self._ticks(hass, data)
+
+        assert 30 in [c.data["position"] for c in calls], (
+            "ohne diesen Fahrweg hat ein Dachfenster keinerlei Funktion"
+        )
+
+    async def test_cooling_down_shuts_it_rather_than_throwing_it_open(self, hass):
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        _entry, data, temp = await self._setup(hass, "26.0")
+        await self._ticks(hass, data)
+        calls.clear()
+
+        hass.states.async_set(temp, "20.0", {"unit_of_measurement": "°C"})
+        await self._ticks(hass, data)
+
+        positions = [c.data["position"] for c in calls]
+        assert 0 in positions, f"muss schliessen, gefahren wurde: {positions}"
+        assert 100 not in positions, (
+            "die Freigabe darf das Fenster nicht aufreissen"
+        )
+
+
+class TestTheExportExplainsAQuietWindow:
+    """Damit „keinerlei Funktion" nicht wieder als Fehler gemeldet wird."""
+
+    @staticmethod
+    def _notes(shutter, area):
+        from custom_components.shutter_pilot.export import _window_silent_notes
+
+        return "\n".join(_window_silent_notes(shutter, area))
+
+    def test_an_area_without_sun_protection_is_named(self):
+        from custom_components.shutter_pilot.const import (
+            CONF_AREA_SUN_PROTECT_ENABLED,
+        )
+
+        notes = self._notes(WINDOW, {CONF_AREA_ID: "bad", CONF_AREA_SUN_PROTECT_ENABLED: False})
+        assert "Sonnenschutz aus" in notes
+
+    def test_a_missing_area_is_named(self):
+        assert "kein Bereich" in self._notes(WINDOW, None)
+
+    def test_an_area_without_conditions_gets_a_hint(self):
+        from custom_components.shutter_pilot.const import (
+            CONF_AREA_SUN_PROTECT_ENABLED,
+        )
+
+        notes = self._notes(WINDOW, {CONF_AREA_ID: "bad", CONF_AREA_SUN_PROTECT_ENABLED: True})
+        assert "keine Bedingung" in notes
+
+    def test_a_properly_configured_window_stays_quiet(self):
+        from custom_components.shutter_pilot.const import (
+            CONF_AREA_SUN_PROTECT_ENABLED,
+        )
+
+        area = {
+            CONF_AREA_ID: "bad",
+            CONF_AREA_SUN_PROTECT_ENABLED: True,
+            sun_condition_keys("a")[0]: "sensor.innentemperatur",
+        }
+        assert self._notes(WINDOW, area) == ""
+
+    def test_leftover_shutter_keys_are_named(self):
+        from custom_components.shutter_pilot.const import (
+            CONF_AREA_SUN_PROTECT_ENABLED,
+            CONF_LOCK_PROTECTION,
+        )
+
+        area = {
+            CONF_AREA_ID: "bad",
+            CONF_AREA_SUN_PROTECT_ENABLED: True,
+            sun_condition_keys("a")[0]: "sensor.innentemperatur",
+        }
+        notes = self._notes({**WINDOW, CONF_LOCK_PROTECTION: True}, area)
+        assert "lock_protection" in notes

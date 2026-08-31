@@ -4,6 +4,21 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.1]
+
+Vier Meldungen an einem Tag, und die erste war ein Fehler von mir aus 2.20.0:
+**das Bearbeiten-Formular ließ sich nicht mehr öffnen.**
+
+### Behoben
+- **„awning is not defined" beim Bearbeiten oder Anlegen** (Wolf, charly166, TanjaHH, hollizone). Beim Einbau der Dachfenster habe ich eine Variable umbenannt und zwei Verwendungen übersehen. Betroffen war der Block „Einstellungen übernehmen von …" – und den gibt es erst **ab dem zweiten Eintrag derselben Geräteart**. Deshalb ging der erste Rollladen und der zweite nicht, deshalb ging es auf dem einen Gerät und auf dem anderen nicht. Gültige Syntax, also fand `node --check` nichts davon. Das Panel wird jetzt bei jedem Push vollständig durchgerendert – alle Ansichten, alle Formulare, alle Bereichsmodi, ausdrücklich mit mehreren Einträgen je Art.
+- **Ein Dachfenster wurde aufgerissen statt geschlossen, wenn die Bedingung wegfiel** (gefunden beim Nachstellen von hollizones Fall). Die Freigabe fuhr auf `position_open` – bei einer Markise heißt das „eingefahren", bei einem Fenster „weit auf". Sobald der Raum abkühlte, stand das Fenster offen. Die Ruhestellung kommt jetzt aus der Geräteart, genau wie beim Schutz.
+- **`resume_automation` ließ einen ganz geschlossenen Rollladen stehen** (pcsv17). Der Dienst las „gilt als unten" – ein Merker, der sagt, wohin zuletzt *gefahren* wurde, nicht, wo die Automatik ihn *haben will*. Wer von Hand zufährt, landet darin, und resume zementierte damit genau die Übersteuerung, die es aufheben soll. Jetzt wird die Tageshälfte aus dem Zeitplan abgeleitet: steht als Nächstes eine Abwärtsfahrt an, gehört der Rollladen bis dahin nach oben. In einem Bereich **ohne** Zeitplan wird bewusst keine Endlage erfunden.
+
+### Neu
+- **Die Listen sind nach Namen sortiert** (charly166) – Rollläden, Markisen und Dachfenster, mit Umlauten und Zahlen in der richtigen Reihenfolge.
+- **Der Export erklärt ein Dachfenster, das nichts tut** (hollizone): kein Bereich, Sonnenschutz im Bereich aus, oder keine Bedingung hinterlegt. Ohne die öffnet ein Dachfenster nie – es fährt in keinem Zeitplan mit.
+- **Der Export erkennt einen Kipp-Zustand, den der Kontakt nicht melden kann** (bjoerg). Ein `binary_sensor` kennt nur „an" und „aus". Steht dort trotzdem ein Kipp-Zustand, wird die Kipp-Position nie gefahren – und der Wechsel von offen auf gekippt ist für den Sensor **keine Änderung**, es kommt also kein Ereignis an. Von aussen sieht das aus, als hänge die Abfrage des Fenstergriffs.
+
 ## [2.21.0]
 
 pcsv17 im Forum: „Ich möchte tagsüber mein Baby hinlegen. Dafür habe ich mir

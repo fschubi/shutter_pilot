@@ -296,12 +296,19 @@ def has_guard(shutter: dict[str, Any]) -> bool:
     return device_kind(shutter) in GUARDED_KINDS
 
 
-def guard_rest_role(shutter: dict[str, Any]) -> str:
-    """The position the protection drives to – the safe one for this kind.
+def rest_role(shutter: dict[str, Any]) -> str:
+    """Where this kind of device belongs when nothing is asking for it.
 
-    An awning is safe when it is in (`position_open`), a roof window when it
-    is shut (`position_closed`). Read from the kind rather than assumed, so
-    the clamp in awning_guard.py keeps pointing the right way.
+    A shutter and an awning rest at `position_open` – open, or retracted. A
+    roof window rests shut, because an open window is the state that costs
+    something. Two callers ask the same question for different reasons and
+    must get the same answer:
+
+    * the protection, when it drives to safety, and
+    * the shading, when it releases a cover it was holding.
+
+    Getting the second one wrong is not cosmetic: releasing a roof window to
+    `position_open` throws it wide open the moment the room cools down.
     """
     return ROLE_CLOSED if is_window(shutter) else ROLE_OPEN
 

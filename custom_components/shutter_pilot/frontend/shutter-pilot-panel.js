@@ -156,6 +156,8 @@ const NATIVE_PICKERS_BROKEN = (() => {
 /* ─── i18n ─── */
 const I18N = {
 de:{
+  f_copy_pick_window:"– Dachfenster wählen –",
+  f_copy_hint_window:"Kopiert Stellungen, Bedingungen und den Regen-, Wind- und Frostschutz. Fenster-Entität, Name und Bereich bleiben unverändert.",
   tab_windows:"Dachfenster",
   add_window:"Dachfenster hinzufügen",
   edit_window:"Dachfenster bearbeiten",
@@ -508,6 +510,8 @@ de:{
   btn_extend_barred:"Gesperrt – Wind- oder Regenschutz aktiv",
 },
 en:{
+  f_copy_pick_window:"– choose a roof window –",
+  f_copy_hint_window:"Copies positions, conditions and the rain, wind and frost protection. Window entity, name and area are left alone.",
   tab_windows:"Roof windows",
   add_window:"Add roof window",
   edit_window:"Edit roof window",
@@ -860,6 +864,8 @@ en:{
   btn_extend_barred:"Barred – wind or rain protection active",
 },
 fr:{
+  f_copy_pick_window:"– choisir une fenêtre de toit –",
+  f_copy_hint_window:"Copie positions, conditions et la protection pluie, vent et gel. Entité, nom et zone restent inchangés.",
   tab_windows:"Fenêtres de toit",
   add_window:"Ajouter une fenêtre de toit",
   edit_window:"Modifier la fenêtre de toit",
@@ -1154,6 +1160,8 @@ fr:{
   btn_extend_barred:"Bloqué – protection vent ou pluie active",
 },
 es:{
+  f_copy_pick_window:"– elegir ventana de tejado –",
+  f_copy_hint_window:"Copia posiciones, condiciones y la protección de lluvia, viento y helada. Entidad, nombre y zona no cambian.",
   tab_windows:"Ventanas de tejado",
   add_window:"Añadir ventana de tejado",
   edit_window:"Editar ventana de tejado",
@@ -1448,6 +1456,8 @@ es:{
   btn_extend_barred:"Bloqueado: protección de viento o lluvia activa",
 },
 it:{
+  f_copy_pick_window:"– scegli una finestra da tetto –",
+  f_copy_hint_window:"Copia posizioni, condizioni e la protezione pioggia, vento e gelo. Entità, nome e area restano invariati.",
   tab_windows:"Finestre da tetto",
   add_window:"Aggiungi finestra da tetto",
   edit_window:"Modifica finestra da tetto",
@@ -1742,6 +1752,8 @@ it:{
   btn_extend_barred:"Bloccata: protezione vento o pioggia attiva",
 },
 nl:{
+  f_copy_pick_window:"– dakraam kiezen –",
+  f_copy_hint_window:"Kopieert standen, voorwaarden en de regen-, wind- en vorstbeveiliging. Entiteit, naam en gebied blijven ongewijzigd.",
   tab_windows:"Dakramen",
   add_window:"Dakraam toevoegen",
   edit_window:"Dakraam bewerken",
@@ -2037,6 +2049,8 @@ nl:{
   btn_extend_barred:"Geblokkeerd – wind- of regenbeveiliging actief",
 },
 da:{
+  f_copy_pick_window:"– vælg ovenlysvindue –",
+  f_copy_hint_window:"Kopierer positioner, betingelser og regn-, vind- og frostbeskyttelsen. Enhed, navn og område forbliver uændret.",
   tab_windows:"Ovenlysvinduer",
   add_window:"Tilføj ovenlysvindue",
   edit_window:"Rediger ovenlysvindue",
@@ -2332,6 +2346,8 @@ da:{
   btn_extend_barred:"Spærret – vind- eller regnbeskyttelse aktiv",
 },
 sv:{
+  f_copy_pick_window:"– välj takfönster –",
+  f_copy_hint_window:"Kopierar lägen, villkor och regn-, vind- och frostskyddet. Entitet, namn och område lämnas orörda.",
   tab_windows:"Takfönster",
   add_window:"Lägg till takfönster",
   edit_window:"Redigera takfönster",
@@ -2627,6 +2643,8 @@ sv:{
   btn_extend_barred:"Spärrad – vind- eller regnskydd aktivt",
 },
 pl:{
+  f_copy_pick_window:"– wybierz okno dachowe –",
+  f_copy_hint_window:"Kopiuje położenia, warunki oraz ochronę przed deszczem, wiatrem i mrozem. Encja, nazwa i obszar pozostają bez zmian.",
   tab_windows:"Okna dachowe",
   add_window:"Dodaj okno dachowe",
   edit_window:"Edytuj okno dachowe",
@@ -2922,6 +2940,8 @@ pl:{
   btn_extend_barred:"Zablokowane – aktywna ochrona przed wiatrem lub deszczem",
 },
 pt:{
+  f_copy_pick_window:"– escolher janela de tecto –",
+  f_copy_hint_window:"Copia posições, condições e a proteção de chuva, vento e geada. Entidade, nome e área ficam inalterados.",
   tab_windows:"Janelas de tecto",
   add_window:"Adicionar janela de tecto",
   edit_window:"Editar janela de tecto",
@@ -3217,6 +3237,8 @@ pt:{
   btn_extend_barred:"Bloqueado – proteção de vento ou chuva ativa",
 },
 nb:{
+  f_copy_pick_window:"– velg takvindu –",
+  f_copy_hint_window:"Kopierer posisjoner, betingelser og regn-, vind- og frostbeskyttelsen. Entitet, navn og område forblir uendret.",
   tab_windows:"Takvinduer",
   add_window:"Legg til takvindu",
   edit_window:"Rediger takvindu",
@@ -5007,8 +5029,15 @@ class ShutterPilotPanel extends PanelBase {
   /* Beide Listen tragen den Index der *vollen* Liste mit: `save_shutter` und
      `delete_shutter` arbeiten darüber, und ein Index aus einer gefilterten
      Liste zeigte auf den falschen Eintrag. */
+  /* Nach Namen sortiert angezeigt (charly166), aber der Index der *vollen*
+     Liste faehrt mit: `save_shutter` und `delete_shutter` arbeiten darueber,
+     und ein Index aus einer sortierten Liste zeigte auf den falschen Eintrag.
+     Deshalb wird erst indiziert und dann sortiert, nie umgekehrt. */
   _byKind(d,kind){
-    return (d.shutters||[]).map((s,i)=>({s,i})).filter(x=>kindOf(x.s)===kind);
+    return (d.shutters||[]).map((s,i)=>({s,i})).filter(x=>kindOf(x.s)===kind)
+      .sort((x,y)=>String(x.s.name||x.s.cover_entity_id||"").localeCompare(
+        String(y.s.name||y.s.cover_entity_id||""),undefined,
+        {sensitivity:"base",numeric:true}));
   }
   _renderShutters(d){
     if(this._editShutter)return this._renderShutterForm(d);
@@ -5186,17 +5215,22 @@ class ShutterPilotPanel extends PanelBase {
     const others=(d.shutters||[]).filter(o=>o.cover_entity_id
       &&o.cover_entity_id!==s.cover_entity_id&&kindOf(o)===kind);
     if(!others.length)return "";
+    /* Je Geraeteart eigene Beschriftung. Frueher stand hier ein `awning`, das
+       beim Umbenennen auf drei Arten stehenblieb – und weil dieser Block erst
+       *ab dem zweiten* Eintrag derselben Art gerendert wird, faellt so etwas
+       in einem Test mit je einem Eintrag nicht auf. */
+    const suffix=kind===KIND_AWNING?"_awning":kind===KIND_WINDOW?"_window":"";
     const pick=this._copyFrom||"";
     return html`<div class="field"><label>${T("f_copy_from")}</label>
       <div class="copy-row">
         <select .value=${pick} @change=${e=>{this._copyFrom=e.target.value;this.requestUpdate();}}>
-          <option value="">${T(awning?"f_copy_pick_awning":"f_copy_pick")}</option>
+          <option value="">${T("f_copy_pick"+suffix)}</option>
           ${others.map(o=>html`<option value="${o.cover_entity_id}" ?selected=${pick===o.cover_entity_id}>${o.name||o.cover_entity_id}</option>`)}
         </select>
         <button class="btn" ?disabled=${!pick} @click=${()=>this._applyCopyFrom(others)}>
           <ha-icon icon="mdi:content-copy"></ha-icon>${T("f_copy_btn")}</button>
       </div>
-      <div class="hint">${T(awning?"f_copy_hint_awning":"f_copy_hint")}</div></div>`;
+      <div class="hint">${T("f_copy_hint"+suffix)}</div></div>`;
   }
   _winEntityId(s){
     const v=s.window_entity_id;

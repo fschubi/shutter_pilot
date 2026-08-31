@@ -42,6 +42,8 @@ from .const import (
     CONF_AREA_WE_UP_FROM,
     CONF_AREA_WORKDAY_SENSOR,
     DEFAULT_AREA_RANDOM_OFFSET,
+    ROLE_CLOSED,
+    ROLE_OPEN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -327,6 +329,45 @@ def get_next_action(
         up_t, down_t = get_time_mode_triggers(hass, area, now_local)
 
     return _next_from_times(now_local, up_t, down_t)
+
+
+def scheduled_role_now(
+    hass: HomeAssistant,
+    up_area: dict | None,
+    down_area: dict | None,
+    now: datetime | None = None,
+) -> str | None:
+    """Which of the two end positions the schedule wants *right now*.
+
+    Derived rather than remembered: the next scheduled movement tells us which
+    half of the day we are in. If the next thing that happens is a downward
+    drive, the shutter belongs up until then, and the other way round.
+
+    That is deliberately not the same question as `covers_driven_down`, which
+    only records where a shutter was last driven to. Somebody closing a
+    shutter by hand at noon lands in that set, and reading it as "the
+    automation wants it closed" cements the very override the user is trying
+    to leave – reported by pcsv17 for a shutter parked at 0 %.
+
+    A shutter can have different areas for up and down, so both are asked and
+    the earlier of the two answers wins. Without a schedule (`none`) there is
+    no answer, and saying so is the point: the shading is then the only thing
+    that has an opinion.
+    """
+    now_local = dt_util.as_local(now or dt_util.now())
+    candidates: list[tuple[datetime, str]] = []
+    for area, wanted in ((up_area, DIRECTION_UP), (down_area, DIRECTION_DOWN)):
+        if not isinstance(area, dict):
+            continue
+        when, direction = get_next_action(hass, area, now_local)
+        if when is None or direction != wanted:
+            continue
+        candidates.append((when, direction))
+    if not candidates:
+        return None
+    _when, direction = min(candidates, key=lambda item: item[0])
+    # The next move is downward -> it belongs open until then, and vice versa.
+    return ROLE_OPEN if direction == DIRECTION_DOWN else ROLE_CLOSED
 
 
 def _next_from_times(

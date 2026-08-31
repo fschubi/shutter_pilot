@@ -22,7 +22,7 @@ Two states, not one, and keeping them apart is the whole design:
 Since 2.20.0 a roof window uses the same engine. Nothing in the evaluation
 changes: "danger" still means danger. Only the safe position differs – an
 awning is safe when it is in, a window when it is shut – and that comes from
-guard_rest_role(), not from a constant. Everything else, the lockout after
+rest_role(), not from a constant. Everything else, the lockout after
 the last exceedance included, reads the same for rain on a window as it does
 for a gust on an awning.
 """
@@ -55,7 +55,7 @@ from .const import (
 )
 from .helpers import (
     get_position_for_role,
-    guard_rest_role,
+    rest_role,
     guard_slot_danger,
     is_window,
     only_guarded,
@@ -232,7 +232,7 @@ def is_barred(data: dict[str, Any], cover_entity_id: str) -> bool:
 
 def rest_position(shutter: dict[str, Any]) -> float:
     """The safe position for this kind – retracted, or shut."""
-    return get_position_for_role(shutter, guard_rest_role(shutter))
+    return get_position_for_role(shutter, rest_role(shutter))
 
 
 def extends_upward(shutter: dict[str, Any]) -> bool:

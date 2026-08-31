@@ -810,3 +810,53 @@ class TestGuardSensorWithoutNumbers:
         md = (await async_build_export(hass, entry))["markdown"]
 
         assert "gilt hier als **Gefahr**" not in md
+
+
+# --- Ein Kipp-Zustand, den der Kontakt nicht melden kann --------------------
+
+
+class TestWindowContactNote:
+    """bjoerg: „nur die Abfrage des Fenstergriffs scheint zu haengen."
+
+    Sein Kontakt ist ein `binary_sensor` – der kennt nur on und off. Der
+    eingetragene Kipp-Zustand „gekippt" kann dort nie eintreten, und der
+    Wechsel offen -> gekippt ist fuer den Sensor gar keine Aenderung: es
+    feuert kein Ereignis, und es sieht aus, als reagiere nichts mehr.
+    """
+
+    @staticmethod
+    def _note(hass, **overrides):
+        from custom_components.shutter_pilot.export import _window_contact_note
+
+        shutter = {
+            CONF_COVER_ENTITY_ID: COVER,
+            CONF_WINDOW_ENTITY_ID: "binary_sensor.fenstergriff",
+            CONF_WINDOW_TILTED_STATE: "gekippt",
+        }
+        shutter.update(overrides)
+        return "\n".join(_window_contact_note(hass, shutter))
+
+    async def test_an_unreachable_tilt_state_is_named(self, hass):
+        hass.states.async_set("binary_sensor.fenstergriff", "on")
+        note = self._note(hass)
+        assert "Binärsensor" in note
+        assert "gekippt" in note
+        assert "keine Änderung" in note
+
+    async def test_a_two_state_contact_stays_quiet(self, hass):
+        """Ohne Kipp-Zustand ist alles in Ordnung – dafuer gibt es 2.8.2."""
+        hass.states.async_set("binary_sensor.fenstergriff", "on")
+        assert self._note(hass, **{CONF_WINDOW_TILTED_STATE: "none"}) == ""
+        assert self._note(hass, **{CONF_WINDOW_TILTED_STATE: ""}) == ""
+
+    async def test_a_real_three_state_sensor_stays_quiet(self, hass):
+        """Ein `sensor` darf melden, was er will – kein Hinweis."""
+        hass.states.async_set("sensor.fenstergriff", "gekippt")
+        assert self._note(
+            hass, **{CONF_WINDOW_ENTITY_ID: "sensor.fenstergriff"}
+        ) == ""
+
+    async def test_an_onoff_word_as_tilt_state_stays_quiet(self, hass):
+        """„auf" faltet auf on – erreichbar, also kein Hinweis."""
+        hass.states.async_set("binary_sensor.fenstergriff", "on")
+        assert self._note(hass, **{CONF_WINDOW_TILTED_STATE: "auf"}) == ""

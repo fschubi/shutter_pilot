@@ -460,7 +460,7 @@ KIND_AWNING = "awning"
 # way: an awning must come *in* when it blows, a window must come *shut* when
 # it rains. Both therefore share the protection engine and stay out of every
 # schedule; only the resting role differs, and that is read from the roles
-# rather than hard-coded – see guard_rest_role().
+# rather than hard-coded – see rest_role().
 KIND_WINDOW = "window"
 # A missing key is a shutter, so no stored configuration needs migrating.
 DEFAULT_DEVICE_KIND = KIND_SHUTTER
