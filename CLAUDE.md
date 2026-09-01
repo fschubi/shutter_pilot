@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (731 Tests)
+tests/               pytest-Suite (740 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -259,7 +259,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 731 Tests, ~17 s
+.venv/bin/pytest            # 740 Tests, ~17 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -288,10 +288,53 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-08-31 – 2.21.2: die Kipp-Position, die es nie gab
+
+bjoerg hatte seinen Fenstergriff auf eine Entitaet mit drei echten Zustaenden
+umgestellt – und meldete: „Aber die Position für tilted wird nicht
+angefahren." Seine Werte 1:1 durch die echten Funktionen gefahren, statt zu
+raten:
+
+```
+Griff open    -> erkannt open   · Ziel 95 % · gefahren 95 %
+Griff tilted  -> erkannt tilted · Ziel 30 % · gefahren 95 %   <-
+Griff closed  -> erkannt closed · keine Fahrt
+```
+
+Erkennung und Zielbestimmung stimmen also. Geklemmt wird einen Schritt
+spaeter: `get_effective_close_position()` fragte `is_window_open_or_tilted()`
+und zog die 30 auf die Mindesthoehe 95 hoch. **Eine Kipp-Position unterhalb
+der Mindesthoehe war damit grundsaetzlich unerreichbar** – gespeichert, im
+Formular sichtbar, wirkungslos. Genau die Sorte, die der Export sonst
+anprangert, nur diesmal im Fahrweg statt in den Optionen.
+
+**Geaendert wurde die Verwendung, nicht die Funktion.** `is_window_open_or_tilted()`
+hat vier weitere Aufrufer (Scheduler, Helligkeit, Beschattung, Lueften), und
+dort ist „offen oder gekippt" richtig: eine Nachholfahrt gehoert auch bei
+gekipptem Fenster vorgemerkt. Nur der Aussperrschutz fragt jetzt auf `"open"`.
+**Merke: wenn eine Praedikat-Funktion an einer Stelle die falsche Frage
+beantwortet, ist meist die Stelle falsch, nicht die Funktion.**
+
+**Wolfs Fall aus 2.10.2 bleibt geklemmt**, und das ist der Grund, warum die
+Aenderung eng genug ist: sein Kontakt ist zweiwertig und meldet `open`, nie
+`tilted`. Ein eigener Test haelt beide Seiten fest.
+
+**Der Kopierknopf traegt jetzt die Bereiche mit** (TanjaHH). Die Begruendung
+von 2.7.0 – „genau die Bereichszuordnung unterscheidet zwei sonst gleiche
+Rollladen" – trifft die Praxis nicht: wer kopiert, legt fast immer einen
+zweiten Rollladen im selben Bereich an. Entitaet und Name unterscheiden
+ohnehin. Der Hinweistext musste in **allen elf Sprachen** mitgeaendert werden,
+sonst verspricht er das Gegenteil dessen, was passiert.
+
+**Verifiziert:** `pytest` 740 Tests gruen (9 neue), **eine Gegenprobe** – mit
+der alten Klemme faellt genau bjoergs Test. Kopierknopf und Sortierung liegen
+jetzt als eigene Renderer-Pruefungen in `tests/panel/` und laufen in der CI.
+i18n 438/438. **Nicht im Browser geprueft.**
 
 ### 2026-08-31 – 2.21.1: die Variable, die beim Umbenennen stehenblieb
 

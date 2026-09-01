@@ -208,7 +208,16 @@ def get_effective_close_position(
     if not shutter.get(CONF_LOCK_PROTECTION, False):
         return target_position
 
-    if not is_window_open_or_tilted(hass, shutter):
+    # Nur bei *offenem* Fenster, nicht bei gekipptem. Durch einen Kippspalt
+    # steigt niemand – es gibt dort keinen Fall, gegen den der Aussperrschutz
+    # schuetzt. Und die Kipp-Position existiert genau dafuer, dass bei gekippt
+    # etwas anderes gilt als bei offen: liegt sie unter der Mindesthoehe,
+    # wurde sie vorher grundsaetzlich hochgeklemmt und war damit gespeichert,
+    # im Formular sichtbar und wirkungslos (bjoerg, 30 % gegen 95 %).
+    #
+    # Ein zweiwertiger Kontakt meldet "open", nicht "tilted" – Wolfs Fall aus
+    # 2.10.2 (Terrassentuer auf, Rollladen faehrt davor) bleibt also geklemmt.
+    if get_window_state(hass, shutter) != "open":
         return target_position
 
     min_pos = shutter.get(CONF_MIN_POSITION_WHEN_OPEN, 20)

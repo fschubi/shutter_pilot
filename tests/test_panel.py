@@ -60,3 +60,18 @@ def test_all_eleven_languages_carry_the_same_keys() -> None:
     assert result.returncode == 0, (
         "i18n unvollstaendig:\n" + result.stdout + result.stderr
     )
+
+
+def test_the_copy_button_carries_the_right_keys() -> None:
+    """Bereiche kommen mit, Identitaet und Fenstersensoren nicht."""
+    result = _run("copy_from.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout
+
+
+def test_the_lists_are_sorted_without_losing_the_index() -> None:
+    """Sortiert angezeigt, aber der Index zeigt auf die volle Liste –
+    sonst loescht ein Klick den falschen Eintrag."""
+    result = _run("sorting.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout

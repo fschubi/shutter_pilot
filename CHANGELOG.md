@@ -4,6 +4,23 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.2]
+
+Zwei Rückmeldungen zu 2.21.1, beide berechtigt – und die erste war ein Fehler,
+den man nicht sehen konnte: **eine Kipp-Position unterhalb der Mindesthöhe des
+Aussperrschutzes wurde nie gefahren.**
+
+### Behoben
+- **Der Aussperrschutz klemmte auch bei gekipptem Fenster** (bjoerg). Sein Fenstergriff meldet `open` / `tilted` / `closed`, die Kipp-Position steht auf 30 %, die Mindesthöhe auf 95 % – gefahren wurden immer 95 %. Nachgerechnet: der Zustand wird richtig erkannt und die Kipp-Position richtig bestimmt, und dann klemmt der Schutz sie hoch. Eine Kipp-Position unterhalb der Mindesthöhe war damit **grundsätzlich unerreichbar**: gespeichert, im Formular sichtbar und wirkungslos. Der Aussperrschutz gilt jetzt nur noch bei **ganz geöffnetem** Fenster – durch einen Kippspalt steigt niemand, dort gibt es den Fall nicht, gegen den er schützt. Für zweiwertige Kontakte ändert sich nichts: die melden „offen", nie „gekippt".
+
+### Geändert
+- **Der Kopierknopf überträgt jetzt auch die Bereiche** (TanjaHH). Bisher blieben sie außen vor, mit der Begründung, genau die Bereichszuordnung unterscheide zwei sonst gleiche Rollläden. In der Praxis ist es umgekehrt: wer „Einstellungen übernehmen von …" drückt, will einen zweiten Rollladen wie den ersten – und der hängt fast immer an denselben Bereichen. Entität, Name und Fenstersensoren bleiben weiterhin unangetastet, die Geräteart ebenso.
+
+### Was ändert sich für mich?
+Wer einen Aussperrschutz **und** eine Kipp-Position unterhalb der Mindesthöhe
+eingestellt hat, bekommt ab jetzt die Kipp-Position, die dort steht. Genau das
+war die Absicht beim Eintragen – vorher wurde sie stillschweigend überschrieben.
+
 ## [2.21.1]
 
 Vier Meldungen an einem Tag, und die erste war ein Fehler von mir aus 2.20.0:
