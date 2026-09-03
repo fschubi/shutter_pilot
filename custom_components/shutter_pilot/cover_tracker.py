@@ -14,6 +14,7 @@ from .const import DOMAIN, CONF_SHUTTERS, CONF_COVER_ENTITY_ID
 from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
+    forget_commanded_position,
     is_recent_automation,
     note_manual_position,
     positions_differ_significantly,
@@ -97,6 +98,9 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             pending.discard(entity_id)
         else:
             source = SOURCE_MANUAL
+            # Unser zuletzt gesendetes Ziel sagt ab jetzt nichts mehr darueber,
+            # wo dieser Rollladen steht.
+            forget_commanded_position(data, entity_id)
             # A shutter somebody closed or opened by hand is down or up, and
             # the schedule has to see that. Without it one blocked direction
             # freezes the other: the evening close is skipped because the

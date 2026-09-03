@@ -259,7 +259,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 740 Tests, ~17 s
+.venv/bin/pytest            # 745 Tests, ~18 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -288,10 +288,80 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.2**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.3**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-03 – 2.21.3: die Zahl, die niemand eingestellt hat
+
+c.radi: „die Position fuer geschlossen wird nicht angefahren, da faehrt er den
+Rolladen auf 74 %. Die habe ich aber nirgendwo eingestellt." Genau das war der
+Hinweis – **74 steht in keiner seiner Einstellungen**: Schliessposition 0,
+Fensterpositionen 100 und 15, Beschattung 50. Eine Zahl, die kein Formular
+kennt, kommt aus einer Messung, nicht aus einer Entscheidung.
+
+**Der Fahrweg war schnell gefunden, die Ursache lag eine Ebene tiefer.** Beim
+Schliessen faehrt `window_trigger.py` nicht auf `position_closed`, sondern auf
+`trigger_heights[cover]` – die Hoehe, auf der der Rollladen *vor* dem Oeffnen
+des Fensters stand. Diese Hoehe wurde als `get_tracked_position()` gemerkt,
+also als **Momentaufnahme der gemeldeten Position**. Steht der Rollladen dabei
+still, ist das richtig. Faehrt er gerade, ist es eine Zahl mitten aus dem Weg.
+
+Nachgestellt statt geraten, mit seinen Werten und einem fahrenden Cover:
+
+```
+Abendfahrt 100 -> 0, unterwegs bei 74 %
+Fenster auf   -> gemerkt 74, gefahren 100   <-
+Fenster gekippt -> gefahren 15
+Fenster zu    -> Window closed – restore: -> 74 %
+```
+
+Die letzte Zeile ist sein Bericht, auf das Prozent. Und danach ruehrt sich
+nichts mehr: die naechste geplante Fahrt kommt erst am Morgen.
+
+**Gemerkt wird jetzt, wo er *steht*, nicht was er gerade meldet.**
+`resting_position()` gibt waehrend einer Fahrt (`opening`/`closing`) das
+zuletzt gesendete Ziel zurueck, sonst die Meldung. Dafuer fuehrt
+`set_cover_position()` – wieder der eine Choke-Point – `commanded_positions`
+mit; **getrennt von `last_positions`**, das der Positions-Mitschreiber laufend
+mit Momentaufnahmen ueberschreibt. Genau deshalb war der vorhandene Rueckfall
+`last_positions.get(cover, pos_closed)` im Restore auch nie ein Rueckfahrziel,
+sondern ein „bleib stehen, wo du bist" – derselbe Fehler, nur leiser.
+
+**Merke: ein Merker, der eine gemessene Groesse festhaelt, muss sagen, wann die
+Messung gilt.** `covers_driven_*` (2.17.0) und `_shade_pos_last` (2.21.0) waren
+dieselbe Klasse zeitlich – hier ist es raeumlich: die Position ist nur zwischen
+den Fahrten eine Aussage.
+
+**Bewusst *nicht* eingebaut:** die naheliegende zweite Bedingung „unsere Fahrt
+liegt noch in der Karenz und er ist noch nicht am Ziel". Sie haette auch
+Antriebe ohne Fahrzustand erfasst – und einen klemmenden Antrieb, der kurz vor
+dem Ziel stehenbleibt, dauerhaft fuer fahrend gehalten. Dann meldeten wir eine
+Position, die er nie erreicht hat. Wo kein `opening`/`closing` kommt, bleibt es
+beim Alten; das steht so im Changelog.
+
+**Dieselbe Frage stellt `ventilation.py`** (`vent_heights`, der Kommentar dort
+sagt es seit 2.6.0 selbst) – der Minutentakt trifft die Abendfahrt genauso
+mitten im Weg. Eine Antwort, zwei Aufrufer.
+
+**Verifiziert:** `pytest` 745 Tests gruen (5 neue), **vier Gegenproben** – ohne
+`resting_position` im Fenstertrigger faellt c.radis Test, ohne den
+`commanded_position`-Rueckfall einer, ohne das Loeschen bei Handfahrt einer,
+ohne `resting_position` im Lueften einer. **Die vierte fiel zuerst nicht**: der
+Test rief die Hilfsfunktion direkt auf statt den Minutentakt zu fahren. Auf die
+Schleife umgestellt, danach fiel sie – `note_manual_position` (2.17.0) und
+`only_guarded` (2.20.0) zum dritten Mal. i18n unveraendert 438/438 (kein
+sichtbarer Text neu). **Nicht im Browser geprueft**, ohne Panel-Aenderung
+diesmal ohne Gewicht.
+
+**Nebenbefund, Test statt Produkt:** `tests/test_resume_automation.py::
+test_without_shading_it_drives_the_half_of_the_day` haengt an der Wanduhr. Der
+Bereich stand auf `time_up 07:00 / time_down 19:00`, und `scheduled_role_now()`
+antwortet nach Tageshaelfte – zwischen 19 und 7 Uhr faellt der Test. Seit
+2.21.0 drin, in der CI nie aufgefallen, weil dort tagsueber gepusht wurde. Die
+Zeiten liegen jetzt relativ zu `dt_util.now()`. **Merke: ein Test gegen eine
+Funktion, die die Uhrzeit liest, braucht eine eigene Uhrzeit.**
 
 ### 2026-08-31 – 2.21.2: die Kipp-Position, die es nie gab
 

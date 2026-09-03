@@ -22,9 +22,11 @@ from .const import (
     MAX_WINDOW_CLOSE_DEBOUNCE,
 )
 from .helpers import (
+    commanded_position,
     forget_drive_after_close,
     get_tracked_position,
     positions_differ_significantly,
+    resting_position,
     is_cover_sun_protected,
     is_shutter_automation_enabled,
     is_system_enabled,
@@ -171,6 +173,12 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
         if trigger_actions.get(cover_entity) == "triggered":
             restore_pos = trigger_heights.get(cover_entity)
             if restore_pos is None:
+                # last_positions ist der laufende Mitschnitt der gemeldeten
+                # Position – als Rueckfahrziel heisst das „bleib stehen, wo du
+                # gerade bist". Das zuletzt gesendete Ziel ist die einzige Zahl
+                # hier, die jemand gewaehlt hat.
+                restore_pos = commanded_position(data, cover_entity)
+            if restore_pos is None:
                 restore_pos = last_positions.get(cover_entity, pos_closed)
             hass.async_create_task(
                 set_cover_position(
@@ -302,7 +310,15 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                     # Remember the height only when the cycle starts. Going
                     # from tilted to open would otherwise make the ventilation
                     # position the height we restore to later.
-                    trigger_heights[cover_entity] = current_pos
+                    #
+                    # Gemerkt wird, wo der Rollladen *steht*, nicht die
+                    # Momentaufnahme eines fahrenden. Wer abends das Fenster
+                    # oeffnet, waehrend die Abendfahrt noch laeuft, bekam sonst
+                    # eine Zwischenstellung als Rueckfahrhoehe – c.radis 74 %,
+                    # eine Zahl, die in keiner seiner Einstellungen steht.
+                    trigger_heights[cover_entity] = resting_position(
+                        hass, data, shutter, cover_entity
+                    )
                 trigger_actions[cover_entity] = "triggered"
                 if window_state == "tilted":
                     reason = "Window tilted"

@@ -173,6 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "shutters": shutters,
         "last_positions": last_positions,
+        "commanded_positions": {},
         "trigger_heights": trigger_heights,
         "trigger_actions": trigger_actions,
         "brightness_down": brightness_down_state,

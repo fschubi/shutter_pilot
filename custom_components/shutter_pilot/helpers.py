@@ -1613,6 +1613,70 @@ def get_tracked_position(
     return _persisted_position(hass, cover_entity_id)
 
 
+def commanded_position(
+    data: dict[str, Any], cover_entity_id: str
+) -> float | None:
+    """The position we last sent to this cover, or None.
+
+    Dropped as soon as somebody moves the cover by hand: from then on our
+    number says nothing about where it stands.
+    """
+    values = data.get("commanded_positions")
+    if not isinstance(values, dict):
+        return None
+    try:
+        value = values[cover_entity_id]
+    except KeyError:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def forget_commanded_position(data: dict[str, Any], cover_entity_id: str) -> None:
+    """Somebody else moved this cover – our target is no longer its target."""
+    values = data.get("commanded_positions")
+    if isinstance(values, dict):
+        values.pop(cover_entity_id, None)
+
+
+def _cover_is_travelling(hass: HomeAssistant, cover_entity_id: str) -> bool:
+    """True while the cover reports that it is on its way somewhere.
+
+    Bewusst nur der gemeldete Fahrzustand. „Unsere Fahrt liegt noch in der
+    Karenz und er ist noch nicht am Ziel" waere die naheliegende zweite
+    Bedingung – und sie haelt einen Antrieb, der klemmt und kurz vor dem Ziel
+    stehenbleibt, fuer fahrend. Dann meldeten wir dauerhaft eine Position, die
+    er nie erreicht hat. Wo kein Fahrzustand kommt, bleibt es beim Alten.
+    """
+    state = hass.states.get(cover_entity_id)
+    return state is not None and state.state in ("opening", "closing")
+
+
+def resting_position(
+    hass: HomeAssistant,
+    data: dict[str, Any],
+    shutter: dict[str, Any],
+    cover_entity_id: str,
+) -> float | None:
+    """Where this cover *stands* – not the number it happens to pass through.
+
+    Ein fahrender Rollladen meldet jede Sekunde eine andere Zahl, und keine
+    davon hat jemand gewaehlt. Eine davon als „Hoehe, auf die wir
+    zurueckkehren" zu merken parkt ihn auf einem Wert, der in keiner
+    Einstellung steht – c.radis 74 %: das Fenster wurde geoeffnet, waehrend die
+    Abendfahrt noch lief. Solange er unterwegs ist, ist das Ziel, das wir
+    geschickt haben, die ehrliche Antwort; nach der Ankunft ist es dieselbe
+    Zahl wie die Meldung.
+    """
+    live = get_tracked_position(hass, shutter, cover_entity_id)
+    if not _cover_is_travelling(hass, cover_entity_id):
+        return live
+    target = commanded_position(data, cover_entity_id)
+    return live if target is None else target
+
+
 def _persisted_position(hass: HomeAssistant, cover_entity_id: str) -> float | None:
     """Read last persisted position from any config entry store."""
     domain_data = hass.data.get(DOMAIN, {})
@@ -1982,6 +2046,11 @@ async def set_cover_position(
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
         if isinstance(data, dict):
             data.setdefault("last_positions", {})[entity_id] = float(position)
+            # Getrennt von last_positions, das der Positions-Mitschreiber
+            # laufend mit Momentaufnahmen ueberschreibt. Hier steht, wohin
+            # zuletzt *befohlen* wurde – die einzige Zahl, die auch waehrend
+            # der Fahrt etwas bedeutet.
+            data.setdefault("commanded_positions", {})[entity_id] = float(position)
 
         store = get_position_store(hass, entry.entry_id)
         await store.async_set_position(

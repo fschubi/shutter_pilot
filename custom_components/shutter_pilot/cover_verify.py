@@ -168,6 +168,9 @@ async def _verify(
             data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
             if isinstance(data, dict):
                 data.setdefault("last_positions", {})[entity_id] = actual
+                # Auch das Ziel korrigieren: er ist dort nie angekommen, und
+                # resting_position() wuerde sonst weiter die Wunschzahl melden.
+                data.setdefault("commanded_positions", {})[entity_id] = actual
             hass.bus.async_fire(
                 EVENT_COVER_FAILED,
                 {

@@ -4,6 +4,26 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.3]
+
+Eine Meldung, ein Fehler – und die Zahl im Bericht war der ganze Hinweis:
+**der Rollladen parkte auf 74 %, einem Wert, der in keiner Einstellung steht.**
+
+### Behoben
+- **Beim Schließen des Fensters blieb der Rollladen auf einer Zwischenstellung stehen** (c.radi). Sein Fenstergriff meldet offen, gekippt und geschlossen; offen und gekippt wurden korrekt angefahren, beim Schließen landete er auf 74 % – weder seine Schließposition (0 %) noch eine der Fensterpositionen (100 % / 15 %). Ursache: beim Schließen fährt der Rollladen auf die Höhe zurück, auf der er **vor** dem Öffnen des Fensters stand, und diese Höhe wurde als Momentaufnahme der gemeldeten Position gemerkt. Wer abends das Fenster öffnet, während die Automatik den Rollladen noch herunterfährt, merkt sich damit eine Zahl mitten aus dem Fahrweg – und fährt später genau dorthin zurück. Gemerkt wird jetzt, wo der Rollladen **steht**: solange er fährt, gilt das Ziel, das die Automatik ihm zuletzt geschickt hat.
+- **Dasselbe beim automatischen Lüften.** Der Minutentakt konnte die Abendfahrt mitten im Weg treffen und sich ebenfalls eine Durchgangszahl als Rückfahrhöhe merken.
+
+### Was ändert sich für mich?
+Nichts, solange Fenster nur bei stehendem Rollladen bewegt werden. Wer das
+Fenster öffnet, während der Rollladen gerade fährt, bekommt beim Schließen
+jetzt die Position, auf die die Automatik unterwegs war – bisher blieb er auf
+einer zufälligen Zwischenhöhe stehen und rührte sich bis zur nächsten
+geplanten Fahrt nicht mehr.
+
+Ein Antrieb, der Home Assistant **nicht** meldet, dass er gerade fährt (kein
+`opening` / `closing`), verhält sich unverändert – dort ist von außen nicht zu
+erkennen, dass die gemeldete Position nur eine Durchgangszahl ist.
+
 ## [2.21.2]
 
 Zwei Rückmeldungen zu 2.21.1, beide berechtigt – und die erste war ein Fehler,

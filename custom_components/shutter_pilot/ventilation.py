@@ -31,7 +31,7 @@ from .const import (
     ROLE_VENTILATION,
 )
 from .helpers import (
-    get_tracked_position,
+    resting_position,
     get_position_for_role,
     get_tilt_for_role,
     is_auto_enabled,
@@ -155,7 +155,10 @@ async def setup_ventilation(hass: HomeAssistant, entry: ConfigEntry) -> None:
                             "[ventilation] %s skipped: %s", cover, blocked
                         )
                         continue
-                    current = get_tracked_position(hass, shutter, cover)
+                    # Nicht die Momentaufnahme eines fahrenden Rollladens:
+                    # der Minutentakt trifft die Abendfahrt sonst mitten im
+                    # Weg und merkt sich eine Hoehe, die niemand gewaehlt hat.
+                    current = resting_position(hass, data, shutter, cover)
                     target = get_position_for_role(shutter, ROLE_VENTILATION)
                     if current is None or abs(current - target) < 1:
                         # Nothing to do, but remember it so the release does

@@ -14,6 +14,7 @@ jemand von aussen gefahren hat, sieht sie nicht.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -67,6 +68,18 @@ def _fast_startup(monkeypatch):
     monkeypatch.setattr(cover_tracker, "STARTUP_RESTORE_RETRY_SEC", 0)
 
 
+def _in(minutes: int) -> str:
+    """Uhrzeit in N Minuten, als HH:MM.
+
+    Der Zeitplan entscheidet, in welcher Tageshaelfte ein Rollladen steht –
+    also entscheidet die Wanduhr, was `scheduled_role_now()` antwortet. Feste
+    07:00/19:00 machten den Test damit von der Startzeit abhaengig: zwischen
+    19 und 7 Uhr faellt er. Die Zeiten liegen deshalb relativ zu jetzt.
+    """
+    moment = dt_util.now() + timedelta(minutes=minutes)
+    return moment.strftime("%H:%M")
+
+
 async def _setup(hass, position: int = 100):
     hass.states.async_set(
         COVER, "open", {"current_position": position, "supported_features": 15}
@@ -78,8 +91,10 @@ async def _setup(hass, position: int = 100):
         CONF_AREA_ID: "og",
         CONF_AREA_NAME: "Obergeschoss",
         CONF_AREA_MODE: AREA_MODE_TIME,
-        CONF_AREA_TIME_UP: "07:00",
-        CONF_AREA_TIME_DOWN: "19:00",
+        # Als Naechstes steht eine Abwaertsfahrt an: der Rollladen gehoert
+        # bis dahin nach oben, zu jeder Tageszeit.
+        CONF_AREA_TIME_DOWN: _in(60),
+        CONF_AREA_TIME_UP: _in(120),
         CONF_AREA_DRIVE_DELAY: 0,
         CONF_AREA_SUN_PROTECT_ENABLED: True,
         CONF_AREA_ELEVATION_MIN: 0,
