@@ -39,7 +39,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (740 Tests)
+tests/               pytest-Suite (752 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -230,7 +230,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.18.0: je 413 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.21.4: je 438 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -259,7 +259,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 745 Tests, ~18 s
+.venv/bin/pytest            # 752 Tests, ~18 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -288,10 +288,71 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.3**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.4**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-04 – 2.21.4: die Beschriftung, die nur die Haelfte nannte
+
+c.radi zu 2.21.3: „Funktioniert nun auch, aber… wenn das Fenster auf gekippt
+steht wird der Rolladen gar nicht geschlossen. Meine Erwartungshaltung waere,
+er wird in die Stellung fuer 'gekippt' gefahren."
+
+**Erst nachgerechnet, mit seinen Werten durch die echten Funktionen** – und
+diesmal war nichts kaputt:
+
+```
+Kontakt tilted -> erkannt tilted · Ziel 15 % · Abendfahrt faehrt: None
+Kontakt open   -> erkannt open   · Ziel 100 % · Abendfahrt faehrt: None
+mit Haken · tilted -> Abendfahrt faehrt: 15 %
+```
+
+An seinem „Arbeitszimmer links" steht `drive_after_close: ja` und
+`window_vent_while_open` gar nicht, also aus. `brightness.py:274` (im
+Scheduler dieselbe Stelle) merkt die Fahrt vor und faehrt nur, wenn
+`get_deferred_close_position()` etwas liefert – und die gibt ohne den Haken
+bewusst `None` zurueck. Das ist der Haken aus 2.18.0, Vorgabe aus, weil er
+sonst in jeder zufriedenen Anlage jeden Abend Rollladen bewegt.
+
+**Der Grund, warum er ihn nicht gefunden hat, steht in der Beschriftung.** Der
+Fahrweg fragt `is_window_open_or_tilted()`, beide Haken hiessen aber
+„Nachholen wenn Fenster **offen**" und „Bei **offenem** Fenster schon auf die
+Lueftungsposition fahren", und beide Hinweistexte ebenso. Wer ein gekipptes
+Fenster hat, ordnet das seinem Fall nicht zu. **Merke: eine Beschriftung, die
+nur einen der beiden Faelle nennt, die das Praedikat abdeckt, ist derselbe
+Vertrag wie `guard_rest_role()` aus 2.21.1 und `include_awnings` aus 2.20.0 –
+nur auf der Nutzerseite.** Jetzt nennen beide „offen oder gekippt", und der
+zweite sagt zusaetzlich, *welche* Position gefahren wird.
+
+**Der Export beantwortet es jetzt selbst.** In seinem Bericht stand fuer die
+Aufwaertsrichtung „✅ Nichts haelt das Oeffnen auf" – fuer die Abwaerts-
+richtung nichts, und `window_vent_while_open` fehlte in der Tabelle sogar
+ganz: der Haken wurde nie angefasst, also ist der Schluessel nicht
+gespeichert, und `_is_set()` sieht nichts. Genau die Luecke, die den
+Einstellungs-Export sonst traegt. `_deferred_close_note()` nennt die Lage,
+beide Positionen und den Zustand, den der Kontakt **gerade** meldet. Zweite
+Meldung dieser Klasse nach bjoerg zu 2.18.0 („im Schlafzimmer hat sich gar
+nichts bewegt").
+
+**Bewusst nicht gemacht: die Vorgabe drehen.** Die Begruendung von 2.18.0 gilt
+unveraendert – eine Verhaltensaenderung, die ungefragt jeden Abend Rollladen
+bewegt, ist schlimmer als der Status quo.
+
+**Verifiziert:** `pytest` 752 Tests gruen (7 neue), **zwei Gegenproben** – ohne
+die Zeile in `async_build_export` faellt der Verdrahtungstest, ohne den
+aktuellen Fensterzustand zwei. Der Verdrahtungstest ist bewusst dabei:
+`note_manual_position` (2.17.0) und `only_guarded` (2.20.0) waren beide gruen,
+weil nur die Funktion geprueft wurde. i18n 438/438 in allen elf Sprachen (kein
+neuer Schluessel, 35 Texte umformuliert). **Nicht im Browser geprueft** – ohne
+Logikaenderung im Panel diesmal ohne Gewicht.
+
+**Werkzeug-Notiz:** c.radi schreibt **nicht** im Thread auf
+community-smarthome.com, sondern in dem auf **community.simon42.com**,
+`topic_id` 90112. Dieselbe Discourse-Mechanik (`/raw/90112/<post>`,
+`/uploads/short-url/<key>.txt` fuer den angehaengten Export). Es gibt also zwei
+Threads, und die Suche nach einem Namen im falschen findet nichts.
+
 
 ### 2026-09-03 – 2.21.3: die Zahl, die niemand eingestellt hat
 

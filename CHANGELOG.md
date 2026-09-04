@@ -4,6 +4,21 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.4]
+
+Eine Rückmeldung zu 2.21.3, und diesmal war nichts kaputt: **die Beschriftung
+sagte „offen", der Fahrweg meint „offen oder gekippt"** – und wer ein gekipptes
+Fenster hat, ordnet die beiden Haken seinem Fall gar nicht zu.
+
+### Geändert
+- **„Nachholen wenn Fenster offen" heißt jetzt „Nachholen wenn Fenster offen oder gekippt"** (c.radi). Gemeldet als „wenn das Fenster auf gekippt steht, wird der Rollladen gar nicht geschlossen". Genau so ist es gedacht: mit der Nachholfunktion wird die Abendfahrt vorgemerkt und erst beim Schließen des Fensters ausgeführt – bis dahin bleibt der Rollladen stehen. Wer stattdessen die Kipp-Position angefahren haben will, setzt den Haken darunter. Nur hieß der „Bei **offenem** Fenster schon auf die Lüftungsposition fahren", und beide Hinweistexte sprachen ebenfalls nur von „offen". Beschriftungen und Hinweise nennen jetzt beides und sagen, welche Position gefahren wird; in allen elf Sprachen.
+- **Der Export erklärt die vorgemerkte Fahrt selbst.** Steht die Nachholfunktion an und der Haken darunter aus, sagt der Bericht am betroffenen Rollladen, dass zur Schließzeit **gar nichts** fährt, solange ein Fenster offen oder gekippt ist – samt der beiden Positionen, die mit dem Haken gefahren würden, und dem Zustand, den der Kontakt gerade meldet. Zweite Meldung dieser Art nach 2.18.0 („im Schlafzimmer hat sich gar nichts bewegt"), und beide Male stand die Antwort in keiner Zeile des Berichts.
+
+### Was ändert sich für mich?
+Am Verhalten **nichts** – es ändern sich nur Beschriftungen und der Export.
+Wer bisher dachte, ein gekipptes Fenster sei von der Nachholfunktion nicht
+betroffen, findet die Einstellung jetzt dort, wo er sie sucht.
+
 ## [2.21.3]
 
 Eine Meldung, ein Fehler – und die Zahl im Bericht war der ganze Hinweis:

@@ -30,6 +30,7 @@ from custom_components.shutter_pilot.const import (
     CONF_AREA_UP_ID,
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
+    CONF_DRIVE_AFTER_CLOSE,
     CONF_LOCK_PROTECTION,
     CONF_NAME,
     CONF_POSITION_WHEN_WINDOW_OPEN,
@@ -38,9 +39,11 @@ from custom_components.shutter_pilot.const import (
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_TILTED_STATE,
+    CONF_WINDOW_VENT_WHILE_OPEN,
     DOMAIN,
 )
 from custom_components.shutter_pilot.export import (
+    _deferred_close_note,
     _silent_setting_notes,
     async_build_export,
 )
@@ -860,3 +863,99 @@ class TestWindowContactNote:
         """„auf" faltet auf on – erreichbar, also kein Hinweis."""
         hass.states.async_set("binary_sensor.fenstergriff", "on")
         assert self._note(hass, **{CONF_WINDOW_TILTED_STATE: "auf"}) == ""
+
+
+# --- die Fahrt, die vorgemerkt wird und deshalb nicht stattfindet ------------
+
+
+class TestDeferredCloseNote:
+    """c.radis Fall: „wenn das Fenster auf gekippt steht, wird der Rolladen
+    gar nicht geschlossen". Nichts war kaputt – „Nachholen wenn Fenster offen"
+    an, der Haken darunter aus. Zweite Meldung dieser Sorte nach bjoerg zu
+    2.18.0, und beide Male sprach die Beschriftung nur von „offen".
+    """
+
+    # Arbeitszimmer links, 1:1 aus seinem Export von 2026-09-02.
+    CRADI = {
+        CONF_COVER_ENTITY_ID: "cover.arbeitszimmer_links",
+        CONF_NAME: "Arbeitszimmer links",
+        CONF_DRIVE_AFTER_CLOSE: True,
+        CONF_LOCK_PROTECTION: False,
+        CONF_POSITION_WHEN_WINDOW_OPEN: 100,
+        CONF_POSITION_WHEN_WINDOW_TILTED: 15,
+        CONF_WINDOW_ENTITY_ID: "sensor.arbeitszimmer_fenster_links",
+        CONF_WINDOW_TILTED_STATE: "tilted",
+    }
+
+    def _note(self, hass, **overrides):
+        shutter = {**self.CRADI, **overrides}
+        return "\n".join(_deferred_close_note(hass, shutter))
+
+    async def test_the_pending_drive_is_explained(self, hass):
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "closed")
+        note = self._note(hass)
+        assert "gar nicht" in note
+        assert "gekippt" in note
+        # Beide Zahlen, damit die Antwort nicht erst nachgeschlagen werden muss.
+        assert "100 %" in note and "15 %" in note
+
+    async def test_the_current_window_state_is_named(self, hass):
+        """Steht das Fenster gerade gekippt, ist das die halbe Antwort."""
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "tilted")
+        assert "gerade gekippt" in self._note(hass)
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "open")
+        assert "gerade offen" in self._note(hass)
+
+    async def test_with_the_second_checkbox_it_stays_quiet(self, hass):
+        """Mit dem Haken faehrt er – dann gibt es nichts zu erklaeren."""
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "tilted")
+        assert self._note(hass, **{CONF_WINDOW_VENT_WHILE_OPEN: True}) == ""
+
+    async def test_without_the_catch_up_option_it_stays_quiet(self, hass):
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "tilted")
+        assert self._note(hass, **{CONF_DRIVE_AFTER_CLOSE: False}) == ""
+
+    async def test_without_a_window_contact_it_stays_quiet(self, hass):
+        """Ohne Kontakt tritt „Fenster offen" nie ein – der Haken tut nichts."""
+        assert self._note(hass, **{CONF_WINDOW_ENTITY_ID: ""}) == ""
+
+    async def test_a_two_state_contact_only_gets_the_one_position(self, hass):
+        """Ohne Kipp-Zustand wird immer die Kipp-Position gefahren (2.8.2)."""
+        hass.states.async_set("binary_sensor.fenster", "off")
+        note = self._note(
+            hass,
+            **{
+                CONF_WINDOW_ENTITY_ID: "binary_sensor.fenster",
+                CONF_WINDOW_TILTED_STATE: "none",
+            },
+        )
+        assert "15 %" in note
+        assert "position_when_window_open" not in note
+
+    async def test_the_note_reaches_the_report(self, hass):
+        """Die Verdrahtung, nicht die Funktion: der Hinweis muss im Bericht
+        stehen. Zweimal war eine Gegenprobe gruen, weil nur die Funktion
+        geprueft wurde (2.17.0, 2.20.0)."""
+        hass.states.async_set("sensor.arbeitszimmer_fenster_links", "tilted")
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        **self.CRADI,
+                        CONF_AREA_UP_ID: "vorne",
+                        CONF_AREA_DOWN_ID: "vorne",
+                    }
+                ],
+            },
+        )
+        entry.add_to_hass(hass)
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+            "sun_protect_covers": set(),
+            "_runtime_started": dt_util.utcnow(),
+        }
+        md = (await async_build_export(hass, entry))["markdown"]
+        assert "zur Schließzeit **gar nicht**" in md
+        assert "gerade gekippt" in md

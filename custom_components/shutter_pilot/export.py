@@ -35,7 +35,10 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_DRIVE_AFTER_CLOSE,
+    CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_TILTED_STATE,
+    CONF_WINDOW_VENT_WHILE_OPEN,
     WINDOW_UNUSED_KEYS,
     AWNING_GUARD_SLOTS,
     AWNING_GUARD_WIND,
@@ -116,6 +119,8 @@ from .position_store import get_position_store
 from .window_helper import (
     _canonical_state,
     _first_entity_id as _first_window_entity,
+    get_tilt_entity_id,
+    get_window_state,
     has_tilt_state,
 )
 
@@ -638,6 +643,68 @@ def _window_contact_note(
     ]
 
 
+def _has_window_contact(shutter: dict[str, Any]) -> bool:
+    """True if any of the three possible contacts is configured."""
+    return bool(
+        _first_window_entity(shutter.get(CONF_WINDOW_ENTITY_ID))
+        or _first_window_entity(shutter.get(CONF_WINDOW_ENTITY_ID_2))
+        or get_tilt_entity_id(shutter)
+    )
+
+
+def _deferred_close_note(hass: HomeAssistant, shutter: dict[str, Any]) -> list[str]:
+    """Warum zur Schliesszeit gar nichts faehrt, obwohl alles eingestellt ist.
+
+    "Nachholen wenn Fenster offen" merkt die Abendfahrt vor und laesst den
+    Rollladen stehen; erst der Haken darunter faehrt ihn schon jetzt auf die
+    Fensterposition. Beide Beschriftungen sprachen lange nur von "offen" – der
+    Fahrweg fragt aber `is_window_open_or_tilted()`. Mit einem gekippten
+    Fenster sieht "es passiert gar nichts" deshalb nach einem Defekt aus, und
+    genau so kam es zweimal an: bjoerg zu 2.18.0 ("im Schlafzimmer hat sich gar
+    nichts bewegt") und c.radi ("wenn das Fenster auf gekippt steht, wird der
+    Rollladen gar nicht geschlossen"). Beide Male war nichts kaputt.
+    """
+    if has_guard(shutter):
+        # Markise und Dachfenster haben keinen Fensterkontakt; ein
+        # uebriggebliebener Schluessel wird schon als solcher gemeldet.
+        return []
+    if not shutter.get(CONF_DRIVE_AFTER_CLOSE):
+        return []
+    if shutter.get(CONF_WINDOW_VENT_WHILE_OPEN):
+        return []
+    if not _has_window_contact(shutter):
+        # Ohne Kontakt tritt "Fenster offen" nie ein – der Haken tut nichts,
+        # und ein Hinweis darauf waere Rauschen.
+        return []
+
+    tilt_pos = _fmt(shutter.get(CONF_POSITION_WHEN_WINDOW_TILTED, 50))
+    if has_tilt_state(shutter):
+        open_pos = _fmt(shutter.get(CONF_POSITION_WHEN_WINDOW_OPEN, 100))
+        would = (
+            f"auf `position_when_window_open` ({open_pos} %) bzw. "
+            f"`position_when_window_tilted` ({tilt_pos} %)"
+        )
+    else:
+        would = f"auf `position_when_window_tilted` ({tilt_pos} %)"
+
+    state = get_window_state(hass, shutter)
+    now = ""
+    if state in ("open", "tilted"):
+        word = "offen" if state == "open" else "gekippt"
+        now = f" Das Fenster steht **gerade {word}**."
+
+    return [
+        "> ℹ️ **„Nachholen wenn Fenster offen oder gekippt“ ist an**, **„Bei "
+        "offenem oder gekipptem Fenster schon auf die Lüftungsposition "
+        "fahren“ ist aus** – "
+        "solange das Fenster offen *oder gekippt* ist, fährt dieser Rollladen "
+        "zur Schließzeit **gar nicht**. Die volle Fahrt wird vorgemerkt und "
+        "erst beim Schließen des Fensters ausgeführt. Mit dem zweiten Haken "
+        f"fährt er schon jetzt {would}.{now}",
+        "",
+    ]
+
+
 def _silent_setting_notes(shutter: dict[str, Any]) -> list[str]:
     """Settings that are stored, look like they work, and do nothing.
 
@@ -1118,6 +1185,7 @@ async def async_build_export(
         out += _settings_table(shutter)
         out += _silent_setting_notes(shutter)
         out += _window_contact_note(hass, shutter)
+        out += _deferred_close_note(hass, shutter)
         out += _drive_command_note(hass, shutter)
 
         if awning:
