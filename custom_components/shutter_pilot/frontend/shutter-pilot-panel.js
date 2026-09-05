@@ -3709,11 +3709,18 @@ class ShutterPilotPanel extends PanelBase {
     .field{margin-bottom:14px}
     .field label{display:block;font-size:13px;color:var(--txt2);margin-bottom:4px}
     /* :not([type=checkbox]) ist hier kein Feinschliff, sondern die Ursache
-       eines gemeldeten Fehlers: mit width:100% samt Rahmen und Polsterung
-       wurde aus dem Haken ein formularbreiter Kasten, das Glyph stand mittig
-       darin und die Beschriftung rutschte in die Zeile darunter. Welcher Text
-       zu welchem Haken gehoerte, war damit nicht mehr zu sehen. */
-    .field input:not([type=checkbox]),.field select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--divider);background:var(--primary-background-color,#111);color:var(--txt);font-size:14px;box-sizing:border-box}
+       eines gemeldeten Fehlers (2.18.0): mit width:100% samt Rahmen und
+       Polsterung wurde aus dem Haken ein formularbreiter Kasten, das Glyph
+       stand mittig darin und die Beschriftung rutschte in die Zeile
+       darunter. Welcher Text zu welchem Haken gehoerte, war damit nicht mehr
+       zu sehen. :not([type=range]) ist dieselbe Klasse Fehler an einer
+       zweiten Stelle: dieselbe Polsterung und der dunkle Hintergrund quetschten
+       die native Schieberegler-Spur auf einen winzigen Streifen zusammen,
+       waehrend .slider-num daneben durch width:100% (hoehere Spezifitaet als
+       .slider-row .slider-num) auf volle Breite aufblies (bjoerg, Lux-Feld).
+       Eine Sammelregel auf input trifft immer auch jeden Eingabetyp mit
+       eigener nativer Darstellung – nicht nur die Checkbox. */
+    .field input:not([type=checkbox]):not([type=range]),.field select{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--divider);background:var(--primary-background-color,#111);color:var(--txt);font-size:14px;box-sizing:border-box}
     /* Haken und Text in einer Zeile, der Text linksbuendig unter dem Haken
        umbrechend – nicht darunter beginnend. */
     .field label:has(input[type=checkbox]){display:flex;align-items:flex-start;gap:10px;
@@ -3737,7 +3744,13 @@ class ShutterPilotPanel extends PanelBase {
     .slider-row{display:flex;align-items:center;gap:12px}
     .slider-row input[type=range]{flex:1;accent-color:var(--sp);height:6px;cursor:pointer}
     .slider-row .slider-val{min-width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--sp)}
-    .slider-row .slider-num{width:88px;flex:0 0 auto;padding:6px 8px;font-size:14px;text-align:right;
+    /* .field vorangestellt, nicht Geschmackssache: ".slider-row .slider-num"
+       hat dieselbe Spezifitaet (zwei Klassen) wie ".field input:not(...)"
+       weiter oben und verlor gegen dessen width:100% (eine Klasse plus eine
+       Pseudoklasse zaehlt hoeher) - die feste Breite stand im CSS, wirkte
+       aber nie. Drei Klassen schlagen die zwei-plus-Pseudoklasse der
+       Sammelregel, ohne !important zu brauchen. */
+    .field .slider-row .slider-num{width:88px;flex:0 0 auto;padding:6px 8px;font-size:14px;text-align:right;
       border:1px solid var(--divider);border-radius:6px;background:var(--card-bg);color:var(--txt)}
     .slider-row .slider-unit{font-size:13px;color:var(--txt2);min-width:22px}
     .form-actions{display:flex;gap:8px;margin-top:16px}
@@ -5060,7 +5073,7 @@ class ShutterPilotPanel extends PanelBase {
           ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",COND_DOMAINS,HINTS.condition)}
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity):""}`:""}`:""}
 
-      `)}${this._sec("mdi:weekend","sec_noup","sec_noup_sub",html`
+      `)}${this._sec("mdi:calendar-weekend","sec_noup","sec_noup_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_noup_intro")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!a.we_no_up}

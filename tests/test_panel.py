@@ -47,6 +47,39 @@ def test_the_panel_parses() -> None:
     assert result.returncode == 0, result.stderr
 
 
+def test_no_invalid_mdi_icon_names() -> None:
+    """bjoerg (Forum): eine leere Stelle statt eines Icons vor „Hochfahren
+    unterbinden". Ursache war `mdi:weekend` – der Name existiert im
+    Material-Design-Icons-Set nicht (gegen pictogrammers.com geprueft, 404).
+    Ein Rendertest findet das nicht, weil `<ha-icon>` bei einem unbekannten
+    Namen einfach nichts zeichnet statt einen Fehler zu werfen – von hier aus
+    also nur als fehlende Zeichenkette pruefbar, nicht als Verhalten."""
+    panel = (
+        Path(__file__).parent.parent
+        / "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js"
+    )
+    text = panel.read_text(encoding="utf-8")
+    assert "mdi:weekend" not in text
+    assert '"mdi:calendar-weekend","sec_noup"' in text
+
+
+def test_the_slider_row_keeps_its_own_input_styling() -> None:
+    """bjoerg (Forum): am Lux-Feld war der Schieber winzig, das Zahlenfeld
+    riesig. Ursache: die Sammelregel `.field input:not([type=checkbox])`
+    (aus 2.18.0, fuer die Checkbox gebaut) traf auch `type=range` mit, und
+    `.slider-row .slider-num` verlor gegen deren `width:100%`, weil beide
+    dieselbe Spezifitaet hatten. Dieselbe Fehlerklasse wie 2.18.0, an einem
+    zweiten Eingabetyp - ein CSS-Cascade-Fehler laesst sich von hier aus nur
+    als Text pruefen, nicht als gerendertes Layout."""
+    panel = (
+        Path(__file__).parent.parent
+        / "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js"
+    )
+    text = panel.read_text(encoding="utf-8")
+    assert ":not([type=checkbox]):not([type=range])" in text
+    assert ".field .slider-row .slider-num{width:88px" in text
+
+
 def test_every_view_and_form_renders() -> None:
     result = _run("render_all.mjs")
     assert result.returncode == 0, (

@@ -4,6 +4,32 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.7]
+
+bjoerg im Forum, zwei Screenshots: eine leere Stelle statt eines Icons, und
+ein Schieberegler, der wie ein Schalter aussah. Beide gegen den Code
+nachgestellt, nicht geglaubt.
+
+### Behoben
+- **Vor „Hochfahren unterbinden" fehlte das Icon.** Ursache: `mdi:weekend`
+  existiert im Material-Design-Icons-Set nicht (verwechselt mit einem
+  gleichnamigen Icon aus einem anderen Icon-Set) – `<ha-icon>` zeichnet bei
+  einem unbekannten Namen einfach nichts. Jetzt `mdi:calendar-weekend`,
+  passend zum Untertext „Wochenende, Ferien, Urlaub" und bereits an anderer
+  Stelle im Panel verwendet.
+- **Der Lux-Schieberegler war auf einen winzigen Streifen zusammengequetscht,
+  das Zahlenfeld daneben füllte fast die ganze Zeile.** Dieselbe Fehlerklasse
+  wie die Checkbox-Beschriftung aus 2.18.0, nur an einem zweiten Eingabetyp:
+  die Sammelregel `.field input:not([type=checkbox])` schloss `type=range`
+  nicht mit aus und stülpte Rahmen, Polsterung und dunklen Hintergrund über
+  den nativen Schieberegler. Gleichzeitig verlor die eigene Breitenregel des
+  Zahlenfelds gegen dieselbe Sammelregel, weil beide dieselbe CSS-Spezifität
+  hatten. Betroffen waren alle Schieberegler mit einem Zahlenfeld daneben
+  (Lux-Schwellen im Helligkeitsmodus), nicht nur die im Screenshot gezeigten.
+
+### Was ändert sich für mich?
+Nur die Optik zweier Formularelemente. Am Verhalten ändert sich nichts.
+
 ## [2.21.6]
 
 Direkte Folge von 2.21.5: die neue Invertier-Checkbox macht eine bestehende

@@ -780,6 +780,10 @@ comment.
   `open_cover`/`close_cover`, approximate an intermediate position by timing
   the configured travel duration.
   [#11](https://github.com/fschubi/shutter_pilot/issues/11)
+- **Retract an awning automatically at dusk, without an automatic re-extend**
+  the next day – independent of the existing shading logic, which would do
+  exactly that.
+  [#12](https://github.com/fschubi/shutter_pilot/issues/12)
 
 ## Support me
 

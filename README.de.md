@@ -791,6 +791,10 @@ Priorisierung mehr als ein neuer Kommentar.
   Jarolift-Controller): statt nur `open_cover`/`close_cover` als Rückfall
   eine Zwischenposition über die konfigurierte Fahrzeit annähern.
   [#11](https://github.com/fschubi/shutter_pilot/issues/11)
+- **Markise abends bei Dämmerung automatisch einfahren, ohne automatische
+  Wiederausfahrt** am nächsten Tag – unabhängig von der bestehenden
+  Beschattungslogik, die genau das täte.
+  [#12](https://github.com/fschubi/shutter_pilot/issues/12)
 
 ## Unterstützt mich
 
