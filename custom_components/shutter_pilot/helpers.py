@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     AREA_MODE_NONE,
+    AWNING_DUSK_SLOT,
     CONF_AREA_MODE,
     CONF_AREA_SHADE_RELEASE_OPENS,
     CONF_AREA_AZIMUTH_ENABLED,
@@ -712,6 +713,28 @@ def no_up_condition_blocks(
     holiday flag would leave the house wide open to the street.
     """
     return _own_slot_met(hass, area, data, NO_UP_CONDITION_SLOT)
+
+
+def awning_dusk_condition_met(
+    hass: HomeAssistant, shutter: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """True when this awning's own "get dark, retract" condition holds.
+
+    Lives on the shutter, not an area, so the memory key is the cover entity
+    rather than an area id - unlike _own_slot_met(), which would otherwise
+    read shutter.get(CONF_AREA_ID) as "" and pool every awning without a real
+    one into the same hysteresis bucket. Fail closed like every other own
+    slot: not configured or unreadable means it does not apply, so a dead
+    sensor never retracts an awning nobody asked to move.
+    """
+    entity_key = sun_condition_keys(AWNING_DUSK_SLOT)[0]
+    if not str(shutter.get(entity_key) or "").strip():
+        return False
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    reading = _slot_reading(
+        hass, shutter, AWNING_DUSK_SLOT, condition_memory(data, "dusk", cover)
+    )
+    return False if reading is None else reading
 
 
 def weekend_blocks_up(

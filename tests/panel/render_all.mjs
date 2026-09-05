@@ -49,7 +49,8 @@ const shutters = [
     position_open:100, position_closed:0, position_sun_protect:50 },
   { cover_entity_id:"cover.markise_a", name:"Markise A", device_kind:"awning", area_down_id:"living",
     position_open:0, position_sun_protect:100, awning_track_enabled:true, blind_drive:true,
-    my_position_entity:"button.my_pos", sun_cond_wind_entity:"sensor.wind" },
+    my_position_entity:"button.my_pos", sun_cond_wind_entity:"sensor.wind",
+    sun_cond_dusk_entity:"sensor.lux" },
   { cover_entity_id:"cover.markise_b", name:"Markise B", device_kind:"awning", area_down_id:"living",
     position_open:0, position_sun_protect:100 },
   { cover_entity_id:"cover.fenster_a", name:"Dachfenster A", device_kind:"window", area_down_id:"none",
@@ -106,6 +107,14 @@ for (const s of shutters) {
   const out = R("Formular: " + s.name, () => p._renderShutterForm(p._data));
   ok("  … zeigt den Kopierknopf (zweiter Eintrag derselben Art)",
      out.includes("f_copy_from"), "Kopierblock fehlt – Test deckt ihn nicht ab");
+  if (s.device_kind === "awning") {
+    ok("  … zeigt den Daemmerungs-Abschnitt (nur Markisen)",
+       out.includes("sec_awning_dusk"), "Daemmerungs-Abschnitt fehlt an einer Markise");
+  }
+  if (s.device_kind === "window") {
+    ok("  … zeigt den Daemmerungs-Abschnitt NICHT (Dachfenster)",
+       !out.includes("sec_awning_dusk"), "Daemmerungs-Abschnitt taucht faelschlich an einem Dachfenster auf");
+  }
 }
 p._editShutter = null;
 

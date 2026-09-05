@@ -28,6 +28,7 @@ custom_components/shutter_pilot/
   elevation.py       Beschattung: Elevation, Azimut, Bedingungen, pro Rollladen
   ventilation.py     Automatisches Lüften nach Bedingungen
   awning_guard.py    Markisen: Wind-, Regen- und Frostschutz (Sperre + Zwangsfahrt)
+  awning_dusk.py     Markisen: bei Dämmerung einfahren, nie automatisch wieder aus
   schedule_times.py  Zeitmathematik: Wochenende, Jitter, Zeitklammern
   window_trigger.py  Reaktion auf Fensterkontakte
   window_helper.py   Fensterzustand und Aussperrschutz
@@ -39,7 +40,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (752 Tests)
+tests/               pytest-Suite (799 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -157,6 +158,18 @@ Anders sind zwei Dinge:
 Optional: **Ausfahrlänge nach Sonnenhöhe**, zwei Stützpunkte linear
 interpoliert, mit Mindeständerung gegen den Minutentakt am Getriebe.
 
+Optional (2.22.0): **`awning_dusk.py`**, bei Dämmerung einfahren. Eigener
+Bedingungs-Slot je Markise (`AWNING_DUSK_SLOT`), unabhängig vom
+Sonnenschutz-Schalter des Bereichs und unabhängig vom Wetterschutz. Anders
+als `awning_guard.py` respektiert er Hauptschalter, Bereichsautomatik und die
+Automatik der Markise – eine Komfortfunktion, keine Sicherheitsfunktion, und
+deshalb bewusst kein vierter Guard-Slot neben Wind/Regen/Eis. Fährt nur
+**einmal ein**, wenn die Bedingung eintritt; die Freigabe (Bedingung fällt
+weg) löst **keine** Fahrt aus – ausfahren bleibt Sache der Beschattung
+(falls eingeschaltet) oder von Hand. Der Speicher hängt am Cover
+(`condition_memory(data, "dusk", cover)`), nicht an einer Bereichs-ID, sonst
+würden Markisen ohne echten Bereich in denselben Hysterese-Topf fallen.
+
 ### Manuelle Übersteuerung
 
 Drei Modi je Bereich: `never` (manuelle Position blockiert bis zum nächsten
@@ -230,7 +243,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.21.4: je 438 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.22.0: je 444 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -259,7 +272,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 752 Tests, ~18 s
+.venv/bin/pytest            # 799 Tests, ~19 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -288,10 +301,71 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.7**, im Forum aktiv genutzt. Einreichung für den
+Version **2.22.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-05 – 2.22.0: die Markise, die abends von selbst geht
+
+Direkte Umsetzung von [#12](https://github.com/fschubi/shutter_pilot/issues/12),
+bjoergs Wunsch aus dem Forum: eine Markise soll abends bei Dämmerung
+einfahren, aber **niemals** automatisch wieder ausfahren – schon gar nicht,
+wenn niemand zuhause ist. Sein eigener Workaround (Helfer-Schalter unter
+„Hochfahren unterbinden") griff nachweislich nicht: `only_shutters()`
+schließt Markisen von genau diesem Fahrweg aus (`brightness.py`,
+`scheduler.py`).
+
+**Warum nicht die Beschattung.** `elevation.py` fährt eine Markise bei
+Bedarf aus *und wieder ein* – dieselbe Bedingung, die abends auslöst, würde
+am nächsten Tag genauso auslösen und die Markise erneut ausfahren. Genau das
+war der Kern der Meldung: keine automatische Wiederausfahrt.
+
+**Warum nicht ein vierter Guard-Slot.** `awning_guard.py` (Wind/Regen/Eis)
+ignoriert Hauptschalter, Bereichsautomatik und die Automatik der Markise mit
+Absicht – eine Böe darf nicht davon abhängen, ob jemand die Markise
+ausgeschaltet hat. Ein Komfort-Wunsch wie „bei Dunkelheit einfahren" soll das
+nicht: schaltet jemand die Automatik ab, soll auch diese Funktion still
+sein. Deshalb ein eigener Bedingungs-Slot (`AWNING_DUSK_SLOT = "dusk"`),
+dieselbe Mechanik wie überall (Zahl mit Hysterese, Zustandsliste, Boolean,
+Invertierung), aber mit eigener, respektierender Prüfung.
+
+**Neues Modul, kein neuer Timer.** `awning_dusk.py` haengt am gemeinsamen
+Minutentakt wie `ventilation.py` und `awning_guard.py`. Fährt genau einmal
+ein, wenn die Bedingung eintritt (`_dusk_retracted`-Merker gegen Motor-
+Genöle), und bei Freigabe passiert **nichts** – keine Fahrt, keine
+Ausnahme, einfach der fehlende Code für „wieder ausfahren". Ein zweiter
+Dämmerungs-Zyklus nach einer hellen Phase darf wieder auslösen, sonst hülfe
+das Feature nur einmal im Leben der Anlage.
+
+**Der Merker-Fallstrick, diesmal im Voraus vermieden.** `_own_slot_met()`
+liest `area.get(CONF_AREA_ID)` roh für den Hysterese-Speicher – bei einem
+Rollladen mit echter Bereichs-ID ist das richtig, bei einer Markise ohne
+eigene wäre es `""`, und **jede** Markise ohne Bereichs-ID würde sich einen
+gemeinsamen Hysterese-Topf teilen. Deshalb `awning_dusk_condition_met()`
+eigenständig, mit dem Cover als Speicherschlüssel
+(`condition_memory(data, "dusk", cover)`) statt der Bereichs-ID – ein Test
+hält das mit zwei Markisen ohne Bereich fest.
+
+**Panel:** ein eigener, zusammenklappbarer Abschnitt „Bei Dämmerung
+einfahren", nur an Markisen (nicht an Dachfenstern) – über `_renderCondDetail()`,
+nicht `_renderGuardSlot()`, weil letzteres eine Sperrzeit mitbringt, die es
+hier gar nicht gibt. Export: eine eigene Verdikt-Zeile mit Sensor, Schwelle
+und aktuellem Zustand, nach demselben Muster wie der Wetterschutz.
+
+**#12 ist damit erledigt**, aus „Geplant" in beiden READMEs wieder entfernt
+– derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
+(damals Markisen selbst) stand, bevor er gebaut wurde.
+
+**Verifiziert:** `pytest` 799 Tests grün (20 neue), **fünf Gegenproben** –
+ohne den Wiederholungsschutz feuert der Motor jede Minute; ohne den
+`is_awning()`-Filter fährt auch ein Dachfenster mit; ohne die
+Automatik-Prüfung am Rollladen fährt eine abgeschaltete Markise trotzdem;
+ohne dieselbe Prüfung am Bereich ebenso; ohne die Export-Zeile fallen drei
+neue Tests. i18n 444/444 in allen elf Sprachen (4 neu). Panel in Node
+gerendert, mit einer eigenen Prüfung je Geräteart (Markise zeigt den
+Abschnitt, Dachfenster nicht) – Gegenprobe gemacht. **Nicht im Browser
+geprüft.**
 
 ### 2026-09-05 – 2.21.7: das Icon, das aus dem falschen Set kam
 

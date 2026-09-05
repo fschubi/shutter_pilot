@@ -4,6 +4,33 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.22.0]
+
+Ein Wunsch aus dem Forum (bjoerg): eine Markise soll abends bei Dämmerung
+einfahren, aber nicht automatisch wieder ausfahren – sein eigener Workaround
+über „Hochfahren unterbinden" griff nicht, weil Markisen von diesem Fahrweg
+grundsätzlich ausgenommen sind.
+
+### Neu
+- **„Bei Dämmerung einfahren"** – ein neuer Abschnitt in jedem
+  Markisenformular. Ein eigener Sensor (Helligkeit, Sonnenhöhe oder ein
+  Schalter) löst eine einmalige Einfahrt aus; eine automatische
+  Wiederausfahrt gibt es nicht – ausfahren bleibt Sache der Beschattung
+  (falls eingeschaltet) oder von Hand. Unabhängig vom Sonnenschutz-Schalter
+  des Bereichs: eine Markise kann beides haben, nur eins oder keins.
+- Für die Schwellen gilt „dunkler als" ohne eigenes Ankreuzen, wie bei Frost
+  und Eis; ein Schalter oder Binärsensor liest „an" als dunkel, mit
+  derselben Invertier-Checkbox wie beim Wetterschutz.
+- Anders als der Wetterschutz respektiert die neue Funktion Hauptschalter,
+  Bereichsautomatik und die Automatik der Markise selbst – eine
+  Komfortfunktion soll nicht greifen, wenn die Automatik ausgeschaltet ist.
+- Der Einstellungs-Export zeigt Wert, Schwelle und aktuellen Zustand der
+  Dämmerungs-Automatik, sofern konfiguriert.
+
+### Was ändert sich für mich?
+Nichts, solange die neue Sensor-Auswahl leer bleibt. Erst ein eingetragener
+Sensor aktiviert die Funktion.
+
 ## [2.21.7]
 
 bjoerg im Forum, zwei Screenshots: eine leere Stelle statt eines Icons, und

@@ -40,6 +40,7 @@ from .const import (
     CONF_WINDOW_TILTED_STATE,
     CONF_WINDOW_VENT_WHILE_OPEN,
     WINDOW_UNUSED_KEYS,
+    AWNING_DUSK_SLOT,
     AWNING_GUARD_SLOTS,
     AWNING_GUARD_ICE,
     AWNING_GUARD_RAIN,
@@ -89,6 +90,7 @@ from .const import (
 )
 from .helpers import (
     rest_role,
+    awning_dusk_condition_met,
     has_guard,
     is_window,
     automated_up_blocked,
@@ -560,6 +562,48 @@ def _guard_rows(
                 "",
             ]
     return out
+
+
+def _dusk_row(
+    hass: HomeAssistant, shutter: dict[str, Any], data: dict[str, Any]
+) -> list[str]:
+    """The dusk-retract verdict for one awning, value and threshold included.
+
+    Reads the raw evaluation, not the runtime "already retracted" flag: the
+    condition can hold every minute for hours, and this line should say so
+    every time it is read, not only once.
+    """
+    entity_key, on_key, off_key, states_key = sun_condition_keys(AWNING_DUSK_SLOT)
+    entity_id = str(shutter.get(entity_key) or "").strip()
+    if not entity_id:
+        return []
+
+    if _is_set(shutter.get(states_key)):
+        limits = f"Zustände: {_fmt(shutter.get(states_key))}"
+    elif entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
+        invert_stored = shutter.get(sun_condition_invert_key(AWNING_DUSK_SLOT))
+        limits = "aus = dunkel" if invert_stored else "an = dunkel"
+    else:
+        invert_stored = shutter.get(sun_condition_invert_key(AWNING_DUSK_SLOT))
+        inverted = bool(
+            invert_stored
+            if invert_stored is not None
+            else AWNING_DUSK_SLOT in INVERTED_BY_DEFAULT_SLOTS
+        )
+        limits = (
+            f"dunkel unter {_fmt(shutter.get(on_key))} / hell ab {_fmt(shutter.get(off_key))}"
+            if inverted
+            else f"dunkel ab {_fmt(shutter.get(on_key))} / hell unter {_fmt(shutter.get(off_key))}"
+        )
+
+    met = awning_dusk_condition_met(hass, shutter, data)
+    verdict = "⛔ eingefahren gehalten" if met else "✅ frei"
+    return [
+        "Dämmerungs-Automatik:",
+        "",
+        f"`{entity_id}` meldet {_state_of(hass, entity_id)} · {limits} · {verdict}",
+        "",
+    ]
 
 
 def _drive_command_note(
@@ -1291,6 +1335,7 @@ async def async_build_export(
             # oefter hier als in der Geometrie darunter.
             out += _awning_silent_notes(shutter)
             out += _guard_rows(hass, entry, data, shutter)
+            out += _dusk_row(hass, shutter, data)
         elif is_window(shutter):
             out += _window_silent_notes(shutter, down_area)
             out += _guard_rows(hass, entry, data, shutter)

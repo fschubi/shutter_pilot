@@ -430,6 +430,10 @@ de:{
   sec_awning_pos_sub:"Ruhestellung, Beschattung und Nachführung",
   sec_awning_guard:"Wind- und Regenschutz",
   sec_awning_guard_sub:"Eigene Sensoren statt der globalen",
+  sec_awning_dusk:"Bei Dämmerung einfahren",
+  sec_awning_dusk_sub:"Ohne automatische Wiederausfahrt",
+  f_awning_dusk_cond:"Dämmerungs-Sensor",
+  f_awning_dusk_hint:"Fährt einmal ein, sobald die Bedingung zutrifft, und nie von selbst wieder aus – ausfahren bleibt der Beschattung (falls eingeschaltet) oder von Hand vorbehalten. Ohne Sensor passiert nichts.",
   sec_awning_sun:"Beschattung",
   sec_awning_sun_sub:"Sonnenstand und Bedingungen",
   sec_guard:"Wind- und Regenschutz für Markisen",
@@ -786,6 +790,10 @@ en:{
   sec_awning_pos_sub:"Rest position, shading and sun tracking",
   sec_awning_guard:"Wind and rain protection",
   sec_awning_guard_sub:"Own sensors instead of the global ones",
+  sec_awning_dusk:"Retract at dusk",
+  sec_awning_dusk_sub:"Without an automatic re-extend",
+  f_awning_dusk_cond:"Dusk sensor",
+  f_awning_dusk_hint:"Retracts once when the condition holds, and never automatically extends again – extending stays shading's job (if enabled) or a manual one. Without a sensor nothing happens.",
   sec_awning_sun:"Shading",
   sec_awning_sun_sub:"Sun position and conditions",
   sec_guard:"Wind and rain protection for awnings",
@@ -1084,6 +1092,10 @@ fr:{
   sec_awning_pos_sub:"Position de repos, ombrage et suivi du soleil",
   sec_awning_guard:"Protection vent et pluie",
   sec_awning_guard_sub:"Capteurs propres au lieu des capteurs globaux",
+  sec_awning_dusk:"Rentrer au crépuscule",
+  sec_awning_dusk_sub:"Sans ressortie automatique",
+  f_awning_dusk_cond:"Capteur de crépuscule",
+  f_awning_dusk_hint:"Rentre une fois la condition remplie, et ne ressort plus jamais automatiquement – ressortir reste la tâche de l'ombrage (si activé) ou une action manuelle. Sans capteur, rien ne se passe.",
   sec_awning_sun:"Ombrage",
   sec_awning_sun_sub:"Position du soleil et conditions",
   sec_guard:"Protection vent et pluie des stores",
@@ -1382,6 +1394,10 @@ es:{
   sec_awning_pos_sub:"Posición de reposo, sombreado y seguimiento solar",
   sec_awning_guard:"Protección de viento y lluvia",
   sec_awning_guard_sub:"Sensores propios en lugar de los globales",
+  sec_awning_dusk:"Recoger al anochecer",
+  sec_awning_dusk_sub:"Sin salida automática posterior",
+  f_awning_dusk_cond:"Sensor de anochecer",
+  f_awning_dusk_hint:"Se recoge una vez que se cumple la condición y nunca vuelve a salir automáticamente: salir sigue siendo tarea de la sombra (si está activada) o una acción manual. Sin sensor no ocurre nada.",
   sec_awning_sun:"Sombreado",
   sec_awning_sun_sub:"Posición del sol y condiciones",
   sec_guard:"Protección de viento y lluvia para toldos",
@@ -1680,6 +1696,10 @@ it:{
   sec_awning_pos_sub:"Posizione di riposo, ombreggiatura e inseguimento solare",
   sec_awning_guard:"Protezione vento e pioggia",
   sec_awning_guard_sub:"Sensori propri al posto di quelli globali",
+  sec_awning_dusk:"Rientra al crepuscolo",
+  sec_awning_dusk_sub:"Senza riuscita automatica",
+  f_awning_dusk_cond:"Sensore crepuscolare",
+  f_awning_dusk_hint:"Rientra una volta soddisfatta la condizione e non esce mai più automaticamente – uscire resta compito dell'ombreggiatura (se attiva) o un'azione manuale. Senza sensore non succede nulla.",
   sec_awning_sun:"Ombreggiatura",
   sec_awning_sun_sub:"Posizione del sole e condizioni",
   sec_guard:"Protezione vento e pioggia per le tende",
@@ -1979,6 +1999,10 @@ nl:{
   sec_awning_pos_sub:"Ruststand, schaduw en zonvolging",
   sec_awning_guard:"Wind- en regenbeveiliging",
   sec_awning_guard_sub:"Eigen sensoren in plaats van de globale",
+  sec_awning_dusk:"Intrekken bij schemering",
+  sec_awning_dusk_sub:"Zonder automatisch weer uitrijden",
+  f_awning_dusk_cond:"Schemeringssensor",
+  f_awning_dusk_hint:"Trekt één keer in zodra de voorwaarde geldt, en rijdt daarna nooit vanzelf weer uit – uitrijden blijft de taak van de zonwering (indien ingeschakeld) of gebeurt handmatig. Zonder sensor gebeurt er niets.",
   sec_awning_sun:"Schaduw",
   sec_awning_sun_sub:"Zonnestand en voorwaarden",
   sec_guard:"Wind- en regenbeveiliging voor zonneschermen",
@@ -2278,6 +2302,10 @@ da:{
   sec_awning_pos_sub:"Hvilestilling, skygge og solfølgning",
   sec_awning_guard:"Vind- og regnbeskyttelse",
   sec_awning_guard_sub:"Egne sensorer i stedet for de globale",
+  sec_awning_dusk:"Kør ind i skumringen",
+  sec_awning_dusk_sub:"Uden automatisk genudkørsel",
+  f_awning_dusk_cond:"Skumringssensor",
+  f_awning_dusk_hint:"Kører ind én gang, når betingelsen er opfyldt, og kører aldrig automatisk ud igen – at køre ud er stadig solafskærmningens opgave (hvis aktiveret) eller en manuel handling. Uden sensor sker der ingenting.",
   sec_awning_sun:"Skygge",
   sec_awning_sun_sub:"Solens position og betingelser",
   sec_guard:"Vind- og regnbeskyttelse for markiser",
@@ -2577,6 +2605,10 @@ sv:{
   sec_awning_pos_sub:"Viloläge, skugga och solföljning",
   sec_awning_guard:"Vind- och regnskydd",
   sec_awning_guard_sub:"Egna sensorer i stället för de globala",
+  sec_awning_dusk:"Fäll in i skymningen",
+  sec_awning_dusk_sub:"Utan automatisk återutfällning",
+  f_awning_dusk_cond:"Skymningssensor",
+  f_awning_dusk_hint:"Fälls in en gång när villkoret uppfylls, och fälls aldrig ut igen av sig själv – att fälla ut är fortfarande solskyddets uppgift (om aktiverat) eller en manuell åtgärd. Utan sensor händer ingenting.",
   sec_awning_sun:"Skugga",
   sec_awning_sun_sub:"Solens läge och villkor",
   sec_guard:"Vind- och regnskydd för markiser",
@@ -2876,6 +2908,10 @@ pl:{
   sec_awning_pos_sub:"Położenie spoczynkowe, zacienienie i podążanie za słońcem",
   sec_awning_guard:"Ochrona przed wiatrem i deszczem",
   sec_awning_guard_sub:"Własne czujniki zamiast globalnych",
+  sec_awning_dusk:"Chowaj o zmierzchu",
+  sec_awning_dusk_sub:"Bez automatycznego ponownego rozłożenia",
+  f_awning_dusk_cond:"Czujnik zmierzchu",
+  f_awning_dusk_hint:"Chowa się raz, gdy warunek jest spełniony, i nigdy sama nie rozkłada się ponownie – rozkładanie pozostaje zadaniem osłony przeciwsłonecznej (jeśli włączona) lub czynnością ręczną. Bez czujnika nic się nie dzieje.",
   sec_awning_sun:"Zacienienie",
   sec_awning_sun_sub:"Położenie słońca i warunki",
   sec_guard:"Ochrona markiz przed wiatrem i deszczem",
@@ -3175,6 +3211,10 @@ pt:{
   sec_awning_pos_sub:"Posição de repouso, sombreamento e seguimento solar",
   sec_awning_guard:"Proteção de vento e chuva",
   sec_awning_guard_sub:"Sensores próprios em vez dos globais",
+  sec_awning_dusk:"Recolher ao anoitecer",
+  sec_awning_dusk_sub:"Sem saída automática posterior",
+  f_awning_dusk_cond:"Sensor de crepúsculo",
+  f_awning_dusk_hint:"Recolhe uma vez quando a condição é cumprida e nunca mais sai automaticamente – sair continua a ser tarefa do sombreamento (se ativado) ou uma ação manual. Sem sensor, nada acontece.",
   sec_awning_sun:"Sombreamento",
   sec_awning_sun_sub:"Posição do sol e condições",
   sec_guard:"Proteção de vento e chuva para toldos",
@@ -3474,6 +3514,10 @@ nb:{
   sec_awning_pos_sub:"Hvilestilling, skygge og solfølging",
   sec_awning_guard:"Vind- og regnbeskyttelse",
   sec_awning_guard_sub:"Egne sensorer i stedet for de globale",
+  sec_awning_dusk:"Kjør inn i skumringen",
+  sec_awning_dusk_sub:"Uten automatisk gjenutkjøring",
+  f_awning_dusk_cond:"Skumringssensor",
+  f_awning_dusk_hint:"Kjører inn én gang når betingelsen er oppfylt, og kjører aldri automatisk ut igjen – å kjøre ut er fortsatt solskjermingens jobb (hvis aktivert) eller en manuell handling. Uten sensor skjer ingenting.",
   sec_awning_sun:"Skygge",
   sec_awning_sun_sub:"Solens posisjon og betingelser",
   sec_guard:"Vind- og regnbeskyttelse for markiser",
@@ -5427,6 +5471,17 @@ class ShutterPilotPanel extends PanelBase {
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
       ${win?"":this._renderMyPosition(s,ep,pct)}
+
+      `)}${win?"":this._sec("mdi:weather-night","sec_awning_dusk","sec_awning_dusk_sub",html`
+      ${/* Eigener Abschnitt statt eines vierten Guard-Slots neben Wind/Regen/
+           Eis: der Schutz ignoriert alle Automatik-Schalter mit Absicht (eine
+           Boe darf nicht davon abhaengen, ob jemand die Markise ausgeschaltet
+           hat) - dieser Komfort-Wunsch soll das nicht. Deshalb der normale
+           Bedingungs-Baustein (_renderCondDetail), nicht _renderGuardSlot mit
+           seiner Sperrzeit, die es hier gar nicht gibt. */""}
+      <div class="hint">${T("f_awning_dusk_hint")}</div>
+      ${ep("sun_cond_dusk_entity",T("f_awning_dusk_cond"),COND_DOMAINS,HINTS.illuminance)}
+      ${s.sun_cond_dusk_entity?this._renderCondDetail(s,"dusk",s.sun_cond_dusk_entity):""}
 
       `)}${this._sec("mdi:weather-windy",K("sec_awning_guard","sec_window_guard"),K("sec_awning_guard_sub","sec_window_guard_sub"),html`
       <div class="hint">${T(K("f_guard_intro","f_window_guard_intro"))}</div>

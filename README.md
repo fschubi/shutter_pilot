@@ -317,6 +317,27 @@ Sun is low  at 20°  →  extend to 100%
 Plus a **minimum change** (default 10%). Without it the motor would run a few
 percent every single minute – the surest way to wear out a drive.
 
+### Retract at dusk, without an automatic re-extend
+
+Its own sensor, independent of shading – since 2.22.0, in every awning's
+form under **"Retract at dusk"**. The difference is deliberate: shading
+extends and retracts as needed, whichever way the condition currently
+points. This one only ever retracts – once it gets bright again, the awning
+stays in until someone extends it by hand, or shading (if enabled) takes
+over.
+
+For a brightness sensor, "darker than" applies without a checkbox, exactly
+like frost and ice protection – a value below the first threshold triggers,
+release only above the second. A switch or binary sensor treats "on" as
+dark, with the same **"Invert meaning"** checkbox as wind, rain and frost
+protection, in case the sensor reports it the other way round.
+
+The sensor belongs to the individual awning, not the area – unlike rain and
+frost, which apply the same across the whole house. It respects the master
+switch, the area automation and the awning's own automation (unlike the
+weather protection, which deliberately asks none of them): a comfort
+feature should not engage while someone has switched the automation off.
+
 ### Entities, service and event
 
 | Kind | Name |
@@ -780,10 +801,6 @@ comment.
   `open_cover`/`close_cover`, approximate an intermediate position by timing
   the configured travel duration.
   [#11](https://github.com/fschubi/shutter_pilot/issues/11)
-- **Retract an awning automatically at dusk, without an automatic re-extend**
-  the next day – independent of the existing shading logic, which would do
-  exactly that.
-  [#12](https://github.com/fschubi/shutter_pilot/issues/12)
 
 ## Support me
 

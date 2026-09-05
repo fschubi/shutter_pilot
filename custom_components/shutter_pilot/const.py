@@ -283,6 +283,17 @@ AWNING_GUARD_RAIN = "rain"
 AWNING_GUARD_ICE = "ice"
 AWNING_GUARD_SLOTS = (AWNING_GUARD_WIND, AWNING_GUARD_RAIN, AWNING_GUARD_ICE)
 
+# Dusk retract: an awning drives to its rest position once this condition
+# holds, and never automatically back out again once it clears - extending
+# stays shading's job (if enabled) or a manual one. Lives on the awning
+# itself, not the area: unlike wind/rain/ice this answers a question about
+# one specific window ("is it dark enough for THIS one"), not the house.
+# Own slot rather than reusing the guard mechanism on purpose - the guard
+# ignores every automation switch by design (a storm must not care whether
+# someone switched the awning off), and a comfort feature like this one
+# should not.
+AWNING_DUSK_SLOT = "dusk"
+
 # Slot used for the alternative closing position. Same evaluation, own name.
 CLOSE_CONDITION_SLOT = "close"
 # Two slots, like ventilation: "warm today AND somebody at home" needs both.
@@ -317,7 +328,9 @@ SUN_PROTECT_ALT_CONDITION_SLOT = "sp_alt"
 # Slots that ask "below" rather than "above" unless told otherwise. Frost is
 # always about falling temperatures, so users should not have to say so – and
 # ice on an awning is the same question asked at the other end of the house.
-INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT, AWNING_GUARD_ICE)
+# Dusk joins them for the same reason: a brightness sensor reads low at dusk,
+# not high, and "darker than" should not need a checkbox to say so.
+INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT, AWNING_GUARD_ICE, AWNING_DUSK_SLOT)
 
 # Standard weather conditions in Home Assistant, offered as checkboxes.
 WEATHER_CONDITIONS = (

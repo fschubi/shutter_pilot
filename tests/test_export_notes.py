@@ -600,6 +600,90 @@ class TestRainAndIceUnitPlausibility:
         assert "misst in **°F**" not in md
 
 
+class TestDuskRow:
+    """Der Daemmerungs-Verdikt einer Markise - bjoergs Wunsch aus dem Forum
+    (abends bei Dunkelheit einfahren, ohne automatische Wiederausfahrt)."""
+
+    @pytest.fixture
+    def make_dusk_entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            AWNING_DUSK_SLOT,
+            CONF_DEVICE_KIND,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+            sun_condition_keys,
+        )
+
+        dusk_keys = sun_condition_keys(AWNING_DUSK_SLOT)
+
+        def _make(extra_shutter_keys=None):
+            shutter = {
+                CONF_COVER_ENTITY_ID: "cover.markise",
+                CONF_NAME: "Markise Terrasse",
+                CONF_DEVICE_KIND: KIND_AWNING,
+                CONF_AREA_DOWN_ID: "vorne",
+                CONF_POSITION_OPEN: 0,
+                CONF_POSITION_SUN_PROTECT: 100,
+                **(extra_shutter_keys or {}),
+            }
+            config_entry = MockConfigEntry(
+                domain=DOMAIN,
+                title="Shutter Pilot",
+                options={CONF_AREAS: [AREA], CONF_SHUTTERS: [shutter]},
+            )
+            config_entry.add_to_hass(hass)
+            hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+                "sun_protect_covers": set(),
+                "covers_driven_up": set(),
+                "covers_driven_down": set(),
+                "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+            }
+            return config_entry
+
+        return _make, dusk_keys
+
+    async def test_not_configured_shows_no_row(self, hass, make_dusk_entry):
+        make, _keys = make_dusk_entry
+        entry = make()
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "Dämmerungs-Automatik" not in md
+
+    async def test_a_numeric_sensor_shows_value_threshold_and_verdict(
+        self, hass, make_dusk_entry
+    ):
+        make, (entity_key, on_key, off_key, _states) = make_dusk_entry
+        entry = make({entity_key: "sensor.lux", on_key: 50, off_key: 100})
+        hass.states.async_set("sensor.lux", "20", {"unit_of_measurement": "lx"})
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "Dämmerungs-Automatik" in md
+        assert "20 lx" in md
+        assert "dunkel unter 50 / hell ab 100" in md
+        assert "⛔ eingefahren gehalten" in md
+
+    async def test_above_threshold_is_free(self, hass, make_dusk_entry):
+        make, (entity_key, on_key, off_key, _states) = make_dusk_entry
+        entry = make({entity_key: "sensor.lux", on_key: 50, off_key: 100})
+        hass.states.async_set("sensor.lux", "500", {"unit_of_measurement": "lx"})
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "✅ frei" in md
+
+    async def test_a_boolean_sensor_gets_a_readable_label(self, hass, make_dusk_entry):
+        make, (entity_key, *_rest) = make_dusk_entry
+        entry = make({entity_key: "binary_sensor.dunkel"})
+        hass.states.async_set("binary_sensor.dunkel", "on")
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "an = dunkel" in md
+
+
 # --- Helfer als Bedingung im Bericht -----------------------------------------
 
 

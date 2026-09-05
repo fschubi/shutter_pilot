@@ -320,6 +320,29 @@ Sonne steht tief bei 20°  →  ausfahren auf 100 %
 Dazu eine **Mindeständerung** (Vorgabe 10 %). Ohne die liefe der Antrieb jede
 Minute ein paar Prozent – der sicherste Weg, ein Getriebe zu verschleißen.
 
+### Bei Dämmerung einfahren, ohne automatische Wiederausfahrt
+
+Ein eigener Sensor, unabhängig von der Beschattung – dafür seit 2.22.0 im
+Formular jeder Markise unter **„Bei Dämmerung einfahren"**. Der Unterschied
+ist bewusst: die Beschattung fährt bei Bedarf aus und wieder ein, je nachdem
+ob die Bedingung gerade gilt. Dieser Sensor fährt **nur ein** – wird es
+morgens wieder hell, bleibt die Markise drin, bis jemand sie von Hand
+ausfährt oder die Beschattung (falls eingeschaltet) das übernimmt.
+
+Für einen Helligkeitssensor gilt „dunkler als" ohne eigenes Ankreuzen, genau
+wie beim Frost- und Eisschutz – ein Wert unter der ersten Schwelle löst aus,
+freigegeben wird erst wieder über der zweiten. Ein Schalter oder
+Binärsensor gilt als „an" bedeutet dunkel, mit derselben Checkbox
+**„Bedeutung umkehren"** wie beim Wind-, Regen- und Frostschutz, falls der
+eigene Sensor es andersherum meldet.
+
+Der Sensor gehört zur einzelnen Markise, nicht zum Bereich – anders als
+Regen und Frost, die im ganzen Haus gleich gelten. Er respektiert
+Hauptschalter, Bereichsautomatik und die Automatik der Markise selbst
+(anders als der Wetterschutz, der bewusst keinen davon fragt): eine
+Komfortfunktion soll nicht greifen, wenn jemand die Automatik ausgeschaltet
+hat.
+
 ### Entitäten, Dienst und Ereignis
 
 | Art | Name |
@@ -791,10 +814,6 @@ Priorisierung mehr als ein neuer Kommentar.
   Jarolift-Controller): statt nur `open_cover`/`close_cover` als Rückfall
   eine Zwischenposition über die konfigurierte Fahrzeit annähern.
   [#11](https://github.com/fschubi/shutter_pilot/issues/11)
-- **Markise abends bei Dämmerung automatisch einfahren, ohne automatische
-  Wiederausfahrt** am nächsten Tag – unabhängig von der bestehenden
-  Beschattungslogik, die genau das täte.
-  [#12](https://github.com/fschubi/shutter_pilot/issues/12)
 
 ## Unterstützt mich
 
