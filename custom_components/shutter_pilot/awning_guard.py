@@ -51,6 +51,7 @@ from .const import (
     MAX_AWNING_SENSOR_GRACE,
     ROLE_SUN_PROTECT,
     awning_lockout_key,
+    sun_condition_invert_key,
     sun_condition_keys,
 )
 from .helpers import (
@@ -89,7 +90,11 @@ def resolve_guard_config(
     """
     merged: dict[str, Any] = {}
     for slot in AWNING_GUARD_SLOTS:
-        keys = (*sun_condition_keys(slot), awning_lockout_key(slot))
+        keys = (
+            *sun_condition_keys(slot),
+            awning_lockout_key(slot),
+            sun_condition_invert_key(slot),
+        )
         for key in keys:
             value = options.get(key)
             if value is not None and str(value).strip() != "":

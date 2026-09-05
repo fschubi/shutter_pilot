@@ -83,6 +83,11 @@ const COND_DOMAINS = ["binary_sensor","sensor","weather","input_boolean",
    Zahlenfelder für etwas, das das Backend als Schalter liest. */
 const BOOL_COND_DOMAINS = ["binary_sensor","input_boolean","switch","schedule"];
 const isBoolEntity = eid => BOOL_COND_DOMAINS.some(d => String(eid||"").startsWith(d+"."));
+/* Spiegelt INVERTED_BY_DEFAULT_SLOTS in const.py - gilt dort wie hier nur
+   fuer den Zahlenzweig (Frost/Eis fragen von sich aus "kaelter als"). Ein
+   boolescher Sensor bekommt nie einen Default-Dreh: sein "an" ist bereits
+   die eigene Zusage des Geraets, unabhaengig vom Slot. */
+const INVERTED_BY_DEFAULT_SLOTS = ["frost","ice"];
 const WEATHER_CONDITIONS = ["sunny","partlycloudy","cloudy","rainy","pouring",
   "snowy","snowy-rainy","fog","hail","lightning","lightning-rainy","windy",
   "windy-variant","clear-night","exceptional"];
@@ -292,6 +297,8 @@ de:{
   btn_export_copied:"Kopiert ✓",
   btn_export_download:"Herunterladen",
   f_sun_cond_bin_hint:"Schalter oder Binärsensor: erfüllt, solange er „an“ ist – keine Schwellen nötig.",
+  f_cond_invert_label:"Bedeutung umkehren",
+  f_cond_invert_hint:"Ankreuzen, wenn dieser Sensor das Gegenteil meldet – z. B. wenn „aus“ hier eigentlich Regen oder Kälte bedeutet.",
   filter_entity:"Suchen…",no_match:"Kein Treffer",
   entity_missing:"Entität nicht gefunden – sie wurde umbenannt oder ist nicht verfügbar.",
   own_entity_warn:"Das ist ein Schalter bzw. Sensor von Shutter Pilot selbst – er zeigt an, was die Automatik gerade entschieden hat. Als Messwert gelesen entsteht daraus eine Rückkopplung (ein Auto-Schalter meldet dauerhaft „an\", also gälte dauerhaft Sturm). Hier gehört der echte Sensor hin.",
@@ -646,6 +653,8 @@ en:{
   btn_export_copied:"Copied ✓",
   btn_export_download:"Download",
   f_sun_cond_bin_hint:"Switch or binary sensor: satisfied while it is on – no thresholds needed.",
+  f_cond_invert_label:"Invert meaning",
+  f_cond_invert_hint:"Check this if the sensor reports the opposite – e.g. if “off” actually means rain or cold here.",
   filter_entity:"Search…",no_match:"No match",
   entity_missing:"Entity not found – it was renamed or is unavailable.",
   own_entity_warn:"This is a switch or sensor of Shutter Pilot itself – it reports what the automation just decided. Read back as a measurement it forms a feedback loop (an automation switch reports \"on\" permanently, so a storm would be permanent). The real sensor belongs here.",
@@ -955,6 +964,8 @@ fr:{
   f_close_cond_both_hint:"Si les deux conditions sont renseignées, les deux doivent être remplies le soir.",
   f_sun_cond_num_hint:"L'écart entre les deux seuils évite les oscillations. Vide = même valeur.",
   f_sun_cond_bin_hint:"Interrupteur ou capteur binaire : rempli tant qu'il est actif – aucun seuil nécessaire.",
+  f_cond_invert_label:"Inverser le sens",
+  f_cond_invert_hint:"À cocher si ce capteur indique le contraire – par ex. si « off » signifie ici pluie ou froid.",
   filter_entity:"Rechercher…",no_match:"Aucun résultat",
   entity_missing:"Entité introuvable – renommée ou indisponible.",
   own_entity_warn:"C’est un interrupteur ou capteur de Shutter Pilot lui-même : il indique ce que l’automatisme vient de décider. Relu comme mesure, cela crée une boucle. Indiquez ici le vrai capteur.",
@@ -1251,6 +1262,8 @@ es:{
   f_close_cond_both_hint:"Si se rellenan ambas condiciones, por la tarde deben cumplirse las dos.",
   f_sun_cond_num_hint:"La diferencia entre umbrales evita oscilaciones. Vacío = mismo valor.",
   f_sun_cond_bin_hint:"Interruptor o sensor binario: se cumple mientras esté activo, sin umbrales.",
+  f_cond_invert_label:"Invertir el significado",
+  f_cond_invert_hint:"Marcar si este sensor indica lo contrario – p. ej. si «off» significa aquí lluvia o frío.",
   filter_entity:"Buscar…",no_match:"Sin resultados",
   entity_missing:"Entidad no encontrada: fue renombrada o no está disponible.",
   own_entity_warn:"Es un interruptor o sensor del propio Shutter Pilot: indica lo que la automatización acaba de decidir. Leerlo como medición crea un bucle. Aquí debe ir el sensor real.",
@@ -1547,6 +1560,8 @@ it:{
   f_close_cond_both_hint:"Se sono indicate entrambe le condizioni, la sera devono valere tutte e due.",
   f_sun_cond_num_hint:"Il divario tra le soglie evita oscillazioni. Vuoto = stesso valore.",
   f_sun_cond_bin_hint:"Interruttore o sensore binario: soddisfatta finché è attivo, senza soglie.",
+  f_cond_invert_label:"Inverti il significato",
+  f_cond_invert_hint:"Da spuntare se questo sensore indica il contrario – ad es. se «off» qui significa pioggia o gelo.",
   filter_entity:"Cerca…",no_match:"Nessun risultato",
   entity_missing:"Entità non trovata: rinominata o non disponibile.",
   own_entity_warn:"È un interruttore o sensore di Shutter Pilot stesso: mostra ciò che l’automazione ha appena deciso. Letto come misura crea un anello di retroazione. Qui va il sensore reale.",
@@ -1843,6 +1858,8 @@ nl:{
   f_close_cond_both_hint:"Zijn beide voorwaarden ingevuld, dan moeten 's avonds ook beide gelden.",
   f_sun_cond_num_hint:"Het verschil tussen de drempels voorkomt pendelen. Leeg = zelfde waarde.",
   f_sun_cond_bin_hint:"Schakelaar of binaire sensor: voldaan zolang deze aan is – geen drempels nodig.",
+  f_cond_invert_label:"Betekenis omkeren",
+  f_cond_invert_hint:"Aanvinken als deze sensor het tegenovergestelde meldt – bijv. als „off” hier eigenlijk regen of kou betekent.",
   filter_entity:"Zoeken…",no_match:"Geen resultaat",
   entity_missing:"Entiteit niet gevonden – hernoemd of niet beschikbaar.",
   own_entity_warn:"Dit is een schakelaar of sensor van Shutter Pilot zelf – hij toont wat de automatisering zojuist besloot. Als meetwaarde gelezen ontstaat een terugkoppeling. Hier hoort de echte sensor.",
@@ -2140,6 +2157,8 @@ da:{
   f_close_cond_both_hint:"Er begge betingelser udfyldt, skal begge også være opfyldt om aftenen.",
   f_sun_cond_num_hint:"Afstanden mellem tærsklerne forhindrer svingninger. Tom = samme værdi.",
   f_sun_cond_bin_hint:"Kontakt eller binær sensor: opfyldt så længe den er aktiv – ingen grænser nødvendige.",
+  f_cond_invert_label:"Vend betydningen om",
+  f_cond_invert_hint:"Sæt kryds, hvis denne sensor melder det modsatte – f.eks. hvis „off” her egentlig betyder regn eller kulde.",
   filter_entity:"Søg…",no_match:"Ingen træffer",
   entity_missing:"Enhed ikke fundet – omdøbt eller utilgængelig.",
   own_entity_warn:"Dette er en kontakt eller sensor fra Shutter Pilot selv – den viser, hvad automatikken netop har besluttet. Læst som måleværdi giver det en tilbagekobling. Her hører den rigtige sensor til.",
@@ -2437,6 +2456,8 @@ sv:{
   f_close_cond_both_hint:"Är båda villkoren ifyllda måste båda gälla på kvällen.",
   f_sun_cond_num_hint:"Avståndet mellan trösklarna förhindrar pendling. Tomt = samma värde.",
   f_sun_cond_bin_hint:"Brytare eller binär sensor: uppfylld så länge den är aktiv – inga trösklar behövs.",
+  f_cond_invert_label:"Invertera betydelsen",
+  f_cond_invert_hint:"Kryssa i om sensorn anger motsatsen – t.ex. om ”off” här egentligen betyder regn eller kyla.",
   filter_entity:"Sök…",no_match:"Ingen träff",
   entity_missing:"Entiteten hittades inte – omdöpt eller otillgänglig.",
   own_entity_warn:"Detta är en brytare eller sensor från Shutter Pilot självt – den visar vad automatiken just beslutat. Läst som mätvärde uppstår en återkoppling. Här hör den riktiga givaren hemma.",
@@ -2734,6 +2755,8 @@ pl:{
   f_close_cond_both_hint:"Gdy wpisane są oba warunki, wieczorem muszą być spełnione oba.",
   f_sun_cond_num_hint:"Odstęp między progami zapobiega oscylacjom. Puste = ta sama wartość.",
   f_sun_cond_bin_hint:"Przełącznik lub czujnik binarny: spełniony, gdy jest włączony – bez progów.",
+  f_cond_invert_label:"Odwróć znaczenie",
+  f_cond_invert_hint:"Zaznacz, jeśli ten czujnik zgłasza przeciwieństwo – np. gdy „off” oznacza tutaj w rzeczywistości deszcz lub mróz.",
   filter_entity:"Szukaj…",no_match:"Brak wyników",
   entity_missing:"Nie znaleziono encji – zmieniono nazwę lub jest niedostępna.",
   own_entity_warn:"To przełącznik lub sensor samego Shutter Pilota – pokazuje, co automatyka właśnie zdecydowała. Odczytany jako pomiar tworzy sprzężenie zwrotne. Tutaj należy wskazać prawdziwy czujnik.",
@@ -3031,6 +3054,8 @@ pt:{
   f_close_cond_both_hint:"Se ambas as condições estiverem preenchidas, à noite têm de se verificar as duas.",
   f_sun_cond_num_hint:"A diferença entre limiares evita oscilações. Vazio = mesmo valor.",
   f_sun_cond_bin_hint:"Interruptor ou sensor binário: cumprido enquanto estiver ativo, sem limiares.",
+  f_cond_invert_label:"Inverter o significado",
+  f_cond_invert_hint:"Marque se este sensor indica o contrário – por ex. se «off» significa aqui na verdade chuva ou frio.",
   filter_entity:"Pesquisar…",no_match:"Sem resultados",
   entity_missing:"Entidade não encontrada – foi renomeada ou está indisponível.",
   own_entity_warn:"Este é um interruptor ou sensor do próprio Shutter Pilot – mostra o que a automação acabou de decidir. Lido como medição cria um ciclo de realimentação. Aqui pertence o sensor real.",
@@ -3328,6 +3353,8 @@ nb:{
   f_close_cond_both_hint:"Er begge vilkårene fylt ut, må begge også gjelde om kvelden.",
   f_sun_cond_num_hint:"Avstanden mellom tersklene hindrer pendling. Tom = samme verdi.",
   f_sun_cond_bin_hint:"Bryter eller binær sensor: oppfylt så lenge den er aktiv – ingen grenser nødvendig.",
+  f_cond_invert_label:"Snu betydningen",
+  f_cond_invert_hint:"Kryss av hvis denne sensoren melder det motsatte – f.eks. hvis «off» her egentlig betyr regn eller kulde.",
   filter_entity:"Søk…",no_match:"Ingen treff",
   entity_missing:"Enheten ble ikke funnet – omdøpt eller utilgjengelig.",
   own_entity_warn:"Dette er en bryter eller sensor fra Shutter Pilot selv – den viser hva automatikken nettopp bestemte. Lest som måleverdi gir det en tilbakekobling. Her hører den ekte sensoren hjemme.",
@@ -4104,6 +4131,31 @@ class ShutterPilotPanel extends PanelBase {
       ? {on:"f_sun_cond_on", off:"f_sun_cond_off", hint:"f_sun_cond_num_hint"}
       : {on:"f_cond_on",     off:"f_cond_off",     hint:"f_cond_num_hint"};
   }
+  /* Spiegelt sun_condition_invert_key()/_slot_reading() in helpers.py: der
+     Vorgabewert (Frost/Eis, nur im Zahlenzweig) gilt nur, solange niemand
+     selbst etwas eingetragen hat - danach entscheidet immer der gespeicherte
+     Wert. numericDefault ist false fuer den Booleschen Zweig, dort gibt es
+     keinen Default-Dreh (das eigene "an" des Sensors ist schon die Zusage). */
+  _condInvertKey(slot){return `sun_cond_${slot}_invert`;}
+  _condInverted(obj,slot,numericDefault){
+    const v=obj[this._condInvertKey(slot)];
+    if(v!==undefined&&v!==null)return !!v;
+    return numericDefault&&INVERTED_BY_DEFAULT_SLOTS.includes(slot);
+  }
+  /* Ohne diese Checkbox war die Invertierung ein Schluessel, den nichts im
+     Formular je schrieb oder las (nur der pro Aufrufstelle hart verdrahtete
+     Wert `true`/`undefined` fuer Frost zaehlte) - gespeichert waere er also
+     wirkungslos gewesen, derselbe Vertrag wie ueberall sonst in dieser
+     Datei. Ein Sensor, dessen "aus" hier eigentlich Regen oder Kaelte
+     bedeutet, hatte davor keinen Weg, das zu sagen. */
+  _renderInvertCheckbox(obj,slot,numericDefault){
+    const T=k=>this.t(k);
+    const key=this._condInvertKey(slot);
+    const checked=this._condInverted(obj,slot,numericDefault);
+    return html`<div class="field"><label><input type="checkbox" .checked=${checked}
+      @change=${e=>{obj[key]=e.target.checked;this.requestUpdate();}}> ${T("f_cond_invert_label")}</label>
+      <div class="hint">${T("f_cond_invert_hint")}</div></div>`;
+  }
   /* Zahl, die auch leer bleiben darf. Der allgemeine Feld-Helfer der drei
      Formulare macht `Number("")` – und das ist 0, nicht "leer". Bei einer
      Schwelle ist der Unterschied das ganze Verhalten: "Aufheben unter" leer
@@ -4120,19 +4172,21 @@ class ShutterPilotPanel extends PanelBase {
         @input=${e=>{const v=e.target.value.trim();obj[k]=v===""?"":Number(v);}}
         @change=${()=>this.requestUpdate()}></div>`;
   }
-  _renderCondDetail(a,slot,eid,inverted){
+  _renderCondDetail(a,slot,eid){
     const T=k=>this.t(k);
-    const L=this._condLabels(slot,inverted);
     /* Reihenfolge wie in _condition_slot_met(): eine eingetragene Zustands-
        liste gewinnt, danach entscheidet die Domäne. Andersherum stünde hier
        „an = erfüllt“, während das Backend die Liste auswertet. */
     const sk=`sun_cond_${slot}_states`;
     const hasStates=this._condStates(a,sk).length>0;
     if(!hasStates&&isBoolEntity(eid))
-      return html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>`;
+      return html`<div class="hint">${T("f_sun_cond_bin_hint")}</div>
+        ${this._renderInvertCheckbox(a,slot,false)}`;
 
     const useStates=hasStates||this._isStateEntity(eid);
     if(!useStates){
+      const inverted=this._condInverted(a,slot,true);
+      const L=this._condLabels(slot,inverted);
       /* Frost fragt "kälter als", alles andere "wärmer/heller als" – nur die
          Beschriftung dreht sich, die Schlüssel bleiben dieselben. */
       /* Die beiden Werte sind ein Einschaltpunkt mit einem Aufhebepunkt
@@ -4148,7 +4202,8 @@ class ShutterPilotPanel extends PanelBase {
         ${this._numOpt(a,`sun_cond_${slot}_on_above`,T(L.on))}
         ${this._numOpt(a,`sun_cond_${slot}_off_below`,T(L.off))}
         ${wrongWay?html`<div class="hint warn">⚠️ ${T("f_sun_cond_wrong_way")}</div>`:""}
-        <div class="hint">${T(L.hint)}</div>`;
+        <div class="hint">${T(L.hint)}</div>
+        ${this._renderInvertCheckbox(a,slot,true)}`;
     }
 
     return this._renderCondStates(a,slot,eid);
@@ -4992,7 +5047,7 @@ class ShutterPilotPanel extends PanelBase {
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),COND_DOMAINS,HINTS.condition)}
-      ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity,true):""}
+      ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity):""}
 
       `)}${this._sec("mdi:air-filter","sec_vent","sec_vent_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.vent_enabled}
@@ -5438,6 +5493,12 @@ class ShutterPilotPanel extends PanelBase {
        Markise faehrt dann ein und nie wieder aus. */
     const hasStates=this._condStates(obj,`sun_cond_${slot}_states`).length>0;
     const useStates=hasStates||(!isBool&&this._isStateEntity(eid));
+    /* Vorher stand hier `slot==="ice"` fest verdrahtet - das war richtig,
+       solange niemand die Invertierung selbst setzen konnte. Jetzt liest die
+       Beschriftung den tatsaechlichen Wert, sonst zeigt das Formular nach
+       einem Klick auf die Checkbox weiter "kaelter als" oder "waermer als"
+       fuer das, was gerade nicht mehr gilt. */
+    const inverted=this._condInverted(obj,slot,true);
     return html`
       <div class="guard-slot">
         ${ep(ek,T("f_guard_"+slot),COND_DOMAINS,slot==="ice"?HINTS.temperature:null)}
@@ -5446,10 +5507,12 @@ class ShutterPilotPanel extends PanelBase {
           ${this._renderCondStates(obj,slot,eid)}
           <div class="hint">${T("f_guard_states_hint")}</div>`:""}
         ${eid&&!isBool&&!useStates?html`
-          ${this._numOpt(obj,`sun_cond_${slot}_on_above`,T("f_guard_on_"+(slot==="ice"?"below":"above")))}
-          ${this._numOpt(obj,`sun_cond_${slot}_off_below`,T("f_guard_off_"+(slot==="ice"?"above":"below")))}
-          <div class="hint">${T("f_guard_hyst_hint")}</div>`:""}
-        ${eid&&isBool&&!useStates?html`<div class="hint">${T("f_guard_bin_hint")}</div>`:""}
+          ${this._numOpt(obj,`sun_cond_${slot}_on_above`,T("f_guard_on_"+(inverted?"below":"above")))}
+          ${this._numOpt(obj,`sun_cond_${slot}_off_below`,T("f_guard_off_"+(inverted?"above":"below")))}
+          <div class="hint">${T("f_guard_hyst_hint")}</div>
+          ${this._renderInvertCheckbox(obj,slot,true)}`:""}
+        ${eid&&isBool&&!useStates?html`<div class="hint">${T("f_guard_bin_hint")}</div>
+          ${this._renderInvertCheckbox(obj,slot,false)}`:""}
         ${eid?rng(`guard_${slot}_lockout`,T("f_guard_lockout"),0,120,5," min"):""}
         ${/* Je Slot ein eigener Text. Der eine Satz ueber die Boe stand vorher
              auch unter Regen und Frost – bei Frost beschreibt er das Gegenteil

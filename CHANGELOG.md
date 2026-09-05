@@ -4,6 +4,66 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.5]
+
+Keine Forum-Meldung diesmal, sondern ein gezielter Blick auf die drei
+unterschiedlichen Antworten, die ein toter oder falscher Sensor je nach
+Zusammenhang bekommen muss – Beschattung lässt durch, Schließen/Frost/Lüften
+sperrt, Markisen- und Dachfensterschutz nimmt Gefahr an. Beim Nachrechnen
+gegen den echten Code kam heraus: zwei dieser drei Antworten waren an
+mehreren Stellen leiser vertauscht, als der Code selbst behauptet.
+
+### Behoben
+- **Eine halb ausgefüllte Regen- oder Frostschwelle am Markisen-/
+  Dachfensterschutz galt als „keine Gefahr" statt als „nicht auswertbar".**
+  Eine Entität, die lebt und etwas meldet, aber deren Zahlenschwelle nie
+  eingetragen wurde (oder deren Text zu keiner konfigurierten Zustandsliste
+  passt), lief bisher durch dieselbe Weiche wie eine tote Sensor-Entität –
+  nur dass diese Weiche innen die Beschattungs-Antwort trug: „blockiert
+  nicht". Für den Wetterschutz heißt „blockiert nicht" aber „keine Gefahr",
+  und eine vergessene Schwelle wurde damit zur dauerhaften, dauerhaft
+  unauffälligen Freigabe. Ein vergessener numerischer Schwellenwert am
+  Frost-/Eis-Slot lief sogar in die andere, ungefährlichere Richtung –
+  dauerhaft „Gefahr", unabhängig von der tatsächlichen Temperatur, mit dem
+  bloßen Slotnamen als Grund statt eines erkennbaren Hinweises. Beide
+  Richtungen sind jetzt dieselbe, klar benannte: wie ein toter Sensor, mit
+  Karenzzeit statt Sofortsperre, und einem Grund, den Panel und Export als
+  „Sensor tot" statt als Wetterereignis anzeigen.
+- **Eine Invertierung war nur für Zahlen möglich, nie für Schalter oder
+  Zustandslisten.** Ein Regenkontakt, dessen „aus" eigentlich „nass"
+  bedeutet, oder ein Frostmelder, dessen „an" eigentlich „warm" heißt,
+  konnte das nirgendwo eintragen – die Invertierung griff ausschließlich im
+  Zahlenzweig. Am gefährlichsten beim Wetterschutz: ein so verdrahteter
+  Regenkontakt hätte eine Markise oder ein Dachfenster bei echtem Regen
+  lautlos für „trocken" gehalten.
+- **Der Invertier-Schlüssel des Markisen-/Dachfensterschutzes wurde beim
+  Speichern verworfen**, unabhängig vom Punkt darüber – `resolve_guard_config()`
+  kannte ihn nicht in seiner eigenen Schlüsselliste. Gespeichert, im Formular
+  sichtbar (nach diesem Update), wirkungslos gewesen wäre er trotzdem.
+
+### Neu
+- **Eine Checkbox „Bedeutung umkehren"** an jeder Bedingung mit Schalter oder
+  Binärsensor – bei den Beschattungs- und Schließbedingungen eines Bereichs
+  ebenso wie am Markisen-/Dachfensterschutz. Frost und Eis behalten ihre
+  bisherige Vorgabe (umgekehrt vergleichen), alle anderen Bedingungen starten
+  weiterhin unverändert.
+- **Der Export warnt jetzt auch bei Regen und Frost vor einer unplausiblen
+  Einheit**, genau wie bisher schon beim Wind (m/s neben einer Schwelle, die
+  nach km/h aussieht). Eine Regenrate (mm/h) mit einer Schwelle aus dem
+  Bereich einer Tagessumme lässt den Schutz kaum greifen; eine Tagessumme mit
+  einer Raten-Schwelle verwechselt sperrt dagegen ab dem ersten Tropfen bis
+  zum Reset des Sensors. Eine Frostschwelle in °F, aber nach °C gedacht (oder
+  umgekehrt), wird so gut wie nie erreicht.
+
+### Was ändert sich für mich?
+Ein gewöhnlicher Wind-, Regen- oder Frostsensor mit der natürlichen
+Bedeutung (an/hoher Wert = Gefahr) verhält sich unverändert. Wer einen Regen-
+oder Frostslot am Schutz konfiguriert, aber die Schwelle nie eingetragen hat,
+sieht ab jetzt „Sensor tot" statt einer stillen Dauersperre oder einer
+stillen Dauerfreigabe – die Einstellung selbst gehört trotzdem nachgetragen.
+Wer einen Sensor hat, dessen „aus" die eigentliche Gefahr bedeutet, kann das
+jetzt über die neue Checkbox eintragen; vorher gab es dafür keinen Weg.
+
 ## [2.21.4]
 
 Eine Rückmeldung zu 2.21.3, und diesmal war nichts kaputt: **die Beschriftung

@@ -296,7 +296,16 @@ Wie es wirkt:
 was der Wind tut. Ausgefahren wird dann ab der ersten Sekunde nicht mehr. Eine
 bereits ausgefahrene Markise wird erst nach einer Karenzzeit (Vorgabe 10 min)
 hereingeholt – ein Sensor, der beim Neustart kurz aussetzt, soll nicht das ganze
-Haus einfahren.
+Haus einfahren. Dieselbe Behandlung bekommt seit 2.21.5 ein Sensor, der zwar
+lebt, dessen Zahlenschwelle aber nie eingetragen wurde – auch dort lässt sich
+sonst nichts entscheiden, und die Markise darf nicht stillschweigend so
+behandelt werden, als wäre alles in Ordnung.
+
+**Invertierte Sensoren.** Meldet der Regen- oder Frostsensor die Gefahr
+umgekehrt – ein Kontakt, dessen „aus" eigentlich „nass" heißt, oder ein
+Melder, dessen „an" eigentlich „warm" bedeutet –, lässt sich das seit 2.21.5
+über die Checkbox **„Bedeutung umkehren"** direkt unter dem Sensorfeld
+eintragen. Ohne sie gilt weiterhin die natürliche Lesart: „an" ist Gefahr.
 
 ### Ausfahrlänge nach Sonnenhöhe
 

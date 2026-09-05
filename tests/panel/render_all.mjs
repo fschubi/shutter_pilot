@@ -86,7 +86,13 @@ R("Bereiche-Tab",     () => p._renderAreas(p._data));
 R("Rollläden-Tab",    () => p._renderShutters(p._data));
 R("Markisen-Tab",     () => p._renderAwnings(p._data));
 R("Dachfenster-Tab",  () => p._renderWindows(p._data));
-R("Einstellungen",    () => p._renderSettings(p._data));
+{
+  const out = R("Einstellungen", () => p._renderSettings(p._data));
+  /* Wind ist numerisch, Regen boolesch (binary_sensor.rain) - beide
+     Zweige von _renderGuardSlot() muessen die Checkbox zeigen. */
+  ok("  … zeigt die Invertier-Checkbox am Schutz",
+     out.includes("f_cond_invert_label"), "Checkbox fehlt im Schutz-Formular");
+}
 p._isMobile = true;
 R("Dashboard (mobil)",       () => p._renderDashboard(p._data));
 R("Rollläden-Tab (mobil)",   () => p._renderShutters(p._data));
@@ -111,7 +117,14 @@ p._editShutter = null;
 console.log("— Bereichsformulare, alle vier Modi —");
 for (const a of areas) {
   p._editArea = a;
-  R("Bereich: " + a.name + " (" + a.mode + ")", () => p._renderAreaForm(a));
+  const out = R("Bereich: " + a.name + " (" + a.mode + ")", () => p._renderAreaForm(a));
+  if (a.id === "living") {
+    /* Der Invertier-Haken muss an einer numerischen Bedingung (frost/a)
+       ebenso auftauchen wie an einer booleschen (b) - sonst haette die
+       Checkbox nur den einen Zweig erreicht, den man gerade im Kopf hatte. */
+    ok("  … zeigt die Invertier-Checkbox",
+       out.includes("f_cond_invert_label"), "Checkbox fehlt im Bereichsformular");
+  }
 }
 p._editArea = null;
 

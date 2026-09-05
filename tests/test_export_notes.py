@@ -389,6 +389,125 @@ class TestAwningReport:
         assert "_awning_guard" not in hass.data[DOMAIN][awning_entry.entry_id]
 
 
+class TestRainAndIceUnitPlausibility:
+    """Derselbe Fehler wie beim Wind (Faktor 3,6 daneben), nur an zwei
+    weiteren Sensoren: eine Regenrate mit einer Tagessummen-Schwelle
+    verwechselt greift kaum, eine Tagessumme mit einer Raten-Schwelle
+    verwechselt sperrt zu lange. Und eine Frostschwelle in °F gedacht, aber
+    an einem °C-Sensor - oder umgekehrt - wird so gut wie nie erreicht.
+    """
+
+    @pytest.fixture
+    def make_guard_entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            AWNING_GUARD_ICE,
+            AWNING_GUARD_RAIN,
+            CONF_DEVICE_KIND,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+            sun_condition_keys,
+        )
+
+        rain_keys = sun_condition_keys(AWNING_GUARD_RAIN)
+        ice_keys = sun_condition_keys(AWNING_GUARD_ICE)
+
+        def _make(rain_on_above=1, ice_on_above=-2):
+            config_entry = MockConfigEntry(
+                domain=DOMAIN,
+                title="Shutter Pilot",
+                options={
+                    CONF_AREAS: [AREA],
+                    CONF_SHUTTERS: [
+                        {
+                            CONF_COVER_ENTITY_ID: "cover.markise",
+                            CONF_NAME: "Markise Terrasse",
+                            CONF_DEVICE_KIND: KIND_AWNING,
+                            CONF_AREA_DOWN_ID: "vorne",
+                            CONF_POSITION_OPEN: 0,
+                            CONF_POSITION_SUN_PROTECT: 100,
+                        }
+                    ],
+                    rain_keys[0]: "sensor.regen",
+                    rain_keys[1]: rain_on_above,
+                    rain_keys[2]: 0,
+                    ice_keys[0]: "sensor.aussentemperatur",
+                    ice_keys[1]: ice_on_above,
+                    ice_keys[2]: 2,
+                },
+            )
+            config_entry.add_to_hass(hass)
+            hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+                "sun_protect_covers": set(),
+                "covers_driven_up": set(),
+                "covers_driven_down": set(),
+                "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+            }
+            return config_entry
+
+        return _make
+
+    async def test_a_rate_threshold_that_looks_like_a_daily_total_is_named(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(rain_on_above=20)
+        hass.states.async_set(
+            "sensor.regen", "0.3", {"unit_of_measurement": "mm/h"}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "misst eine **Regenrate**" in md
+        assert "0,1–2 mm/h" in md
+
+    async def test_a_daily_total_threshold_that_looks_like_a_rate_is_named(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(rain_on_above=0.1)
+        hass.states.async_set("sensor.regen", "0.3", {"unit_of_measurement": "mm"})
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "misst eine **Regensumme**" in md
+
+    async def test_a_plausible_rain_rate_gets_no_warning(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(rain_on_above=1)
+        hass.states.async_set(
+            "sensor.regen", "0.3", {"unit_of_measurement": "mm/h"}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "misst eine **Regen" not in md
+
+    async def test_a_fahrenheit_ice_threshold_shaped_like_celsius_is_named(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(ice_on_above=-2)
+        hass.states.async_set(
+            "sensor.aussentemperatur", "40", {"unit_of_measurement": "°F"}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "misst in **°F**" in md
+        assert "-18.9 °C" in md
+
+    async def test_a_plausible_fahrenheit_threshold_gets_no_warning(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(ice_on_above=28)
+        hass.states.async_set(
+            "sensor.aussentemperatur", "20", {"unit_of_measurement": "°F"}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "misst in **°F**" not in md
+
+
 # --- Helfer als Bedingung im Bericht -----------------------------------------
 
 

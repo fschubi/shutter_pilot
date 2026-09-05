@@ -293,7 +293,16 @@ How it behaves:
 **Dead sensor:** if the sensor reports `unavailable` or `unknown`, nobody knows
 what the wind is doing. Extending is barred from the first second. An already
 extended awning is pulled in only after a grace period (default 10 min) – a
-sensor blinking out during a restart should not retract the whole house.
+sensor blinking out during a restart should not retract the whole house. Since
+2.21.5 a sensor that is alive but whose numeric threshold was never entered
+gets the same treatment – nothing can be decided there either, and the awning
+must not silently be treated as if everything were fine.
+
+**Inverted sensors.** If the rain or ice sensor reports danger the other way
+round – a contact whose "off" actually means "wet", or a sensor whose "on"
+actually means "warm" – this can now be entered directly under the sensor
+field via the **"Invert meaning"** checkbox, since 2.21.5. Without it, the
+natural reading still applies: "on" is danger.
 
 ### Extending further as the sun sinks
 

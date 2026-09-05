@@ -20,6 +20,7 @@ from custom_components.shutter_pilot.const import (
     ROLE_CLOSED,
     ROLE_CLOSED_ALT,
     ROLE_CLOSED_FROST,
+    sun_condition_invert_key,
     sun_condition_keys,
 )
 from custom_components.shutter_pilot.helpers import (
@@ -112,6 +113,44 @@ class TestInvertedComparison:
 
     async def test_missing_entity_does_not_trigger(self, hass):
         assert frost_condition_met(hass, _frost_area(), {}) is False
+
+    async def test_a_forgotten_threshold_does_not_trigger(self, hass):
+        """Vor der Trennung der drei Polaritaeten (siehe _slot_reading() in
+        helpers.py) sickerte hier der fail-open-Rueckfall der Beschattung
+        durch: eine lebende, aber halb konfigurierte Entitaet (kein
+        on_below eingetragen) galt als DAUERHAFT erfuellt, unabhaengig von
+        der tatsaechlichen Temperatur - der Rollladen waere permanent auf
+        die Frostposition gefahren."""
+        entity_key, _on, _off, _states = sun_condition_keys(FROST_CONDITION_SLOT)
+        area = _area(**{entity_key: TEMP})  # kein on_below!
+        _temp(hass, "18.0")  # warm
+        assert frost_condition_met(hass, area, {}) is False
+
+    async def test_an_inverted_binary_sensor_can_say_so(self, hass):
+        """Ein binary_sensor, dessen 'aus' Frost bedeutet - ohne die
+        Invertierung liest das 'aus' als 'kein Frost' und der Rollladen
+        friert an. Analog zum Regenschutz in test_awning_guard.py."""
+        entity_key, _on, _off, _states = sun_condition_keys(FROST_CONDITION_SLOT)
+        invert_key = sun_condition_invert_key(FROST_CONDITION_SLOT)
+        cold = "binary_sensor.nicht_kalt"
+        area = _area(**{entity_key: cold, invert_key: True})
+        hass.states.async_set(cold, "off")  # heisst hier: es ist kalt
+
+        assert frost_condition_met(hass, area, {}) is True
+
+    async def test_without_invert_a_plain_cold_contact_reads_naturally(
+        self, hass
+    ):
+        """Kein Default-Umdrehen fuer Booleans, auch nicht bei Frost: ein
+        gewoehnlicher 'kalt'-Kontakt, dessen 'an' bereits Kaelte bedeutet,
+        darf durch die Frost-Vorbelegung (INVERTED_BY_DEFAULT_SLOTS gilt nur
+        fuer den Zahlenzweig) nicht auf den Kopf gestellt werden."""
+        entity_key, _on, _off, _states = sun_condition_keys(FROST_CONDITION_SLOT)
+        cold = "binary_sensor.kalt"
+        area = _area(**{entity_key: cold})
+        hass.states.async_set(cold, "on")  # heisst hier bereits: es ist kalt
+
+        assert frost_condition_met(hass, area, {}) is True
 
 
 class TestNormalDirectionUnchanged:

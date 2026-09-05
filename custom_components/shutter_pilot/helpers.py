@@ -482,34 +482,59 @@ def _warn_useless_hysteresis(
     )
 
 
-def _condition_slot_met(
+def _slot_reading(
     hass: HomeAssistant,
     area: dict[str, Any],
     slot: str,
     memory: dict[str, bool],
-) -> bool:
-    """Evaluate one extra shading condition, remembering it for hysteresis.
+) -> bool | None:
+    """Read one condition slot's raw comparison, or None if it cannot be judged.
+
+    None covers every "unusable" case – no entity configured, the entity is
+    dead, its state is text without a configured state list, or a numeric
+    threshold was never entered. None carries no safety meaning of its own:
+    deciding what "cannot judge" means is strictly the caller's job, and the
+    three callers below answer it three different, deliberately different
+    ways:
+
+      sun_extra_conditions_met() -> None means "does not block"  (fail open)
+      _own_slot_met()            -> None means "does not apply"  (fail closed)
+      guard_slot_danger()        -> None means "assume danger"   (fail danger)
+
+    Do not add a fourth caller that lets a None default silently borrow one
+    of the three above – decide, in that caller, what "cannot judge" means
+    for it, the same way the three below do.
 
     An on/off entity answers directly – see BOOLEAN_CONDITION_DOMAINS, which
     covers helpers too, not just binary sensors. A numeric sensor becomes
     satisfied at `on_above` and stays satisfied until it drops below
-    `off_below`, so a passing cloud does not make the shutters bounce.
-    Anything unusable – no sensor, unknown, unavailable, non-numeric – never
-    blocks shading.
+    `off_below`, so a passing cloud does not make the shutters bounce. The
+    "invert" flag applies to every branch, not only the numeric one – a
+    binary_sensor or a state list can be wired the wrong way round just as
+    easily as a number, and a slot with no way to say "this sensor's 'on'
+    means the opposite" would misread that sensor silently forever.
+
+    The per-slot default (INVERTED_BY_DEFAULT_SLOTS, frost and ice) only
+    applies to the numeric branch, never to a boolean or a state list: it
+    exists because a raw number is ambiguous about which side of the
+    threshold is dangerous, and frost genuinely needs "colder than" instead
+    of "warmer than". A boolean sensor carries no such ambiguity – its "on"
+    is whatever the user's own device already calls the affirmative state,
+    the same convention every other boolean slot in this module uses, frost
+    and ice included. Defaulting a boolean frost/ice sensor to inverted would
+    silently flip a plain "on = cold" contact sensor to mean the opposite.
     """
     entity_key, on_key, off_key, states_key = sun_condition_keys(slot)
     entity_id = str(area.get(entity_key) or "").strip()
     if not entity_id:
-        return True
+        return None
 
     state = hass.states.get(entity_id)
     if state is None or state.state in ("unknown", "unavailable"):
-        _LOGGER.debug(
-            "Sun condition %s: %s unavailable – not blocking shading",
-            slot,
-            entity_id,
-        )
-        return True
+        _LOGGER.debug("Sun condition %s: %s unavailable", slot, entity_id)
+        return None
+
+    invert_stored = area.get(sun_condition_invert_key(slot))
 
     # A list of allowed states wins: that covers weather entities and scrape
     # sensors whose state is text like "sunny" or "bewölkt".
@@ -519,13 +544,19 @@ def _condition_slot_met(
     if isinstance(allowed, (list, tuple)) and any(str(x).strip() for x in allowed):
         wanted = {str(x).strip().lower() for x in allowed if str(x).strip()}
         met = str(state.state).strip().lower() in wanted
+        met = (not met) if invert_stored else met
         memory[slot] = met
         return met
 
     if entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
         met = str(state.state).lower() in ("on", "true", "1")
+        met = (not met) if invert_stored else met
         memory[slot] = met
         return met
+
+    inverted = bool(
+        invert_stored if invert_stored is not None else slot in INVERTED_BY_DEFAULT_SLOTS
+    )
 
     try:
         value = float(state.state)
@@ -539,13 +570,13 @@ def _condition_slot_met(
             entity_id,
             state.state,
         )
-        return True
+        return None
 
     try:
         on_above = float(area.get(on_key))
     except (TypeError, ValueError):
         # Threshold not configured – the sensor alone cannot decide anything.
-        return True
+        return None
 
     try:
         off_below = float(area.get(off_key))
@@ -555,9 +586,7 @@ def _condition_slot_met(
     # Frost protection asks "colder than", everything else "warmer / brighter
     # than". Inverting mirrors the hysteresis too, otherwise the release
     # threshold would sit on the wrong side of the switch-on point.
-    if area.get(
-        sun_condition_invert_key(slot), slot in INVERTED_BY_DEFAULT_SLOTS
-    ):
+    if inverted:
         if off_below < on_above:
             _warn_useless_hysteresis(memory, slot, entity_id, on_above, off_below, True)
             off_below = on_above
@@ -575,6 +604,17 @@ def _condition_slot_met(
         met = value >= on_above
     memory[slot] = met
     return met
+
+
+def _condition_slot_met(
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    slot: str,
+    memory: dict[str, bool],
+) -> bool:
+    """Evaluate one extra shading condition. Unreadable never blocks shading."""
+    reading = _slot_reading(hass, area, slot, memory)
+    return True if reading is None else reading
 
 
 def sun_extra_conditions_met(
@@ -747,18 +787,16 @@ def _own_slot_met(
 
     The shading conditions fail open – a dead sensor must never keep the
     shutters up. Here the safe answer is the opposite one: an unreadable sensor
-    must not leave every shutter standing part way open all night.
+    must not leave every shutter standing part way open all night. Reads via
+    _slot_reading(), not _condition_slot_met() – the latter's None-fallback is
+    shading's fail-open answer, and would leak the wrong polarity in here.
     """
     entity_key = sun_condition_keys(slot)[0]
-    entity_id = str(area.get(entity_key) or "").strip()
-    if not entity_id:
-        return False
-    state = hass.states.get(entity_id)
-    if state is None or state.state in ("unknown", "unavailable"):
-        _LOGGER.debug("Condition %s: %s unavailable – treated as not met", slot, entity_id)
+    if not str(area.get(entity_key) or "").strip():
         return False
     area_id = str(area.get(CONF_AREA_ID) or "")
-    return _condition_slot_met(hass, area, slot, condition_memory(data, area_id))
+    reading = _slot_reading(hass, area, slot, condition_memory(data, area_id))
+    return False if reading is None else reading
 
 
 def guard_slot_danger(
@@ -781,18 +819,24 @@ def guard_slot_danger(
     Returns the danger flag and a short reason for the log, the panel and the
     export – "it is blocked" without saying by what is the report that starts
     the forum thread rather than ending it.
+
+    Reads via _slot_reading(), not _condition_slot_met(): the latter's
+    None-fallback is shading's fail-open answer, and a live-but-unreadable
+    guard sensor (state present, but text without a state list, or a
+    threshold field left empty) must land here, not slip through as a
+    silent "no danger" – that is exactly the leak that let a forgotten
+    threshold on a live sensor look configured and correct.
     """
     entity_key = sun_condition_keys(slot)[0]
     entity_id = str(config.get(entity_key) or "").strip()
     if not entity_id:
         return False, ""
 
-    state = hass.states.get(entity_id)
-    if state is None or state.state in ("unknown", "unavailable"):
-        return True, GUARD_REASON_UNAVAILABLE
-
     memory = condition_memory(data, f"guard|{slot}", cover_entity_id)
-    return _condition_slot_met(hass, config, slot, memory), slot
+    reading = _slot_reading(hass, config, slot, memory)
+    if reading is None:
+        return True, GUARD_REASON_UNAVAILABLE
+    return reading, slot
 
 
 def shade_release_opens(area: dict[str, Any]) -> bool:
@@ -974,7 +1018,7 @@ def resolve_shading_config(
             continue
         if merged is area:
             merged = dict(area)
-        for key in (entity_key, on_key, off_key, states_key):
+        for key in (entity_key, on_key, off_key, states_key, sun_condition_invert_key(slot)):
             merged[key] = shutter.get(key)
         overridden.append(slot)
 

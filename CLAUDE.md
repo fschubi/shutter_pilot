@@ -288,10 +288,121 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.4**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.5**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-05 – 2.21.5: der Knoten, der zu viele Antworten teilte
+
+Kein Forumsbeitrag diesmal, sondern ein Wissensgraph des ganzen Repos (2768
+Knoten, 6156 Kanten) und die Frage, welcher Knoten am meisten Communities
+verbindet. Antwort: `sun_condition_keys()` – 24 Communities, von „Guard Slot
+Danger" bis „Roof Window Rain Protection". Eine reine Schluessel-Baufunktion
+mit so hoher Betweenness-Zentralitaet ist verdaechtig: sie tut wenig, aber
+fuenf unvereinbare Vertraege laufen an ihr zusammen.
+
+Nachgerechnet statt vermutet, mit zwei Gegenproben gegen den echten Code:
+
+```
+Frost-Slot, Entitaet lebt, on_above nie eingetragen, 18 Grad warm
+  -> vorher: barred=True, retract=True, reasons=['ice']   (dauerhaft, unerklaerbar)
+Regenkontakt, "off" bedeutet nass, keine Invertierung moeglich
+  -> vorher: barred=False   (Markise/Dachfenster bleibt draussen/offen)
+```
+
+**Der Fund: `_condition_slot_met()` traf vier „nicht auswertbar"-Entscheidungen
+selbst, tief in einer gemeinsamen Funktion, und alle vier gaben `True`
+zurueck – die Beschattungs-Antwort (fail open).** `_own_slot_met()` (Schliessen/
+Frost/Lueften, fail closed) und `guard_slot_danger()` (Markisen + Dachfenster,
+„Gefahr liegt vor") fingen nur die *aeusseren* Faelle selbst ab (Entitaet
+fehlt, Sensor tot) und erbten die inneren (Text ohne Zustandsliste, Schwelle
+nie eingetragen) ungefragt von der Beschattung. Bei `guard_slot_danger` heisst
+das: „blockiert nicht" wird zu „keine Gefahr" – eine halb ausgefuellte Regen-
+oder Frostkonfiguration war damit eine lautlose Dauerfreigabe.
+
+**Getrennt in `_slot_reading()`**: die Funktion gibt jetzt `bool | None`
+zurueck, `None` heisst „nicht beurteilbar" und traegt selbst keine
+Sicherheitsbedeutung. Drei duenne Fassaden entscheiden, was `None` fuer sie
+bedeutet – in genau einer Zeile, statt implizit im Verhalten einer fremden
+Funktion: `_condition_slot_met()` macht `None` zu `True` (fail open),
+`_own_slot_met()` zu `False` (fail closed), `guard_slot_danger()` zu
+`(True, GUARD_REASON_UNAVAILABLE)` (fail danger).
+
+**Nebenwirkung, bewusst mitgenommen statt versteckt:** eine vergessene
+Schwelle am Markisen-/Dachfensterschutz laeuft jetzt ueber denselben Weg wie
+ein toter Sensor – Karenzzeit statt Sofortsperre, und ein Grund
+(`slot:sensor_unavailable`), den Panel und Export bereits als „Sensor tot"
+anzeigen (seit 2.20.0, fuer den Wind gebaut). Das Verhalten aendert sich
+sichtbar: vorher sofortige, dauerhafte, unbenannte Sperre; jetzt erkennbare
+Sperre mit Karenz.
+
+**Der zweite Fund lag eine Ebene tiefer: Invertierung gab es nur fuer
+Zahlen.** `sun_condition_invert_key()` wird seit jeher gespeichert und
+gelesen – aber nur im numerischen Zweig. Ein Regenkontakt, dessen „aus"
+„nass" bedeutet, oder ein Frostmelder, dessen „an" „warm" bedeutet, hatte
+keinen Weg, das zu sagen. Jetzt gilt Invertierung in allen drei Zweigen
+(Zahl, Zustandsliste, Boolean) – mit einer Einschraenkung: **der Default-Dreh
+(`INVERTED_BY_DEFAULT_SLOTS`, Frost und Eis) gilt weiterhin nur fuer Zahlen.**
+Ein boolescher Sensor traegt keine Ambiguitaet ueber die Vergleichsrichtung
+in sich – sein „an" ist bereits die eigene Zusage des Geraets, unabhaengig
+vom Slot. Ein Default-Dreh auch dort haette einen gewoehnlichen „an =
+kalt"-Kontakt am Frost-Slot stillschweigend umgedreht, ohne dass je jemand
+danach gefragt haette.
+
+**Und der Schluessel selbst war fuer den Markisen-/Dachfensterschutz nie im
+Vertrag:** `resolve_guard_config()` hat seine eigene Schluesselliste –
+derselbe Vertrag wie in `resolve_sun_geometry()` (2.10.3) –, und die kannte
+`sun_condition_invert_key()` nicht. Gespeichert waere er gewesen, sichtbar
+im Formular nach diesem Update, aber wirkungslos. Zweite Stelle mit
+derselben Luecke: `resolve_shading_config()`s Pro-Rollladen-Override der
+Slots a-d kopiert seit jeher `(entity, on_above, off_below, states)`, nie
+den Invertier-Schluessel – ein Rollladen, der eine Bedingung mit eigener
+Entitaet ueberschreibt, konnte also nie eine eigene Invertierung dazu setzen.
+
+**Frontend:** eine echte Checkbox „Bedeutung umkehren" in
+`_renderCondDetail()` (Bereichs- und Rollladenbedingungen) und
+`_renderGuardSlot()` (Markisen-/Dachfensterschutz) – vorher stand `inverted`
+an genau einer Aufrufstelle (Frost) hart auf `true`, gelesen wurde der
+gespeicherte Wert **nirgends**. Der Eis-Slot im Schutzformular hatte
+zusaetzlich eine eigene, unabhaengige Beschriftungslogik
+(`slot==="ice"?"below":"above"`), die denselben Zustand ein zweites Mal, aber
+ohne Checkbox, nachbildete – jetzt liest sie denselben Wert wie die
+Checkbox.
+
+**Am Export nachgezogen, analog zur Wind-Pruefung aus 2.12.0:** eine
+Regenrate (mm/h) mit einer Schwelle aus dem Bereich einer Tagessumme
+verwechselt laesst den Schutz kaum greifen, eine Tagessumme mit einer
+Raten-Schwelle sperrt umgekehrt ab dem ersten Tropfen bis zum Reset des
+Sensors. Eine Frostschwelle in °F, aber nach °C gedacht (oder umgekehrt),
+wird so gut wie nie erreicht.
+
+**Verifiziert:** `pytest` 772 Tests gruen (20 neue), **vier Gegenproben**
+gemacht – ohne die drei duennen Fassaden faellt `TestUnusableButAlive`
+(zweimal) und ein neuer Test in `test_frost_protection.py`; ohne den
+Invertier-Schluessel in `resolve_guard_config()` faellt genau
+`test_an_inverted_binary_rain_sensor_can_say_so`; ohne den entfernten
+Default-Dreh im Booleschen Zweig faellt
+`test_without_invert_a_plain_cold_contact_reads_naturally`; ohne die beiden
+Export-Bloecke fallen drei der vier neuen Plausibilitaetstests. i18n 440/440
+in allen elf Sprachen (2 neu). Panel in Node gerendert, mit zwei eigenen
+Inhaltspruefungen fuer die neue Checkbox (Bereichsformular und
+Schutz-Formular) – Gegenprobe gemacht, ohne den Aufruf faellt genau die
+Pruefung im Bereichsformular. **Nicht im Browser geprueft.**
+
+**Bewusst nicht gemacht:** eine automatische Erkennung invertierter Sensoren.
+Ob ein binary_sensor „an = Regen" oder „an = trocken" meint, steht nirgends
+in Home Assistant, und ein Rateversuch waere in der Haelfte der Faelle
+falsch – genau die Sorte Automatik, die ein Sicherheitsfeature schlechter
+macht als eine leere Checkbox.
+
+**Werkzeug-Notiz:** `/graphify` auf dem eigenen Repo gebaut (Community-
+Erkennung + Betweenness-Zentralitaet) und dessen "Surprising Connections"/
+"Suggested Questions" als Einstieg genutzt, statt auf eine Meldung zu warten.
+Der hoechste Bruecken-Knoten war in diesem Fall keine Zufallsentdeckung,
+sondern zeigte direkt auf die Stelle, an der funf verschiedene Vertraege
+(drei Polaritaeten plus zwei Formular-Vertraege) an einer einzigen Funktion
+haengen.
 
 ### 2026-09-04 – 2.21.4: die Beschriftung, die nur die Haelfte nannte
 

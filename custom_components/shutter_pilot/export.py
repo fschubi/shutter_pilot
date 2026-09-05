@@ -41,6 +41,8 @@ from .const import (
     CONF_WINDOW_VENT_WHILE_OPEN,
     WINDOW_UNUSED_KEYS,
     AWNING_GUARD_SLOTS,
+    AWNING_GUARD_ICE,
+    AWNING_GUARD_RAIN,
     AWNING_GUARD_WIND,
     AREA_MODE_NONE,
     AWNING_UNUSED_KEYS,
@@ -460,6 +462,66 @@ def _guard_rows(
                 f"{threshold * 3.6:.0f} km/h – dieser Wert wird nie erreicht, "
                 "die Markise fährt also nie ein. 25 km/h entsprechen rund "
                 "7 m/s.",
+                "",
+            ]
+
+    # Derselbe Fehler wie beim Wind, nur in beide Richtungen möglich: eine
+    # Regenrate (mm/h) mit einer Schwelle aus dem Bereich einer Tagessumme
+    # verwechselt lässt den Schutz kaum greifen – eine Tagessumme mit einer
+    # Raten-Schwelle verwechselt sperrt dagegen ab dem ersten Tropfen bis
+    # Mitternacht, nicht nur während es tatsächlich regnet. Beides sieht von
+    # außen wie ein defekter Antrieb aus, ist aber eine Einheit, die zur
+    # Schwelle nicht passt – der Ecowitt-Fall aus 2.20.0, nur am Export
+    # gefunden statt im Forum gemeldet.
+    rain_entity = str(
+        config.get(sun_condition_keys(AWNING_GUARD_RAIN)[0]) or ""
+    ).strip()
+    if rain_entity:
+        state = hass.states.get(rain_entity)
+        unit = str((state.attributes.get("unit_of_measurement") if state else "") or "").lower()
+        try:
+            threshold = float(config.get(sun_condition_keys(AWNING_GUARD_RAIN)[1]))
+        except (TypeError, ValueError):
+            threshold = None
+        if unit == "mm/h" and threshold is not None and threshold > 15:
+            out += [
+                f"> ⚠️ `{rain_entity}` misst eine **Regenrate** (mm/h), die "
+                f"Einfahrschwelle steht auf **{threshold:.10g}**. Das entspricht "
+                "schon Starkregen – ein gewöhnlicher Schauer erreicht das kaum, "
+                "der Schutz greift also selten. Übliche Werte liegen bei "
+                "0,1–2 mm/h.",
+                "",
+            ]
+        elif unit in ("mm", "l/m²") and threshold is not None and threshold < 0.5:
+            out += [
+                f"> ⚠️ `{rain_entity}` misst eine **Regensumme**, keine Rate. "
+                f"Die Schwelle **{threshold:.10g}** wird oft schon vom ersten "
+                "Tropfen überschritten – der Schutz sperrt dann ab dem ersten "
+                "Regen bis zum Reset des Sensors, nicht nur während es "
+                "tatsächlich regnet.",
+                "",
+            ]
+
+    # Analog zum Wind: eine Frostschwelle, die nach °C gedacht ist, aber an
+    # einem °F-Sensor hängt, wird so gut wie nie erreicht – der Schutz greift
+    # dann praktisch nie.
+    ice_entity = str(
+        config.get(sun_condition_keys(AWNING_GUARD_ICE)[0]) or ""
+    ).strip()
+    if ice_entity:
+        state = hass.states.get(ice_entity)
+        unit = str((state.attributes.get("unit_of_measurement") if state else "") or "")
+        try:
+            threshold = float(config.get(sun_condition_keys(AWNING_GUARD_ICE)[1]))
+        except (TypeError, ValueError):
+            threshold = None
+        if unit in ("°F", "F") and threshold is not None and -20 <= threshold <= 20:
+            celsius_equivalent = (threshold - 32) * 5 / 9
+            out += [
+                f"> ⚠️ `{ice_entity}` misst in **°F**, die Frostschwelle "
+                f"**{threshold:.10g}** sieht nach einem in °C gedachten Wert "
+                f"aus. In °F entspricht das {celsius_equivalent:.1f} °C – ein "
+                "Frost, der so gut wie nie erreicht wird.",
                 "",
             ]
     return out

@@ -39,6 +39,7 @@ from custom_components.shutter_pilot.const import (
     GUARD_REASON_UNAVAILABLE,
     KIND_AWNING,
     awning_lockout_key,
+    sun_condition_invert_key,
     sun_condition_keys,
 )
 
@@ -68,6 +69,8 @@ def _slot(slot: str, **values):
         out[states] = values["states"]
     if "lockout" in values:
         out[awning_lockout_key(slot)] = values["lockout"]
+    if "invert" in values:
+        out[sun_condition_invert_key(slot)] = values["invert"]
     return out
 
 
@@ -302,6 +305,76 @@ class TestDeadSensor:
         assert state["retract"] is False
 
 
+class TestUnusableButAlive:
+    """Der Sensor lebt und meldet etwas – nur laesst sich daraus keine
+    Antwort ableiten, weil eine Schwelle fehlt oder der Text keiner
+    konfigurierten Zustandsliste entspricht. Vor der Trennung der drei
+    Polaritaeten (siehe _slot_reading() in helpers.py) landete das hier als
+    harter, dauerhafter "Gefahr"-Befund mit dem blossen Slotnamen als Grund –
+    ununterscheidbar von einer echten Boe. Jetzt derselbe Weg wie ein toter
+    Sensor: sofort gesperrt, aber mit Karenzzeit und einem Grund, den das
+    Panel als "Sensor tot" statt als Wetterereignis anzeigt."""
+
+    async def test_a_forgotten_threshold_reads_like_a_dead_sensor(
+        self, hass, make_entry
+    ):
+        entry = make_entry(
+            {
+                **_slot(AWNING_GUARD_WIND, entity=""),
+                # on_above absichtlich nicht gesetzt - im Formular vergessen.
+                **_slot(AWNING_GUARD_ICE, entity=TEMP, lockout=0),
+            }
+        )
+        hass.states.async_set(TEMP, "18.0")  # warm, kein Frost
+
+        state = evaluate_guard(hass, entry, _data(hass, entry), _awning(), now=T0)
+
+        assert state["barred"] is True
+        assert f"{AWNING_GUARD_ICE}:{GUARD_REASON_UNAVAILABLE}" in state["reasons"]
+        assert AWNING_GUARD_ICE not in state["reasons"], (
+            "ein blosser Slotname waere ununterscheidbar von echtem Frost"
+        )
+        assert state["retract"] is False, "keine sofortige Zwangsfahrt ohne Karenz"
+
+    async def test_it_recovers_once_the_grace_runs_out_like_a_dead_sensor(
+        self, hass, make_entry
+    ):
+        entry = make_entry(
+            {
+                **_slot(AWNING_GUARD_WIND, entity=""),
+                **_slot(AWNING_GUARD_ICE, entity=TEMP, lockout=0),
+                CONF_AWNING_SENSOR_GRACE: 10,
+            }
+        )
+        data = _data(hass, entry)
+        hass.states.async_set(TEMP, "18.0")
+        evaluate_guard(hass, entry, data, _awning(), now=T0)
+
+        state = evaluate_guard(hass, entry, data, _awning(), now=11 * MINUTE)
+
+        assert state["retract"] is True
+
+    async def test_text_without_a_state_list_reads_like_a_dead_sensor(
+        self, hass, make_entry
+    ):
+        # RAIN ist ein binary_sensor in diesem Modul (siehe Konstante oben) -
+        # ein sensor.-Domain-Textzustand ohne Liste braucht eine eigene
+        # Entität, um den numerischen Zweig zu erreichen.
+        text_sensor = "sensor.regenlage"
+        entry = make_entry(
+            {
+                **_slot(AWNING_GUARD_WIND, entity=""),
+                **_slot(AWNING_GUARD_RAIN, entity=text_sensor, lockout=0),
+            }
+        )
+        hass.states.async_set(text_sensor, "nass")
+
+        state = evaluate_guard(hass, entry, _data(hass, entry), _awning(), now=T0)
+
+        assert state["barred"] is True
+        assert f"{AWNING_GUARD_RAIN}:{GUARD_REASON_UNAVAILABLE}" in state["reasons"]
+
+
 # --- Regen und Frost ---------------------------------------------------------
 
 
@@ -324,6 +397,39 @@ class TestRainAndIce:
         assert AWNING_GUARD_RAIN in state["reasons"]
 
     async def test_dry_weather_does_not_bar(self, hass, make_entry):
+        entry = make_entry(
+            {
+                **_slot(AWNING_GUARD_WIND, entity=""),
+                **_slot(AWNING_GUARD_RAIN, entity=RAIN, lockout=0),
+            }
+        )
+        hass.states.async_set(RAIN, "off")
+
+        assert evaluate_guard(hass, entry, _data(hass, entry), _awning())["barred"] is False
+
+    async def test_an_inverted_binary_rain_sensor_can_say_so(self, hass, make_entry):
+        """Ein Kontakt, dessen 'aus' NASS bedeutet - ohne Invertierung liesst
+        das Regen immer als 'trocken' und die Markise/das Dachfenster bleibt
+        bei jedem Regen draussen bzw. offen. Bis jetzt gab es dafuer keinen
+        Weg; die Invertierung galt nur fuer den Zahlenzweig."""
+        entry = make_entry(
+            {
+                **_slot(AWNING_GUARD_WIND, entity=""),
+                **_slot(AWNING_GUARD_RAIN, entity=RAIN, lockout=0, invert=True),
+            }
+        )
+        hass.states.async_set(RAIN, "off")  # heisst hier: nass
+
+        state = evaluate_guard(hass, entry, _data(hass, entry), _awning())
+
+        assert state["retract"] is True
+        assert AWNING_GUARD_RAIN in state["reasons"]
+
+    async def test_without_invert_a_reversed_sensor_still_reads_the_old_way(
+        self, hass, make_entry
+    ):
+        """Regressionsschutz: ohne die neue Option aendert sich am Bestand
+        nichts - 'on' bleibt Gefahr, 'off' bleibt keine."""
         entry = make_entry(
             {
                 **_slot(AWNING_GUARD_WIND, entity=""),
