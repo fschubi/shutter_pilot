@@ -73,7 +73,6 @@ from .const import (
     BOOLEAN_CONDITION_DOMAINS,
     DOMAIN,
     INVERTED_BY_DEFAULT_SLOTS,
-    BOOLEAN_CONDITION_DOMAINS,
     CONF_AWNING_TRACK_ENABLED,
     CONF_MY_POSITION_ENTITY,
     CONF_MY_POSITION_PCT,
@@ -301,7 +300,24 @@ def _condition_rows(
             # einer vergessenen Einstellung aus. An/aus braucht keine Schwelle.
             limits = "an = erfüllt"
         else:
-            limits = f"ab {_fmt(cfg.get(on_key))} / auf unter {_fmt(cfg.get(off_key))}"
+            # Dieselbe Richtung, die _condition_note() unten schon berechnet,
+            # aber dort nur fuer den Warnhinweis - die Beschriftung selbst
+            # blieb bisher hart auf "nicht invertiert" stehen. Seit die
+            # Invertierung per Checkbox fuer jeden Slot einstellbar ist (nicht
+            # mehr nur Frost/Eis mit fester Vorgabe), waere das eine
+            # Beschriftung, die fuer jeden invertierten Slot das Gegenteil
+            # dessen sagt, was tatsaechlich gilt.
+            invert_stored = cfg.get(sun_condition_invert_key(slot))
+            inverted = bool(
+                invert_stored
+                if invert_stored is not None
+                else slot in INVERTED_BY_DEFAULT_SLOTS
+            )
+            limits = (
+                f"unter {_fmt(cfg.get(on_key))} / auf ab {_fmt(cfg.get(off_key))}"
+                if inverted
+                else f"ab {_fmt(cfg.get(on_key))} / auf unter {_fmt(cfg.get(off_key))}"
+            )
         rows.append(
             f"| {slot} | `{entity_id}` | {_state_of(hass, entity_id)} | "
             f"{limits} | {'✅' if met else '❌'} | "
@@ -346,12 +362,31 @@ def _guard_rows(
         if not entity_id:
             rows.append(f"| {slot} | – | – | – | nicht eingerichtet |")
             continue
-        limits = (
-            f"Zustände: {_fmt(config.get(states_key))}"
-            if _is_set(config.get(states_key))
-            else f"einfahren ab {_fmt(config.get(on_key))} / "
-            f"frei unter {_fmt(config.get(off_key))}"
-        )
+        # Vorher hart auf "nicht invertiert" beschriftet - fuer den
+        # Eis-Slot (Vorgabe: invertiert) stand hier "einfahren ab -2 / frei
+        # unter 2", tatsaechlich gilt genau das Gegenteil ("Gefahr unter -2,
+        # frei ab 2"). Seit die Invertierung per Checkbox auch fuer Wind und
+        # Regen einstellbar ist, waere das an jedem invertierten Slot falsch,
+        # nicht nur an einem, den ohnehin niemand liest.
+        if _is_set(config.get(states_key)):
+            limits = f"Zustände: {_fmt(config.get(states_key))}"
+        elif entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
+            invert_stored = config.get(sun_condition_invert_key(slot))
+            limits = "aus = Gefahr" if invert_stored else "an = Gefahr"
+        else:
+            invert_stored = config.get(sun_condition_invert_key(slot))
+            inverted = bool(
+                invert_stored
+                if invert_stored is not None
+                else slot in INVERTED_BY_DEFAULT_SLOTS
+            )
+            limits = (
+                f"Gefahr unter {_fmt(config.get(on_key))} / "
+                f"frei ab {_fmt(config.get(off_key))}"
+                if inverted
+                else f"einfahren ab {_fmt(config.get(on_key))} / "
+                f"frei unter {_fmt(config.get(off_key))}"
+            )
         hit = [r for r in (status.get("reasons") or []) if r.split(":")[0] == slot]
         verdict = "⛔ " + ", ".join(hit) if hit else "✅ frei"
         rows.append(

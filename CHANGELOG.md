@@ -4,6 +4,32 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.21.6]
+
+Direkte Folge von 2.21.5: die neue Invertier-Checkbox macht eine bestehende
+Beschriftungslücke im Einstellungs-Export erreichbar, die vorher nur den
+Frost-/Eis-Slot betraf und dort niemandem auffiel.
+
+### Behoben
+- **Der Einstellungs-Export beschriftete Schwellen immer als „nicht
+  invertiert", unabhängig vom tatsächlichen Wert.** Beim Markisen-/
+  Dachfensterschutz stand am Eis-Slot „einfahren ab -2 / frei unter 2" –
+  tatsächlich gilt das Gegenteil: Gefahr **unter** -2, frei **ab** 2. Bisher
+  betraf das nur Eis (Vorgabe: invertiert, niemand hat es angeschaut). Seit
+  eine Invertierung jetzt für Wind, Regen und jede Beschattungsbedingung per
+  Checkbox einstellbar ist, hätte dieselbe Beschriftungslücke jeden
+  invertierten Slot betroffen. Beide Berichtstabellen (Markisen-/
+  Dachfensterschutz und Beschattungsbedingungen eines Bereichs) lesen die
+  Invertierung jetzt genauso wie die Auswertung selbst.
+- **Ein Schalter oder Binärsensor am Wetterschutz zeigte „einfahren ab – /
+  frei unter –"** – eine leere Schwelle, die wie eine vergessene Einstellung
+  aussieht. Zeigt jetzt „an = Gefahr" bzw. „aus = Gefahr" (invertiert), genau
+  wie die Beschattungsbedingungen das seit 2.14.0 schon für „an = erfüllt" tun.
+
+### Was ändert sich für mich?
+Nur die Anzeige im Einstellungs-Export. Ein nicht invertierter Wind-, Regen-
+oder Frostsensor sieht unverändert aus.
+
 ## [2.21.5]
 
 Keine Forum-Meldung diesmal, sondern ein gezielter Blick auf die drei

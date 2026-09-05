@@ -288,10 +288,56 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.21.5**, im Forum aktiv genutzt. Einreichung für den
+Version **2.21.6**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-05 – 2.21.6: die Beschriftung, die 2.21.5 selbst freigelegt hat
+
+Direkte Fortsetzung von 2.21.5, keine neue Recherche. Beim gezielten
+Durchsehen von `async_build_export()` – dem zweitgroessten Bruecken-Knoten im
+Wissensgraph, 16 Communities – fiel auf: die eigene neue Invertier-Checkbox
+macht eine Beschriftungsluecke erreichbar, die vorher niemandem auffallen
+konnte.
+
+**Der Fund, gegen den echten Export geprueft:** Beim Eis-Slot (Vorgabe seit
+jeher invertiert) stand im Bericht „einfahren ab -2 / frei unter 2" – real gilt
+das Gegenteil: Gefahr **unter** -2, frei **ab** 2.
+
+```
+| ice | sensor.aussentemperatur | 0 °C | einfahren ab -2 / frei unter 2 | ✅ frei |
+```
+
+Der Verdikt (✅/❌) stimmt, weil er aus der echten Auswertung kommt – nur die
+Beschriftung der Schwellen daneben ist seit jeher hart auf „nicht invertiert"
+verdrahtet, in `_guard_rows()` **und** in `_condition_rows()` (Beschattungs-
+bedingungen a–d). Vor 2.21.5 betraf das ausschliesslich Eis, dessen
+Invertierung niemand je angesehen hat, weil es dafuer keine Checkbox gab.
+**Seit 2.21.5 ist Invertierung fuer Wind, Regen und jede Beschattungs-
+bedingung per Klick einstellbar** – genau die Aenderung, die dieselbe alte
+Beschriftungsluecke von einem toten Sonderfall zu etwas macht, das jetzt jeder
+erreichen kann.
+
+**Zweiter Fund an derselben Stelle:** ein Schalter oder Binärsensor am
+Wetterschutz zeigte „einfahren ab – / frei unter –" – eine leere Schwelle, die
+wie eine vergessene Einstellung aussieht. Die Beschattungsbedingungen haben
+dafuer seit 2.14.0 „an = erfuellt"; der Wetterschutz hatte den gleichwertigen
+Zweig nie bekommen. Jetzt „an = Gefahr" bzw. „aus = Gefahr" bei Invertierung.
+
+**Merke, zum wiederholten Mal:** eine Beschriftung, die eine Richtung fest
+annimmt, ist derselbe Vertrag wie ein Schluessel-Tupel – sie bricht nicht,
+wenn sie geschrieben wird, sondern erst, wenn eine spaetere Aenderung den
+Fall erreichbar macht, fuer den sie nie gedacht war. `resolve_sun_geometry()`
+(2.10.3) und `resolve_guard_config()` (2.21.5, heute frueh) waren dieselbe
+Klasse an einem Schluessel; hier ist es an einer Anzeige.
+
+**Verifiziert:** `pytest` 776 Tests gruen (4 neue), **zwei Gegenproben** –
+ohne den Fix in `_condition_rows()` faellt genau
+`test_an_inverted_shading_condition_says_the_real_direction`; ohne den Fix in
+`_guard_rows()` fallen alle drei neuen `TestGuardTableRespectsInversion`-Tests.
+i18n unveraendert 440/440 (keine Panel-Aenderung, nur der Export). **Nicht im
+Browser geprueft** – ohne Panel-Aenderung diesmal ohne Gewicht.
 
 ### 2026-09-05 – 2.21.5: der Knoten, der zu viele Antworten teilte
 

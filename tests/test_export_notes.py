@@ -389,6 +389,98 @@ class TestAwningReport:
         assert "_awning_guard" not in hass.data[DOMAIN][awning_entry.entry_id]
 
 
+class TestGuardTableRespectsInversion:
+    """`_guard_rows()` beschriftete die Schwellen bisher immer als "nicht
+    invertiert" - fuer den Eis-Slot (Vorgabe: invertiert) stand dort
+    "einfahren ab -2 / frei unter 2", tatsaechlich gilt "Gefahr unter -2,
+    frei ab 2". Seit die Invertierung per Checkbox auch fuer Wind und Regen
+    einstellbar ist (2.21.5), waere das an jedem invertierten Slot falsch."""
+
+    @pytest.fixture
+    def make_guard_entry(self, hass):
+        from custom_components.shutter_pilot.const import (
+            AWNING_GUARD_ICE,
+            AWNING_GUARD_RAIN,
+            CONF_DEVICE_KIND,
+            CONF_POSITION_OPEN,
+            CONF_POSITION_SUN_PROTECT,
+            KIND_AWNING,
+            sun_condition_invert_key,
+            sun_condition_keys,
+        )
+
+        ice_keys = sun_condition_keys(AWNING_GUARD_ICE)
+        rain_keys = sun_condition_keys(AWNING_GUARD_RAIN)
+
+        def _make(rain_invert=None):
+            options = {
+                CONF_AREAS: [AREA],
+                CONF_SHUTTERS: [
+                    {
+                        CONF_COVER_ENTITY_ID: "cover.markise",
+                        CONF_NAME: "Markise Terrasse",
+                        CONF_DEVICE_KIND: KIND_AWNING,
+                        CONF_AREA_DOWN_ID: "vorne",
+                        CONF_POSITION_OPEN: 0,
+                        CONF_POSITION_SUN_PROTECT: 100,
+                    }
+                ],
+                ice_keys[0]: "sensor.aussentemperatur",
+                ice_keys[1]: -2,
+                ice_keys[2]: 2,
+                rain_keys[0]: "binary_sensor.regen",
+            }
+            if rain_invert is not None:
+                options[sun_condition_invert_key(AWNING_GUARD_RAIN)] = rain_invert
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, title="Shutter Pilot", options=options
+            )
+            config_entry.add_to_hass(hass)
+            hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+                "sun_protect_covers": set(),
+                "covers_driven_up": set(),
+                "covers_driven_down": set(),
+                "_runtime_started": dt_util.utcnow() - timedelta(hours=6),
+            }
+            return config_entry
+
+        return _make
+
+    async def test_the_default_inverted_ice_slot_says_the_real_direction(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry()
+        hass.states.async_set(
+            "sensor.aussentemperatur", "0", {"unit_of_measurement": "°C"}
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "Gefahr unter -2 / frei ab 2" in md
+        assert "einfahren ab -2" not in md
+
+    async def test_a_boolean_guard_slot_gets_a_readable_label(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry()
+        hass.states.async_set("binary_sensor.regen", "off")
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "an = Gefahr" in md
+        assert "einfahren ab – / frei unter –" not in md
+
+    async def test_an_inverted_boolean_guard_slot_says_so(
+        self, hass, make_guard_entry
+    ):
+        entry = make_guard_entry(rain_invert=True)
+        hass.states.async_set("binary_sensor.regen", "off")
+
+        md = (await async_build_export(hass, entry))["markdown"]
+
+        assert "aus = Gefahr" in md
+
+
 class TestRainAndIceUnitPlausibility:
     """Derselbe Fehler wie beim Wind (Faktor 3,6 daneben), nur an zwei
     weiteren Sensoren: eine Regenrate mit einer Tagessummen-Schwelle
@@ -546,6 +638,31 @@ class TestHelperConditionInTheReport:
         md = (await async_build_export(hass, entry))["markdown"]
         assert "ab 30000 / auf unter 20000" in md
         assert "an = erfüllt" not in md
+
+    async def test_an_inverted_shading_condition_says_the_real_direction(
+        self, hass, entry
+    ):
+        """Slots a-d haben keine Vorgabe-Invertierung, sind aber seit 2.21.5
+        per Checkbox invertierbar - die Tabelle beschriftete das bisher immer
+        als "nicht invertiert", unabhaengig vom tatsaechlichen Wert."""
+        from custom_components.shutter_pilot.const import sun_condition_invert_key
+
+        hass.states.async_set(
+            "sensor.aussentemperatur", "0", {"unit_of_measurement": "°C"}
+        )
+        area = dict(AREA)
+        area["sun_cond_a_entity"] = "sensor.aussentemperatur"
+        area["sun_cond_a_on_above"] = -2
+        area["sun_cond_a_off_below"] = 2
+        area[sun_condition_invert_key("a")] = True
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_AREAS: [area]},
+        )
+
+        md = (await async_build_export(hass, entry))["markdown"]
+        assert "unter -2 / auf ab 2" in md
+        assert "ab -2 / auf unter 2" not in md
 
 
 # --- Der Bericht, der sich selbst widersprach --------------------------------
