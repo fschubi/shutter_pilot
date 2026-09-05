@@ -190,6 +190,37 @@ class TestSettingsSurviveTheRoundTrip:
         for key, value in self.GUARD.items():
             assert result["settings"].get(key) == value, key
 
+    async def test_saving_from_the_panel_survives_the_round_trip(
+        self, hass, hass_ws_client
+    ):
+        """GitHub #9: Entität im Formular gewählt, Speichern gedrückt, Feld
+        wieder leer. Gemeldet gegen 2.14.0, vor der Ausschlussliste oben -
+        dieser Test fährt den tatsaechlichen Weg des Panels (save_settings,
+        dann neu laden per get_status), nicht nur eine vorher gesetzte
+        Option, um den gemeldeten Ablauf woertlich nachzustellen."""
+        result = await _status(hass, hass_ws_client, _options(TIME_AREA))
+
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            "id": 2,
+            "type": "shutter_pilot/save_settings",
+            "settings": self.GUARD,
+        })
+        save_response = await client.receive_json()
+        assert save_response["success"]
+        await hass.async_block_till_done()
+
+        await client.send_json({"id": 3, "type": "shutter_pilot/get_status"})
+        reload_response = await client.receive_json()
+        assert reload_response["success"]
+
+        settings = reload_response["result"]["settings"]
+        for key, value in self.GUARD.items():
+            assert settings.get(key) == value, (
+                f"{key} kam nach dem Speichern nicht zurueck - "
+                "genau das gemeldete Symptom"
+            )
+
     async def test_the_known_defaults_are_still_filled_in(self, hass, hass_ws_client):
         """Ein frisch eingerichtetes System hat nichts davon gespeichert."""
         result = await _status(hass, hass_ws_client, _options(TIME_AREA))

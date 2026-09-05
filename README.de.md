@@ -780,6 +780,18 @@ Anders als bei allen übrigen Bedingungen wird hier **nach unten** verglichen: D
 
 Frostschutz gewinnt gegen das abweichende Schließen – Schutz geht vor Komfort. Beides wirkt im Zeit-, Sonnen- und Helligkeitsmodus. Ein Rollladen ohne gesetzte Frostposition schließt unverändert ganz, selbst wenn die Bedingung des Bereichs erfüllt ist.
 
+## Geplant
+
+Wünsche, die nachvollziehbar sind, aber (noch) keinen Code haben – gebündelt
+hier statt verstreut über Issues und Forum, damit sie nicht zwischen echten
+Fehlermeldungen untergehen. Ein 👍 auf dem verlinkten Issue hilft bei der
+Priorisierung mehr als ein neuer Kommentar.
+
+- **Fahrzeit-Simulation für Antriebe ohne Positionsrückmeldung** (z. B.
+  Jarolift-Controller): statt nur `open_cover`/`close_cover` als Rückfall
+  eine Zwischenposition über die konfigurierte Fahrzeit annähern.
+  [#11](https://github.com/fschubi/shutter_pilot/issues/11)
+
 ## Unterstützt mich
 
 Shutter Pilot entsteht in meiner Freizeit und ist und bleibt kostenlos und quelloffen. Wenn dir die Integration den Alltag erleichtert und du dich erkenntlich zeigen möchtest, freue ich mich über einen Kaffee:

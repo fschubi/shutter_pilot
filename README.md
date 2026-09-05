@@ -768,6 +768,19 @@ Unlike every other condition this one compares **downwards**: frost protection k
 
 Frost protection wins over partial closing — protection beats comfort. Both apply in time, sun and brightness mode. A shutter without a frost position still closes fully, even when the area's condition is met.
 
+## Planned
+
+Requests that make sense but don't have code (yet) – gathered here instead
+of scattered across issues and the forum, so they don't get lost among real
+bug reports. A 👍 on the linked issue helps prioritization more than a new
+comment.
+
+- **Timed-drive position simulation for actuators without position feedback**
+  (e.g. Jarolift controllers): instead of only falling back to
+  `open_cover`/`close_cover`, approximate an intermediate position by timing
+  the configured travel duration.
+  [#11](https://github.com/fschubi/shutter_pilot/issues/11)
+
 ## Support me
 
 Shutter Pilot is built in my spare time and is — and stays — free and open source. If it makes your day a little easier and you'd like to say thanks, I'd appreciate a coffee:
