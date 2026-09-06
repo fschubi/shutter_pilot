@@ -1,0 +1,2438 @@
+# CLAUDE.md – Fortschritts-Log (Archiv)
+
+Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, weil die Datei über das Kontextlimit gewachsen ist (CLAUDE.md wird bei jeder Session komplett geladen, diese Datei nur bei Bedarf). Neueste Einträge zuerst, wie zuvor. Die letzten fünf Einträge stehen zusätzlich in `CLAUDE.md` selbst, für schnellen Zugriff ohne diese Datei öffnen zu müssen.
+
+Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
+
+### 2026-09-06 – 2.22.2: drei Schlösser, die eine Hintertür hatten
+
+Kein Forumsbeitrag – eine beauftragte, vollständige Analyse der gesamten
+Beschattungs-, Lüftungs-, Dämmerungs- und Schutzlogik, mit ausdrücklichem
+Auftrag, jeden Fund gegen den tatsächlichen Codefluss zu prüfen, bevor er
+als Fehler behauptet wird. Erst mit `graphify query`/`explain` orientiert,
+dann `helpers.py`, `elevation.py`, `awning_guard.py`, `awning_dusk.py`,
+`ventilation.py`, `window_trigger.py`, `window_helper.py`, `scheduler.py`,
+`brightness.py`, `cover_tracker.py`, `services.py` vollständig gelesen und
+gegen die vorhandenen Tests abgeglichen. Drei Funde wurden nicht nur
+gelesen, sondern **durch tatsächliche Testläufe** verifiziert – ein
+temporärer Reproduktionstest je Fund, kurz nach `tests/` kopiert, ausgeführt
+und wieder gelöscht (`git status` danach sauber), bevor überhaupt Code
+geändert wurde.
+
+**Fund 1: `resume_automation` kannte den Wetterschutz nicht.**
+`services.py::resume_automation()` filterte seine Ziele über
+`filter_shutters_by_area(..., use_up=False)` **ohne** `shutters_only=True` –
+anders als `ventilate_group` in derselben Datei, das das bewusst tut
+(„Awnings have no ventilation position"). Der Dienst ist laut README,
+`services.yaml` und diesem Dokument ausdrücklich nur für „einen Rollladen"
+gedacht, konnte aber Markisen und Dachfenster erreichen. Seine letzte
+Fahrstufe – die Übergabe an den Zeitplan, wenn die Beschattung nichts
+beanspruchte – rief `set_cover_position()` direkt auf, **ohne** je
+`has_guard()`/`is_barred()` zu fragen, obwohl genau diese Prüfung in
+`_drive_group()` (derselben Datei, benutzt von `open_group`/`close_group`/
+`sun_protect_group`) längst existiert. Reproduziert: ein Dachfenster,
+durch aktiven Regen gesperrt (bereits korrekt auf 0 % zugefahren), stand
+laut Zeitplan „müsste tagsüber offen sein" – `resume_automation` fuhr es
+trotz weiterhin aktivem Regen auf 100 % auf. Log bestätigt:
+`Resume automation: cover.dachfenster_test -> 100%`, während der Guard
+weiterhin `barred=True` meldete.
+
+Behoben mit zwei Riegeln statt einem: `shutters_only=True` beim Filtern
+(Markisen/Dachfenster erreichen den Dienst jetzt gar nicht mehr – werden
+also auch nicht mehr von manueller Übersteuerung oder
+Beschattungsmerkern befreit, was der Dienst für sie ohnehin nie sollte),
+und zusätzlich dieselbe defensive `has_guard`/`is_barred`-Prüfung wie in
+`_drive_group()` direkt vor der letzten Fahrt – unter der heutigen
+Konfiguration durch den ersten Riegel bereits unerreichbar, aber
+Tiefenverteidigung für den Tag, an dem eine dritte geschützte Geräteart
+dazukommt. **Merke, wieder einmal:** ein Dienst, der „für einen Rollladen"
+dokumentiert ist, muss das auch selbst durchsetzen – sonst ist die
+Dokumentation die einzige Guard-Prüfung, die er hat.
+
+**Fund 2: der Fenstertrigger vergaß seinen eigenen Zyklus nach einer
+Nachholfahrt.** `window_trigger.py::_apply_window_closed()` hat zwei
+Enden: einen `pending_entry`-Zweig (eine vorgemerkte Fahrt wird nachgeholt)
+und den normalen Restore-Zweig. Nur der zweite räumte am Ende
+`trigger_actions`/`trigger_heights` auf; der erste endete mit einem
+`return` **davor**. Reproduziertes Szenario: ein Rollladen wird beschattet
+(40 %), das Fenster geht auf – der Trigger merkt sich 40 % als
+Rückfahrziel und fährt auf die Lüftungsposition. Abends will der Zeitplan
+voll zufahren, das Fenster ist noch offen: die Fahrt wird vorgemerkt
+(`remember_drive_after_close`, genau wie in `scheduler.py` und
+`brightness.py`). Fenster schließt – die vorgemerkte Fahrt greift korrekt
+auf 0 %, aber der Zyklus-Merker bleibt auf „triggered" mit der **alten**
+Höhe (40 %) stehen. Wird das Fenster später in derselben Nacht noch
+einmal kurz zum Lüften geöffnet und geschlossen – ohne jeden Bezug zur
+Beschattung von vorhin –, restauriert der Trigger auf die veraltete 40 %
+statt auf die aktuell korrekten 0 %: der Rollladen öffnet sich mitten in
+der Nacht von selbst. Log bestätigt vor dem Fix:
+`Window closed – restore: cover.schlafzimmer_stale -> 40%`.
+
+Behoben mit zwei Zeilen: der `pending_entry`-Zweig räumt
+`trigger_actions`/`trigger_heights` jetzt genauso auf wie der normale Zweig
+– die nachgeholte Fahrt **ist** die Restaurierung dieses Fensterzyklus.
+**Dieselbe Fehlerklasse wie `resting_position()` (2.21.3) und
+`note_manual_position()` (2.17.0):** ein Merker, der eine Handlung
+überlebt, für die er nicht gedacht war.
+
+**Fund 3: die Dämmerungs-Einfahrt einer Markise konnte die Beschattung
+dauerhaft lahmlegen.** `awning_dusk.py` fuhr eine Markise bei Dunkelheit
+ein, ohne `sun_protect_covers` anzufassen. `elevation.py` verlässt sich
+aber genau auf dieses Flag: solange es „aktiv" sagt und die Markise nicht
+sonnennachführend ist, tut die Beschattung bei weiterhin erfüllter
+Bedingung **nichts** (`elif not is_awning(shutter): …` gilt nur für
+Nicht-Markisen). Normalerweise räumt `elevation.py` das Flag am Abend
+selbst auf, weil die Elevationsprüfung dann selbst scheitert – das griff
+aber nicht bei `elevation_enabled=False` (eine dokumentierte, unterstützte
+Konfiguration seit 2.10.1: „wer einen Sensor pro Fenster hat, will, dass
+der entscheidet"). Reproduziert: Markise mit abgeschalteter
+Elevationsprüfung, Beschattung an einem durchgehend „heißen"
+Temperatursensor. Dämmerung fährt korrekt ein – aber danach fuhr über
+mehrere weitere Minutentakte **kein einziger** Befehl mehr, obwohl die
+Beschattungsbedingung unverändert erfüllt blieb (Log:
+`commands issued after dusk retract: []`, Position bleibt bei 0 %).
+
+Eine alleinige Lösung „beim Einfahren `forget_shading_for_cover()`
+aufrufen" wäre gefährlich unvollständig gewesen: ohne eine Sperre auf der
+anderen Seite hätte dieselbe (unabhängige) Beschattungsbedingung die
+Markise **sofort in derselben Minute** wieder ausgefahren, sobald der
+Merker weg ist – bei `elevation_enabled=False` gibt es keinen natürlichen
+Moment, der das verhindert. Deshalb eine abgestimmte Lösung an beiden
+Enden: `awning_dusk.py` räumt `forget_shading_for_cover()` beim Einfahren
+korrekt auf, und eine neue Funktion `is_dusk_retracted(data, cover)` wird
+von `elevation.py` **vor** jeder Verlängerung/Neuausfahrt gefragt – solange
+das Cover in `data["_dusk_retracted"]` steht, fasst die Beschattung es gar
+nicht erst an. Erst wenn `awning_dusk.py` selbst wieder hell registriert
+und den Eintrag entfernt, darf die Beschattung erneut entscheiden. Wind-,
+Regen- und Frostschutz bleiben unberührt: `awning_guard.py` läuft
+komplett unabhängig weiter und hat weiterhin Vorrang – eigens mit einem
+Test abgesichert, der einen aktiven Wind-Guard **nach** einer
+Dämmerungs-Freigabe prüft.
+
+**Nebenbefund, geprüft statt geglaubt (kein Fehler): die
+Minutentakt-Reihenfolge.** Beschattung, Wetterschutz und
+Dämmerungsfunktion hängen am selben gemeinsamen Minutentakt
+(`_setup_minute_ticker()`), aber jeder Callback stößt seine Auswertung
+nur als eigenen `hass.async_create_task(...)` an – es gibt keine Garantie,
+in welcher Reihenfolge die drei tatsächlich fertig werden, nur eine
+Reihenfolge, in der ihre Tasks gestartet werden. Zwölf Regressionstests
+(`tests/test_minute_tick_order_independence.py`) haben alle sechs
+möglichen Reihenfolgen der drei Auswertungen durchgespielt, je einmal mit
+und ohne aktive Gefahr – in keiner Reihenfolge ließ sich eine gesperrte
+Markise ausfahren, in keiner blieb eine freie Markise unbeschattet. **Das
+ist kein Zufall, sondern Architektur:** `evaluate_guard()` liest Sensor-
+und Laufzeitzustand bei jedem Aufruf direkt, keines der drei Module
+verlässt sich auf einen von einem anderen vorbereiteten Cache. Bewusst
+**nicht** serialisiert – die Gegenprobe (Guard-Prüfung in
+`_drive_sun_protect()` probeweise abgeschaltet) ließ alle sechs
+„gesperrt"-Permutationen sofort umfallen, die Tests sind also scharf genug,
+einen echten Reihenfolgefehler zu erkennen, hätte es einen gegeben. Der
+Kommentar in `__init__.py`, der die Setup-Reihenfolge von
+`setup_elevation_listener`/`setup_awning_guard` erklärte, war dabei selbst
+irreführend („der Guard muss sein Verdikt schon kennen, wenn die erste
+Beschattung fragt" – tatsächlich läuft `elevation.py` zuerst) und wurde
+präzisiert: die Reihenfolge ist unerheblich, weil jeder Fahrweg den Guard
+selbst prüft, nicht weil eine bestimmte Startreihenfolge das garantiert.
+
+**Zweiter Nebenbefund, rein kosmetisch:** die Beschattungs-Logzeile
+(`[sun-protect] area=…: elev=… in […]`) behauptete auch bei
+`elevation_enabled=False` einen geprüften Höhenbereich – ausgerechnet für
+die Konfiguration, die Fund 3 überhaupt erst brauchte. Sagt jetzt
+„elevation check disabled", wenn die per-Rollladen zusammengeführte
+Geometrie die Höhe für diese Fahrt gar nicht entschieden hat.
+
+**Verifiziert:** `pytest` 826 Tests grün (23 neue). Für jeden der drei
+bestätigten Fehler und für die Reihenfolgen-Frage eine **echte Gegenprobe**
+gemacht – Fix jeweils testweise entschärft (`if False and …` bzw. einen
+Aufruf auskommentiert), genau die zugehörigen neuen Tests fielen, alle
+anderen 8xx blieben grün, danach der Fix wiederhergestellt und die volle
+Suite erneut grün. Neue Dateien: `tests/test_window_trigger_stale_restore.py`,
+`tests/test_minute_tick_order_independence.py`,
+`tests/test_elevation_log_disabled.py`; erweitert:
+`tests/test_resume_automation.py`, `tests/test_awning_dusk.py`. **Nicht im
+Browser geprüft** – reine Backend-Logik, keine Panel-Änderung.
+
+### 2026-09-06 – 2.22.1: der Schutz, der nur die Markise kannte
+
+Kein Forumsbeitrag – ein Fund beim systematischen Durchgehen der gesamten
+Beschattungs-/Schutzlogik für Rollläden, Markisen und Dachfenster, auf
+eigene Anforderung hin (Bedingungslücken, Widersprüche, Zirkelbezüge).
+
+**Der Fund:** `_drive_sun_protect()` in `elevation.py` fragte den
+Wind-/Regen-/Frostschutz (`evaluate_guard`/`clamp_to_rest`) vor einer
+Beschattungsfahrt nur unter `if awning:` – aus der Zeit, als die Markise
+(2.12.0) die einzige geschützte Geräteart war. Seit das Dachfenster
+(2.20.0) genau denselben Schutz bekam (`has_guard()` deckt beide ab), lief
+diese eine Prüfstelle nicht mit: ein Dachfenster geriet in den
+allgemeinen (Nicht-Markisen-)Zweig und konnte trotz aktiver Regengefahr
+auf die Lüftungsspalt-Position hinausgefahren werden.
+
+**Warum das schwerer wiegt als ein einmaliges Fehlverhalten.** Der Schutz
+fährt pro Gefahrenepisode nur *einmal* zu (`state["retracted"]` in
+`awning_guard.py`, damit er nicht gegen eine manuelle Korrektur ankämpft
+– dieselbe Regel wie bei einer Markise). Ohne die Schutzabfrage im
+Beschattungs-Fahrweg konnte die Beschattung ein einmal vom Schutz
+zugefahrenes Dachfenster beliebig oft wieder öffnen, solange es
+weiterregnete – der Schutz hielt sich für diese Episode für erledigt und
+griff kein zweites Mal ein. Genau das Szenario, vor dem der 2.20.0-Log
+warnt: „bei einem Dachfenster kostet ein verpasster Schutz Wasser im
+Haus."
+
+**Behoben mit der kleinstmöglichen Änderung:** das Schutz-Gate hängt jetzt
+an `has_guard(shutter)` statt an `is_awning(shutter)` – eine reine
+Umhängung, keine neue Prüfung. Die geräteartabhängige Positionsberechnung
+(Markise vs. Dachfenster/Rollladen) bleibt unverändert im jeweiligen
+Zweig stehen; nur die Frage „braucht dieses Gerät den Schutz" wurde von
+der Frage „wie wird seine Zielposition berechnet" getrennt. Für Markisen
+ist das exakt dieselbe Prüfung wie vorher, nur eine Codezeile weiter
+unten. Für gewöhnliche Rollläden (`has_guard()` == False) läuft der Block
+gar nicht erst an.
+
+**Merke, wieder einmal:** dieselbe Fehlerklasse wie
+`resolve_sun_geometry()` (2.10.3), `only_shutters` (2.16.0/2.20.0) und
+`guard_rest_role`/`rest_role` (2.21.1) – eine neue Geräteart wird an einem
+zentralen Vertrag ergänzt, aber nicht an jeder Stelle durchgezogen, die
+denselben Vertrag konsultiert. Diesmal war es nicht ein Schlüssel-Tupel
+oder ein Filter, sondern ein Sicherheits-Check vor einer Fahrt.
+
+**Verifiziert:** `pytest` 803 Tests grün (4 neue), in
+`tests/test_roof_windows.py`. Der Kern-Regressionstest fährt genau die
+Reihenfolge nach, die den Fund ausmacht: Dachfenster öffnet bei
+trockenem, warmem Zustand → Regen setzt ein, Schutz fährt einmal zu → es
+regnet über mehrere weitere Minutentakte unverändert weiter → die
+Beschattung darf nicht erneut öffnen. Dazu eine Gegenprobe mit allen drei
+Gerätearten im selben Bereich am selben Regensensor: nur der ungeschützte
+Rollladen beschattet normal, Markise und Dachfenster bleiben gesperrt.
+Volle Suite `pytest` grün (803, zuvor 799). **Nicht im Browser geprüft** –
+reine Backend-Logik, keine Panel-Änderung.
+
+### 2026-09-05 – 2.22.0: die Markise, die abends von selbst geht
+
+Direkte Umsetzung von [#12](https://github.com/fschubi/shutter_pilot/issues/12),
+bjoergs Wunsch aus dem Forum: eine Markise soll abends bei Dämmerung
+einfahren, aber **niemals** automatisch wieder ausfahren – schon gar nicht,
+wenn niemand zuhause ist. Sein eigener Workaround (Helfer-Schalter unter
+„Hochfahren unterbinden") griff nachweislich nicht: `only_shutters()`
+schließt Markisen von genau diesem Fahrweg aus (`brightness.py`,
+`scheduler.py`).
+
+**Warum nicht die Beschattung.** `elevation.py` fährt eine Markise bei
+Bedarf aus *und wieder ein* – dieselbe Bedingung, die abends auslöst, würde
+am nächsten Tag genauso auslösen und die Markise erneut ausfahren. Genau das
+war der Kern der Meldung: keine automatische Wiederausfahrt.
+
+**Warum nicht ein vierter Guard-Slot.** `awning_guard.py` (Wind/Regen/Eis)
+ignoriert Hauptschalter, Bereichsautomatik und die Automatik der Markise mit
+Absicht – eine Böe darf nicht davon abhängen, ob jemand die Markise
+ausgeschaltet hat. Ein Komfort-Wunsch wie „bei Dunkelheit einfahren" soll das
+nicht: schaltet jemand die Automatik ab, soll auch diese Funktion still
+sein. Deshalb ein eigener Bedingungs-Slot (`AWNING_DUSK_SLOT = "dusk"`),
+dieselbe Mechanik wie überall (Zahl mit Hysterese, Zustandsliste, Boolean,
+Invertierung), aber mit eigener, respektierender Prüfung.
+
+**Neues Modul, kein neuer Timer.** `awning_dusk.py` haengt am gemeinsamen
+Minutentakt wie `ventilation.py` und `awning_guard.py`. Fährt genau einmal
+ein, wenn die Bedingung eintritt (`_dusk_retracted`-Merker gegen Motor-
+Genöle), und bei Freigabe passiert **nichts** – keine Fahrt, keine
+Ausnahme, einfach der fehlende Code für „wieder ausfahren". Ein zweiter
+Dämmerungs-Zyklus nach einer hellen Phase darf wieder auslösen, sonst hülfe
+das Feature nur einmal im Leben der Anlage.
+
+**Der Merker-Fallstrick, diesmal im Voraus vermieden.** `_own_slot_met()`
+liest `area.get(CONF_AREA_ID)` roh für den Hysterese-Speicher – bei einem
+Rollladen mit echter Bereichs-ID ist das richtig, bei einer Markise ohne
+eigene wäre es `""`, und **jede** Markise ohne Bereichs-ID würde sich einen
+gemeinsamen Hysterese-Topf teilen. Deshalb `awning_dusk_condition_met()`
+eigenständig, mit dem Cover als Speicherschlüssel
+(`condition_memory(data, "dusk", cover)`) statt der Bereichs-ID – ein Test
+hält das mit zwei Markisen ohne Bereich fest.
+
+**Panel:** ein eigener, zusammenklappbarer Abschnitt „Bei Dämmerung
+einfahren", nur an Markisen (nicht an Dachfenstern) – über `_renderCondDetail()`,
+nicht `_renderGuardSlot()`, weil letzteres eine Sperrzeit mitbringt, die es
+hier gar nicht gibt. Export: eine eigene Verdikt-Zeile mit Sensor, Schwelle
+und aktuellem Zustand, nach demselben Muster wie der Wetterschutz.
+
+**#12 ist damit erledigt**, aus „Geplant" in beiden READMEs wieder entfernt
+– derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
+(damals Markisen selbst) stand, bevor er gebaut wurde.
+
+**Verifiziert:** `pytest` 799 Tests grün (20 neue), **fünf Gegenproben** –
+ohne den Wiederholungsschutz feuert der Motor jede Minute; ohne den
+`is_awning()`-Filter fährt auch ein Dachfenster mit; ohne die
+Automatik-Prüfung am Rollladen fährt eine abgeschaltete Markise trotzdem;
+ohne dieselbe Prüfung am Bereich ebenso; ohne die Export-Zeile fallen drei
+neue Tests. i18n 444/444 in allen elf Sprachen (4 neu). Panel in Node
+gerendert, mit einer eigenen Prüfung je Geräteart (Markise zeigt den
+Abschnitt, Dachfenster nicht) – Gegenprobe gemacht. **Nicht im Browser
+geprüft.**
+
+### 2026-09-05 – 2.21.7: das Icon, das aus dem falschen Set kam
+
+bjoergs letzter Forumspost (drei Stunden nach seiner Rückmeldung zu 2.21.4),
+zwei Screenshots und zwei echte Funde, beide gegen den Code nachgestellt.
+
+**Fund 1: fehlendes Icon vor „Hochfahren unterbinden".** Sein Screenshot
+zeigt die Stelle leer, rot eingekreist. `_sec("mdi:weekend", ...)` –
+`mdi:weekend` gegen pictogrammers.com (die offizielle MDI-Icon-Datenbank)
+geprüft: **404, existiert nicht**. Vermutlich mit dem gleichnamigen Icon aus
+Google Material Symbols verwechselt, einem anderen Icon-Set. `<ha-icon>`
+wirft dabei keinen Fehler, es zeichnet einfach nichts – lautlos, wie ein
+Rendertest es nicht findet, weil nichts crasht. Alle ~60 im Panel benutzten
+`mdi:`-Namen einzeln gegen die MDI-Datenbank geprüft: **nur dieser eine war
+falsch**. Ersetzt durch `mdi:calendar-weekend` – existiert, passt inhaltlich
+besser zum Untertext „Wochenende, Ferien, Urlaub" und wird an anderer Stelle
+im Panel (Dashboard-Sonneninfo) bereits verwendet.
+
+**Fund 2: der Lux-Schieberegler sah aus wie ein Schalter.** Zweiter
+Screenshot: ein winziger blauer Punkt statt einer Schieber-Spur, daneben ein
+Zahlenfeld, das fast die ganze Zeile füllt. Das ist **dieselbe Fehlerklasse
+wie die Checkbox-Beschriftung aus 2.18.0**, nur an einem zweiten Eingabetyp:
+
+```css
+.field input:not([type=checkbox]),.field select{width:100%;padding:8px 12px;
+  border:1px solid var(--divider);background:...;border-radius:8px;...}
+```
+
+`:not([type=checkbox])` schließt Checkboxen aus – aber `type=range` eben
+nicht. Der native Schieberegler bekam damit Polsterung, Rahmen und einen
+dunklen Hintergrund übergestülpt, die für ein Textfeld gedacht sind, und
+seine Spur quetschte sich auf einen Streifen zusammen. **Zweiter Effekt
+derselben Zeile:** `.slider-row .slider-num{width:88px}` (zwei Klassen) hat
+dieselbe CSS-Spezifität wie `.field input:not([type=checkbox])` (eine Klasse
+plus eine Pseudoklasse zählt gleich hoch) – die feste 88px-Breite stand im
+Code, hat aber nie gewonnen, das Zahlenfeld füllte über `width:100%` die
+ganze Zeile.
+
+Zwei Zeilen behoben: `:not([type=checkbox]):not([type=range])` schließt jetzt
+beide Sonderfälle aus, und `.slider-row .slider-num` wurde zu
+`.field .slider-row .slider-num` (drei Klassen statt zwei) – schlägt die
+Sammelregel jetzt ohne `!important`. **Merke, zum dritten Mal an dieser
+Stelle:** eine Sammelregel auf `input` trifft jeden Eingabetyp mit eigener
+nativer Darstellung, nicht nur den, an den beim Schreiben gedacht wurde –
+2.18.0 war die Checkbox, heute der Schieberegler. Betroffen waren alle
+Schieberegler-plus-Zahlenfeld-Kombinationen mit ungebremstem Maximum (aktuell
+nur die Lux-Schwellen im Helligkeitsmodus, `rngOpen()`), nicht nur die im
+Screenshot gezeigten.
+
+**Zwei weitere Punkte in seinem Post, kein Code:**
+
+- **„Hast du an deiner Markisen-Steuerung etwas geändert? Das Tauschen der
+  beiden %-Werte hat jetzt eine Umkehr bewirkt, was vorher nicht klappte."**
+  Reine Rückmeldung, kein Fehler – bestätigt den Rat aus 2.18.0 (Positionen
+  tauschen dreht die Fahrtrichtung rechnerisch um), keine Aktion nötig.
+- **„Gibt es eine elegante Möglichkeit, eine Markise abends bei Dunkelheit
+  einfahren zu lassen, ohne automatische Wiederausfahrt?"** Sein eigener
+  Workaround (Helfer-Schalter unter „Hochfahren unterbinden") **greift
+  nicht** – nachgerechnet: `only_shutters()` schließt Markisen an genau
+  dieser Stelle aus (`brightness.py:342`), der Haken ist für seine Markise
+  wirkungslos. Und sein Bereich hat den Sonnenschutz gar nicht eingeschaltet,
+  die Markise bewegt sich also automatisch nur über den Wetterschutz, nie
+  über Helligkeit. Es gibt dafür aktuell keinen eingebauten Weg – die
+  bestehende Beschattungslogik würde genau das tun, was er nicht will
+  (am nächsten Tag automatisch wieder ausfahren). Als
+  [#12](https://github.com/fschubi/shutter_pilot/issues/12) angelegt und in
+  „Geplant" (beide READMEs) neben #11 einsortiert, mit Erklärung, warum sein
+  Workaround nicht greift.
+
+**Verifiziert:** `pytest` 779 Tests grün (2 neue), **zwei Gegenproben** –
+ohne die Icon-Korrektur fällt `test_no_invalid_mdi_icon_names`, ohne die
+CSS-Spezifitätskorrektur fällt `test_the_slider_row_keeps_its_own_input_
+styling`. Beide Tests prüfen Text im Quellcode, nicht gerendertes Layout –
+von hier aus (kein Browser) ist ein CSS-Kaskadenfehler nur so greifbar.
+**Nicht im Browser geprüft** – bei einem CSS-Fehler wiegt das schwerer als
+sonst, weil genau das die Art Fehler ist, die sich nur dort zeigt.
+
+### 2026-09-05 – GitHub-Aufräumen: #9 geschlossen, #11 einsortiert
+
+Zwei offene GitHub-Issues durchgesehen, keins davon brauchte neuen Code.
+
+**#9 „Markisen-Entitäten werden nicht gespeichert"**, gemeldet gegen 2.14.0:
+Wind-/Regen-/Temperatursensor unter Einstellungen standen nach „Speichern"
+wieder leer. Genau der Fehler aus **2.15.0** – `_ws_get_status` schickte die
+globalen Einstellungen als Erlaubnisliste von sechs Schlüsseln, der
+Markisenschutz kam nie dazu. Seit 2.15.0 eine Ausschlussliste
+(`__init__.py:493-500`), mit `tests/test_ws_status.py::
+TestSettingsSurviveTheRoundTrip` als Regressionsschutz. Nachgerechnet statt
+geglaubt: der vorhandene Test setzte die Optionen nur vorab und prüfte
+`get_status` – der tatsächlich gemeldete Weg (Formular → **Speichern-Klick**
+→ neu laden) war nie durchgespielt. Neuer Test
+`test_saving_from_the_panel_survives_the_round_trip` fährt genau diesen Weg
+über `save_settings` gefolgt von `get_status`, mit denselben Feldern aus dem
+Issue. Gegenprobe: mit einer simulierten alten Erlaubnisliste fallen beide
+Tests der Klasse. Das Issue ist sechs Versionen alt und war schlicht nie
+geschlossen worden – im Forum gemeldete Fehler laufen hier normalerweise über
+das Changelog, nicht über den GitHub-Tracker, und diese Meldung ist dort
+liegen geblieben.
+
+**#11 „Beschattung auch für Jaroliftcontroller"** ist kein Fehler, sondern ein
+Wunsch nach Fahrzeit-Simulation für Antriebe ohne Positionsrückmeldung – über
+das hinausgehend, was der bestehende `blind_drive`-Rückfall
+(`open_cover`/`close_cover`, seit 2.12.0) heute kann. Dafür jetzt ein
+**„Geplant"-Abschnitt** in beiden READMEs, direkt vor „Unterstützt mich" –
+derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
+(damals Markisen) stand, bevor er gebaut wurde. Zweck: Wünsche an einem Ort
+bündeln, statt sie zwischen echten Fehlermeldungen im Issue-Tracker
+verstreut zu lassen.
+
+**Verifiziert:** `pytest` 777 Tests grün (1 neu), Gegenprobe gemacht (ohne
+die Ausschlussliste fallen beide Tests der Klasse, nicht nur der neue).
+Keine Verhaltensänderung, deshalb keine neue Version.
+
+### 2026-09-05 – 2.21.6: die Beschriftung, die 2.21.5 selbst freigelegt hat
+
+Direkte Fortsetzung von 2.21.5, keine neue Recherche. Beim gezielten
+Durchsehen von `async_build_export()` – dem zweitgroessten Bruecken-Knoten im
+Wissensgraph, 16 Communities – fiel auf: die eigene neue Invertier-Checkbox
+macht eine Beschriftungsluecke erreichbar, die vorher niemandem auffallen
+konnte.
+
+**Der Fund, gegen den echten Export geprueft:** Beim Eis-Slot (Vorgabe seit
+jeher invertiert) stand im Bericht „einfahren ab -2 / frei unter 2" – real gilt
+das Gegenteil: Gefahr **unter** -2, frei **ab** 2.
+
+```
+| ice | sensor.aussentemperatur | 0 °C | einfahren ab -2 / frei unter 2 | ✅ frei |
+```
+
+Der Verdikt (✅/❌) stimmt, weil er aus der echten Auswertung kommt – nur die
+Beschriftung der Schwellen daneben ist seit jeher hart auf „nicht invertiert"
+verdrahtet, in `_guard_rows()` **und** in `_condition_rows()` (Beschattungs-
+bedingungen a–d). Vor 2.21.5 betraf das ausschliesslich Eis, dessen
+Invertierung niemand je angesehen hat, weil es dafuer keine Checkbox gab.
+**Seit 2.21.5 ist Invertierung fuer Wind, Regen und jede Beschattungs-
+bedingung per Klick einstellbar** – genau die Aenderung, die dieselbe alte
+Beschriftungsluecke von einem toten Sonderfall zu etwas macht, das jetzt jeder
+erreichen kann.
+
+**Zweiter Fund an derselben Stelle:** ein Schalter oder Binärsensor am
+Wetterschutz zeigte „einfahren ab – / frei unter –" – eine leere Schwelle, die
+wie eine vergessene Einstellung aussieht. Die Beschattungsbedingungen haben
+dafuer seit 2.14.0 „an = erfuellt"; der Wetterschutz hatte den gleichwertigen
+Zweig nie bekommen. Jetzt „an = Gefahr" bzw. „aus = Gefahr" bei Invertierung.
+
+**Merke, zum wiederholten Mal:** eine Beschriftung, die eine Richtung fest
+annimmt, ist derselbe Vertrag wie ein Schluessel-Tupel – sie bricht nicht,
+wenn sie geschrieben wird, sondern erst, wenn eine spaetere Aenderung den
+Fall erreichbar macht, fuer den sie nie gedacht war. `resolve_sun_geometry()`
+(2.10.3) und `resolve_guard_config()` (2.21.5, heute frueh) waren dieselbe
+Klasse an einem Schluessel; hier ist es an einer Anzeige.
+
+**Verifiziert:** `pytest` 776 Tests gruen (4 neue), **zwei Gegenproben** –
+ohne den Fix in `_condition_rows()` faellt genau
+`test_an_inverted_shading_condition_says_the_real_direction`; ohne den Fix in
+`_guard_rows()` fallen alle drei neuen `TestGuardTableRespectsInversion`-Tests.
+i18n unveraendert 440/440 (keine Panel-Aenderung, nur der Export). **Nicht im
+Browser geprueft** – ohne Panel-Aenderung diesmal ohne Gewicht.
+
+### 2026-09-05 – 2.21.5: der Knoten, der zu viele Antworten teilte
+
+Kein Forumsbeitrag diesmal, sondern ein Wissensgraph des ganzen Repos (2768
+Knoten, 6156 Kanten) und die Frage, welcher Knoten am meisten Communities
+verbindet. Antwort: `sun_condition_keys()` – 24 Communities, von „Guard Slot
+Danger" bis „Roof Window Rain Protection". Eine reine Schluessel-Baufunktion
+mit so hoher Betweenness-Zentralitaet ist verdaechtig: sie tut wenig, aber
+fuenf unvereinbare Vertraege laufen an ihr zusammen.
+
+Nachgerechnet statt vermutet, mit zwei Gegenproben gegen den echten Code:
+
+```
+Frost-Slot, Entitaet lebt, on_above nie eingetragen, 18 Grad warm
+  -> vorher: barred=True, retract=True, reasons=['ice']   (dauerhaft, unerklaerbar)
+Regenkontakt, "off" bedeutet nass, keine Invertierung moeglich
+  -> vorher: barred=False   (Markise/Dachfenster bleibt draussen/offen)
+```
+
+**Der Fund: `_condition_slot_met()` traf vier „nicht auswertbar"-Entscheidungen
+selbst, tief in einer gemeinsamen Funktion, und alle vier gaben `True`
+zurueck – die Beschattungs-Antwort (fail open).** `_own_slot_met()` (Schliessen/
+Frost/Lueften, fail closed) und `guard_slot_danger()` (Markisen + Dachfenster,
+„Gefahr liegt vor") fingen nur die *aeusseren* Faelle selbst ab (Entitaet
+fehlt, Sensor tot) und erbten die inneren (Text ohne Zustandsliste, Schwelle
+nie eingetragen) ungefragt von der Beschattung. Bei `guard_slot_danger` heisst
+das: „blockiert nicht" wird zu „keine Gefahr" – eine halb ausgefuellte Regen-
+oder Frostkonfiguration war damit eine lautlose Dauerfreigabe.
+
+**Getrennt in `_slot_reading()`**: die Funktion gibt jetzt `bool | None`
+zurueck, `None` heisst „nicht beurteilbar" und traegt selbst keine
+Sicherheitsbedeutung. Drei duenne Fassaden entscheiden, was `None` fuer sie
+bedeutet – in genau einer Zeile, statt implizit im Verhalten einer fremden
+Funktion: `_condition_slot_met()` macht `None` zu `True` (fail open),
+`_own_slot_met()` zu `False` (fail closed), `guard_slot_danger()` zu
+`(True, GUARD_REASON_UNAVAILABLE)` (fail danger).
+
+**Nebenwirkung, bewusst mitgenommen statt versteckt:** eine vergessene
+Schwelle am Markisen-/Dachfensterschutz laeuft jetzt ueber denselben Weg wie
+ein toter Sensor – Karenzzeit statt Sofortsperre, und ein Grund
+(`slot:sensor_unavailable`), den Panel und Export bereits als „Sensor tot"
+anzeigen (seit 2.20.0, fuer den Wind gebaut). Das Verhalten aendert sich
+sichtbar: vorher sofortige, dauerhafte, unbenannte Sperre; jetzt erkennbare
+Sperre mit Karenz.
+
+**Der zweite Fund lag eine Ebene tiefer: Invertierung gab es nur fuer
+Zahlen.** `sun_condition_invert_key()` wird seit jeher gespeichert und
+gelesen – aber nur im numerischen Zweig. Ein Regenkontakt, dessen „aus"
+„nass" bedeutet, oder ein Frostmelder, dessen „an" „warm" bedeutet, hatte
+keinen Weg, das zu sagen. Jetzt gilt Invertierung in allen drei Zweigen
+(Zahl, Zustandsliste, Boolean) – mit einer Einschraenkung: **der Default-Dreh
+(`INVERTED_BY_DEFAULT_SLOTS`, Frost und Eis) gilt weiterhin nur fuer Zahlen.**
+Ein boolescher Sensor traegt keine Ambiguitaet ueber die Vergleichsrichtung
+in sich – sein „an" ist bereits die eigene Zusage des Geraets, unabhaengig
+vom Slot. Ein Default-Dreh auch dort haette einen gewoehnlichen „an =
+kalt"-Kontakt am Frost-Slot stillschweigend umgedreht, ohne dass je jemand
+danach gefragt haette.
+
+**Und der Schluessel selbst war fuer den Markisen-/Dachfensterschutz nie im
+Vertrag:** `resolve_guard_config()` hat seine eigene Schluesselliste –
+derselbe Vertrag wie in `resolve_sun_geometry()` (2.10.3) –, und die kannte
+`sun_condition_invert_key()` nicht. Gespeichert waere er gewesen, sichtbar
+im Formular nach diesem Update, aber wirkungslos. Zweite Stelle mit
+derselben Luecke: `resolve_shading_config()`s Pro-Rollladen-Override der
+Slots a-d kopiert seit jeher `(entity, on_above, off_below, states)`, nie
+den Invertier-Schluessel – ein Rollladen, der eine Bedingung mit eigener
+Entitaet ueberschreibt, konnte also nie eine eigene Invertierung dazu setzen.
+
+**Frontend:** eine echte Checkbox „Bedeutung umkehren" in
+`_renderCondDetail()` (Bereichs- und Rollladenbedingungen) und
+`_renderGuardSlot()` (Markisen-/Dachfensterschutz) – vorher stand `inverted`
+an genau einer Aufrufstelle (Frost) hart auf `true`, gelesen wurde der
+gespeicherte Wert **nirgends**. Der Eis-Slot im Schutzformular hatte
+zusaetzlich eine eigene, unabhaengige Beschriftungslogik
+(`slot==="ice"?"below":"above"`), die denselben Zustand ein zweites Mal, aber
+ohne Checkbox, nachbildete – jetzt liest sie denselben Wert wie die
+Checkbox.
+
+**Am Export nachgezogen, analog zur Wind-Pruefung aus 2.12.0:** eine
+Regenrate (mm/h) mit einer Schwelle aus dem Bereich einer Tagessumme
+verwechselt laesst den Schutz kaum greifen, eine Tagessumme mit einer
+Raten-Schwelle sperrt umgekehrt ab dem ersten Tropfen bis zum Reset des
+Sensors. Eine Frostschwelle in °F, aber nach °C gedacht (oder umgekehrt),
+wird so gut wie nie erreicht.
+
+**Verifiziert:** `pytest` 772 Tests gruen (20 neue), **vier Gegenproben**
+gemacht – ohne die drei duennen Fassaden faellt `TestUnusableButAlive`
+(zweimal) und ein neuer Test in `test_frost_protection.py`; ohne den
+Invertier-Schluessel in `resolve_guard_config()` faellt genau
+`test_an_inverted_binary_rain_sensor_can_say_so`; ohne den entfernten
+Default-Dreh im Booleschen Zweig faellt
+`test_without_invert_a_plain_cold_contact_reads_naturally`; ohne die beiden
+Export-Bloecke fallen drei der vier neuen Plausibilitaetstests. i18n 440/440
+in allen elf Sprachen (2 neu). Panel in Node gerendert, mit zwei eigenen
+Inhaltspruefungen fuer die neue Checkbox (Bereichsformular und
+Schutz-Formular) – Gegenprobe gemacht, ohne den Aufruf faellt genau die
+Pruefung im Bereichsformular. **Nicht im Browser geprueft.**
+
+**Bewusst nicht gemacht:** eine automatische Erkennung invertierter Sensoren.
+Ob ein binary_sensor „an = Regen" oder „an = trocken" meint, steht nirgends
+in Home Assistant, und ein Rateversuch waere in der Haelfte der Faelle
+falsch – genau die Sorte Automatik, die ein Sicherheitsfeature schlechter
+macht als eine leere Checkbox.
+
+**Werkzeug-Notiz:** `/graphify` auf dem eigenen Repo gebaut (Community-
+Erkennung + Betweenness-Zentralitaet) und dessen "Surprising Connections"/
+"Suggested Questions" als Einstieg genutzt, statt auf eine Meldung zu warten.
+Der hoechste Bruecken-Knoten war in diesem Fall keine Zufallsentdeckung,
+sondern zeigte direkt auf die Stelle, an der funf verschiedene Vertraege
+(drei Polaritaeten plus zwei Formular-Vertraege) an einer einzigen Funktion
+haengen.
+
+### 2026-09-04 – 2.21.4: die Beschriftung, die nur die Haelfte nannte
+
+c.radi zu 2.21.3: „Funktioniert nun auch, aber… wenn das Fenster auf gekippt
+steht wird der Rolladen gar nicht geschlossen. Meine Erwartungshaltung waere,
+er wird in die Stellung fuer 'gekippt' gefahren."
+
+**Erst nachgerechnet, mit seinen Werten durch die echten Funktionen** – und
+diesmal war nichts kaputt:
+
+```
+Kontakt tilted -> erkannt tilted · Ziel 15 % · Abendfahrt faehrt: None
+Kontakt open   -> erkannt open   · Ziel 100 % · Abendfahrt faehrt: None
+mit Haken · tilted -> Abendfahrt faehrt: 15 %
+```
+
+An seinem „Arbeitszimmer links" steht `drive_after_close: ja` und
+`window_vent_while_open` gar nicht, also aus. `brightness.py:274` (im
+Scheduler dieselbe Stelle) merkt die Fahrt vor und faehrt nur, wenn
+`get_deferred_close_position()` etwas liefert – und die gibt ohne den Haken
+bewusst `None` zurueck. Das ist der Haken aus 2.18.0, Vorgabe aus, weil er
+sonst in jeder zufriedenen Anlage jeden Abend Rollladen bewegt.
+
+**Der Grund, warum er ihn nicht gefunden hat, steht in der Beschriftung.** Der
+Fahrweg fragt `is_window_open_or_tilted()`, beide Haken hiessen aber
+„Nachholen wenn Fenster **offen**" und „Bei **offenem** Fenster schon auf die
+Lueftungsposition fahren", und beide Hinweistexte ebenso. Wer ein gekipptes
+Fenster hat, ordnet das seinem Fall nicht zu. **Merke: eine Beschriftung, die
+nur einen der beiden Faelle nennt, die das Praedikat abdeckt, ist derselbe
+Vertrag wie `guard_rest_role()` aus 2.21.1 und `include_awnings` aus 2.20.0 –
+nur auf der Nutzerseite.** Jetzt nennen beide „offen oder gekippt", und der
+zweite sagt zusaetzlich, *welche* Position gefahren wird.
+
+**Der Export beantwortet es jetzt selbst.** In seinem Bericht stand fuer die
+Aufwaertsrichtung „✅ Nichts haelt das Oeffnen auf" – fuer die Abwaerts-
+richtung nichts, und `window_vent_while_open` fehlte in der Tabelle sogar
+ganz: der Haken wurde nie angefasst, also ist der Schluessel nicht
+gespeichert, und `_is_set()` sieht nichts. Genau die Luecke, die den
+Einstellungs-Export sonst traegt. `_deferred_close_note()` nennt die Lage,
+beide Positionen und den Zustand, den der Kontakt **gerade** meldet. Zweite
+Meldung dieser Klasse nach bjoerg zu 2.18.0 („im Schlafzimmer hat sich gar
+nichts bewegt").
+
+**Bewusst nicht gemacht: die Vorgabe drehen.** Die Begruendung von 2.18.0 gilt
+unveraendert – eine Verhaltensaenderung, die ungefragt jeden Abend Rollladen
+bewegt, ist schlimmer als der Status quo.
+
+**Verifiziert:** `pytest` 752 Tests gruen (7 neue), **zwei Gegenproben** – ohne
+die Zeile in `async_build_export` faellt der Verdrahtungstest, ohne den
+aktuellen Fensterzustand zwei. Der Verdrahtungstest ist bewusst dabei:
+`note_manual_position` (2.17.0) und `only_guarded` (2.20.0) waren beide gruen,
+weil nur die Funktion geprueft wurde. i18n 438/438 in allen elf Sprachen (kein
+neuer Schluessel, 35 Texte umformuliert). **Nicht im Browser geprueft** – ohne
+Logikaenderung im Panel diesmal ohne Gewicht.
+
+**Werkzeug-Notiz:** c.radi schreibt **nicht** im Thread auf
+community-smarthome.com, sondern in dem auf **community.simon42.com**,
+`topic_id` 90112. Dieselbe Discourse-Mechanik (`/raw/90112/<post>`,
+`/uploads/short-url/<key>.txt` fuer den angehaengten Export). Es gibt also zwei
+Threads, und die Suche nach einem Namen im falschen findet nichts.
+
+
+### 2026-09-03 – 2.21.3: die Zahl, die niemand eingestellt hat
+
+c.radi: „die Position fuer geschlossen wird nicht angefahren, da faehrt er den
+Rolladen auf 74 %. Die habe ich aber nirgendwo eingestellt." Genau das war der
+Hinweis – **74 steht in keiner seiner Einstellungen**: Schliessposition 0,
+Fensterpositionen 100 und 15, Beschattung 50. Eine Zahl, die kein Formular
+kennt, kommt aus einer Messung, nicht aus einer Entscheidung.
+
+**Der Fahrweg war schnell gefunden, die Ursache lag eine Ebene tiefer.** Beim
+Schliessen faehrt `window_trigger.py` nicht auf `position_closed`, sondern auf
+`trigger_heights[cover]` – die Hoehe, auf der der Rollladen *vor* dem Oeffnen
+des Fensters stand. Diese Hoehe wurde als `get_tracked_position()` gemerkt,
+also als **Momentaufnahme der gemeldeten Position**. Steht der Rollladen dabei
+still, ist das richtig. Faehrt er gerade, ist es eine Zahl mitten aus dem Weg.
+
+Nachgestellt statt geraten, mit seinen Werten und einem fahrenden Cover:
+
+```
+Abendfahrt 100 -> 0, unterwegs bei 74 %
+Fenster auf   -> gemerkt 74, gefahren 100   <-
+Fenster gekippt -> gefahren 15
+Fenster zu    -> Window closed – restore: -> 74 %
+```
+
+Die letzte Zeile ist sein Bericht, auf das Prozent. Und danach ruehrt sich
+nichts mehr: die naechste geplante Fahrt kommt erst am Morgen.
+
+**Gemerkt wird jetzt, wo er *steht*, nicht was er gerade meldet.**
+`resting_position()` gibt waehrend einer Fahrt (`opening`/`closing`) das
+zuletzt gesendete Ziel zurueck, sonst die Meldung. Dafuer fuehrt
+`set_cover_position()` – wieder der eine Choke-Point – `commanded_positions`
+mit; **getrennt von `last_positions`**, das der Positions-Mitschreiber laufend
+mit Momentaufnahmen ueberschreibt. Genau deshalb war der vorhandene Rueckfall
+`last_positions.get(cover, pos_closed)` im Restore auch nie ein Rueckfahrziel,
+sondern ein „bleib stehen, wo du bist" – derselbe Fehler, nur leiser.
+
+**Merke: ein Merker, der eine gemessene Groesse festhaelt, muss sagen, wann die
+Messung gilt.** `covers_driven_*` (2.17.0) und `_shade_pos_last` (2.21.0) waren
+dieselbe Klasse zeitlich – hier ist es raeumlich: die Position ist nur zwischen
+den Fahrten eine Aussage.
+
+**Bewusst *nicht* eingebaut:** die naheliegende zweite Bedingung „unsere Fahrt
+liegt noch in der Karenz und er ist noch nicht am Ziel". Sie haette auch
+Antriebe ohne Fahrzustand erfasst – und einen klemmenden Antrieb, der kurz vor
+dem Ziel stehenbleibt, dauerhaft fuer fahrend gehalten. Dann meldeten wir eine
+Position, die er nie erreicht hat. Wo kein `opening`/`closing` kommt, bleibt es
+beim Alten; das steht so im Changelog.
+
+**Dieselbe Frage stellt `ventilation.py`** (`vent_heights`, der Kommentar dort
+sagt es seit 2.6.0 selbst) – der Minutentakt trifft die Abendfahrt genauso
+mitten im Weg. Eine Antwort, zwei Aufrufer.
+
+**Verifiziert:** `pytest` 745 Tests gruen (5 neue), **vier Gegenproben** – ohne
+`resting_position` im Fenstertrigger faellt c.radis Test, ohne den
+`commanded_position`-Rueckfall einer, ohne das Loeschen bei Handfahrt einer,
+ohne `resting_position` im Lueften einer. **Die vierte fiel zuerst nicht**: der
+Test rief die Hilfsfunktion direkt auf statt den Minutentakt zu fahren. Auf die
+Schleife umgestellt, danach fiel sie – `note_manual_position` (2.17.0) und
+`only_guarded` (2.20.0) zum dritten Mal. i18n unveraendert 438/438 (kein
+sichtbarer Text neu). **Nicht im Browser geprueft**, ohne Panel-Aenderung
+diesmal ohne Gewicht.
+
+**Nebenbefund, Test statt Produkt:** `tests/test_resume_automation.py::
+test_without_shading_it_drives_the_half_of_the_day` haengt an der Wanduhr. Der
+Bereich stand auf `time_up 07:00 / time_down 19:00`, und `scheduled_role_now()`
+antwortet nach Tageshaelfte – zwischen 19 und 7 Uhr faellt der Test. Seit
+2.21.0 drin, in der CI nie aufgefallen, weil dort tagsueber gepusht wurde. Die
+Zeiten liegen jetzt relativ zu `dt_util.now()`. **Merke: ein Test gegen eine
+Funktion, die die Uhrzeit liest, braucht eine eigene Uhrzeit.**
+
+### 2026-08-31 – 2.21.2: die Kipp-Position, die es nie gab
+
+bjoerg hatte seinen Fenstergriff auf eine Entitaet mit drei echten Zustaenden
+umgestellt – und meldete: „Aber die Position für tilted wird nicht
+angefahren." Seine Werte 1:1 durch die echten Funktionen gefahren, statt zu
+raten:
+
+```
+Griff open    -> erkannt open   · Ziel 95 % · gefahren 95 %
+Griff tilted  -> erkannt tilted · Ziel 30 % · gefahren 95 %   <-
+Griff closed  -> erkannt closed · keine Fahrt
+```
+
+Erkennung und Zielbestimmung stimmen also. Geklemmt wird einen Schritt
+spaeter: `get_effective_close_position()` fragte `is_window_open_or_tilted()`
+und zog die 30 auf die Mindesthoehe 95 hoch. **Eine Kipp-Position unterhalb
+der Mindesthoehe war damit grundsaetzlich unerreichbar** – gespeichert, im
+Formular sichtbar, wirkungslos. Genau die Sorte, die der Export sonst
+anprangert, nur diesmal im Fahrweg statt in den Optionen.
+
+**Geaendert wurde die Verwendung, nicht die Funktion.** `is_window_open_or_tilted()`
+hat vier weitere Aufrufer (Scheduler, Helligkeit, Beschattung, Lueften), und
+dort ist „offen oder gekippt" richtig: eine Nachholfahrt gehoert auch bei
+gekipptem Fenster vorgemerkt. Nur der Aussperrschutz fragt jetzt auf `"open"`.
+**Merke: wenn eine Praedikat-Funktion an einer Stelle die falsche Frage
+beantwortet, ist meist die Stelle falsch, nicht die Funktion.**
+
+**Wolfs Fall aus 2.10.2 bleibt geklemmt**, und das ist der Grund, warum die
+Aenderung eng genug ist: sein Kontakt ist zweiwertig und meldet `open`, nie
+`tilted`. Ein eigener Test haelt beide Seiten fest.
+
+**Der Kopierknopf traegt jetzt die Bereiche mit** (TanjaHH). Die Begruendung
+von 2.7.0 – „genau die Bereichszuordnung unterscheidet zwei sonst gleiche
+Rollladen" – trifft die Praxis nicht: wer kopiert, legt fast immer einen
+zweiten Rollladen im selben Bereich an. Entitaet und Name unterscheiden
+ohnehin. Der Hinweistext musste in **allen elf Sprachen** mitgeaendert werden,
+sonst verspricht er das Gegenteil dessen, was passiert.
+
+**Verifiziert:** `pytest` 740 Tests gruen (9 neue), **eine Gegenprobe** – mit
+der alten Klemme faellt genau bjoergs Test. Kopierknopf und Sortierung liegen
+jetzt als eigene Renderer-Pruefungen in `tests/panel/` und laufen in der CI.
+i18n 438/438. **Nicht im Browser geprueft.**
+
+### 2026-08-31 – 2.21.1: die Variable, die beim Umbenennen stehenblieb
+
+Vier Meldungen an einem Tag (Wolf, charly166, TanjaHH, hollizone), alle
+dieselbe: **`awning is not defined`, das Formular liess sich nicht mehr
+oeffnen.** Mein Fehler aus 2.20.0 – beim Umbenennen von `awning` auf `kind` in
+`_renderCopyFrom` blieben zwei von drei Verwendungen stehen.
+
+**Warum es niemand vorher sah, und das ist der eigentliche Punkt.** Der Block
+„Einstellungen uebernehmen von …" wird erst gerendert, wenn `others.length > 0`
+– also **ab dem zweiten Eintrag derselben Geraeteart**. Mein Panel-Test hatte
+je *einen* Rollladen, eine Markise, ein Dachfenster. Der Zweig lief nie.
+TanjaHHs Beschreibung ist der perfekte Beleg: „ab dem zweiten Rollladen".
+`node --check` findet so etwas ohnehin nicht – es ist gueltige Syntax.
+
+**Konsequenz, und die ist wichtiger als der Fix:** der Renderer liegt jetzt in
+`tests/panel/` und laeuft in der CI (`tests/test_panel.py`). Alle Tabs in
+beiden Breiten, alle Formulare, alle vier Bereichsmodi, neu und bearbeitet –
+und **zwei Eintraege je Art**. Gegenprobe: den Fehler wieder eingebaut, Test
+faellt. CLAUDE.md sagte bisher „wegwerf-Werkzeug im Scratchpad, nicht im
+Repo" – das war die Zeile, die das hier gekostet hat.
+
+**Der Fund beim Nachstellen von hollizones Fall wiegt schwerer als die
+Meldung.** Er schrieb „keinerlei Funktion". Beim Testen kam heraus: die
+Beschattung *gibt* ein Dachfenster auf `position_open` frei – bei einer Markise
+„eingefahren", bei einem Fenster **weit auf**. Sobald der Raum abkuehlte, riss
+es das Fenster auf. Bei Regen waere das Wasser im Haus gewesen, also genau der
+Schaden, gegen den die Geraeteart gebaut wurde. `guard_rest_role()` heisst
+deshalb jetzt `rest_role()` und wird an beiden Stellen gefragt – Schutz *und*
+Freigabe. **Merke: ein Name, der nur einen der beiden Aufrufer nennt, ist
+derselbe Vertrag wie `include_awnings` aus 2.20.0.** Und: 2.20.0 hatte den
+Schutz getestet, aber nicht den Fahrweg, auf dem ein Dachfenster ueberhaupt
+oeffnet – eine ganze Geraeteart mit einem ungetesteten Weg.
+
+**pcsv17s 0 %-Fall war mein Designfehler von gestern.** `resume_automation` las
+`covers_driven_down`. Der Merker sagt, wohin zuletzt *gefahren* wurde, nicht,
+wo die Automatik den Rollladen *haben will* – wer von Hand zufaehrt, landet
+darin, und resume zementierte die Uebersteuerung, die es aufheben soll. Jetzt
+`scheduled_role_now()`: steht als Naechstes eine Abwaertsfahrt an, gehoert er
+bis dahin nach oben. Bei Modus `none` gibt es bewusst **keine** Antwort – eine
+Endlage zu raten waere schlechter als nichts zu tun.
+
+**bjoergs „die Abfrage des Fenstergriffs haengt" ist kein Codefehler.** Sein
+Kontakt ist ein `binary_sensor` und kennt nur on/off; `window_tilted_state:
+gekippt` kann dort nie eintreten. Der Wechsel offen -> gekippt ist fuer den
+Sensor damit **keine Aenderung**, es feuert kein Ereignis – und von aussen
+sieht das aus, als reagiere nichts mehr. Der Export benennt das jetzt.
+Dieselbe Klasse wie heinzies `open` an einem Binaersensor in 2.8.1, nur am
+anderen Ende der Zustandsliste.
+
+**Verifiziert:** `pytest` 731 Tests gruen (19 neue), **vier Gegenproben** –
+ohne den Formular-Fix faellt der Renderer, ohne `rest_role` in der Freigabe
+einer, ohne `scheduled_role_now` drei, ohne den Kontakt-Hinweis vier. Die
+Sortierung hat einen eigenen Test, der prueft, dass der Index weiter auf die
+**volle** Liste zeigt – sonst loescht ein Klick den falschen Eintrag. i18n
+438/438 in allen elf Sprachen (2 neu). **Nicht im Browser geprueft.**
+
+### 2026-08-30 – 2.21.0: der Merker, der nach der Fahrt stehen blieb
+
+pcsv17 wollte einen Trigger, "der die Position anfaehrt, in der die Automatik
+jetzt eigentlich waere" – sein Baby-Schalter faehrt auf 20 %, danach wieder
+hoch, und dann steht die Automatik. Erst nachgerechnet, und dabei kam ein
+Fehler heraus, nach dem niemand gefragt hatte.
+
+**`elevation.py` fragt die manuelle Uebersteuerung nirgends ab** – daran lag es
+also nicht. Der Grund steht drei Zeilen weiter: solange `was_active` gilt,
+faehrt die Beschattung nur bei geaenderter **Zielposition** nach
+(`_shade_pos_last`, aus 2.17.0). Dass der Rollladen laengst woanders steht,
+weil ihn jemand von aussen gefahren hat, prueft sie nicht. Sein Rollladen stand
+danach offen in der Sonne, waehrend der Merker "beschattet" sagte. **Das ist
+2.8.0 gespiegelt:** dort eilte ein Merker der Handlung voraus, hier haengt er
+ihr nach – beide Male sperrt derselbe Merker die Wiederholung.
+
+**Nicht automatisch aufgeloest, und das ist die eigentliche Entscheidung.** Den
+Merker bei jeder fremden Fahrt fallen zu lassen waere eine Zeile – und wuerde
+das Baby-Rollo eine Minute nach dem Abdunkeln wieder auf Beschattungshoehe
+ziehen. Wer entscheidet, wann die Automatik zurueckdarf, ist der Nutzer.
+Deshalb ein Dienst, `resume_automation`, genau wie er ihn vorgeschlagen hat.
+
+**Der Dienst rechnet die Position nicht selbst aus.** Er loescht die Merker und
+laesst dann `_evaluate()` aus `elevation.py` laufen – *awaited*, nicht ueber
+den Minutentakt, sonst wuesste der Aufrufer nicht, ob danach noch etwas zu
+fahren ist. Erst was die Beschattung nicht beansprucht, faehrt er selbst auf
+offen bzw. zu, nach `covers_driven_down`. Die Alternative waere eine zweite
+Antwort auf dieselbe Frage gewesen – derselbe Grund, aus dem
+`get_position_for_window_state()` in 2.18.0 nach `window_helper.py` gewandert
+ist. Dafuer liegt `_evaluate` jetzt als `data["_elevation_evaluate"]` bereit.
+
+**Gegenprobe B fiel zuerst nicht.** Ohne `clear_manual_override_for_covers`
+blieben alle Tests gruen – weil jede gelungene Fahrt die Quelle ohnehin auf
+`automation` schreibt und mein Test nur das Ergebnis prueft. Scharf wurde er
+erst, als **nichts** faehrt (Fahrt und Auswertung gepatcht): dann bleibt die
+Uebersteuerung stehen und sperrt das naechste Hochfahren, ohne dass es jemandem
+auffiele. **Merke: ein Test, dessen Zustand nebenbei von einer anderen Funktion
+hergestellt wird, prueft nichts** – dieselbe Klasse wie die Verdrahtungsfalle
+aus 2.17.0 und 2.20.0, nur andersherum.
+
+**Verifiziert:** `pytest` 712 Tests gruen (6 neue), **zwei Gegenproben** – ohne
+`forget_shading_for_cover` fallen zwei, ohne `clear_manual_override_for_covers`
+einer (nach dem Nachschaerfen). Der Ist-Zustand ist als eigener Test
+festgehalten, der pcsv17s Ablauf gegen die echte Beschattung faehrt. i18n
+unveraendert 436/436 (kein sichtbarer Text neu – der Dienst steht in
+`services.yaml`). **Nicht im Browser geprueft**, und ohne Panel-Aenderung ist
+das diesmal ohne Gewicht.
+
+**Testfalle, teuer:** die sechs neuen Tests fahren echtes Setup und kosteten
+zusammen **84 Sekunden**, die Suite damit 100 statt 16. Mit
+`STARTUP_RESTORE_DELAY_SEC = 0` **und** `STARTUP_RESTORE_RETRY_SEC = 0` sind es
+0,36 s. Beide Konstanten, nicht nur die erste – die Wiederholung schlaegt sonst
+allein zu Buche.
+
+**Offen:** ein Knopf im Panel, der denselben Dienst ruft, waere naheliegend –
+zurueckgestellt, weil gefragt war, was eine Automation ausloesen kann, und ein
+Knopf dafuer nichts beitraegt.
+
+### 2026-08-30 – 2.20.0: die dritte Geraeteart
+
+hollizone im Forum wollte eine Regensteuerung fuer Dachfenster ueber eine
+Ecowitt. Erst nachgerechnet, dann gebaut: der Schutz war schon generisch –
+`guard_slot_danger()` kennt Binaersensor, Zahlenhysterese und Zustandsliste,
+dazu Sperrzeit und Karenz. Ein Dachfenster als „Markise" mit vertauschten
+Positionen funktionierte in einem Wegwerf-Test auf Anhieb. **Genau das war das
+Argument fuer die eigene Art**, nicht dagegen: wenn die Mechanik traegt, kostet
+sie nur Beschriftung – und die Alternative waere gewesen, dem Nutzer eine
+Konfiguration zu empfehlen, die er in einem halben Jahr nicht mehr versteht.
+
+**Der Fund steckte im Filter.** `only_shutters()` hiess `not is_awning(s)`. Ein
+neuer `device_kind` faellt dadurch **nicht** von selbst durch – er rutscht mit:
+das Dachfenster waere im Scheduler gelandet, abends zugefahren und vom
+Fensterkontakt behandelt worden, ohne dass eine Zeile daran erinnert haette.
+Jetzt `is_shutter()`, positiv gefragt. **Merke: was aufgezaehlt gehoert, sind
+die Teilnehmer, nicht die Ausnahmen** – dieselbe Klasse wie die `else`-Zweige
+aus 2.16.0 und die Erlaubnisliste aus 2.15.0, nur an einem Filter statt an
+einem Vertrag.
+
+Dieselbe Sorte an drei weiteren Stellen: `elevation.py` („nur beschatten, was
+schon offen ist"), `window_helper.py` (der Aussperrschutz klemmt nach unten –
+bei einem Fenster ist unten die *sichere* Seite) und `_lockClamp` im Panel.
+Alle drei fragten `is_awning`, alle drei meinen „hat einen Schutz".
+
+**Der einzige echte Unterschied ist die sichere Stellung.** Eine Markise ist
+sicher, wenn sie drin ist (`ROLE_OPEN`), ein Dachfenster, wenn es zu ist
+(`ROLE_CLOSED`). Dafuer `guard_rest_role()`; `clamp_to_rest` und
+`extends_upward` lesen sie, statt eine Konstante zu nehmen. Alles andere –
+Hysterese, Sperrzeit nach der letzten Ueberschreitung, Karenz bei totem
+Sensor – gilt fuer Regen am Fenster wortgleich wie fuer eine Boe an der
+Markise.
+
+**`include_awnings` hiess nach der dritten Art nicht mehr, was es tut.** Jetzt
+`shutters_only`, andersherum formuliert. Ein Parametername, der die Ausnahme
+nennt, ist derselbe Vertrag wie der Schluessel-Tupel in
+`resolve_sun_geometry()` aus 2.10.3.
+
+**Das Formular ist eines, nicht zwei.** `_renderAwningForm` traegt beide
+bewachten Arten ueber ein `K(markise, fenster)`; verschieden sind die Woerter,
+die Positionsrollen und zwei Bloecke, die es nur an der Markise gibt
+(Sonnennachfuehrung, „My"-Stellung). Zwei Formulare waeren zwei Stellen, an
+denen der naechste Schutz-Schalter fehlt.
+
+**Der Vorbehalt steht im Produkt, nicht nur in der Antwort.** Bei einer Markise
+kostet ein verpasster Schutz Geld, bei einem Dachfenster Wasser im Haus – und
+die Kette ist lang: Wetterstation, HA, Minutentakt, Motorlaufzeit. Der Hinweis
+auf einen Regensensor *am Fenster* steht im Formular, im README (beide
+Sprachen) und im Changelog. Dieselbe Ueberlegung wie „Der Schutz ignoriert
+Haupt- und Bereichsschalter" aus 2.12.0: sonst meldet der erste Nutzer mit
+nassem Parkett es als Fehler.
+
+**Verifiziert:** `pytest` 706 Tests gruen (15 neue), **drei Gegenproben** –
+ohne `is_shutter` fallen zwei, ohne `guard_rest_role` drei, ohne
+`only_guarded` im Schutz eine. **Die dritte fiel zuerst nicht**: die Tests
+riefen `evaluate_guard()` direkt, und die Schleife in `async_enforce_guard()`
+ist die einzige Stelle, die entscheidet, *welche* Eintraege der Schutz ansieht.
+Zwei Tests nachgezogen, die den Befehl fahren statt die Funktion – danach fiel
+sie. **Das ist `note_manual_position` aus 2.17.0 ein zweites Mal; die Falle
+wiederholt sich offenbar bei jeder neuen Art von Verdrahtung.** i18n 436/436 in
+allen elf Sprachen (24 neu). Panel in Node gerendert: drei Listen, beide
+Formulare, plus siebzehn Inhaltspruefungen. **Nicht im Browser geprueft.**
+
+**Offen:** Ob ein Dachfenster am automatischen Lueften (`ventilation.py`)
+teilnehmen sollte, ist bewusst zurueckgestellt – inhaltlich naheliegend, aber
+es waere ein zweiter Fahrweg mit eigener Rangfolge gegen den Schutz. Die
+Bedingungen des Bereichs leisten heute dasselbe ohne diesen Preis.
+
+### 2026-08-30 – 2.19.0: das leere Feld, das eine 0 war
+
+Ein Beitrag (bjoerg), und der interessante Fund steckte wieder nicht in der
+Frage, sondern in dem Satz daneben: „Habe ja beim zweiten Wert nichts
+eingetragen." Sein Export sagt `sun_cond_a_off_below: 0`. Beides stimmt.
+
+**`Number("") === 0`, und das war der ganze Fehler.** Die drei Formulare bauen
+je einen allgemeinen Feld-Helfer `f(k,lbl,type)`, der bei `type="number"` roh
+`Number(e.target.value)` schreibt. Ein geleertes Feld wird damit zur echten
+Schranke 0. Bei einem Aufhebepunkt ist das die Umkehrung der Bedeutung: leer
+heisst laut Hinweis „gleicher Wert wie Beschatten ab" (helpers.py faellt bei
+unlesbarem `off_below` auf `on_above` zurueck), 0 heisst an einem Lux-Sensor
+**nie wieder aufheben** – verglichen wird `value >= off_below`, und selbst
+voellige Dunkelheit ist `0 >= 0`. Genau bjoergs Gewitter: 6000 lx, Beschattung
+blieb unten.
+
+**Der Fallstrick war seit 2.7.0 bekannt und stand als Kommentar im File** – dort
+neben `numOpt`, gebaut fuer die Sonnengrenzen des Helligkeitsmodus. Die
+Bedingungsfelder griffen weiter auf den allgemeinen Helfer zu. **Merke: ein
+Fallstrick, der an einer Stelle mit einem eigenen Helfer geloest wurde, ist an
+allen anderen Stellen unveraendert da**; die Frage ist nicht „ist das bekannt",
+sondern „wer ruft den falschen Helfer".
+
+Behoben mit einer Methode `_numOpt()` auf der Klasse statt drei Lambdas in drei
+Formularen. Sie uebernimmt bei jedem Tastendruck und zeichnet erst bei
+`@change` neu – der Android-WebView-Punkt aus 2.18.0, hier gleich mitgebaut.
+Der Parameter `f` faellt damit aus `_renderCondDetail`, `_renderConditionSlots`
+und `_renderGuardSlot` heraus; toter Parameter ist dieselbe Sorte Vertrag, die
+`resolve_sun_geometry()` zwei Releases lang stillgelegt hat.
+
+**Bestandsdaten repariert das nicht** – bjoergs 0 steht in seiner
+Konfiguration. Deshalb ein Hinweis in `_condition_note()`, wenn nicht
+invertiert und `off_below <= 0 < on_above`. Bewusst nur dieser Fall: bei einem
+invertierten Slot (Frost) ist 0 als Aufhebepunkt normal, und eine Warnung, die
+an jedem Temperatursensor steht, liest bald niemand mehr.
+
+**Der zweite Fund kam aus einem Screenshot, nach dem niemand gefragt hatte.**
+Spook meldete bei ihm fuenf verwaiste Entitaeten, zwei davon mit `_2`.
+`_ws_delete_shutter` raeumte im Entitaetsregister **gar nichts** auf,
+`_ws_delete_area` nur den Automatik-Schalter – Sonnenschutz-Schalter, Sensor
+„naechste Fahrt" und Binaersensor „Sonnenschutz aktiv" blieben stehen. Der
+Folgeschaden ist nicht die Unordnung, sondern die belegte entity_id: der wieder
+angelegte Rollladen heisst `..._2`, waehrend `shutter_auto_entity_id` in den
+Optionen auf die alte zeigt – `_apply_shutter_automation_state()` schreibt dann
+an eine Entitaet, die niemand sieht. Zwei Listen (`_area_registry_uids`,
+`_shutter_registry_uids`) halten fest, was ein Bereich bzw. ein Rollladen
+besitzt; **die gehoeren bei jeder neuen Entitaet mitgepflegt.**
+
+**Zwei Meldungen waren keine Fehler**, beide gegen den Code geprueft statt
+geglaubt: sein Regensensor ist ein `binary_sensor` mit `device_class: moisture`
+– der Zustand *ist* `on`/`off`, „Nass"/„Trocken" ist die Anzeige von Home
+Assistant. `_renderGuardSlot` zeigt dort zu Recht den an/aus-Hinweis; die
+Zustandsliste aus 2.18.0 ist fuer Sensoren, deren Zustand wirklich ein Wort
+ist. Und „Manuelle Position" steht unter **Kalender & manuelle Bedienung**,
+nicht unter „Grunddaten" – die Angabe im Forum war falsch, nicht das Panel.
+
+**Offen, nicht entschieden:** in bjoergs Export tragen **alle vier** Rollladen
+`shading_enabled: nein`, sind also von der Beschattung abgemeldet – waehrend er
+schreibt, die Beschattung sei unten gewesen. Das Panel setzt den Schluessel nur
+bei einem Klick, das Backend speichert nur, was ankommt; wie alle vier dazu
+gekommen sind, ist von hier aus nicht zu klaeren. Danach fragen, bevor daraus
+ein Fix wird.
+
+**Verifiziert:** `pytest` 691 Tests gruen (14 neue), **drei Gegenproben**
+gemacht – ohne den Export-Hinweis faellt genau sein Test, ohne die
+Registerpflege in `delete_shutter` fallen zwei, ohne die in `delete_area` eine.
+Dazu eine Gegenprobe im Panel **am unveraenderten Original**: das Bereichs-
+formular gerendert, alle 77 Handler eingesammelt und das Feld geleert – vorher
+0, nachher leer. i18n 413/413 in allen elf Sprachen (kein neuer Schluessel, der
+Fix benutzt die vorhandenen Beschriftungen). Panel in Node gerendert: sieben
+Ansichten plus acht Inhaltspruefungen. **Nicht im Browser geprueft.**
+
+**Werkzeug-Notiz:** Das Forum laesst sich direkt lesen –
+`https://community-smarthome.com/raw/<topic>/<post>` liefert den Rohtext
+inklusive Zitatbloecken, und die darin als `upload://<key>.png` referenzierten
+Screenshots liegen unter `/uploads/short-url/<key>.png`. Kein Copy-and-paste
+mehr noetig.
+
+**Falle beim Pruefen, neu:** Ein Regex-Zaehler ueber die `I18N`-Bloecke zaehlt
+zu wenig – Schluessel, die in derselben Zeile hinter einem anderen stehen,
+faellt er durch, und dann melden neun Sprachen Luecken, die es nicht gibt.
+Das Objekt stattdessen auswerten: `new Function(code + ";return I18N;")()`.
+Ebenso im Test: `@websocket_api.async_response` macht aus der Coroutine einen
+**synchronen** Handler, der die Arbeit als Hintergrundtask einreiht – ein
+`await handler(...)` bekommt `None`. Aufrufen und `async_block_till_done()`.
+
+### 2026-08-29 – 2.18.0: der Kontakt, der nur den geschlossenen Rollladen fand
+
+Vier Beitraege, drei davon an derselben Zeile. `window_trigger.py` faehrt nur,
+wenn der Rollladen (nahezu) geschlossen ist oder beschattet wird. Die Pruefung
+soll verhindern, dass ein offenes Fenster mittags einen offenen Rollladen
+herunterzieht – sie war aber **richtungsblind**, und nach *oben* faehrt auf
+diesem Weg nur der Aussperrschutz. Genau der Haken also, wegen dem jemand ihn
+ueberhaupt setzt: pcsv17 („Rollo manuell auf 45 %, Tuer auf, es passiert
+nichts"), und in Wolfs Export steht derselbe Fall an „Kueche vorne"
+(Mindesthoehe 90, Kipp-Position 0). Behoben mit `opens_cover` – **dieselbe
+Blindheit wie `shading_would_open_cover()` aus 2.15.0, nur an der anderen
+Seite.** Der Aussperrschutz-Deckel wird dafuer *vor* die Pruefung gezogen; die
+Richtung entscheidet sich am geklemmten Ziel, nicht am rohen.
+
+**Der Haken, den 2.10.0 als „Offen" notiert hatte.** bjoerg: „Muesste dann aber
+nicht die Jalousie auf die Position fuer gekippt fahren? Im Schlafzimmer hat
+sich gar nichts bewegt." Mit `drive_after_close` und offenem Fenster fuhr die
+Abendfahrt **nichts** – nicht einmal die Teilfahrt, die der Fensterkontakt
+gefahren haette. `window_vent_while_open`, Vorgabe **aus**: eine
+Verhaltensaenderung, die ungefragt jeden Abend Rollladen bewegt, ist schlimmer
+als der Status quo (dieselbe Begruendung wie `shade_release_opens` in 2.15.0).
+`get_position_for_window_state()` ist dafuer nach `window_helper.py` gewandert
+– Scheduler und Fensterkontakt stellen dieselbe Frage, und zwei Antworten
+haetten geheissen, dass der Rollladen woanders steht, je nachdem ob ihn die Uhr
+oder der Kontakt hingefahren hat.
+
+**Der CSS-Fehler, der wie eine Geschmacksfrage aussah.** bjoerg meldete
+„schwierig, die Zugehoerigkeit der Anhaak-Kaestchen zu erkennen" und schlug
+Trennlinien vor. Ursache war `.field input{width:100%;padding;border;background}`
+– das galt auch fuer `type=checkbox`. Der Haken wurde damit ein formularbreiter
+Kasten mit dem Glyph mittendrin, die Beschriftung rutschte in die Zeile
+darunter. **Merke: eine Sammelregel auf `input` trifft immer auch die
+Kaestchen.** `:not([type=checkbox])` plus Flexzeile; die Trennlinie gibt es
+zusaetzlich, sie war der Wunsch.
+
+**Die dritte Polaritaet schlaegt zurueck.** bjoergs Regensensor meldet „nass"/
+„trocken". Das Formular bot fuer den Markisenschutz nur Zahlenfelder an – die
+Zustandsliste gab es nur bei den Beschattungsbedingungen. Und in
+`guard_slot_danger()` bedeutet „nicht auswertbar" **Gefahr**: `float("nass")`
+scheitert, `_condition_slot_met()` gibt `True` zurueck, die Markise faehrt ein
+und nie wieder aus. Der Zustandsblock ist jetzt `_renderCondStates()` und wird
+von beiden Formularen benutzt. **Merke: jeder Zweig, den die Bedingungslogik
+neu bekommt, muss durch alle drei Polaritaeten gedacht werden** – hier war der
+Ausgang „fail closed", also lautlos in die falsche Richtung.
+
+**Zwei Tablet-Meldungen, beide dieselbe Klasse.** Wolf: die festgestellten
+Reiter und das Lux-Zahlenfeld gehen auf dem Android-Telefon, auf dem Tablet
+nicht. Fuer die Reiter war der `overflow-x:hidden`-Rueckfall aus 2.16.0 die
+Ursache: er macht den Host zum Scrollport, und darin klebt sticky an nichts –
+auf einer WebView **ohne** `overflow:clip` also gar nicht. Rueckfall ersatzlos
+weg. Beim Lux-Feld ist es das `requestUpdate()` im `@input`: Lit schreibt
+`.value` mitten im Tippen neu. Jetzt Wert bei jedem Tastendruck uebernehmen,
+neu zeichnen erst bei `@change`. **Beides nicht auf dem Geraet nachgestellt** –
+die Diagnose passt zum Symptom, mehr ist von hier aus nicht zu sagen.
+
+**Was Wolf beantwortet hat, ohne gefragt zu werden:** die „My"-Position aus
+2.16.0. Er hat die Entitaet genannt – `button.terasse_markise_hinten_my_position`
+(Overkiz). Damit ist die dritte Stellung kein Stop-im-Stillstand mehr, sondern
+ein Knopfdruck. `my_position_target()` sitzt **nur im Rueckfallzweig** von
+`_send_position()`: an einem Antrieb, der positionieren kann, waere My nur
+ungenauer. Erst damit bedeutet `awning_track_enabled` an so einem Antrieb
+ueberhaupt etwas – vorher wurde aus jedem Wert ab 50 % `open_cover`.
+
+**`set_cover_position()` bekommt die Konfiguration jetzt per Nachschlagen**
+(`find_shutter_by_cover`), nicht als Parameter. Ein Dutzend Aufrufstellen, und
+genau eine davon braucht sie.
+
+**bjoergs Fahrtrichtung bleibt offen – aber nicht mehr unbeantwortbar.** Sein
+Shelly haengt mit *einem* Steuerdraht an der Markise („Phase = Hoch / Null =
+Runter, eine bischen wilde Schaltung"). Positionen zu tauschen dreht rechnerisch
+beide Wege um; er sagt, es aendert nichts. Von hier aus ist das nicht zu
+entscheiden – **also sagt der Export jetzt, welches Kommando gesendet wird**
+(`cover.open_cover` bzw. `cover.close_cover`, je Position benannt). Aus einer
+Vermutung wird damit etwas, das er unter Werkzeuge > Aktionen in zwei Klicks
+gegenpruefen kann. Eine Option „Fahrtrichtung umkehren" waere redundant gewesen:
+sie taete dasselbe wie das Tauschen der beiden Positionen.
+
+**Smons und Linos wollten dasselbe von zwei Seiten:** er einen kompakten Block
+im Panel, Linos „mit Entitaeten, fuers HA-Dashboard". Beides gebaut, aber
+getrennt – Kopfblock im Dashboard, `sensor.shutter_pilot_status` fuer HA.
+`area_id` ist bei allen Gruppen-Diensten optional geworden, plus `stop_group`;
+kein Rollladen faehrt doppelt, weil der Hoch-Dienst ueber `area_up_id` filtert
+und die Runter-Dienste ueber `area_down_id`. **Bewusst nicht gebaut: ein
+globaler Sonnenschutz-Schalter.** Der leitet seinen Zustand aus den Bereichen ab
+und muesste ihn zurueckschreiben – das ist der vierte Schreiber aus 2.15.0, der
+beinahe einen Reload in den Start gelegt haette. Eine Schaltergruppe in HA tut
+dasselbe ohne diesen Preis.
+
+**Verifiziert:** `pytest` 677 Tests gruen (26 neue), **sieben Gegenproben**
+gemacht – jede Aenderung einzeln zurueckgedreht, jedes Mal fiel genau ihr Test.
+i18n 413/413 in allen elf Sprachen (16 neu). Panel in Node gerendert: fuenf
+Ansichten plus neunzehn Inhaltspruefungen. **Nicht im Browser geprueft** – und
+bei den beiden Tablet-Punkten faellt das schwerer ins Gewicht als sonst, weil
+sich beide nur auf echter Hardware zeigen.
+
+**Offen:** Wolfs „Wohnbereich Seite" ist eine Einstellungssache, kein Fehler.
+Er will die Rollladen dort immer oben und nur zur Beschattung unten – dafuer
+ist `none` der Modus, nicht `brightness` mit `lux_up: 2000` und einem
+Aussensensor, der im Sommer Zehntausende meldet. Seine Abwesenheitsbereiche
+kann `none` dagegen wirklich nicht ersetzen: die sollen bei Abwesenheit fahren,
+nur eben dann nicht, wenn er da ist. Zwei Bereiche mit abgeschalteter Automatik
+sind dafuer der richtige Aufbau, nicht ein Umweg.
+
+### 2026-08-28 – 2.17.0: die Knoepfe, die an der Automatik vorbeifahren
+
+Vier Beitraege an einem Tag, drei Fehler. **Zwei davon sind derselbe Satz:**
+die Dashboard-Knoepfe rufen die `cover`-Dienste direkt auf (bewusst, seit
+2.7.1 – sonst verliert man die Rechtepruefung je Entitaet), und damit kommen
+sie an *allem* vorbei, was im Backend zwischen Absicht und Fahrt steht. Bisher
+war nur der Mindestabstand doppelt gebaut. Es fehlten der **Aussperrschutz**
+(Linos: „Sonnenschutz"-Knopf faehrt den Rollladen vor die offene
+Terrassentuer) und der **Rollladenschalter** (Linos und c.radi unabhaengig:
+„der linke ist defekt und deaktiviert, faehrt aber mit").
+
+**Merke: was im Backend an einem Fahrweg haengt, gilt fuer die Knoepfe nicht.**
+Die Liste ist jetzt dreimal doppelt gebaut – Mindestabstand, Markisensperre,
+Aussperrschutz – und beim naechsten Riegel ist die erste Frage, ob das Panel
+ihn auch kennt. Die Trennung, die dabei entstanden ist: **Gruppenknopf =
+Bereich handelt** (Schalter gilt), **Zeilenknopf und Dienste = von Hand**
+(Schalter gilt nicht, sonst kann man einen reparierten Antrieb nicht pruefen).
+Der Test `test_manual_service_still_drives_disabled_shutter` haelt die zweite
+Haelfte fest – er ist beim Umbau umgefallen und war das Signal, die Dienste
+in Ruhe zu lassen.
+
+**Der Fund, der Smons erklaert.** Alle seine Rollladen stehen auf 0 % mit
+Quelle `manual`, der Bereich auf `manual_override: never`. Damit ueberspringt
+`should_skip_automated_up()` jedes Hochfahren – und geloescht wird der Merker
+nur von einer *automatischen* Fahrt (`clear_manual_override_for_covers`). Wer
+abends von Hand schliesst, bekommt also **nie wieder** ein automatisches Auf.
+Und „von Hand" heisst hier auch: mit dem Runter-Knopf dieses Panels, denn der
+laeuft am Pending-Marker vorbei. Die Uebersteuerung ist fuer den Rollladen
+gedacht, den jemand auf halber Hoehe geparkt hat; von Hand zufahren ist das
+Gegenteil davon. `manual_position_is_a_close()` prueft deshalb gegen die
+*eigenen* Schliesspositionen des Rollladens (closed, closed_alt, closed_frost,
+je mit Toleranz, plus alles jenseits der engsten) – eine Position **dazwischen**
+bleibt eine Uebersteuerung, denn die faehrt hier nichts an.
+
+**Der Fund, der c.radi erklaert – und der allgemeinere.** `covers_driven_up`
+und `covers_driven_down` wurden nur von eigenen Fahrten gepflegt. Bleibt eine
+Richtung einmal aus, friert sie die andere ein: sein Rollladen stand seit Tagen
+in `covers_driven_down`, also fiel jede weitere Abendfahrt aus, und von Hand
+hochziehen half nicht, weil das niemand mitschrieb. `note_manual_position()`
+haengt jetzt im `cover_tracker` und bucht **nur die beiden Enden** – eine
+Position dazwischen sagt nichts darueber, in welcher Tageshaelfte der Rollladen
+steht. Die Sets werden **in place** veraendert; neu zuweisen war der Fehler von
+2.10.0. Die Merker heissen im Export jetzt „gilt als oben/unten", weil „heute
+schon gefahren" schon vorher nicht stimmte.
+
+**Die Gegenprobe, die zuerst nicht fiel.** Zurueckdrehen von
+`note_manual_position` liess alle 648 Tests gruen: die Tests pruefen die
+Funktion, nicht die Verdrahtung. Der Aufruf im `cover_tracker` ist die einzige
+Stelle, die eine fremde Fahrt ueberhaupt mitbekommt – **die Verdrahtung ist
+hier die Aenderung**, nicht die Funktion. Zwei Tests nachgezogen, die den
+Cover-Zustand von aussen setzen; danach fiel sie.
+
+**Der Export beantwortet die zweithaeufigste Frage jetzt selbst.** „Warum
+faehrt er morgens nicht hoch" stand nirgends: jede Sperre auf diesem Weg ist
+lautlos und hinterlaesst *keinen* Merker – zu sehen war nur, dass nichts
+gefahren ist, und das ist das Symptom. `_drive_verdict()` nennt Hauptschalter,
+Bereichs- und Rollladenautomatik, Wochenend- und `no_up`-Sperre und die
+Handposition **samt Wert**.
+
+**Dabei eine Altlast aus 2.15.0 mitgenommen:** `automated_up_blocked()` im
+Export lief gegen das echte `data` – und `_own_slot_met()` schreibt die
+Hysterese beim Auswerten mit. `_memory_copy()` schuetzt seit 2.8.0 die
+Beschattungspruefung, aber diese Funktion nimmt `data`, nicht den Merker.
+Dafuer jetzt `_shielded()`, eine Ebene hoeher. **Merke: der Schutz haengt an
+der Signatur** – wer eine Funktion in den Export holt, die `data` nimmt, muss
+ihn neu bauen.
+
+**Zwei Wuensche, beide als vorhandenes Paar gebaut.** Die zweite
+Beschattungsposition (pcsv17) ist `resolve_close_role()` noch einmal:
+**Bedingung am Bereich, Position am Rollladen**. Neu ist nur, dass sie
+**sofort** greifen muss – „binaer aktiviert" heisst nicht „beim naechsten
+Mal", also merkt sich `elevation.py` in `_shade_pos_last` die zuletzt
+gefahrene Zahl und faehrt nach, sobald sie sich um mehr als
+`SHADE_POSITION_MIN_STEP` unterscheidet. Der Schritt ist noetig, weil die
+Entitaets-Variante kriechen kann; sonst laeuft der Motor jede Minute ein
+Prozent. Die Entitaet **gewinnt ueber beide festen Positionen** und faellt bei
+unlesbarem oder ausser-Bereich-Wert zurueck statt auszusetzen – dieselbe
+Richtung wie ueberall bei der Beschattung.
+
+**`shading_enabled` ist bewusst nicht der Automatik-Schalter** (Linos). Der
+haelt jede Fahrt an, auch das Oeffnen am Morgen; gefragt war „dieses Fenster
+nie beschatten". Der Haken laeuft im `elevation.py` durch denselben Zweig wie
+eine weggefallene Bedingung, **nicht** durch den Zweig des Rollladenschalters:
+abwaehlen mitten am Nachmittag ist genau der Moment, in dem jemand diesen
+Rollladen wieder oben haben will.
+
+**Verifiziert:** `pytest` 651 Tests gruen (38 neue), **sieben Gegenproben**
+gemacht – jede Aenderung einzeln zurueckgedreht, jedes Mal fiel genau ihr Test
+(die zu `note_manual_position` erst nach den zwei nachgezogenen Tests, siehe
+oben). i18n 397/397 in allen elf Sprachen (10 neu). Panel in Node gerendert:
+sechs Ansichten plus zwoelf Pruefungen der neuen Klemm- und Filterlogik,
+darunter Linos' Fall (Sonnenschutz-Knopf klemmt bei offener Tuer auf 100).
+**Nicht im Browser geprueft.**
+
+**Beinahe-Unfall beim Arbeiten, nicht im Produkt:** `git checkout <datei>` nach
+einer Gegenprobe stellt **HEAD** wieder her, nicht den Stand von vorhin – damit
+waren alle Aenderungen an `services.py` weg. Fuer Gegenproben immer eine Kopie
+im Scratchpad anlegen und die zuruecklegen.
+
+**Offen:** Bei c.radi bleibt eine Einstellungssache, die kein Code loest: sein
+Helligkeitssensor ist die Beleuchtungsstaerke eines Bewegungsmelders. Der
+meldet nur bei Bewegung, und der Helligkeitsmodus haengt am State-Change –
+im Fenster 06:30–07:00 feuert dort morgens oft nichts. Die Frist aus 2.11.0
+faengt das ab, seine steht aber auf 07:15, also *ausserhalb* des Fensters. Das
+ist erlaubt (die Frist prueft `_area_window` bewusst nicht), sieht aber wie ein
+Fehler aus – Kandidat fuer eine Formularwarnung.
+
+### 2026-08-27 – 2.16.0: der Bereich, der nichts faehrt
+
+Zwei Beitraege, vier Wuensche. Der interessante war der kuerzeste: malleYay
+wollte Shutter Pilot **nur zum Beschatten** benutzen. Ging nicht – und der
+naheliegende Weg ist eine Sackgasse, weil `elevation.py:272` die
+Bereichsautomatik abfragt: wer sie ausschaltet, um den Zeitplan loszuwerden,
+schaltet die Beschattung mit ab. Genau darin sass **Wolf** auch, nur anders
+erzaehlt: sein Bereich „Wohnbereich Seite" steht auf Automatik *aus* bei
+eingeschaltetem Sonnenschutz, und sein eigener Export sagt an zwei Stellen,
+dass deshalb nicht beschattet wird.
+
+**Der vierte Modus kostet in den Fahrwegen keine Zeile.** Scheduler,
+Helligkeit und der Sonnen-Zweig filtern alle *positiv* auf ihren eigenen Modus
+(`!= AREA_MODE_X → continue`), ein unbekannter Wert faellt bei ihnen also von
+selbst durch. **Genau eine Stelle macht es nicht von selbst richtig:**
+`get_next_action()` hat am Ende einen Rueckfall auf die Zeitmodus-Zeiten – ein
+Sensor, der eine Fahrt verspricht, die niemand geplant hat. Merke: bei einem
+neuen Modus nicht die Fahrwege durchsehen, sondern die Stellen, die mit
+`else` enden.
+
+**Und eine Vorgabe muss sich drehen.** Ohne Zeitplan gibt es keine Abendfahrt,
+die den Rollladen von der Beschattungshoehe holt – der `elev < e_min`-Zweig
+loescht den Merker und faehrt nicht. Dort stuende er fuer immer. Deshalb
+`shade_release_opens(area)`: der Haken aus 2.15.0 gewinnt, wo er gesetzt ist,
+und ohne Zeitplan gilt er ohnehin. Als blosse Vorbelegung im Formular waere das
+falsch gewesen – ein Nutzer haette ihn abwaehlen koennen.
+
+**Der Fund, nach dem niemand gefragt hat.** In Wolfs Export steht als
+Sondertage-Sensor `binary_sensor.shutter_pilot_wohnbereich_vorne_sonnenschutz`
+– der eigene Sonnenschutz-Sensor dieses Bereichs. `is_weekend_schedule()` liest
+`on` als Arbeitstag, die Zeitwahl kippt also mitten am Tag, sobald die
+Beschattung laeuft. Das ist bjoergs Windsensor aus 2.15.0 ein zweites Mal, und
+die Ursache ist **unsere**: `_rankEntities()` zieht Shutter-Pilot-eigene
+Entitaeten in *jedem* Auswahlfeld nach oben, gebaut war das fuer die
+Bedingungsfelder. Bei Wolf stehen rund dreissig davon vorne, und `LIMIT=40`
+verdraengt damit die echten Kandidaten aus der Liste. Jetzt: vorziehen nur in
+Bedingungs-Slots (`sun_cond_*_entity`, ohne wind/rain/ice – das *sind*
+Messfelder), Warnung unter dem Feld sonst. **Die Vorhersage-Sensoren sind
+ausgenommen**: sie stammen von der Wetter-Entitaet, nicht aus einer
+Entscheidung dieser Integration – die Grenze ist „schreibt Shutter Pilot das
+als Ergebnis einer Fahrentscheidung", nicht „gehoert Shutter Pilot".
+
+**Sticky Tabs sind nicht eine Zeile CSS.** `:host` trug `overflow-x:hidden`,
+und ein Wert ungleich `visible` setzt den anderen implizit auf `auto` – der
+Host ist damit ein Scrollport, hat aber keine Hoehe, scrollt also nie. Ein
+sticky Element darin klebt an nichts. `overflow-x:clip` schneidet genauso ab
+*ohne* Scrollport; die alte Regel bleibt als Rueckfall stehen.
+
+**Lux ohne Deckel** (Wolf): der Schieber endete bei 1000, sein Export zeigt
+`lux_up: 1000` – am Anschlag, mit `lux_down: 981` neunzehn Lux darunter. Ein
+Aussensensor meldet im Sommer Zehntausende. Schieber bleibt fuer den
+Feinbereich (0–2000), daneben ein Zahlenfeld ohne Grenze; der Schieber wird
+*geklemmt dargestellt*, ohne den Wert anzufassen.
+
+**Bewusst nicht ausgeblendet.** Ohne Zeitplan sind auch abweichendes
+Schliessen, Frost, „nicht hochfahren" und die Licht-Folgeaktion tot (alle
+haengen an `scheduler`/`brightness`). Weg sind trotzdem nur Zeitplan und
+Kalender – die *definieren* den Zeitplan. Der Rest bekommt einen Hinweis:
+etwas zu verstecken, das gespeichert ist und wirkt, sobald der Modus
+zurueckgestellt wird, waere die schlechtere Haelfte des Problems, das
+`_silent_setting_notes()` ueberhaupt erst noetig gemacht hat.
+
+**Verifiziert:** `pytest` 613 Tests gruen (14 neue), **drei Gegenproben**
+gemacht (ohne den `none`-Zweig in `get_next_action` faellt der Sensor-Test;
+ohne die Modusprüfung in `shade_release_opens` fallen zwei, darunter der
+Abend-Test gegen den echten Aufbau). i18n 387/387 in allen elf Sprachen (5
+neu). Panel in Node gerendert: fuenf Ansichten plus siebzehn
+Inhaltspruefungen. **Nicht im Browser geprueft** – und das faellt hier
+staerker ins Gewicht als sonst, weil die sticky-Regel genau die Sorte ist, die
+sich nur in echtem Home Assistant zeigt.
+
+**Offen, wartet auf Wolf:** die „My"-Position bei Somfy RTS. Der Fahrweg dafuer
+ist `_send_position()` – der Fallback von 2.12.0 kennt heute nur `open_cover`
+und `close_cover`, eine dritte Stellung waere das Stop-Kommando im Stillstand.
+Welche Integration seine RTS-Markisen fährt, muss er sagen. Nebenbefund fuer
+die Antwort: an beiden Markisen ist `awning_track_enabled` an – an einem
+Antrieb ohne Positionierung ist jede Zwischenstellung ≥ 50 schlicht
+„ganz ausfahren", und `helpers.py` schreibt dazu bei jeder Fahrt eine Warnung
+ins Log.
+
+### 2026-08-25 – 2.15.0: zwei Wochen Forum am Stück
+
+Nach dem Urlaub lagen acht Beiträge da. Vier Fehler, vier Wünsche und drei
+Antworten, für die es keinen Code brauchte. Aufgearbeitet wurde in dieser
+Reihenfolge: erst alles gegen den Code gerechnet, dann gebaut.
+
+**Der Fehler, der die anderen erzeugt hat.** `_ws_get_status` schickte die
+globalen Einstellungen als **Erlaubnisliste von sechs Schlüsseln**. Der
+Markisenschutz kam nie dazu – gespeichert wurde er (`save_settings` nimmt
+alles), angewendet auch, angezeigt nie. bjoerg und charly166 haben unabhängig
+dasselbe gemeldet: „die Entitäten verschwinden beim Speichern".
+
+Und der Folgeschaden steckt in bjoergs Export: als Windsensor stand dort
+`switch.shutter_pilot_auto_balkon` – ein **Schalter der Integration selbst**.
+Der meldet dauerhaft `on`, also gilt dauerhaft Sturm, also fährt die Markise
+nie wieder aus. Wer in ein leeres Formular tippt, tippt irgendwas hinein.
+Deshalb jetzt **Ausschlussliste statt Erlaubnisliste** – dieselbe Klasse
+Vertrag wie der Schlüssel-Tupel in `resolve_sun_geometry()` (2.10.3) und
+`BOOL_COND_DOMAINS` im Panel (2.14.0). **Merke: eine Erlaubnisliste gilt immer
+nur für die Felder, an die jemand gedacht hat.**
+
+**Der Export widersprach sich selbst.** „Fensterrichtung: ❌ (295,4° in
+[225° – 315°])" – der Wert liegt sichtbar im Bereich. Die Zeile las
+`geometry_ok`, und das ist Höhe **und** Richtung zusammen. Abends zog die
+Elevation die Richtungszeile mit ins Nein. Ein Bericht, dessen Zeilen einander
+widersprechen, kostet mehr Zeit als er spart – und dieser Bericht ist das
+Werkzeug, mit dem hier alle Forumsfälle beantwortet werden.
+
+**Die Beschattung wurde bei sinkender Sonne nie aufgelöst** (bjoerg). Der
+`elev < e_min`-Zweig löscht seit jeher den Merker und **fährt nicht** – mit der
+Begründung, der Abendplan komme gleich. Das stimmt im Sonnenmodus. Im
+Helligkeitsmodus wartet er auf einen Lux-Wert, im Zeitmodus auf eine Uhr; bei
+bjoerg (Helligkeit, lux_down 199) waren das Stunden auf halber Höhe. Neuer
+Haken je Bereich, **Vorgabe aus**: eine Verhaltensänderung, die ungefragt in
+jeder zufriedenen Anlage abends Rollläden bewegt, wäre schlimmer als der
+Status quo.
+
+**Beschatten öffnet.** charly166 und Linos, unabhängig: Rollläden, die noch gar
+nicht hochgefahren sind, fahren in die Beschattungsposition. Das ist kein
+Fehler, sondern die Folge davon, dass `set_cover_position(50)` von unten wie
+von oben derselbe Befehl ist – dem Code fehlt die Information, aus welcher
+Richtung er kommt. Sie steht aber in der aktuellen Position, und genau das
+prüft `shading_would_open_cover()`. Richtungsblind formuliert wie bei den
+Markisen (`extends_upward`), damit es an einer Markise nicht falsch herum
+greift; Markisen sind zusätzlich ausgenommen, weil dort Beschatten *immer*
+Ausfahren heißt.
+
+**Der Sonnenschutz-Schalter je Bereich** (MartyBr) ist bewusst **nicht** in
+`is_auto_enabled` gefaltet. Beschattung und Zeitplan sind zwei Fragen; wer die
+Bereichsautomatik ausschaltet, um die Beschattung loszuwerden, hält morgens auch
+das Öffnen an. Und: **Ausschalten gibt frei**, es friert nicht ein – in
+`elevation.py` läuft „abgeschaltet" durch denselben Zweig wie eine weggefallene
+Bedingung, nur ohne Haltezeit (wie Saisonende und Uhrzeitgrenze).
+
+**Der Schalter, der beinahe einen Reload im Start ausgelöst hätte.** Master,
+Bereich und Rollladen schreiben ihre entity_id beim ersten Start in die
+Optionen zurück – jedes `async_update_entry` lädt den Entry neu. Ein vierter
+Schreiber ließ den Reload mitten in die erste Beschattungsauswertung fallen;
+aufgefallen ist es daran, dass `tests/test_shade_hours.py` plötzlich rot war,
+weil sein `data`-Dict nach dem Reload tot war. **Der neue Schalter schreibt
+sich deshalb als einziger nicht zurück** und legt seine ID in
+`data["sun_protect_entities"]` ab – gebraucht wird sie nur im Prozess.
+Die drei älteren blieben unverändert; sie zu ändern hieße, an Bestandsdaten zu
+rühren.
+
+**Hochfahren unterbinden**, zwei Wege, ein Aufruf. `automated_up_blocked()`
+fasst Wochenendhaken und `no_up`-Bedingung zusammen und wird an **beiden**
+Hochfahr-Wegen gefragt: `scheduler._run_up_async` und `brightness._run_up` –
+letzteres deckt Lux-Pfad *und* Frist ab, weil beide durch dieselbe Funktion
+laufen. Zwei Aufrufstellen statt vier, sonst vergisst der nächste Pfad die
+Prüfung. Der `no_up`-Slot braucht **keine vierte Polarität**: `_own_slot_met()`
+liefert genau „nicht gesetzt = nein, toter Sensor = nein", und das ist hier die
+sichere Antwort (fahren).
+
+**Der Wochenendhaken hängt an `is_weekend_schedule()`**, nicht am Kalender.
+Damit erledigt er hollstens Sonnabend/Sonntag-Wunsch mit: ein Workday-Sensor
+mit `excludes: [sun]` macht Sonnabend zum Arbeitstag. **Das war die Antwort auf
+seine Frage, nicht ein drittes Zeitschema.**
+
+**Der zweite Fensterkontakt** (Thsu) ist eine ODER-Verknüpfung mit Rangfolge
+open > tilted > closed. Der separate **Kipp**-Kontakt behält seinen Vorrang und
+wird *nicht* mitgerankt: er ist ein Modifikator des Hauptkontakts (bei Kipp
+melden beide „offen"), kein zweiter Flügel. `window_trigger.py` muss auf alle
+drei hören – ein Kontakt, den niemand abonniert, fällt erst eine Minute später
+jemand anderem auf.
+
+**Drei Antworten ohne Code**, alle mit Test hinterlegt statt behauptet:
+
+| Frage | Antwort |
+| --- | --- |
+| Beschattung erst bei geschlossenem Fenster (hollizone) | „Fahrt nach dem Schließen nachholen" – die Beschattung ist einer ihrer Fahrwege, seit 2.6.0 |
+| Sonnabend/Sonntag getrennt (hollsten) | Sondertage-Sensor mit `excludes: [sun]` |
+| Rollladen soll gar nicht mitfahren | Auto-Schalter je Rollladen, seit 2.5.0 |
+
+**Verifiziert:** `pytest` 599 Tests grün (37 neue), **sieben Gegenproben**
+gemacht – jede einzelne Änderung zurückgedreht, jedes Mal fiel genau ihr Test.
+i18n 382/382 in allen elf Sprachen (17 neu, `f_guard_lockout_hint` durch drei
+slot-eigene ersetzt: bei Frost beschrieb der Bö-Satz das Gegenteil dessen, was
+die Sperrzeit dort tut – gemeldet als Textfehler, war einer). Panel in Node
+gerendert, fünf Ansichten plus zwölf Inhaltsprüfungen. **Nicht im Browser
+geprüft.**
+
+**Testfalle, neu:** Der Scheduler markiert beim Aufbau jede heute schon
+vergangene Uhrzeit als erledigt (sonst holt ein Reload um 23 Uhr den ganzen Tag
+nach). Im Test heißt das: mit `time_up: "00:01"` fährt **nie** etwas, bis
+`data["_scheduler_fired"]` geleert wird. Dafür steht `_rearm_scheduler()` in
+`tests/test_forum_2_15.py`.
+
+
+
+### 2026-08-02 – 2.4.1: Hauptschalter und Menü-Knopf
+
+Aus einem Forumsbeitrag von MartyBr (weiße Seite nach dem Update auf 2.4.0):
+
+- Ursache war ein fehlender Browser-Reload, kein Fehler im Code. Trotzdem
+  gehärtet: Der Basisklassen-Resolver des Panels prüft jetzt zehn statt zwei
+  Elemente, und weder ein fehlendes LitElement noch ein Renderfehler führen
+  noch zu einer weißen Seite.
+- **Hauptschalter startete nach einer Neuinstallation ausgeschaltet.**
+  `RestoreEntity` merkt sich Zustände über die entity_id, nicht über die
+  unique_id – eine neu hinzugefügte Integration erbte das „aus" der alten.
+  Der Schalter schreibt jetzt seine `config_entry_id` als Attribut mit und
+  verwirft fremde Zustände. Ein fehlendes Attribut gilt als eigener Zustand,
+  damit Bestandsnutzer beim Update nicht plötzlich wieder „an" stehen.
+  Ebenso: `unavailable`/`unknown` galten als „aus", jetzt als „an".
+- Menü-Knopf im Panel für schmale Bildschirme (`ha-menu-button`, sonst eigener
+  Knopf mit `hass-toggle-menu`) – vorher kam man auf dem Handy aus dem Panel
+  nur über den Zurück-Knopf des Browsers heraus.
+
+### 2026-08-02 – 2.4.2: Rechteprüfung (Review von frenck)
+
+Review zur Aufnahme in den HACS-Default-Store durch **frenck**: Die
+schreibenden WebSocket-Befehle waren authentifiziert, prüften aber keine
+Rechte – jeder Nicht-Admin konnte konfigurieren.
+
+- Alle sieben ändernden Befehle mit `@websocket_api.require_admin` versehen.
+  `save_settings` stand nicht in frencks Liste, schreibt aber genauso in die
+  Options – mit abgesichert.
+- **Bewusste Abweichung von frencks Vorschlag:** `require_admin` bleibt am
+  Panel `False`. Das Panel ist zugleich Bedienoberfläche (hoch/runter/…, über
+  `cover`-Dienste, die HA selbst autorisiert). Es aus der Seitenleiste zu
+  nehmen hätte Mitbewohnern die Bedienung genommen – ausdrücklicher Wunsch des
+  Entwicklers, dass es sichtbar bleibt. Stattdessen richtet sich das Panel nach
+  `hass.user.is_admin`. Am PR ist das offen begründet, mit dem Angebot
+  umzustellen, falls frenck darauf besteht.
+- PR-Status: hacs-bot stellte den PR nach jedem „ready for review" binnen
+  Sekunden auf Draft zurück – Grund war **nicht** das offene Review, sondern ein
+  veralteter Branch („Your branch seems out of date"). Der Fork-Branch
+  `add-shutter-pilot-v2` muss vor jedem „ready for review" mit `hacs:master`
+  aktuell sein. Frenck hat das am 2026-08-02 selbst erledigt (Merge `6380e7f`)
+  und den PR wieder freigegeben; seither ist er in der Queue, alle Checks grün.
+- **Nicht am PR herumdrehen.** Der Bot bittet Einreicher ausdrücklich, nicht zu
+  kommentieren, keinen zweiten PR zu öffnen und den Base-Branch nur auf
+  Aufforderung zu mergen. Der Kommentar zur `require_admin`-Abweichung war die
+  Ausnahme, weil frenck um Release und Re-Request gebeten hatte.
+
+**Nächste Schritte:** Antwort von frenck abwarten. Falls er auf
+`require_admin=True` besteht, umstellen und im Forum ankündigen, dass das Panel
+für Nicht-Admins verschwindet.
+
+### 2026-08-02 – 2.5.0: Automatik pro Rollladen (Feedback von Linos)
+
+Ausführliches Feld-Feedback von **Linos** im Forum, zehn Punkte. Alle gegen den
+Code geprüft, einer umgesetzt, der Rest bewusst zurückgestellt.
+
+**Umgesetzt:** Dritte Ebene unter Hauptschalter und Bereich. `automation_enabled`
+je Rollladen, Schalter `switch.shutter_pilot_auto_<name>`, Prüfung über
+`is_shutter_automation_enabled()` an den vier automatisierten Fahrpfaden
+(Scheduler, Helligkeit, Beschattung, Fenstertrigger). Anlass: defekter Antrieb,
+der nicht fahren darf, ohne seine Konfiguration zu verlieren.
+
+Zwei Dinge, die man dabei wissen muss:
+
+- **Nicht in `set_cover_position()` prüfen.** Dort laufen auch die Dienste und
+  die Dashboard-Knöpfe durch. Manuell muss ein abgeschalteter Rollladen fahren –
+  sonst kann man ihn nach der Reparatur nicht prüfen.
+- **Rangfolge:** Laufzeitwert (`data["shutter_automation"]`) → Schalter-Entität →
+  gespeicherter Wert. Der Config-Wert ist nur der Startwert; sobald der Schalter
+  existiert, entscheidet er, sonst würde ein Umlegen in HA beim nächsten Reload
+  verlorengehen. `_apply_shutter_automation_state()` hält beide beim Speichern
+  im Panel gleich. Anders als bei Bereich und Hauptschalter gilt hier
+  **fail open**: ein toter Schalter legt keinen Rollladen still.
+
+**Geprüft und zurückgestellt** (Analyse nicht neu erarbeiten):
+
+| Punkt | Ist-Zustand |
+| --- | --- |
+| Sonnengrenze im Helligkeitsmodus | nur Uhrzeitfenster (`_area_window`); sonnenrelativ gibt es nur im Sonnenmodus (`clamp_to_bounds`) |
+| Flattern bei Wolken | Hysterese über Werte und Phasensperren, aber **keine** Zeitbedingung; `_release_sun_protect()` fährt sofort auf |
+| Fahrverzögerung global | wirkt nur je Bereich, jeder Bereich ist ein eigener Task → gleichzeitige Bursts. Choke-Point wäre `set_cover_position()` |
+| Nachhol-Pending | `drive_after_close_pending` nur im RAM, `position_store.py` wäre der Ablageort |
+| Profile/Label | bräuchte dritte Stufe in `resolve_shading_config()` + Migration. Zwischenschritt: Kopierknopf im Formular |
+| Lüften mit Bedingungen | rein manuell, kein Automatikpfad; Bedingungs-Slots wären wiederverwendbar |
+| Zweiter Azimutbereich | ein Bereich je Rollladen, Wrap-around unterstützt. Nötig nur bei getrennten Richtungen an einem Aktor |
+
+**Nachtrag 2.5.1:** Schalten geht jetzt auch im Panel – Dashboard-Zeile und
+Rollläden-Tab – über den neuen Befehl `set_shutter_automation` (Muster von
+`set_auto_mode`: Laufzeitwert setzen und die Schalter-Entität nachziehen).
+Ausserdem heissen die Rollladen-Schalter **Shutter Pilot Rollladen <Name>**
+statt „Auto <Name>": Bereich und Rollladen tragen oft denselben Namen, und
+zwei gleich benannte Schalter liefern in HA ein `_2` an einem davon.
+
+**Fallstrick, einmal reingefallen:** In `__init__.py` stehen die
+WebSocket-Dekoratoren direkt über der Funktion. Eine neue Hilfsfunktion
+dazwischen zu setzen hängt die Dekoratoren an die falsche Funktion – das
+Setup bricht dann mit `'function' object has no attribute '_ws_command'` ab.
+Die Testsuite fängt das ab, aber nur, weil sie den echten Setup fährt.
+
+### 2026-08-06 – 2.6.0, Teil 1: Zeitzone im Sonnenmodus (Meldung von Xerenas)
+
+Zwei Meldungen aus dem Forum, beide bestätigt und reproduziert.
+
+**Der Bug:** `schedule_times.py` parste die `sun.sun`-Attribute (HA schreibt sie
+mit `+00:00`), konvertierte aber nie nach lokal. `clamp_to_bounds()` verglich
+danach `moment.time()` – die **UTC**-Wanduhr – gegen die lokal gemeinte Schranke
+und schrieb sie per `moment.replace(hour=…)` in der UTC-Zone zurück. Aus
+„Runter frühestens 21:00" wurde 21:00 UTC = 23:00 Berlin. Genau die gemeldete
+Fahrt. Im Winter 1 h, im Sommer 2 h; nur Bereiche mit Zeitklammer betroffen.
+
+Behoben mit **einer** Stelle: `_local_sun_time()` legt `dt_util.as_local()` um
+das Parsen. `clamp_to_bounds`, `infer_today_sun_time` und die beiden
+Datumsvergleiche in `scheduler.py` (281, 324) werden dadurch von selbst richtig
+– bewusst kein zweites Sicherheitsnetz, der Vertrag steht stattdessen im
+Docstring von `get_sun_mode_triggers` („returns local time") und als Kommentar
+an scheduler.py:322.
+
+**Warum die 246 Tests grün blieben:** `tests/test_sun_bounds.py` injizierte die
+Sonnenzeiten mit `+02:00` statt `+00:00`, und die Assertions lasen `up.hour`
+roh – eine UTC-Zeit mit den richtigen Ziffern besteht so einen Test. Dazu ist
+die Test-Zeitzone `US/Pacific` (aus pytest-homeassistant-custom-component),
+nicht UTC. Jetzt: Autouse-Fixture auf `Europe/Berlin`, `_set_sun` rechnet nach
+UTC um wie das echte HA, und `_hm()` vergleicht in Ortszeit. Gegenprobe
+gemacht: ohne den Fix fallen 14 der 22 Tests um.
+
+**Anzeigefehler (Bug A), separater Ursprung:** `_renderSunInfo` rendert die rohe
+`next_rising` plus Offset. Zeitklammern und Jitter fehlten – und das Panel
+*kann* sie nicht rechnen: `get_random_offset` seedet Pythons Mersenne Twister,
+in JS nicht nachbaubar, dazu Workday-Sensor und Wochenend-Rückfall. Deshalb
+Backend als einzige Wahrheitsquelle: neue `get_sun_mode_trigger_details()`
+liefert Zeit **plus Begründung**, `_ws_get_status` schickt sie als
+`area_triggers`, das Panel fällt bei fehlendem Wert wörtlich aufs alte
+Verhalten zurück (altes Backend, kein `sun.sun`). `clamp_to_bounds` und
+`get_sun_mode_triggers` bleiben als unveränderte Hüllen stehen, damit kein
+Aufrufer und kein Test bricht.
+
+Zwei Dinge fürs nächste Mal:
+
+- **Kein freezegun in WebSocket-Tests.** `freezer.move_to()` in die
+  Vergangenheit lässt das Auth-Token als abgelaufen gelten, der Client bekommt
+  `auth_invalid`. In `tests/test_ws_status.py` werden die Sonnenzeiten
+  stattdessen relativ zum heutigen Tag gebaut.
+- Die neun kleineren Sprachen im Panel haben **52 fehlende i18n-Schlüssel**
+  (Rückfall auf Englisch). Bestand, nicht aus dieser Änderung – aber einmal
+  aufräumen wäre fällig.
+
+### 2026-08-06 – 2.6.0, Teil 2: drei Features aus dem Forum
+
+Alles in einem Release; ein separates 2.5.2 wurde bewusst nicht getaggt.
+
+**Entprellung des Fensterkontakts (Xerenas).** Beim Drehen des Griffs von
+gekippt auf offen läuft der Kontakt kurz durch „geschlossen". Darin steckten
+**zwei** Fehler, und nur einer war der gemeldete:
+
+1. Timing – der `closed`-Zweig fuhr sofort zurück. Jetzt Wartezeit je Rollladen
+   (0–30 s, Default 5), Muster `cover_verify`: ein Task je Cover, Abbruch beim
+   nächsten Fensterereignis. **Bei 0 s bleibt der Pfad synchron** (kein Task,
+   kein await) – sonst änderte sich die Reihenfolge für Bestandsnutzer.
+2. Der Offen-Zweig prüfte nur „ist der Rollladen zu?" und übersah einen
+   laufenden Zyklus. Nach zu → gekippt (50 %) → offen scheiterte die Prüfung,
+   der Zweig brach ab und warf die Rückfahrhöhe weg. **Ohne diesen zweiten Fix
+   wäre das Symptom auch mit perfekter Entprellung geblieben.**
+
+Beim Abbrechen **nicht** von `cover_verify` abschreiben: dessen `finally` popt
+ohne Identitätsprüfung und entfernt den Eintrag eines schon nachgerückten
+Tasks. Hier vergleicht das `finally` mit `asyncio.current_task()`.
+`cover_verify.py:186-188` hat den Fehler weiterhin – offen.
+
+**Frostschutz (Linos).** Rolle `closed_frost` analog `closed_alt`. Die
+Bedingungen kannten nur „über Schwelle"; die neue Invert-Kennung spiegelt
+Vergleich *und* Hysterese. Der Frost-Slot steht in `INVERTED_BY_DEFAULT_SLOTS`,
+niemand soll ankreuzen müssen, dass Frost mit „kälter" zu tun hat. Die Kennung
+liegt in `sun_condition_invert_key()`, **nicht** als fünftes Tupelelement in
+`sun_condition_keys()` – das wird an drei Stellen entpackt.
+
+Dabei zwei Altlasten mitgenommen: `resolve_close_role()` wird jetzt von
+Scheduler **und** Helligkeit benutzt (die abweichende Schließposition wirkte im
+Helligkeitsmodus nie), und die eigenen Bedingungs-Slots sind **fail closed** bei
+totem Sensor. Beschattung bleibt fail open – dort ist die sichere Antwort die
+umgekehrte.
+
+**Lüften mit Bedingungen (Linos).** Neues `ventilation.py` am gemeinsamen
+Minutentakt. Zurück geht es auf die **vorherige** Position (`vent_heights`, wie
+`trigger_heights`), nicht auf „offen" – sonst stünde der Rollladen nach einer
+Nachtlüftung oben. Rangfolge festgeschrieben: Fensterkontakt > Beschattung >
+Lüften.
+
+**Aus dem Plan verworfen:** der Lüften-Knopf im Dashboard sollte auf den Dienst
+umgestellt werden. Die Karte listet `area_up_id` **oder** `area_down_id`, der
+Dienst filtert nur `area_down_id` – bei getrennten Bereichen hätte der Knopf
+danach stillschweigend Rollläden ausgelassen.
+
+**Testfallen, die Zeit gekostet haben:**
+
+- `patch("...modul.asyncio.sleep")` patcht das **globale** Modul. Ein Mock, der
+  sofort zurückkehrt (wie in `test_cover_verify`), geht gut; ein *blockierender*
+  legt ganz HA lahm. In `test_window_debounce` wird nur die passende Wartezeit
+  gegated, der Rest geht an den echten `sleep`.
+- `hass.async_block_till_done()` wartet auch auf einen gerade erzeugten,
+  gegateten Task – dafür gibt es dort `_window_bounce()` mit `sleep(0)`-Runden.
+- Denselben Zustand nochmal setzen feuert **kein** Event.
+- Ein reiner `async_mock_service` lässt die Cover-Position stehen; der
+  Startup-Restore hält die Fahrt für verschluckt und wiederholt sie viermal.
+  Dessen `STARTUP_RESTORE_DELAY_SEC = 5` hat die Suite von 4 auf 25 Sekunden
+  gebracht, bis er in `test_ventilation` abgekürzt wurde.
+- **Kein freezegun in WebSocket-Tests**: Zeit zurückdrehen macht das Auth-Token
+  ungültig, der Client bekommt `auth_invalid`.
+
+**Offen:** die neun kleineren Panel-Sprachen haben 52 fehlende i18n-Schlüssel
+(Rückfall auf Englisch). Bestand, einmal aufräumen wäre fällig.
+
+### 2026-08-07 – 2.7.0, Teil 1: zwei GitHub-Issues
+
+**Beschattung pendelte im Minutentakt (#4).** Mit *einem* Bereich war alles
+stabil – der Fehler brauchte einen Rollladen, dessen Hoch- und Runter-Bereich
+verschieden sind. `elevation.py` setzte die Beschattung im `in_down`-Zweig und
+gab sie im `in_up`-Zweig frei, jeweils mit der Konfiguration *dieses* Bereichs.
+Widersprachen sich Bedingungen, Saison oder Geometrie, beschattete der eine und
+der andere gab sofort frei: 50, 100, 50, 100.
+
+Umbau: `_evaluate()` läuft jetzt über die **Rollläden** statt über die Bereiche,
+und der Runter-Bereich entscheidet allein; Fahrten werden danach je Bereich
+gebündelt. Dabei mitgenommen: ein Rollladen, dessen Runter-Bereich keine
+Beschattung (mehr) hat, bekommt sein Flag gelöscht – sonst blockierte der
+Aggregatwert `sun_protect_active` dauerhaft das automatische Hochfahren. Im
+Repro stand er auf `True`, während `sun_protect_covers` leer war.
+
+**Namensanzeige (#3):** `friendly_name||s.name` im Dashboard – umgedreht. Der
+Rollläden-Tab machte es schon richtig.
+
+**`cover_verify` finally** hat jetzt die Identitätsprüfung, die `window_trigger`
+seit 2.6.0 hat. Der Nebenbefund von damals ist damit erledigt.
+
+**Wieder in dieselbe Testfalle getappt:** `patch("...cover_verify.asyncio.sleep")`
+patcht das globale Modul – ein *blockierender* Mock legt auch das `sleep(0)` im
+Test selbst lahm. Es muss immer nur die eine passende Wartezeit gegated werden.
+
+### 2026-08-07 – 2.7.0, Teil 2: die Restliste abgearbeitet
+
+Alles, was aus Forum und GitHub noch offen war, in einem Zug. Ein separates
+2.6.1 wurde nicht getaggt – die Fixes stecken in 2.7.0.
+
+**Globaler Mindestabstand (Linos' Schlüsselfunktion).** `drive_delay` staffelt
+nur *innerhalb* eines Bereichs, und jeder Bereich ist ein eigener Task. Der
+Choke-Point ist `set_cover_position()` – die eine Stelle, durch die jede Fahrt
+läuft. Ein `asyncio.Lock` im Runtime-Dict serialisiert gleichzeitige Aufrufer zu
+einer Warteschlange; der Lock wird **über den Schlaf gehalten**, sonst wären
+alle gleichzeitig durch. Gedeckelt auf 10 s, damit ein Tippfehler die
+Integration nicht anhält.
+
+**Beschattung halten.** Nur die *Freigabe* wird verzögert. Das Beschatten sofort
+zu lassen ist wichtig (sonst steht man eine Stunde in der Sonne), und das Ende
+des Tages – `elev < e_min` – ebenfalls, sonst hängt die Beschattung in den
+Abendplan hinein. Während der Haltezeit gilt der Rollladen **weiter als
+beschattet**, sonst fährt der Scheduler in die Lücke.
+
+**Sonnengrenzen im Helligkeitsmodus.** `_area_window` prüft zusätzlich eine
+Sonnenschranke. Gerechnet wird mit `_local_sun_time`/`infer_today_sun_time` aus
+`schedule_times` – genau die Umrechnung, deren Fehlen in 2.6.0 zwei Stunden
+Versatz erzeugt hat. Im Panel brauchen die beiden Felder einen eigenen Helfer:
+`Number("")` wäre `0`, und `0` ist hier eine gültige Schranke, kein „aus".
+
+**Kopierknopf** statt Profile/Label – der vereinbarte Zwischenschritt, ohne
+Eingriff ins Datenmodell. **Ausschlussliste statt Erlaubnisliste**, damit ein
+künftiges Feld nicht stillschweigend vom Kopieren ausgenommen bleibt. Listen
+werden kopiert, nicht geteilt.
+
+**Blind fahren (Viktor).** Sein Vorschlag war, die Positionsprüfung abzuschalten
+– das wäre schlechter: dann fährt die Lüftung auch bei richtig stehendem
+Rollladen, und der Fenstertrigger verliert die Rückfahrhöhe. `get_tracked_position()`
+fällt stattdessen auf die eigene Buchführung zurück. Die übrige Logik bleibt in
+Kraft.
+
+**Nachhol-Fahrt persistent.** Nur Position, Winkel, Grund und Zeitstempel gehen
+auf die Platte; das Shutter-Dict wird beim Start frisch aus den Optionen
+zugeordnet – eine veraltete Kopie wäre die gefährlichere der beiden. Nach 24 h
+verworfen.
+
+**Bugs:** Das Pendeln (#4) brauchte *getrennte* Hoch-/Runter-Bereiche; mit einem
+Bereich war nichts nachzustellen. Merke: bei Berichten über Sonnenschutz immer
+zuerst fragen, ob die beiden Bereiche verschieden sind.
+
+**Testfalle, zum zweiten Mal:** `patch("...modul.asyncio.sleep")` trifft das
+globale Modul. Ein *blockierender* Mock legt auch das `sleep(0)` im Test selbst
+lahm. Immer nur die eine passende Wartezeit gaten.
+
+**Offen geblieben, bewusst:** Profile/Label (der Kopierknopf ist der
+Zwischenschritt) und ein zweiter Azimutbereich je Rollladen (nur nötig, wenn ein
+Aktor zwei Richtungen bedient). Sowie die 52 fehlenden i18n-Schlüssel in den
+neun kleineren Panel-Sprachen – Bestand, Rückfall auf Englisch.
+
+### 2026-08-07 – 2.7.1: die drei Restpunkte
+
+**Der Mindestabstand galt nicht für die Dashboard-Knöpfe.** Beim Durchsehen der
+offenen Punkte aufgefallen – ein Mangel an einem Feature, das Stunden vorher
+rausging. `_coverAction` schickte **einen** Dienstaufruf mit allen entity_ids;
+Home Assistant fächert das gleichzeitig auf. Der Knopf, den Linos drückt, war
+also genau der Burst, gegen den die Einstellung gebaut ist.
+
+Bewusst **nicht** übers Backend gelöst: Die Knöpfe rufen `cover`-Dienste direkt
+auf, und dabei prüft HA die Rechte je Entität. Ein eigener WebSocket-Befehl
+hätte diese Prüfung verloren – das Panel ist absichtlich auch für Nicht-Admins
+sichtbar. Also wird im Frontend ein zweites Mal gestaffelt. Zwei Stellen für
+dieselbe Regel, aber die Alternative wäre ein Loch in der Rechteprüfung.
+Gestaffelt wird auch „Stop": ein verschluckter Stopp lässt den Rollladen bis
+zum Anschlag laufen, ein um Sekunden späterer nicht.
+
+**52 i18n-Schlüssel × 9 Sprachen.** Alle elf Sprachen stehen jetzt bei 258
+Schlüsseln. Ein Prüfskript dafür ist trivial und lohnt sich vor jedem Release:
+Schlüsselmengen aller Sprachen gegen `de` vergleichen.
+
+**Sensornamen übersetzbar.** Fallstrick: `Entity._name_internal` nimmt
+`_attr_name`, **sobald es gesetzt ist** – der Übersetzungsschlüssel wird dann nie
+nachgeschlagen. Es braucht also beides: `_attr_name` weg *und*
+`_attr_has_entity_name = True`. Bestehende Entitäts-IDs bleiben, weil die
+Registry sie über die `unique_id` hält; ein Test hält das fest, damit ein
+künftiges Umbenennen nicht unbemerkt Automationen bricht.
+
+`ShutterPilotNextActionSensor` bleibt absichtlich bei `_attr_name`: Der Name
+enthält den vom Nutzer vergebenen Bereichsnamen, den keine Übersetzungsdatei
+kennen kann.
+
+### 2026-08-07 – 2.7.2 und der Stand beim HACS-Store
+
+**Textbedingung (#6).** Der Melder hatte selbst geschlossen, die Sackgasse war
+aber echt: Ohne bekannte Zustandsliste bot das Formular nur den gerade
+gemeldeten Zustand an. Freitextfeld jetzt genau dort – `weather.*` behält seine
+15 Standardlagen ohne Zusatzfeld, Zahlensensoren bleiben numerisch. Eingaben
+werden getrimmt und kleingeschrieben, passend zu `_condition_slot_met()`.
+
+**HACS-PR [hacs/default#9592]: der Blocker ist formal.** Alle Checks grün,
+Branch aktuell, alle acht schreibenden WS-Befehle admin-geschützt, Icons liegen
+korrekt in `custom_components/shutter_pilot/brand/` (icon.png 256², icon@2x.png
+512²). Blockiert wird allein durch frencks `CHANGES_REQUESTED` vom 2026-08-01.
+
+Der entscheidende Fund: **`reviewRequests` ist leer.** frenck bat um
+„re-request review" – das ist eine eigene GitHub-Aktion, kein Kommentar, und sie
+wurde nie ausgelöst. Ohne sie liegt der PR in keiner Warteschlange.
+
+**Das geht nicht per API:** `POST /pulls/9592/requested_reviewers` liefert 404,
+weil das Push-Rechte am Repo verlangt – als PR-Autor aus einem Fork hat man die
+nicht. Nur im Browser über das ↻ neben dem Reviewer. Kein Kommentar, also auch
+kein Verstoss gegen die Bot-Regel.
+
+**Brands ist erledigt, nicht offen:** Die beiden PRs (home-assistant/brands
+#10878, #10007) wurden automatisch geschlossen, weil HA seit 2026.3.0 keine
+Icons für Custom Integrations mehr dort annimmt. Der Ersatzweg – Ordner `brand/`
+in der Integration – ist längst gegangen. Nicht erneut einreichen.
+
+### 2026-08-08 – 2.8.0: zwei Forum-Meldungen, die niemand beantworten konnte
+
+MartyBr und heinzie haben je einen Fall gemeldet, beide mit Screenshots. Der
+erste Schritt war, MartyBrs Konfiguration exakt gegen die echten Helfer
+nachzurechnen (`resolve_shading_config`, `sun_protect_conditions_met`,
+`sun_extra_conditions_met`, `season_allows_shading`) mit den Werten aus seinem
+zweiten Screenshot: Elevation 25,54° in [2°, 70°] ✓, Richtungsprüfung aus ✓,
+Bedingung 1 32.898 ≥ 30.000 ✓, Bedingung 2 96,8 ≥ 40 ✓, ganzjährig ✓.
+
+**Die Konfiguration hätte beschatten müssen.** Der Grund lag also in einer
+Einstellung, die auf keinem Bild war. Genau das ist der Anlass für den Export –
+und der Anlass, ihn nicht als Datei-Dump zu bauen, sondern mit der
+Entscheidung: `export.py` rechnet je Rollladen die reale Beschattungsprüfung
+durch und schreibt jede Teilprüfung mit ihrem Ergebnis hin. Eine Zeile
+beantwortet damit, was vorher drei Screenshots offen liessen.
+
+**Zwei Eigenheiten, die den Aufbau bestimmt haben:**
+
+1. **Der Export darf nichts anfassen.** `_condition_slot_met()` schreibt beim
+   Auswerten die Hysterese mit, und `condition_memory()` legt den Eintrag beim
+   ersten Zugriff überhaupt erst an. Ein Bericht, der das täte, würde den
+   Zustand verschieben, den er dokumentieren soll – gemessen würde dann etwas,
+   das der Messvorgang selbst erzeugt hat. Deshalb `_memory_copy()`: liest ohne
+   `setdefault`, gibt eine Kopie zurück. Ein Test hält das fest.
+2. **Alle gespeicherten Schlüssel, nicht eine Auswahl.** Der Wert, auf den es
+   ankommt, ist immer der, den niemand fotografiert hat. `False` zählt dabei als
+   gesetzt – eine ausgeschaltete Option ist eine Entscheidung.
+
+**Die fünf Funde beim Nachprüfen** (alle mit Test, siehe
+`tests/test_forum_findings.py`):
+
+1. **Merker vor der Fahrt.** `set_cover_sun_protected(..., True)` lief, während
+   die Fahrt erst eingereiht war – und `set_cover_position()` schluckt
+   Ausnahmen. Eine gescheiterte Fahrt galt ab der nächsten Minute als erledigt
+   und wurde **nie** wiederholt. `set_cover_position()` gibt jetzt zurück, ob es
+   geklappt hat; `_drive_sun_protect()` liefert die Cover, die wirklich unter
+   Beschattung stehen. Wartende Nachhol-Fahrten zählen ausdrücklich dazu, sonst
+   würde die Merkdatei jede Minute neu geschrieben.
+2. **`should_skip_full_open_preserving_sun_protect` fragte den Bereich.** Seit
+   2.7.0 (GitHub #4) wird die Beschattung je Cover geführt; diese eine Stelle
+   nicht. Sie ist zugleich die **einzige** im ganzen Code, deren Verhalten von
+   der Position abhängt (`abs(cur - pos_sp) <= 10`) – und damit die einzige
+   Erklärung für heinzies vierten Punkt: von Hand verfahren, dann fährt er
+   hoch. Der Bereichs-Vorabcheck in `brightness.py` fiel mit weg; er hielt den
+   ganzen Raum an, sobald ein Fenster beschattet war.
+3. **Haltezeit auch für den Sonnenuntergang.** Die Reihenfolge im Code
+   entschied: erst warten, dann den Grund bestimmen. Jetzt umgekehrt – die
+   Haltezeit gilt nur noch, wenn eine *Bedingung* weggefallen ist. Sonne über
+   den Bereich gestiegen, aus dem Fenster gewandert oder Saisonende sind keine
+   Wolke, sie kommen innerhalb der Haltezeit nicht zurück. Zusammen mit Fund 2
+   war das ein doppelter Riegel: nicht freigeben *und* das Hochfahren sperren.
+4. **`off_below > on_above` wurde geklammert.** MartyBrs 40 / 130 beim Azimut
+   ist als Spanne gemeint; das Paar ist aber Einschaltpunkt plus Aufhebepunkt
+   darunter. Übrig blieb „Azimut ≥ 40". Warnung jetzt im Formular und einmal je
+   Bedingung im Log, mit dem Verweis auf „Nur bei passender Fensterrichtung".
+5. **`resolve_sun_geometry` warf die alte Einzelschwelle weg**, sobald der Haken
+   „Eigene Ausrichtung" gesetzt war – auch ohne eigene Werte. Aus „ab 25°" wurde
+   der eingebaute Vorgabewert, also [1°, 4°]. Verworfen wird sie jetzt nur, wenn
+   der Rollladen wirklich eigene Elevationswerte trägt.
+
+Dazu die Anordnung im Formular: die Felder, die der Haken freischaltet, standen
+**hinter** dem Bedingungsblock. In MartyBrs Screenshot ist genau das zu sehen –
+Haken gesetzt, darunter sofort Bedingungen. Jetzt stehen sie direkt unter dem
+Haken.
+
+**Lehre:** Wenn ein Merker sagt „erledigt", muss er von der Handlung gesetzt
+werden, nicht von der Absicht. Die Funde 1 und 3 sind beide diese Klasse: ein
+Zustand, der vorauseilt (Fund 1) oder nachhängt (Fund 3), und in beiden Fällen
+gibt es danach keinen Weg zurück, weil derselbe Zustand die Wiederholung sperrt.
+
+**Verifiziert:** `pytest` 387 Tests grün (13 neue), `node --check` fürs Panel,
+i18n 269/269 Schlüssel in allen elf Sprachen. **Nicht** im Browser geprüft: die
+Panel-Änderungen (Export-Abschnitt, Warnhinweis, neue Feldreihenfolge) – dafür
+bräuchte es eine laufende HA-Instanz mit angelegtem Benutzer.
+
+### 2026-08-08 – 2.8.1: was der Export sofort eingebracht hat
+
+Der Bericht aus 2.8.0 hat gehalten, wofür er gebaut wurde: MartyBrs Export
+beantwortet seine Meldung ohne eine einzige Rückfrage.
+
+**MartyBr ist eine Einstellungssache, keine Codefrage.** Acht seiner zehn
+Rollläden hängen mit Schwellen von 20.000–50.000 an
+`sensor.gw3000a_wifi4133_solarstrahlung`, der 559,7 meldet – Solarstrahlung in
+W/m², nicht Lux. Die Bedingung kann dort nie erfüllt werden. Die beiden
+Rollläden an `sensor.solarstrahlung_lux` (70.914) rechnen dagegen sauber, und
+„Rollo Küche" steht im eigenen Bericht auf „Ergebnis: beschatten". Dazu vier
+Azimut-Bedingungen als Spanne gedacht (40/130, 130/220, 205/320, 355/359) –
+alle vier werden auf „≥ unterer Wert" geklammert, das ist Fund 4 aus 2.8.0.
+Nachgerechnet mit `_condition_slot_met` gegen seine Werte, nicht geschätzt.
+
+**heinzie war zweimal kaputt, jedes Mal ausreichend allein:**
+
+1. **`window_open_state` = `open` an einem `binary_sensor`.** Der bietet nur
+   `on` und `off`. `get_window_state` verglich exakt, also galt der Kontakt
+   dauerhaft als geschlossen – kein Lüften, keine Rückfahrt, kein
+   Aussperrschutz, und **keine einzige Logzeile**. Das Formular bot die vier
+   Wörter an, ohne je nachzusehen, was die gewählte Entität überhaupt melden
+   kann. Jetzt faltet `_canonical_state()` beide Seiten auf `on`/`off`; exakte
+   Treffer bleiben exakt, `tilted`/`2` sind ausdrücklich **keine** Synonyme.
+   Im Formular steht `off` mit zur Wahl (Kontakte, die andersherum melden) und
+   darunter der gerade gemeldete Zustand.
+2. **Der Kontakt erreichte den beschatteten Rollladen nicht.**
+   `_is_cover_effectively_closed` liess nur (nahezu) geschlossene durch – die
+   Beschattung parkt auf halber Höhe, also fiel er durch. Die in dieser Datei
+   festgeschriebene Rangfolge *Fensterkontakt > Beschattung > Lüften* galt
+   damit für `ventilation.py`, aber nicht für den Kontakt selbst.
+
+**Der Nebenbefund, ohne den Fix 2 gefährlich wäre:** `_release_sun_protect()`
+räumte die Rückfahrhöhe des Fensterkontakts nicht weg. Endet die Beschattung
+bei offenem Fenster, fährt der Rollladen sonst beim Schliessen auf die
+Beschattungsposition zurück – Stunden später. Scheduler und Helligkeitsmodus
+rufen dafür längst `clear_stale_window_cycle_after_automated_up()`; die
+Freigabe tat es nicht. Dazu `forget_drive_after_close()`, weil ersteres den
+Merker nur aus dem RAM nimmt und die Platte stehen lässt.
+
+**Am Export nachgezogen**, alles drei aus MartyBrs Bericht heraus gelesen: die
+**Einheit** neben dem Wert (559,7 W/m² neben Schwelle 30000 erklärt sich von
+selbst, 559,7 neben 30000 nicht), ein Hinweis, wenn Haupt-, Bereichs- oder
+Rollladenschalter **aus** steht (dort stand „Ergebnis: beschatten", während
+nichts fahren konnte), und die Erklärung der beiden stillen Haken – `unknown`
+mit ✅ heisst „blockiert nicht", nicht „erfüllt".
+
+**Testfalle, neu:** `tests/test_forum_findings.py` braucht ~14 s Fixture-Setup
+je Test (Startup-Restore plus Fahrtkontrolle). Sechs neue Tests dort kosten
+anderthalb Minuten Suite-Laufzeit – wer dort etwas ergänzt, sollte prüfen, ob
+es nicht in eine Datei mit leichterem Aufbau gehört.
+
+### 2026-08-08 – 2.8.2: heinzies Diagnose-Datei gegengerechnet
+
+Er hat nicht den Einstellungs-Export geschickt, sondern die HA-Diagnose. Reicht
+auch: **beide** Rollläden mit Fensterkontakt (`cover.gardrobe`, `cover.buro`)
+tragen `window_open_state: "open"` an demselben `binary_sensor`, und beide
+stehen in `sun_protect_covers` bei 47 % bzw. 80 %. Damit greifen die zwei Fixes
+aus 2.8.1 an genau seinem Fall, jeder für sich schon ausreichend.
+
+Nachgerechnet mit `resolve_shading_config` gegen seine Werte: „Buero" beschattet
+korrekt (Elevation 54,1° in [0–90], Azimut 177,3° in [5–335], 620 W/m² ≥ 300).
+„Wohnz. 5" hat `elevation_max: -5` und Azimut 135–135, „Wohnz. 6" Schwellen von
+20.000 an einem W/m²-Sensor – beide können nie beschatten. Nicht sein
+gemeldetes Problem, aber er wird danach fragen.
+
+**Der Fund, den 2.8.1 nicht abdeckt:** Ein Kontakt ohne Kipp-Zustand ist
+zweiwertig, `_get_target_position_for_window_state()` fährt dann bewusst die
+**Kipp-Position** – auch für „offen". Im Formular standen trotzdem zwei
+Schieber, und heinzie hatte 97 % bei „offen" und 98 % bei „gekippt" gesetzt;
+gefahren wird 98. Ohne Kipp-Zustand steht jetzt nur noch ein Schieber da, auf
+`position_when_window_tilted`. Der alte Hinweis dazu behauptete, die Position
+gelte „wenn der Rollladen geschlossen ist" – seit 2.8.1 doppelt falsch.
+
+**Merke:** Die Diagnose-Datei (`diagnostics.py`) trägt `options` und `runtime`
+vollständig, inklusive `sun_protect_covers` und `sun_cond_state`. Für die Frage
+„warum fährt er nicht" ist sie so gut wie der Export – nur ohne die
+Sensorwerte, die man sich dann selbst dazu holen muss.
+
+### 2026-08-08 – 2.9.0: Linos' Durchgang durch die Oberflaeche
+
+Zehn Punkte, davon zwei echte Fehler, zwei Fragen mit einer Luecke dahinter
+und der Rest Beschriftung und Aufbau.
+
+**Der Anzeigefehler:** `_renderSunProtectInfo` setzte „Warte auf passende
+Sonnenhöhe", sobald `in_range` (= Geometrie erfüllt) galt und der Schutz
+trotzdem nicht aktiv war. Der Text erschien also genau dann, wenn die Höhe
+**passte**. Linos stellte 0°–90° ein und bekam ihn den ganzen Tag. Das Backend
+liefert `elevation_in_range` und `azimuth_in_range` längst mit – jetzt werden
+sie auch benutzt, mit einem eigenen Text für „Geometrie passt, Bedingungen
+fehlen noch".
+
+**Die Luecke hinter seiner Wetter-Frage:** `weather_data.py` nahm
+`forecast[0]["temperature"]` und schrieb ihn alle 30 Minuten neu. Eine
+Tagesvorhersage wird aber fortgeschrieben und faellt, sobald die Spitze vorbei
+ist. Wer abends „war es ueber 26 °C?" fragt, fragt gegen einen Wert, der
+inzwischen 25 sagt. `_peak_today()` haelt daher das Tagesmaximum, an das Datum
+gebunden, plus eigener Sensor `forecast_temp_max_peak`.
+
+**Seine zweite Frage war eine Verstaendnisfrage:** nachts teilweise oeffnen zum
+Luftwechsel ist *Abweichendes Schliessen* (`position_closed_alt` +
+`sun_cond_close_*`), nicht *Automatisches Lueften* – letzteres faehrt
+zwischendurch und wieder zurueck, ersteres bestimmt die Schliessposition.
+
+**Bewusst nicht gemacht: Kompass-Mehrfachauswahl.** Sein Vorschlag war, N+NO+O
+gleichzeitig anzuklicken. Daraus muss aber wieder **ein** Min/Max-Bereich
+werden, und N+O ergaebe stillschweigend 0°–90° samt NO. Das ist genau die
+Verwechslung von Spanne und Punktepaar, die MartyBrs Fehler war.
+
+**Nachgereicht in 2.9.1: die aufklappbaren Abschnitte.** Zurueckgestellt war
+sie, weil `_section()` nur die Ueberschrift ausgab und die Felder als
+Geschwister folgten – 18 Aufrufstellen in drei Formularen. Gegangen ist der
+Weg dann doch, weil sich das ganze Panel in Node auswerten laesst und der
+Umbau damit pruefbar wird.
+
+Zwei Dinge, die dabei zaehlen:
+
+* **Der Harnisch braucht zwei Ebenen.** Der LitElement-Resolver laeuft die
+  Prototypenkette hoch und nimmt die *hoechste* Klasse, die `html` und `css`
+  noch kennt. Gibt `customElements.get()` genau eine Stub-Klasse zurueck,
+  landet er bei `Function.prototype`. Es braucht `class Host extends Stub`.
+  Und `get("shutter-pilot-panel")` muss **leer** bleiben, sonst ueberspringt
+  das File sein eigenes `define()` und die Klasse ist nicht einzusammeln.
+* **Die Grenze eines Abschnitts ist nicht die naechste Ueberschrift.** Der
+  Export sitzt in `${this._isAdmin()?html\`…\`:""}`; ein Rumpf, der bis zur
+  naechsten Ueberschrift laeuft, verschluckt den oeffnenden Ausdruck und das
+  File laesst sich nicht mehr parsen. Beim automatisierten Umbau gehoeren die
+  umschliessenden Ausdruecke in die Abbruchliste.
+
+Geprueft wurde nicht die Optik, sondern der Bestand: beide Fassungen voll
+aufgeklappt gerendert und die `<label>`- und `hint`-Texte verglichen – 71
+Bedienelemente, keines verloren.
+
+### 2026-08-09 – 2.10.0: der nachgeholte Rollladen und Linos' Bedingungen
+
+**heinzies Ablauf, vier Schritte:** abends alle runter, einer bleibt wegen
+offenem Fenster oben (vorgemerkt), Fenster zu → holt nach, naechster Morgen →
+alle hoch **ausser ihm**.
+
+Der Nachhol-Zweig in `scheduler.py` und `brightness.py` verliess die Schleife
+mit `continue`, **bevor** `covers_driven_down.add()` / `covers_driven_up.
+discard()` liefen. Der Rollladen blieb damit als „heute hochgefahren"
+vermerkt, und `_run_up_async` filtert genau danach. Dass die Fahrt beim
+Fensterschliessen stattfand, sieht der Scheduler nicht – `window_trigger.py`
+pflegt diese Merker nicht. **Merke:** ein `continue` in einer Fahrschleife
+ueberspringt nicht nur die Fahrt, sondern auch deren Buchfuehrung.
+
+**Der Fund darunter:** `clear_covers_driven_for_direction()` setzte
+`data["covers_driven_up"] = set()` – ein **neues** Set. Scheduler und
+Helligkeitsmodus binden ihre Referenz aber einmalig beim Setup per
+`setdefault`. Ab dem ersten Aufruf schrieben sie also in ein Set, das nicht
+mehr in `data` haengt: der Aufruf war wirkungslos, und Diagnose wie Export
+zeigten dauerhaft „–", waehrend intern etwas anderes entschied. Genau das
+stand in allen bisherigen Exporten, und ich habe es geglaubt.
+
+Repariert wurde nicht die Funktion, sondern ihre Notwendigkeit: die vier
+Aufrufe sind weg, die Funktion auch. Die Sets pflegen sich ueber `add`/
+`discard` gegenseitig. **Wirksam machen waere die falsche Reparatur gewesen** –
+in `brightness.py` lief der Aufruf jede Minute, ein wirksames Leeren haette
+jede Minute neu gefahren; im Scheduler stand er direkt vor dem Filter, der
+gegen dasselbe Set prueft, und haette ihn ausgehebelt.
+
+**Linos, zwei Punkte:** „Abweichendes Schliessen" hat jetzt zwei Bedingungen
+(`CLOSE_CONDITION_SLOTS`, Muster von `VENT_CONDITION_SLOTS`, beide muessen
+zutreffen, fail closed wie bisher). Und die Zahlenfelder trugen ueberall die
+Beschriftung des Sonnenschutzes – „Beschatten ab" samt Hinweis auf
+durchziehende Wolken, auch bei Frost und Lueften. `_condLabels()` entscheidet
+das jetzt am Slot; die Schluessel bleiben dieselben.
+
+**Offen:** `drive_after_close` und Aussperrschutz schliessen sich heute aus.
+Der Nachhol-Zweig faehrt gar nicht, obwohl der Aussperrschutz sagt, wie weit
+gefahren werden duerfte. Wer bei offenem Fenster die Lueftungsposition und
+beim Schliessen die volle Fahrt will, kann das nicht einstellen.
+
+### 2026-08-09 – 2.10.1: die Vorgabe, die nie beschattete
+
+**Der eigentliche Fund kam beim Pruefen eines Wunsches.** charly166 wollte
+seine Helligkeitssensoren ohne Elevation und Azimut nutzen. Azimut ist laengst
+optional, Bedingungen gehen laengst pro Rollladen – sein Ziel war also schon
+erreichbar. Beim Nachsehen fiel aber auf: `DEFAULT_AREA_ELEVATION_MAX = 15.0`.
+Die Mittagssonne steht im Sommer bei 60°. **Ein frisch angelegter Bereich mit
+eingeschaltetem Sonnenschutz beschattete tagsueber also nie** – nur kurz nach
+Sonnenaufgang und vor Sonnenuntergang. Das duerfte hinter einigen „warum
+beschattet er nicht"-Fragen stecken.
+
+Geaendert wurde nur die Vorgabe fuer **neue** Bereiche (Panel-Default und
+`DEFAULT_AREA_ELEVATION_MAX`, das ausschliesslich der config_flow beim
+Ersteinrichten liest). `DEFAULT_AREA_ELEVATION_THRESHOLD = 4.0` bleibt, weil
+`get_elevation_bounds()` es als Rueckfall fuer gespeicherte Konfigurationen
+ohne `elevation_max` benutzt – daran zu drehen haette Bestandsanlagen
+verschoben.
+
+**`elevation_enabled`** schaltet die Hoehenpruefung ab, Default `True`. Drei
+Stellen muessen mitziehen, sonst wirkt der Haken nur halb:
+
+* `elevation_in_sun_protect_range()` gibt True zurueck,
+* `sun_protect_conditions_met()` darf bei `elevation is None` nicht mehr
+  pauschal blockieren – ohne Sonnendaten gibt es nichts zu pruefen,
+* **`elevation.py` ist die leicht zu uebersehende:** die Freigabe-Zweige
+  `elev < e_min` („Tag vorbei") und `elev > e_max` haengen an denselben
+  Grenzen. Ohne Gate dort wuerde die Beschattung abends beendet, obwohl die
+  Hoehe egal sein soll.
+
+**Raumtemperatur im Dashboard** ist reines Frontend: `temp_sensor` je Bereich,
+gelesen aus `hass.states`. Kein Backend-Code – `save_area` speichert
+unbekannte Schluessel ohnehin mit. Tote und fehlende Sensoren lassen die Zeile
+weg, statt „unavailable" hinzuschreiben.
+
+**Slots heissen `a`–`d`, nicht `sun_cond_a`.** `sun_condition_keys("a")` baut
+`sun_cond_a_entity` daraus. Mit dem vollen Namen aufgerufen entsteht
+`sun_cond_sun_cond_a_entity`, der Slot gilt als unkonfiguriert und
+`_condition_slot_met` gibt **True** zurück – ein fail-open, das wie ein
+bestandener Test aussieht.
+
+### 2026-08-10 – 2.10.2: Wolfs Export, und was der Export selbst verschwieg
+
+Der erste Bericht, der einen Fehler aufgedeckt hat, den vorher niemand gemeldet
+hatte. Gefunden nicht in seiner Beschwerde, sondern beim Durchrechnen der
+Tabelle daneben.
+
+**Der Fund: der Aussperrschutz galt beim Fenstertrigger nicht.**
+`get_effective_close_position()` sitzt an jedem automatisierten Fahrweg –
+Scheduler, Helligkeit, Beschattung – nur nicht an dem einen, der
+**ausschliesslich bei offenem Fenster** faehrt. `window_trigger.py` fuhr
+`target_pos` roh. Wolfs „Kueche vorne": Kontakt ohne Kipp-Zustand, also
+zweiwertig, also gilt `position_when_window_tilted` = 0 – und daneben
+Aussperrschutz mit Mindesthoehe 90. Terrassentuer auf, Rollladen zu.
+
+Zwei Dinge daran sind lehrreich:
+
+* **Der Weg dahin wurde erst 2.8.1 geoeffnet.** Solange der Fenstertrigger nur
+  (nahezu) geschlossene Rollladen erreichte, fuhr er von 0 auf 0 und der
+  fehlende Deckel fiel nicht auf. Erst seit der beschattete Rollladen den
+  Kontakt annimmt, faehrt er von 50 auf 0. Ein Fix kann eine alte Luecke
+  scharfstellen, ohne sie zu beruehren.
+* **Die Gegenprobe gehoert dazu:** ohne die eine Zeile fallen 2 der 4 neuen
+  Tests. Gemacht, nicht angenommen.
+
+**Was der Export selbst falsch erzaehlt hat.** Jedes Speichern im Panel ruft
+`async_reload` (`__init__.py:378`), und `hass.data[...]` wird dabei neu
+aufgebaut. Alle Laufzeit-Merker stehen danach leer. Wolf hat kurz vorher etwas
+umgestellt – sein Bericht zeigte deshalb „Laufender Zustand" komplett auf „–"
+und bei zwei Rollladen „Ergebnis: beschatten · gemerkter Zustand: nicht
+beschattet", samt der Aufforderung, das zu melden. Beides kein Befund.
+
+Dass die Beschattung vorher lief, stand trotzdem drin: beide Rollladen genau
+auf ihrer `position_sun_protect` (49 bzw. 59), Quelle `automation` – auf solche
+Werte faehrt nichts sonst. **Merke: bei leeren Merkern zuerst die Positionen
+gegen die Rollen halten, bevor man einen Fehler sucht.** `_runtime_started`
+steht jetzt im Dict, der Export nennt das Alter und erklaert die Striche.
+
+**Zwei stille Einstellungen** hat derselbe Export offengelegt, beide derselben
+Klasse: gespeichert, in der Tabelle sichtbar, wirkungslos, weil ein Schalter
+daneben etwas anderes lesen laesst. Eigene Geometriewerte ohne „Eigene
+Ausrichtung", und `position_when_window_open` an einem zweiwertigen Kontakt
+(2.8.2 hat dafuer das Formular aufgeraeumt, die Bestandsdaten nicht).
+`_silent_setting_notes()` benennt beide. `_has_tilt_state` ist dafuer nach
+`window_helper.py` gewandert und heisst dort `has_tilt_state`.
+
+**Bei Wolf selbst falsch eingestellt** (fuer die Antwort im Forum
+nachgerechnet, nicht geschaetzt): in seinem Helligkeitsbereich sind Hoch- und
+Runter-Zeitfenster vertauscht – Hoch 19:00–20:00, Runter 11:00–18:00. Damit
+faehrt dort morgens nie etwas hoch und abends nie etwas runter. Dazu Lux Hoch
+595 unter Lux Runter 956; zwischen beiden Werten gilt beides gleichzeitig.
+Gerettet wird ihn nur, dass sich die Zeitfenster nicht ueberschneiden –
+korrigiert er die, faengt es an zu pendeln. Daher die Formularwarnung.
+
+**Testfalle vermieden:** die neuen Export-Tests liegen in
+`tests/test_export_notes.py`, nicht in `test_forum_findings.py` – dessen
+Fixture kostet ~14 s je Test. `async_build_export` braucht kein echtes Setup:
+Optionen am Entry und ein hingestelltes `hass.data[DOMAIN][entry_id]` reichen.
+
+**Verifiziert:** `pytest` 436 Tests gruen (12 neue), Gegenprobe zum Fix
+gemacht, `node --check` fuers Panel, i18n 291/291 Schluessel in allen elf
+Sprachen. **Nicht im Browser geprueft:** die Formularwarnung und der
+reparierte Download-Knopf – letzterer laesst sich ohne Android-Tablet ohnehin
+nicht nachstellen.
+
+### 2026-08-10 – 2.10.3: der Haken, den niemand gelesen hat
+
+Wolfs zweiter Export, und wieder steckte der Fund nicht in seiner Frage (sie
+ging um die Dateiendung), sondern in einer Zeile der Tabelle daneben:
+`elevation_enabled: nein` an einem Rollladen.
+
+**`resolve_sun_geometry()` kannte den Schlüssel nicht.** Das Panel rendert den
+Haken seit 2.10.1 in *beiden* Formularen und `save_shutter` speichert
+unbekannte Schlüssel ohnehin mit – gemerged wurde er nie. `elevation_used(geo)`
+las damit immer den Bereich, an allen drei Stellen (Helper, `elevation.py`,
+Export). Der Changelog-Eintrag von 2.10.1 verspricht ausdrücklich „je Bereich
+und je Rollladen".
+
+**Die Lehre ist die Liste selbst:** Der Schlüssel-Tupel in
+`resolve_sun_geometry` *ist* der Vertrag zwischen Formular und Logik. Steht ein
+Feld im Rollladenformular, aber nicht in dieser Liste, ist es gespeichert,
+sichtbar und wirkungslos – genau die Klasse Fehler, die `_silent_setting_notes()`
+seit 2.10.2 im Export benennt. Steht jetzt als Kommentar am Docstring.
+
+Am Export nachgezogen: der Hinweis nennt den Haken nur, wenn er **aus** ist.
+Eingeschaltet ist er die Vorgabe und beschreibt nichts – als Warnung stünde er
+sonst an fast jedem Rollladen (`_is_set(True)` wäre wahr).
+
+**Download jetzt `.txt`.** Kein Codefehler, sondern die Whitelist des Forums
+(jpg, png, …, yaml, txt – kein md). Der Inhalt bleibt Markdown; wer die Datei
+einfügt statt hochzuladen, merkt nichts.
+
+**Verifiziert:** `pytest` 442 Tests grün (6 neue), Gegenprobe gemacht – ohne die
+eine Zeile in `resolve_sun_geometry` fallen 2 der 4 neuen Geometrie-Tests.
+`node --check` fürs Panel. **Nicht im Browser geprüft:** der Download-Knopf.
+
+**Wolfs Anlage selbst** (nachgerechnet, nicht geschätzt): vier seiner sechs
+Rollläden hängen halb in der Luft, alle aus derselben Ursache – ein Bereich mit
+abgeschalteter Automatik auf einer der beiden Seiten. „Zimmer vorne" fährt über
+`wohnbereich_vorne` abends runter, aber sein Hoch-Bereich `abwesend_hoch` ist
+aus: er bleibt unten. „Küche vorne" ist der Spiegelfall (Runter-Bereich
+`abwesend_runter` aus, fährt also nie zu; dessen Sonnenschutz ist ebenfalls aus,
+seine eigenen Geometriewerte damit doppelt wirkungslos). „Wohnzimmer" und
+„Zimmer hinten" haben die Automatik am Rollladen aus. Die Abwesenheits-Bereiche
+als zweite Seite einzutragen ist naheliegend und kippt beim Einschalten das
+Verhalten der betroffenen Rollläden komplett – möglicher Kandidat für einen
+Hinweis im Formular.
+
+### 2026-08-11 – 2.11.0: die Frist im Helligkeitsmodus
+
+hollizone: in der dunklen Jahreszeit wird die Lux-Schwelle nie erreicht, er
+braucht eine Uhrzeit, zu der trotzdem geöffnet wird. Nachgesehen: gab es
+nicht. Die Zeitfenster (`_area_window`) und die Sonnengrenzen (`_sun_bound_ok`)
+**erlauben** eine Fahrt nur, ausgelöst hat immer allein der Lux-Wert. Der
+einzige Nachholmechanismus war `pending_up` – und der hängt weiter am Sensor.
+
+**Der Punkt, der den Aufbau bestimmt hat:** `brightness.py` war rein
+ereignisgetrieben, es hing allein an `async_track_state_change_event` des
+Sensors. Meldet der Sensor in der Dämmerung minutenlang denselben Wert, feuert
+kein Event – eine Prüfung „ist es jetzt 09:00?" im vorhandenen Pfad wäre nie
+gelaufen. Der Modus hängt jetzt zusätzlich am gemeinsamen Minutentakt
+(`register_minute_callback(data, "brightness", …)`), aber nur, wenn überhaupt
+eine Frist eingeschaltet ist.
+
+Dafür mussten die beiden Fahrblöcke aus `_process_brightness` heraus:
+`_run_down()` und `_run_up()` sind jetzt Funktionen, die Lux-Pfad und
+Uhrzeit-Pfad gemeinsam benutzen. Der Umbau ist reine Umstellung – die 442
+Tests von 2.10.3 blieben unverändert grün, *bevor* die neuen dazukamen. Genau
+deshalb in dieser Reihenfolge gemacht.
+
+Drei Entscheidungen, die man kennen muss:
+
+* **Abschaltbar, Vorgabe aus** (ausdrücklicher Wunsch). Eine Frist, die
+  ungefragt gilt, bewegt in jeder zufriedenen Anlage Rollläden.
+* **Der Tagesmerker wird auch gesetzt, wenn nichts gefahren wurde.** `t >=
+  deadline` bleibt bis Mitternacht wahr; ohne Merker führe die Frist jede
+  Minute erneut auf – und höbe abends den Rollladen wieder hoch, den der
+  Lux-Wert eben geschlossen hat. Muster von `fired_today` im Scheduler.
+* **Beim Setup wird eine schon vergangene Frist als erledigt markiert**, sonst
+  fährt ein Reload um 23 Uhr alles hoch, weil „spätestens 09:00" längst vorbei
+  ist. Ebenfalls aus `scheduler.py` abgeschrieben, dort für den Zeitmodus.
+
+Die Wochenendwerte fallen wie überall auf die Wochentagswerte zurück
+(`b_we_latest_up` leer = `b_latest_up`). Vier neue i18n-Schlüssel; die
+Zeitfeld-Beschriftungen `f_latest_up`/`f_we_latest_up` gab es schon aus den
+Zeitklammern des Sonnenmodus und werden mitbenutzt.
+
+**Verifiziert:** `pytest` 455 Tests grün (13 neue), beide Gegenproben gemacht
+(ohne den Tagesmerker fällt „einmal am Tag", ohne die Setup-Markierung fällt
+„kein Nachholen nach Neustart"), i18n 295/295 in allen elf Sprachen, Panel in
+Node gerendert. **Nicht im Browser geprüft.**
+
+**Testfalle, neu:** `setup_brightness_listener` steigt bei einem falsy
+Laufzeit-Dict sofort aus – ein frisch hingestelltes `{}` ist falsy, und der
+Test bekommt kommentarlos keinen Minutentakt. Im Test steht deshalb
+`{"master_enabled": True}` drin.
+
+**Panel in Node rendern:** `_sec()` gibt den Rumpf nur aus, wenn der Abschnitt
+aufgeklappt ist. Im Harnisch `p._secIsOpen = () => true` setzen, sonst sucht
+man Felder, die nur zugeklappt sind.
+
+### 2026-08-11 – 2.14.0: der Helfer, der als erfüllt galt
+
+DocSpider im Forum: „Hausmodus", „Kino Modus" und „Reinigungsdienst" liegen bei
+ihm als Helfer vor, und das Bedingungsfeld fand sie nicht. Die Frage klang nach
+Bedienung, war aber ein Fehler – und zwar der gefährlichere von zweien.
+
+**Sichtbar war nur die Auswahl.** `_entityField` bekam an allen sechs
+Bedingungsstellen `["binary_sensor","sensor","weather"]`, `input_boolean` und
+`input_select` fielen also raus. Das allein wäre eine Unbequemlichkeit gewesen.
+
+**Der eigentliche Fund lag dahinter:** Hätte er den Helfer doch eintragen
+können – über einen Import, ein altes Backup, eine umbenannte Entität –, dann
+prüft `_condition_slot_met()` auf `binary_sensor.` und sonst nichts. Ein
+`input_boolean` fiel damit in den Zahlen-Zweig, `float("off")` scheitert, und
+der Zweig endet mit **`return True`**. Fail open heißt hier: die Bedingung, die
+das Beschatten verhindern sollte, meldet „erfüllt". Genau die Klasse, die
+2.10.1 schon einmal hatte (`sun_cond_sun_cond_a_entity` – Slot gilt als
+unkonfiguriert, also True). **Merke: in dieser Funktion sieht jeder Fehlerpfad
+wie ein bestandener Test aus.**
+
+Behoben an einer Stelle: `BOOLEAN_CONDITION_DOMAINS` in `const.py`
+(`binary_sensor`, `input_boolean`, `switch`, `schedule`), und weil
+`guard_slot_danger()` und die eigenen Slots durch dieselbe Funktion laufen,
+gilt es sofort für Beschattung, Schließen, Frost, Lüften und Markisenschutz.
+
+Drei Dinge, die dazugehören:
+
+* **Die JS-Liste ist die zweite Hälfte des Vertrags.** `BOOL_COND_DOMAINS` im
+  Panel muss `BOOLEAN_CONDITION_DOMAINS` spiegeln, sonst zeigt das Formular
+  Zahlenfelder für etwas, das das Backend als Schalter liest. Steht als
+  Kommentar an beiden Listen – dieselbe Sorte Vertrag wie der Schlüssel-Tupel
+  in `resolve_sun_geometry()` aus 2.10.3.
+* **Reihenfolge in `_renderCondDetail` an die des Backends angeglichen.** Dort
+  gewinnt eine eingetragene Zustandsliste vor der Domänenprüfung; das Panel
+  prüfte zuerst die Domäne. Bei einem Binärsensor mit gespeicherter Liste
+  hätte das Formular „an = erfüllt" behauptet, während das Backend die Liste
+  auswertet.
+* **`input_select` bringt seine Optionen selbst mit** (`attributes.options`).
+  Das Freitextfeld aus 2.7.2 bleibt, wird hier aber nicht mehr gebraucht – und
+  „Urlaub" gegen „urlaub" kann nicht mehr danebengehen (das Backend vergleicht
+  ohnehin kleingeschrieben, aber niemand sieht das dem Formular an).
+
+Am Export nachgezogen: bei einem an/aus-Helfer stand in der Schwellenspalte
+„ab – / auf unter –", was sich wie eine vergessene Einstellung liest.
+
+**Was nicht gebaut wurde, obwohl gefragt:** DocSpiders andere drei Fälle
+brauchen keinen Code. Hausmodus und Kino sind „soll dieser Rollladen überhaupt
+automatisch fahren" – das ist der Schalter je Rollladen aus 2.5.0, und
+`elevation.py:268` beschreibt in seinem Kommentar genau diesen Ablauf (weder
+beschatten noch freigeben, Merker bleibt stehen, sauberer Wiedereinstieg).
+**Nicht über die manuelle Übersteuerung lösen**: die Beschattung fragt sie
+nirgends ab und fährt binnen einer Minute zurück auf die Beschattungsposition.
+
+**Verifiziert:** `pytest` 562 Tests grün (11 neue), Gegenprobe gemacht – ohne
+die eine Zeile in `_condition_slot_met` fallen 4 der 7 neuen Helfer-Tests, die
+übrigen drei beschreiben Verhalten, das schon vorher stimmte. i18n 366/366 in
+allen elf Sprachen (kein neuer Schlüssel, `f_sun_cond_bin_hint` in allen elf
+umformuliert). Panel in Node gerendert, sieben Bedingungsarten plus die
+Auswahlliste. **Nicht im Browser geprüft.**
+
+### 2026-08-11 – 2.13.0: die Uhrzeit, die der Beschattung fehlte
+
+Aus GitHub-Diskussion #5 (Fireblade900rr): das Kinderzimmer soll in den
+Schulferien morgens dunkel bleiben. Der Screenshot im Chat war eine
+Übersetzung; das englische Original ist präziser – *„prevent a shutter from
+opening at standard time/sunrise **and delay sun shading to a defined hour**"*,
+Titel *„…of single shutter"*.
+
+**Erst nachgesehen, dann gebaut.** Das war eine Anfrage in drei Teilen, und
+zwei davon konnte die Integration bereits:
+
+| Teil | Stand |
+| --- | --- |
+| später hochfahren, sensorgesteuert | **ging** – `is_weekend_schedule()` fragt den Workday-Sensor vor dem Kalender, und zwar in *allen drei* Modi |
+| Automatik ganz unterbinden | **ging** – Auto-Schalter je Rollladen |
+| Beschattung erst ab einer Uhrzeit | **fehlte** – Elevation, Azimut, Bedingungen und Saison beschreiben alle die Sonne, keine davon die Uhr |
+
+Gebaut wurde deshalb nur der dritte Teil, plus eine Umbenennung.
+
+**`shade_from`/`shade_to`, beide einzeln optional.** „Erst ab 09:00" ist für
+sich eine gültige Einstellung – eine obere Grenze zu erzwingen hätte den
+gefragten Fall umständlicher gemacht als nötig. Rückfall **je Schlüssel** in
+`resolve_shading_config()`, nicht hinter dem Geometrie-Haken: der gefragte Fall
+ist immer ein einzelnes Fenster, und ihn an „Eigene Ausrichtung" zu koppeln
+hieße, eine völlig unabhängige Einstellung zu erzwingen.
+
+**Kein Wrap über Mitternacht** – bewusst anders als Saison und Azimut. Ein
+Beschattungsfenster durch die Nacht meint niemand, und `from > to` als Umschlag
+zu lesen wäre die Verwechslung von Spanne und Punktepaar, die 2.8.0 vier
+Bedingungen wirkungslos gemacht hat. Stattdessen: verwerfen und ins Log.
+
+**Freigabe ohne Haltezeit**, wie beim Saisonende. Die Haltezeit ist für
+durchziehende Wolken; eine Uhrzeitgrenze kommt innerhalb der Haltezeit nicht
+zurück, und der Rollladen zählte solange weiter als beschattet – was den
+Abendplan zusätzlich blockiert. Derselbe Doppel-Riegel wie Fund 3 aus 2.8.0.
+
+**Der Fehler, den der Test gefunden hat:** `parse_time()` fällt bei
+unlesbaren Werten auf **06:00** zurück, nicht auf `None`. Ein Tippfehler im
+Zeitfeld hätte damit jeden Morgen eine Beschattungssperre erfunden, die
+niemand eingetragen hat. Die neuen Felder prüfen deshalb streng auf `HH:MM`
+und ignorieren alles andere. **Merke: `parse_time(x, None)` gibt nicht `None`
+zurück** – wer eine „keine Grenze"-Semantik braucht, muss selbst parsen.
+
+**Die zweite Hälfte war kein Code.** Der „Workday-Sensor" heißt jetzt
+„Sondertage-Sensor", und der Hinweistext nennt das vollständige Ferien-Rezept
+(Sensor eintragen, „Hoch Wochenende" 09:00, „Runter Wochenende" leer lassen).
+Schlüssel und Verhalten unverändert. Wer nur „Workday-Sensor" liest, kommt
+nicht auf Schulferien – und genau das war hier der Grund für die Anfrage.
+
+**Verifiziert:** `pytest` 551 Tests grün (17 neue), **drei Gegenproben**
+gemacht (ohne das Gate beschattet sie durch; ohne den Rückfall je Rollladen
+greift der eigene Wert nicht; mit `parse_time` statt der strengen Prüfung
+blockiert ein Tippfehler). i18n 366/366 in allen elf Sprachen, Panel in Node
+gerendert – Bereichs-, Rollladen- und Markisenformular. **Nicht im Browser
+geprüft.**
+
+**Beinahe-Unfall beim Arbeiten, nicht im Produkt:**
+`open(p,"w").write(open(p).read().replace(...))` leert die Datei, bevor sie
+gelesen wird – Python wertet `open(p,"w")` zuerst aus. Die `manifest.json`
+stand danach auf 0 Bytes. Aufgefallen ist es nur, weil die Kontrollausgabe
+danach leer blieb. **Lesen und Schreiben immer in zwei Anweisungen**, und nach
+jeder Skript-Änderung an einer Datei deren Inhalt prüfen, nicht nur den
+Rückgabewert des Skripts.
+
+### 2026-08-11 – 2.12.0: Markisen
+
+Der Wunsch stand seit Monaten als „Geplant" im README, mit Umfrage. Umgesetzt
+wurde er nicht als zweites Datenmodell, sondern als **ein Schlüssel**.
+
+**Der Befund, der den ganzen Umbau bestimmt hat:** `elevation.py` ist
+richtungsblind. Es fährt beim Beschatten auf `position_sun_protect` und beim
+Freigeben auf `position_open` – welche Zahl das ist, interessiert den Code
+nicht. Eine Markise mit 0 als Ruhestellung und 100 als Beschattung läuft durch
+dieselbe Maschine. Elevation, Azimut, Saison, die vier Bedingungen, Haltezeit,
+Hysterese je Cover, Mindestabstand, Fahrtkontrolle, Positionsspeicher,
+manuelle Übersteuerung, der Doppel-Riegel aus 2.11.1: alles trägt unverändert.
+
+Deshalb `device_kind` in derselben `shutters`-Liste statt einer zweiten Liste.
+Fehlender Schlüssel = Rollladen, also **keine Migration**. Ein eigenes Array
+hätte bedeutet, jede der oben genannten Mechaniken zu duplizieren.
+
+**Die drei Polaritäten der Bedingungs-Slots.** Das ist der Teil, den man beim
+nächsten Mal nicht neu herleiten will:
+
+| Wer | nicht konfiguriert | Sensor tot |
+| --- | --- | --- |
+| Beschattung (`sun_extra_conditions_met`) | ja (blockiert nicht) | ja – **fail open** |
+| Schließen/Frost/Lüften (`_own_slot_met`) | nein | nein – **fail closed** |
+| Markisenschutz (`guard_slot_danger`) | **keine Gefahr** | **Gefahr** |
+
+Die dritte passt in keine der beiden vorhandenen, deshalb eigene Funktion mit
+genau diesem Kommentar darüber. Und: der Slot bedeutet **„Gefahr liegt vor"**,
+nicht „Freigabe erfüllt". Damit lesen sich Binärsensor („on" = Regen),
+Zahlenhysterese (einfahren ab 30, frei unter 15) und Textzustände alle richtig
+herum, ohne dass `_condition_slot_met()` angefasst werden musste.
+
+**Zwei Zustände, nicht einer.** *Gesperrt* (nicht ausfahren) und *einfahren*
+sind getrennt. Ein toter Sensor sperrt ab der ersten Sekunde, holt die Markise
+aber erst nach einer Karenz herein – sonst reißt ein Sensor, der beim Neustart
+eine Minute aussetzt, jede Markise im Haus hinein.
+
+**Der Schutz ignoriert Haupt-, Bereichs- und Rollladenschalter.** Bewusste
+Abweichung von der sonst geltenden Rangfolge, an drei Stellen dokumentiert
+(Panel, README, Changelog). Sonst meldet der erste Nutzer, dessen Markise bei
+ausgeschaltetem System einfährt, das als Fehler.
+
+**Zwei Fehler in der eigenen Guard-Logik, beide beim Testschreiben gefunden:**
+
+1. Die Ruhe-Uhr für die Sperrzeit wurde beim *ersten Blick* auf einen ruhigen
+   Sensor gestellt statt beim *Übergang* von Gefahr auf Ruhe. Damit hätte jeder
+   Neustart jede Markise zwanzig Minuten ausgesperrt, ohne dass je etwas
+   überschritten war.
+2. Der Merker „schon eingefahren" saß an der Absicht statt an der Fahrt – eine
+   gescheiterte Zwangsfahrt wäre nie wiederholt worden. **Dieselbe Klasse wie
+   Fund 1 aus 2.8.0.** Der Fehler ist offenbar leicht wieder zu machen: der
+   Merker gehört an die Handlung, nicht an den Entschluss.
+
+**Ein dritter, im Export:** die Warnung „Windsensor misst in m/s, Schwelle sieht
+nach km/h aus" stand hinter einem frühen `return` – ausgerechnet im Fall
+„frisch eingerichtet, Schutz hat noch nie ausgewertet", also genau da, wo die
+Schwelle noch falsch stehen kann. Faktor 3,6 daneben heißt: die Markise fährt
+nie ein. Das ist der W/m²-Fehler aus 2.8.1 noch einmal, nur gefährlicher.
+
+**Mitgenommen, unabhängig von Markisen:** `set_cover_position()` rief immer
+`cover.set_cover_position`, ohne das Feature-Bit zu prüfen – die Tilt-Fahrt tut
+das seit jeher. Antriebe ohne Positionierung (viele Markisenmotoren, etliche
+alte Rollladenantriebe) scheiterten dort, und seit 2.8.0 wird eine gescheiterte
+Fahrt jede Minute wiederholt. Jetzt Rückfall auf `open_cover`/`close_cover`.
+
+**Im Panel aufgefallen, beim Rendern in Node:** der Kopierknopf bot im
+Markisenformular auch Rollläden als Vorlage an – samt `position_open: 100`,
+Fenster- und Lamellenschlüsseln. Vorlagen sind jetzt auf dieselbe Geräteart
+beschränkt, und `device_kind` steht in `COPY_KEEP`: sonst wäre aus dem
+Kopierknopf ein Umschalter geworden, der die halbe Konfiguration wegwirft.
+
+**Aufteilung der Sensoren** (ausdrückliche Vorgabe): alle drei global, davon
+**nur der Wind** je Markise überschreibbar. Im Formular steht deshalb nur der
+Windsensor plus ein Verweis auf die Einstellungen; das Backend könnte alle drei
+mergen, das Formular bietet sie nur nicht an.
+
+**Verifiziert:** `pytest` 534 Tests grün (73 neue), **vier Gegenproben** gemacht
+(ohne den Scheduler-Filter fährt die Markise abends mit; ohne den
+Aussperrschutz-Riegel bleibt sie bei 20 % stehen; ohne die Guard-Abfrage in der
+Beschattung fährt sie in den Sturm; mit dem Merker an der Absicht wird eine
+gescheiterte Fahrt nie wiederholt). `node --check` fürs Panel, i18n 361/361 in
+allen elf Sprachen, Panel in Node gerendert – alle sieben Ansichten plus
+zwanzig Inhaltsprüfungen. **Nicht im Browser geprüft.**
+
+**Testfalle, neu:** `evaluate_guard(now=…)` mischt sich nicht mit der echten
+monotonen Uhr. Wer den ersten Aufruf ohne `now` macht und danach absolute Werte
+übergibt, vergleicht gegen einen Nullpunkt Jahre in der Zukunft. In
+`test_awning_guard.py` steht dafür `T0 = 0.0`.
+
+**Offen:** Die Sperrzeit steht nur im RAM – ein Neustart mitten in der
+Sperrzeit gibt die Markise früher frei. Die Wertehysterese hält weiterhin,
+betroffen ist nur das Fenster „ruhig, aber noch in der Sperrzeit". Persistent
+wäre `position_store.py` der Ablageort.
+
+### 2026-08-11 – 2.11.1: derselbe Rollladen zweimal
+
+Viktor hat sich verklickt und ein Rollo zweimal angelegt, in verschiedenen
+Bereichen. Ergebnis: Fahrt im Minutentakt hin und her – jeder Eintrag
+entscheidet für sich, und die beiden widersprechen sich. Gemerkt hat er es
+erst im Export.
+
+**`save_shutter` hängte ungeprüft an.** Bereiche sind über ihre `id`
+geschlüsselt (`_ws_save_area` sucht den Index und aktualisiert), Rollläden
+liegen dagegen als Liste mit Index vor – ohne Schlüssel gab es nichts, was
+einen zweiten Eintrag verhindert hätte. Der Riegel sitzt jetzt dort, mit
+`i != idx`: beim Bearbeiten ist der eigene Eintrag natürlich derselbe
+Rollladen.
+
+Drei Ebenen, bewusst:
+
+* **Server** – der Befehl lehnt ab (`duplicate_cover`), samt Name des
+  bestehenden Eintrags. Das ist die Grenze.
+* **Panel** – Warnung direkt unter der Auswahl und ein Abbruch vor dem Senden,
+  damit man es sieht, bevor man speichert. Beides über `_duplicateCover()`.
+* **Export** – nennt bestehende Doppeleinträge bei *beiden* Zeilen. Neue
+  Konfigurationen sind gesperrt, alte tragen den Fehler weiter.
+
+**Nicht gemacht:** die Laufzeit gegen Doppeleinträge härten (etwa in
+`elevation.py` nach Cover deduplizieren). Das würde den Fehler verstecken,
+statt ihn zu beheben – und welcher der beiden Bereiche gewinnt, wäre willkürlich.
+
+**Verifiziert:** `pytest` 461 Tests grün (6 neue), Gegenprobe gemacht (ohne den
+Riegel fällt die Ablehnung), Panel in Node gerendert – Hinweis erscheint beim
+Doppel und *nicht* beim Bearbeiten des vorhandenen Eintrags. i18n 296/296.
+
+**Falle beim Testschreiben:** `async_build_export` gibt ein Dict zurück
+(`{"markdown": …, …}`), keinen String.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
