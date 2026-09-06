@@ -301,10 +301,64 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.22.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.22.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
+
+### 2026-09-06 – 2.22.1: der Schutz, der nur die Markise kannte
+
+Kein Forumsbeitrag – ein Fund beim systematischen Durchgehen der gesamten
+Beschattungs-/Schutzlogik für Rollläden, Markisen und Dachfenster, auf
+eigene Anforderung hin (Bedingungslücken, Widersprüche, Zirkelbezüge).
+
+**Der Fund:** `_drive_sun_protect()` in `elevation.py` fragte den
+Wind-/Regen-/Frostschutz (`evaluate_guard`/`clamp_to_rest`) vor einer
+Beschattungsfahrt nur unter `if awning:` – aus der Zeit, als die Markise
+(2.12.0) die einzige geschützte Geräteart war. Seit das Dachfenster
+(2.20.0) genau denselben Schutz bekam (`has_guard()` deckt beide ab), lief
+diese eine Prüfstelle nicht mit: ein Dachfenster geriet in den
+allgemeinen (Nicht-Markisen-)Zweig und konnte trotz aktiver Regengefahr
+auf die Lüftungsspalt-Position hinausgefahren werden.
+
+**Warum das schwerer wiegt als ein einmaliges Fehlverhalten.** Der Schutz
+fährt pro Gefahrenepisode nur *einmal* zu (`state["retracted"]` in
+`awning_guard.py`, damit er nicht gegen eine manuelle Korrektur ankämpft
+– dieselbe Regel wie bei einer Markise). Ohne die Schutzabfrage im
+Beschattungs-Fahrweg konnte die Beschattung ein einmal vom Schutz
+zugefahrenes Dachfenster beliebig oft wieder öffnen, solange es
+weiterregnete – der Schutz hielt sich für diese Episode für erledigt und
+griff kein zweites Mal ein. Genau das Szenario, vor dem der 2.20.0-Log
+warnt: „bei einem Dachfenster kostet ein verpasster Schutz Wasser im
+Haus."
+
+**Behoben mit der kleinstmöglichen Änderung:** das Schutz-Gate hängt jetzt
+an `has_guard(shutter)` statt an `is_awning(shutter)` – eine reine
+Umhängung, keine neue Prüfung. Die geräteartabhängige Positionsberechnung
+(Markise vs. Dachfenster/Rollladen) bleibt unverändert im jeweiligen
+Zweig stehen; nur die Frage „braucht dieses Gerät den Schutz" wurde von
+der Frage „wie wird seine Zielposition berechnet" getrennt. Für Markisen
+ist das exakt dieselbe Prüfung wie vorher, nur eine Codezeile weiter
+unten. Für gewöhnliche Rollläden (`has_guard()` == False) läuft der Block
+gar nicht erst an.
+
+**Merke, wieder einmal:** dieselbe Fehlerklasse wie
+`resolve_sun_geometry()` (2.10.3), `only_shutters` (2.16.0/2.20.0) und
+`guard_rest_role`/`rest_role` (2.21.1) – eine neue Geräteart wird an einem
+zentralen Vertrag ergänzt, aber nicht an jeder Stelle durchgezogen, die
+denselben Vertrag konsultiert. Diesmal war es nicht ein Schlüssel-Tupel
+oder ein Filter, sondern ein Sicherheits-Check vor einer Fahrt.
+
+**Verifiziert:** `pytest` 803 Tests grün (4 neue), in
+`tests/test_roof_windows.py`. Der Kern-Regressionstest fährt genau die
+Reihenfolge nach, die den Fund ausmacht: Dachfenster öffnet bei
+trockenem, warmem Zustand → Regen setzt ein, Schutz fährt einmal zu → es
+regnet über mehrere weitere Minutentakte unverändert weiter → die
+Beschattung darf nicht erneut öffnen. Dazu eine Gegenprobe mit allen drei
+Gerätearten im selben Bereich am selben Regensensor: nur der ungeschützte
+Rollladen beschattet normal, Markise und Dachfenster bleiben gesperrt.
+Volle Suite `pytest` grün (803, zuvor 799). **Nicht im Browser geprüft** –
+reine Backend-Logik, keine Panel-Änderung.
 
 ### 2026-09-05 – 2.22.0: die Markise, die abends von selbst geht
 

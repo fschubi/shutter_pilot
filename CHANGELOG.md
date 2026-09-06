@@ -4,6 +4,29 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.22.1]
+
+Ein Fund beim systematischen Durchgehen der gesamten Beschattungs- und
+Schutzlogik: der Wind-, Regen- und Frostschutz wurde vor einer
+Beschattungsfahrt bisher nur für Markisen gefragt, nicht für Dachfenster.
+
+### Behoben
+- **Die Beschattung konnte ein Dachfenster trotz aktivem Regenschutz auf
+  die Lüftungsspalt-Position öffnen.** Der Schutz-Check vor einer
+  Beschattungsfahrt hing an „ist das eine Markise?" statt an „braucht
+  dieses Gerät überhaupt Schutz?" – aus der Zeit, als die Markise die
+  einzige geschützte Geräteart war. Seit das Dachfenster denselben Schutz
+  bekam, lief diese eine Stelle nicht mit. Verschärft durch die
+  „einmal pro Gefahrenepisode"-Sperre des Schutzes selbst: ein einmal
+  zugefahrenes Dachfenster hätte die Beschattung während anhaltendem
+  Regen beliebig oft wieder öffnen können, weil der Schutz sich für diese
+  Episode bereits für erledigt hielt.
+
+### Was ändert sich für mich?
+Nichts an der Bedienung. Wer ein Dachfenster mit Wetterschutz **und**
+Beschattung für dessen Bereich eingerichtet hat, ist jetzt zusätzlich
+geschützt; Markisen und gewöhnliche Rollläden verhalten sich unverändert.
+
 ## [2.22.0]
 
 Ein Wunsch aus dem Forum (bjoerg): eine Markise soll abends bei Dämmerung

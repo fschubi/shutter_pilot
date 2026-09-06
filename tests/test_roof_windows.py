@@ -318,7 +318,7 @@ class TestOpeningAndClosingByConditions:
     """
 
     @staticmethod
-    async def _setup(hass, temp: str):
+    async def _setup(hass, temp: str, rain: str | None = None):
         from unittest.mock import patch as _patch
 
         from custom_components.shutter_pilot import cover_tracker
@@ -346,6 +346,10 @@ class TestOpeningAndClosingByConditions:
         hass.states.async_set(
             "sun.sun", "above_horizon", {"elevation": 30.0, "azimuth": 180.0}
         )
+        # Ein Regensensor ist optional, damit die beiden bestehenden Tests
+        # (ohne Wetterschutz konfiguriert) unveraendert bleiben.
+        if rain is not None:
+            hass.states.async_set(RAIN, rain)
         e_key, on_key, off_key, _ = sun_condition_keys("a")
         area = {
             CONF_AREA_ID: "bad",
@@ -359,13 +363,14 @@ class TestOpeningAndClosingByConditions:
             on_key: 24,
             off_key: 22,
         }
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            options={
-                CONF_AREAS: [area],
-                CONF_SHUTTERS: [{**WINDOW, CONF_NAME: "Dachfenster"}],
-            },
-        )
+        options = {
+            CONF_AREAS: [area],
+            CONF_SHUTTERS: [{**WINDOW, CONF_NAME: "Dachfenster"}],
+        }
+        if rain is not None:
+            options[sun_condition_keys("rain")[0]] = RAIN
+            options["guard_rain_lockout"] = 10
+        entry = MockConfigEntry(domain=DOMAIN, options=options)
         entry.add_to_hass(hass)
         with _patch(
             "custom_components.shutter_pilot._async_register_panel", return_value=None
@@ -410,6 +415,213 @@ class TestOpeningAndClosingByConditions:
         assert 0 in positions, f"muss schliessen, gefahren wurde: {positions}"
         assert 100 not in positions, (
             "die Freigabe darf das Fenster nicht aufreissen"
+        )
+
+
+# --- Der Wetterschutz muss die Fahrt kennen, nicht nur die Markise ----------
+
+
+class TestGuardBeatsShadingForAWindow:
+    """Derselbe Fall wie `TestGuardBeatsShading` in test_awning_shading.py,
+    nur an der Geraeteart, fuer die der Schutz vor der Fahrt bisher nie
+    gefragt wurde: `_drive_sun_protect()` in elevation.py prüfte den
+    Wetterschutz nur unter `if awning:` – ein Dachfenster lief an dieser
+    Pruefung vorbei und konnte trotz aktivem Regenschutz auf die
+    Lueftungsspalt-Position hinausgefahren werden.
+
+    Der schwerere Teil steckt in der zweiten und dritten Pruefung: der Schutz
+    faehrt pro Gefahrenepisode nur *einmal* zu (`state["retracted"]` in
+    awning_guard.py, damit er nicht gegen eine manuelle Korrektur ankaempft).
+    Ohne den Fix in elevation.py haette die Beschattung genau diese Sperre
+    ausgenutzt und das Fenster waehrend anhaltendem Regen beliebig oft wieder
+    aufreissen koennen, weil sie den Schutz gar nicht erst fragte.
+    """
+
+    # Dieselben Helfer wie oben, per Referenz statt per Vererbung – eine
+    # Test-Unterklasse wuerde pytest sonst auch die beiden geerbten Tests aus
+    # TestOpeningAndClosingByConditions ein zweites Mal einsammeln lassen.
+    _setup = staticmethod(TestOpeningAndClosingByConditions._setup)
+    _ticks = staticmethod(TestOpeningAndClosingByConditions._ticks)
+
+    async def test_rain_suppresses_the_airing_gap(self, hass):
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        _entry, data, _temp = await self._setup(hass, "26.0", rain="on")
+        await self._ticks(hass, data)
+
+        assert 30 not in [c.data["position"] for c in calls], (
+            "die Beschattung darf ein Dachfenster nicht bei aktivem "
+            "Regenschutz oeffnen"
+        )
+
+    async def test_it_stays_shut_across_further_ticks(self, hass):
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        _entry, data, _temp = await self._setup(hass, "26.0", rain="on")
+        await self._ticks(hass, data, count=5)
+
+        assert 30 not in [c.data["position"] for c in calls], (
+            "auch ueber mehrere Minutentakte darf es nicht aufgehen, "
+            "solange es weiterregnet"
+        )
+
+    async def test_the_once_per_episode_lockout_does_not_let_shading_reopen_it(
+        self, hass
+    ):
+        """Erst auf (trocken), dann Regen – der Schutz faehrt genau einmal
+        zu. Die Beschattung darf die zweite Fahrt nicht selbst uebernehmen,
+        nur weil der Schutz sich fuer diese Gefahrenepisode schon erledigt
+        haelt.
+        """
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        _entry, data, _temp = await self._setup(hass, "26.0", rain="off")
+        await self._ticks(hass, data)
+        assert 30 in [c.data["position"] for c in calls], (
+            "Vorbedingung: trocken und warm oeffnet wie gewohnt"
+        )
+        hass.states.async_set(
+            "cover.dachfenster_bad",
+            "open",
+            {"current_position": 30, "supported_features": 15},
+        )
+        calls.clear()
+
+        # Regen setzt ein - der Schutz greift ueber den Sensor-Listener
+        # sofort, nicht erst beim naechsten Minutentakt, und merkt sich diese
+        # Fahrt als "Gefahrenepisode erledigt" (state["retracted"]).
+        hass.states.async_set(RAIN, "on")
+        await hass.async_block_till_done()
+        assert 0 in [c.data["position"] for c in calls], (
+            "der Schutz muss sofort zufahren"
+        )
+        hass.states.async_set(
+            "cover.dachfenster_bad",
+            "closed",
+            {"current_position": 0, "supported_features": 15},
+        )
+        calls.clear()
+
+        # Es regnet weiter unveraendert - ohne den Fix wuerde die
+        # Beschattung (Temperatur weiterhin ueber der Schwelle) das Fenster
+        # jetzt erneut oeffnen, weil sie den Schutz fuer Nicht-Markisen nie
+        # gefragt hat.
+        await self._ticks(hass, data, count=3)
+
+        assert 30 not in [c.data["position"] for c in calls], (
+            "die einmal-pro-Gefahrenepisode-Sperre des Schutzes darf die "
+            "Beschattung nicht dazu bringen, das Fenster waehrend "
+            "anhaltendem Regen erneut zu oeffnen"
+        )
+
+
+class TestGuardGateAppliesByHasGuardNotByAwning:
+    """Die Unterscheidung, um die es in diesem Fix geht: `has_guard(shutter)`
+    entscheidet, ob der Wetterschutz gefragt wird, nicht `is_awning(shutter)`
+    und nicht die Art, wie die Zielposition berechnet wird. Ein Rollladen
+    ohne Schutz muss von alledem unberuehrt bleiben, auch wenn im selben
+    Bereich zur selben Zeit eine Markise und ein Dachfenster wegen Regen
+    gesperrt sind.
+    """
+
+    async def test_the_shutter_is_untouched_while_the_awning_and_window_are_barred(
+        self, hass
+    ):
+        from unittest.mock import patch as _patch
+
+        from pytest_homeassistant_custom_component.common import async_mock_service
+
+        from custom_components.shutter_pilot import cover_tracker
+        from custom_components.shutter_pilot.const import (
+            AREA_MODE_NONE,
+            CONF_AREA_AZIMUTH_ENABLED,
+            CONF_AREA_DRIVE_DELAY,
+            CONF_AREA_ELEVATION_ENABLED,
+            CONF_AREA_MODE,
+            CONF_AREA_NAME,
+            CONF_AREA_SUN_PROTECT_ENABLED,
+            CONF_AREAS,
+            CONF_NAME,
+        )
+
+        cover_tracker.STARTUP_RESTORE_DELAY_SEC = 0
+        cover_tracker.STARTUP_RESTORE_RETRY_SEC = 0
+
+        for cover in (
+            SHUTTER[CONF_COVER_ENTITY_ID],
+            AWNING[CONF_COVER_ENTITY_ID],
+            WINDOW[CONF_COVER_ENTITY_ID],
+        ):
+            hass.states.async_set(
+                cover, "closed", {"current_position": 0, "supported_features": 15}
+            )
+        temp_sensor = "sensor.innentemperatur"
+        hass.states.async_set(temp_sensor, "26.0", {"unit_of_measurement": "°C"})
+        hass.states.async_set(
+            "sun.sun", "above_horizon", {"elevation": 30.0, "azimuth": 180.0}
+        )
+        hass.states.async_set(RAIN, "on")
+
+        e_key, on_key, off_key, _ = sun_condition_keys("a")
+        area = {
+            CONF_AREA_ID: "bad",
+            CONF_AREA_NAME: "Bad",
+            CONF_AREA_MODE: AREA_MODE_NONE,
+            CONF_AREA_DRIVE_DELAY: 0,
+            CONF_AREA_SUN_PROTECT_ENABLED: True,
+            CONF_AREA_ELEVATION_ENABLED: False,
+            CONF_AREA_AZIMUTH_ENABLED: False,
+            e_key: temp_sensor,
+            on_key: 24,
+            off_key: 22,
+        }
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_AREAS: [area],
+                CONF_SHUTTERS: [
+                    {**SHUTTER, CONF_NAME: "Rollladen"},
+                    {**AWNING, CONF_NAME: "Markise"},
+                    {**WINDOW, CONF_NAME: "Dachfenster"},
+                ],
+                sun_condition_keys("rain")[0]: RAIN,
+                "guard_rain_lockout": 10,
+            },
+        )
+        entry.add_to_hass(hass)
+        calls = async_mock_service(hass, "cover", "set_cover_position")
+        with _patch(
+            "custom_components.shutter_pilot._async_register_panel", return_value=None
+        ):
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+        data = hass.data[DOMAIN][entry.entry_id]
+
+        from homeassistant.util import dt as dt_util
+
+        for _ in range(2):
+            now = dt_util.now()
+            for cb in list(data.get("_minute_callbacks", {}).values()):
+                cb(now)
+            await hass.async_block_till_done()
+
+        by_entity: dict[str, list[int]] = {}
+        for c in calls:
+            by_entity.setdefault(c.data["entity_id"], []).append(c.data["position"])
+
+        assert 50 in by_entity.get(SHUTTER[CONF_COVER_ENTITY_ID], []), (
+            "ein ungeschuetzter Rollladen muss trotz Regen ganz normal "
+            "beschatten"
+        )
+        assert 100 not in by_entity.get(AWNING[CONF_COVER_ENTITY_ID], []), (
+            "die Markise darf bei Regen nicht ausfahren"
+        )
+        assert 30 not in by_entity.get(WINDOW[CONF_COVER_ENTITY_ID], []), (
+            "das Dachfenster darf bei Regen nicht auf die "
+            "Lueftungsspalt-Position fahren"
         )
 
 

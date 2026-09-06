@@ -31,6 +31,7 @@ from .const import (
 from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
 from .helpers import (
     rest_role,
+    has_guard,
     is_shutter,
     awning_shade_position,
     awning_track_step,
@@ -142,20 +143,6 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 # is the same code as for a shutter; only the target differs.
                 pos = awning_shade_position(shutter, elev)
                 tilt = None
-                # Protection outranks shading, always. Asked here rather than
-                # leaving it to the guard to pull the awning back in a moment
-                # later: extending into a gust and retracting straight away is
-                # a drive nobody wants to watch, and radio actuators drop the
-                # second command more often than the first.
-                state = evaluate_guard(hass, entry, data, shutter)
-                if state.get("barred") and clamp_to_rest(shutter, pos) != pos:
-                    _LOGGER.info(
-                        "[sun-protect] %s: shading due, awning barred (%s) – "
-                        "staying in",
-                        cover_entity,
-                        describe_reasons(state.get("reasons")),
-                    )
-                    continue
             else:
                 # Which of the two shading positions – or a number a helper
                 # entity dictates. The reason travels along for the log: "50%"
@@ -167,6 +154,30 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                         "[sun-protect] %s: shading position %d%% (%s)",
                         cover_entity, int(pos), why,
                     )
+
+            # Wind, rain and frost protection outrank shading, always – for
+            # every guarded kind, not just awnings. That check used to sit
+            # under `if awning:` alone, from when the awning was the only
+            # guarded kind; a roof window is guarded exactly the same way
+            # (awning_guard.py treats both alike, see has_guard()) but this
+            # shading drive is what pushes it open, and it never asked.
+            # Asked here rather than leaving it to the guard to pull the
+            # cover back a moment later: driving out into a gust or a rain
+            # shower and retracting straight away is a drive nobody wants to
+            # watch, and radio actuators drop the second command more often
+            # than the first.
+            if has_guard(shutter):
+                state = evaluate_guard(hass, entry, data, shutter)
+                if state.get("barred") and clamp_to_rest(shutter, pos) != pos:
+                    _LOGGER.info(
+                        "[sun-protect] %s: shading due, %s barred (%s) – "
+                        "staying at rest",
+                        cover_entity,
+                        "awning" if awning else "window",
+                        describe_reasons(state.get("reasons")),
+                    )
+                    continue
+
             if not awning and shutter.get(
                 CONF_DRIVE_AFTER_CLOSE, False
             ) and is_window_open_or_tilted(hass, shutter):
