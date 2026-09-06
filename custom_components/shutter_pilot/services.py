@@ -350,8 +350,13 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         targets: list[dict] = []
         for area_id in _target_area_ids(call):
+            # Nur Rollläden: README, services.yaml und CLAUDE.md nennen den
+            # Dienst ausdrücklich für „einen Rollladen". Eine Markise oder
+            # ein Dachfenster hätte hier weder eine manuelle Übersteuerung
+            # noch einen Beschattungsmerker, die es aufzuheben gäbe - dafür
+            # aber einen Wetterschutz, den dieser Dienst nicht kennt.
             for shutter in filter_shutters_by_area(
-                _shutter_list(), area_id, use_up=False
+                _shutter_list(), area_id, use_up=False, shutters_only=True
             ):
                 cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
                 if not cover or (wanted_set and cover not in wanted_set):
@@ -412,6 +417,22 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             position = get_position_for_role(shutter, role)
             if role == ROLE_CLOSED:
                 position = get_effective_close_position(hass, shutter, position)
+            # Defensiv, unter der heutigen Konfiguration nicht erreichbar:
+            # shutters_only=True oben hält jede geschützte Geräteart bereits
+            # aus `targets` heraus. Bleibt trotzdem stehen, falls eine
+            # künftige Geräteart hier doch einmal ankommt - dieselbe Prüfung
+            # wie in _drive_group(), damit der Wetterschutz nicht über einen
+            # zweiten Fahrweg umgangen werden kann.
+            if has_guard(shutter) and is_barred(data, cover):
+                safe = clamp_to_rest(shutter, position)
+                if safe != position:
+                    _LOGGER.info(
+                        "resume_automation: %s skipped – awning protection active (%s)",
+                        cover,
+                        describe_reasons(guard_status(data, cover).get("reasons")),
+                    )
+                    continue
+                position = safe
             await set_cover_position(
                 hass, entry, cover, position, "Resume automation"
             )

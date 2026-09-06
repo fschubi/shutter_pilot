@@ -41,13 +41,18 @@ from custom_components.shutter_pilot.const import (
     CONF_AREA_UP_ID,
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
+    CONF_DEVICE_KIND,
     CONF_NAME,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     CONF_POSITION_SUN_PROTECT,
     CONF_SHUTTERS,
     DOMAIN,
+    KIND_AWNING,
+    KIND_WINDOW,
+    sun_condition_keys,
 )
+from custom_components.shutter_pilot.awning_guard import evaluate_guard, is_barred
 from custom_components.shutter_pilot.helpers import is_cover_sun_protected
 
 COVER = "cover.kinderzimmer"
@@ -411,3 +416,137 @@ class TestScheduledRoleNow:
         area = {CONF_AREA_ID: "x", CONF_AREA_MODE: AREA_MODE_NONE}
         assert scheduled_role_now(hass, area, area) is None
         assert scheduled_role_now(hass, None, None) is None
+
+
+AWNING = "cover.markise_resume_test"
+WINDOW = "cover.dachfenster_resume_test"
+RAIN = "binary_sensor.regen_resume_test"
+
+
+class TestGuardedKindsAreLeftAlone:
+    """resume_automation ist laut README/services.yaml/CLAUDE.md nur fuer
+    Rollladen gedacht - eine Markise oder ein Dachfenster durfte trotzdem
+    hindurchrutschen und dabei den Wetterschutz umgehen (kein
+    `shutters_only=True` bei filter_shutters_by_area, keine Guard-Pruefung
+    vor der finalen Fahrt). Beide Luecken sind geschlossen: die Geraeteart
+    wird schon beim Sammeln der Ziele ausgefiltert, eine zweite, defensive
+    Guard-Pruefung sitzt zusaetzlich direkt vor der Fahrt.
+    """
+
+    async def _setup(self, hass):
+        # Regen: alle geschuetzten Geraetearten (Markise, Dachfenster)
+        # sperren sich global auf denselben Sensor.
+        hass.states.async_set(RAIN, "on")
+        hass.states.async_set(
+            COVER, "open", {"current_position": 20, "supported_features": 15}
+        )
+        hass.states.async_set(
+            AWNING, "open", {"current_position": 100, "supported_features": 15}
+        )
+        hass.states.async_set(
+            WINDOW, "open", {"current_position": 100, "supported_features": 15}
+        )
+        hass.states.async_set(
+            "sun.sun", "below_horizon", {"elevation": -20.0, "azimuth": 10.0}
+        )
+        area = {
+            CONF_AREA_ID: "og",
+            CONF_AREA_NAME: "Obergeschoss",
+            CONF_AREA_MODE: AREA_MODE_TIME,
+            CONF_AREA_TIME_DOWN: _in(60),
+            CONF_AREA_TIME_UP: _in(120),
+            CONF_AREA_DRIVE_DELAY: 0,
+        }
+        shutters = [
+            {
+                CONF_COVER_ENTITY_ID: COVER,
+                CONF_NAME: "Kinderzimmer",
+                CONF_AREA_UP_ID: "og",
+                CONF_AREA_DOWN_ID: "og",
+                CONF_POSITION_OPEN: 100,
+                CONF_POSITION_CLOSED: 0,
+            },
+            {
+                CONF_COVER_ENTITY_ID: AWNING,
+                CONF_NAME: "Markise",
+                CONF_DEVICE_KIND: KIND_AWNING,
+                CONF_AREA_DOWN_ID: "og",
+                CONF_POSITION_OPEN: 0,
+                CONF_POSITION_SUN_PROTECT: 100,
+            },
+            {
+                CONF_COVER_ENTITY_ID: WINDOW,
+                CONF_NAME: "Dachfenster",
+                CONF_DEVICE_KIND: KIND_WINDOW,
+                CONF_AREA_DOWN_ID: "og",
+                CONF_POSITION_OPEN: 100,
+                CONF_POSITION_CLOSED: 0,
+            },
+        ]
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Shutter Pilot",
+            options={
+                CONF_AREAS: [area],
+                CONF_SHUTTERS: shutters,
+                sun_condition_keys("rain")[0]: RAIN,
+            },
+        )
+        entry.add_to_hass(hass)
+        with patch(
+            "custom_components.shutter_pilot._async_register_panel", return_value=None
+        ):
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+        return entry, hass.data[DOMAIN][entry.entry_id]
+
+    async def test_a_barred_awning_is_not_touched(self, hass, cover_calls):
+        entry, data = await self._setup(hass)
+        awning_cfg = entry.options[CONF_SHUTTERS][1]
+        assert evaluate_guard(hass, entry, data, awning_cfg).get("barred") is True
+        cover_calls.clear()
+
+        await hass.services.async_call(
+            DOMAIN, "resume_automation", {"entity_id": AWNING}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+        assert not [c for c in cover_calls if c.data["entity_id"] == AWNING], (
+            "eine gesperrte Markise darf resume_automation nicht erreichen"
+        )
+        assert is_barred(data, AWNING) is True, "der Schutz bleibt unveraendert aktiv"
+
+    async def test_a_barred_roof_window_is_not_touched(self, hass, cover_calls):
+        entry, data = await self._setup(hass)
+        window_cfg = entry.options[CONF_SHUTTERS][2]
+        assert evaluate_guard(hass, entry, data, window_cfg).get("barred") is True
+        cover_calls.clear()
+
+        await hass.services.async_call(
+            DOMAIN, "resume_automation", {"entity_id": WINDOW}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+        assert not [c for c in cover_calls if c.data["entity_id"] == WINDOW], (
+            "ein gesperrtes Dachfenster darf resume_automation nicht erreichen"
+        )
+        assert is_barred(data, WINDOW) is True, "der Schutz bleibt unveraendert aktiv"
+
+    async def test_a_regular_shutter_still_resumes_normally(self, hass, cover_calls):
+        """Dieselbe Anfrage ohne entity_id (ganzes Haus): der Rollladen
+        verhaelt sich unveraendert, waehrend Markise und Dachfenster
+        aussen vor bleiben."""
+        _entry, data = await self._setup(hass)
+        cover_calls.clear()
+
+        await hass.services.async_call(
+            DOMAIN, "resume_automation", {}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+        driven = {c.data["entity_id"]: c.data["position"] for c in cover_calls}
+        assert driven.get(COVER) == 100, (
+            "der normale Rollladen gehoert tagsueber (naechste Aktion: runter) nach oben"
+        )
+        assert AWNING not in driven
+        assert WINDOW not in driven

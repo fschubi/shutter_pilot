@@ -167,6 +167,15 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 "Fenster geschlossen – Drive-after-close: %s -> %d%%",
                 cover_entity, int(target_pos),
             )
+            # Die nachgeholte Fahrt *ist* die Restaurierung dieses
+            # Fensterzyklus. Ohne diese zwei Zeilen blieb der Zyklus als
+            # "triggered" stehen, mit der *alten* Hoehe von vor der
+            # Abendfahrt (etwa der Beschattungsposition) - eine spaetere,
+            # voellig unabhaengige Oeffnung/Schliessung (z. B. kurz Lueften
+            # in der Nacht) restaurierte dann auf diese veraltete Hoehe statt
+            # auf die gerade erst gefahrene, korrekte Position.
+            trigger_actions.pop(cover_entity, None)
+            trigger_heights.pop(cover_entity, None)
             return
 
         # Restore only if this window cycle actually triggered a movement.

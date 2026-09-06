@@ -28,6 +28,7 @@ from .const import (
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
 )
+from .awning_dusk import is_dusk_retracted
 from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
 from .helpers import (
     rest_role,
@@ -191,13 +192,24 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 shaded.append(cover_entity)
                 continue
             pos = get_effective_close_position(hass, shutter, pos)
-            e_min, e_max = get_elevation_bounds(area)
+            # Die per-Rollladen zusammengefuehrte Geometrie, nicht die des
+            # Bereichs: ein Rollladen mit eigener Ausrichtung kann die
+            # Elevationspruefung fuer sich abgeschaltet haben, waehrend der
+            # Bereich sie nutzt (und umgekehrt). Vorher stand hier immer
+            # "elev=... in [e_min-e_max]", auch wenn elevation_enabled=False
+            # die Hoehe fuer diese Fahrt gar nicht entschied - irrefuehrend
+            # ausgerechnet fuer die Konfiguration, die is_dusk_retracted()
+            # oben ueberhaupt erst brauchte.
+            geo_for_log = resolve_shading_config(area, shutter)
+            if elevation_used(geo_for_log):
+                e_min, e_max = get_elevation_bounds(geo_for_log)
+                elev_desc = f"elev={elev:.1f} in [{e_min:.1f}–{e_max:.1f}]"
+            else:
+                elev_desc = "elevation check disabled"
             _LOGGER.info(
-                "[sun-protect] area=%s: elev=%.1f in [%.1f–%.1f], azimuth=%s → %s -> %d%%",
+                "[sun-protect] area=%s: %s, azimuth=%s → %s -> %d%%",
                 area_id,
-                elev,
-                e_min,
-                e_max,
+                elev_desc,
                 f"{azim:.1f}" if azim is not None else "n/a",
                 cover_entity,
                 int(pos),
@@ -374,6 +386,18 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 # Die Wolke ist weitergezogen – die Haltezeit beginnt bei der
                 # nächsten Unterbrechung von vorn.
                 release_since.pop(cover, None)
+                if is_dusk_retracted(data, cover):
+                    # awning_dusk.py hat diese Markise fuer die Nacht
+                    # eingefahren und dabei bewusst den Beschattungsmerker
+                    # geloescht (sonst laege der Bericht ueber ihren
+                    # Zustand). Ohne diese Sperre wuerde genau das dazu
+                    # fuehren, dass die Beschattung sie eine Minute spaeter
+                    # wieder ausfaehrt, sobald dieselbe (unabhaengige)
+                    # Bedingung noch zutrifft - unabhaengig davon, ob die
+                    # Elevationspruefung ueberhaupt an ist. Ausfahren bleibt
+                    # Sache der Daemmerungsfunktion selbst, bis sie den
+                    # Eintrag wieder freigibt.
+                    continue
                 if not was_active:
                     # Der Merker wird erst gesetzt, wenn die Fahrt durch ist.
                     to_shade.setdefault(area_id, []).append(shutter)

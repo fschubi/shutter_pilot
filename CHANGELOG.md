@@ -4,6 +4,69 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.22.2]
+
+Kein Forumsbeitrag – eine beauftragte, systematische Analyse der gesamten
+Beschattungs-, Lüftungs-, Dämmerungs- und Schutzlogik auf Widersprüche und
+Regressionen, mit drei bestätigten und durch echte Testläufe (nicht nur
+Codelektüre) verifizierten Funden.
+
+### Behoben
+- **`resume_automation` konnte eine durch Wind, Regen oder Frost gesperrte
+  Markise oder ein gesperrtes Dachfenster trotzdem fahren.** Der Dienst ist
+  laut README, `services.yaml` und CLAUDE.md ausdrücklich nur für Rollläden
+  gedacht, filterte aber nicht danach – und seine letzte Fahrstufe (Übergabe
+  an den Zeitplan) fragte den Wetterschutz nirgends ab, anders als
+  `open_group`/`close_group`/`sun_protect_group` in derselben Datei. Im
+  reproduzierten Fall fuhr der Dienst ein durch aktiven Regen gesperrtes
+  Dachfenster wieder auf 100 % auf. Behoben mit zwei Riegeln: der Dienst
+  filtert jetzt auf Rollläden (Markisen/Dachfenster werden weder gefahren
+  noch von manueller Übersteuerung oder Beschattungsmerkern befreit), und
+  eine zusätzliche, defensive Wetterschutz-Prüfung sitzt direkt vor der
+  letzten Fahrt – falls eine künftige Geräteart denselben Fahrweg einmal
+  doch erreicht.
+- **Nach einer nachgeholten Abendfahrt konnte ein Rollladen nachts auf eine
+  längst überholte Beschattungshöhe zurückfahren.** Öffnete ein Fenster
+  während der Beschattung, merkte sich der Fenstertrigger diese Höhe als
+  Rückfahrziel. Kam abends eine vorgemerkte Fahrt hinzu (Fenster noch
+  offen), lief diese beim Schließen korrekt durch – der Fenstertrigger
+  räumte seinen eigenen Zyklus dabei aber nicht auf. Ein späteres,
+  unabhängiges Lüften in der Nacht restaurierte dadurch auf die alte,
+  längst nicht mehr gültige Höhe statt auf die aktuell richtige (etwa: die
+  geschlossene) Position.
+- **Eine Markise, die abends bei Dämmerung einfuhr, konnte danach dauerhaft
+  von der Beschattung „vergessen" werden.** Die Dämmerungs-Einfahrt
+  hinterließ den Beschattungsmerker unverändert auf „ausgefahren", obwohl
+  die Markise längst eingefahren war – am auffälligsten bei abgeschalteter
+  Elevationsprüfung (sensor-/temperaturgesteuerte Beschattung ohne
+  Sonnenhöhe), wo nichts anderes diesen Merker von selbst aufräumt. Ohne
+  Fix hätte dieselbe, weiterhin erfüllte Beschattungsbedingung die Markise
+  nie wieder ausgefahren. Jetzt räumt die Dämmerungsfunktion den Merker
+  beim Einfahren korrekt auf, und die Beschattung hält sich zusätzlich
+  zurück, solange die Markise als „dämmerungsbedingt eingefahren" gilt –
+  bis die Dämmerungsfunktion selbst wieder freigibt. Wind-, Regen- und
+  Frostschutz bleiben davon unberührt und behalten weiterhin Vorrang.
+
+### Sonstiges
+- Geprüft, ob die fehlende Reihenfolgegarantie zwischen Beschattung,
+  Wetterschutz und Dämmerungsfunktion auf dem gemeinsamen Minutentakt zu
+  einem Fehler führen kann (alle drei starten nur einen eigenen
+  Hintergrund-Task, keine Serialisierung). In keiner der sechs möglichen
+  Reihenfolgen ließ sich ein unsicheres Ausfahren erzeugen; nicht
+  serialisiert, sondern dokumentiert (`__init__.py`) und mit
+  Regressionstests festgeschrieben.
+- Die Beschattungs-Logzeile behauptete bei abgeschalteter Elevationsprüfung
+  weiterhin einen geprüften Höhenbereich („elev=… in […]"). Sie sagt jetzt
+  „elevation check disabled", wenn die Höhe für diese Fahrt gar nicht
+  entschieden hat.
+
+### Was ändert sich für mich?
+Nichts an der Bedienung. Wer `resume_automation` bisher auf eine Markise
+oder ein Dachfenster angewendet hat, sieht dort künftig keine Fahrt mehr –
+der Dienst war dafür nie vorgesehen. Alle drei Funde griffen nur in eher
+seltenen zeitlichen Zusammentreffen; normale Rollläden ohne diese
+Kombinationen verhalten sich unverändert.
+
 ## [2.22.1]
 
 Ein Fund beim systematischen Durchgehen der gesamten Beschattungs- und

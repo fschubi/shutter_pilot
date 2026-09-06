@@ -41,6 +41,7 @@ from .const import (
 )
 from .helpers import (
     awning_dusk_condition_met,
+    forget_shading_for_cover,
     get_position_for_role,
     get_tilt_for_role,
     is_auto_enabled,
@@ -53,6 +54,22 @@ from .helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def is_dusk_retracted(data: dict[str, Any], cover_entity_id: str) -> bool:
+    """True while dusk retract alone is holding this awning in.
+
+    Read by elevation.py before it decides to extend an awning for shading:
+    without this, clearing the shading-active flag below (so the report does
+    not keep lying about "still shaded") would make the very next shading
+    tick re-extend the awning a minute later, whenever the shading condition
+    itself happens to still read true - exactly the automatic re-extension
+    this feature exists to prevent. Extending it back out stays this
+    module's own decision alone, made when the dusk condition itself clears
+    (see the `retracted.discard(cover)` below).
+    """
+    retracted = data.get("_dusk_retracted")
+    return isinstance(retracted, set) and cover_entity_id in retracted
 
 
 async def setup_awning_dusk(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -132,6 +149,13 @@ async def setup_awning_dusk(hass: HomeAssistant, entry: ConfigEntry) -> None:
             )
             if ok:
                 retracted.add(cover)
+                # Die Beschattung darf sich diese Markise nicht laenger als
+                # "schon draussen" merken - sonst tut sie gar nichts mehr,
+                # solange dieselbe (unabhaengige) Beschattungsbedingung
+                # weiter zutrifft (siehe is_dusk_retracted() oben: das haelt
+                # elevation.py davon ab, das jetzt fehlende Flag als Anlass
+                # zu nehmen, sofort wieder auszufahren).
+                forget_shading_for_cover(data, cover)
 
     def _tick(_now: Any) -> None:
         hass.async_create_task(_evaluate())

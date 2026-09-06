@@ -207,8 +207,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_brightness_listener(hass, entry)
         await setup_schedulers(hass, entry)
         await setup_elevation_listener(hass, entry)
-        # After shading: the guard must already know its verdict when the
-        # first shading evaluation asks whether an awning may go out.
+        # setup_elevation_listener() runs *before* setup_awning_guard() here -
+        # that is fine, not an oversight to fix later. evaluate_guard() reads
+        # live Home Assistant state and the runtime dict directly every time
+        # it is called; it does not depend on awning_guard's own minute tick
+        # having populated a cache first. elevation.py calls evaluate_guard()
+        # itself before it would extend a guarded cover (see
+        # _drive_sun_protect() in elevation.py), so the guard's verdict is
+        # always current regardless of setup order here.
+        #
+        # More generally: once running, every module below is on the same
+        # shared minute ticker (_setup_minute_ticker()), but each callback
+        # only *starts* its own evaluation as a separate task
+        # (hass.async_create_task(...)) - there is no guarantee about the
+        # order in which those tasks actually finish relative to each other,
+        # this setup order included. Every drive path that can move a
+        # guarded cover (awning/roof window) therefore checks the wind/rain/
+        # frost guard itself at the moment it decides to drive, rather than
+        # relying on another module having already run first.
         await setup_awning_guard(hass, entry)
         await setup_awning_dusk(hass, entry)
         await setup_ventilation(hass, entry)
