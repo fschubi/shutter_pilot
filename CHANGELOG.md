@@ -4,6 +4,33 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.22.3]
+
+Zwei Forumsmeldungen vom selben Tag (community-smarthome.com/11378), beide
+gegen den Code nachgerechnet. Ein Fund war reines Konfigurationsverhalten
+(keine Codeänderung, siehe Forumsantwort), zwei waren echte Fehler.
+
+### Behoben
+- **Ein von Hand voll hochgefahrener Rollladen konnte beim Öffnen eines
+  Fensters wieder herunterfahren.** Der Fenstertrigger behandelte einen
+  Beschattungs-Merker als unbedingten Grund zu reagieren, „whatever the
+  position" – auch wenn der Rollladen längst von Hand aus der Beschattung
+  herausgefahren wurde und der Merker dadurch nicht mehr zur tatsächlichen
+  Position passte. Der Merker gilt jetzt nur noch, solange der Rollladen
+  nicht bereits effektiv offen steht; der ursprüngliche Grund für den
+  unbedingten Bypass (ein tatsächlich an der Beschattungsposition
+  geparkter Rollladen muss dem Fensterkontakt weiterhin weichen) bleibt
+  unverändert erhalten.
+- **Eine vorgemerkte Nachhol-Fahrt („Fahrt nach dem Schließen nachholen")
+  konnte eine zwischenzeitliche manuelle Fahrt überleben.** Stand ein
+  Fenster beim abendlichen Zufahren offen, merkte sich die Automatik die
+  Zielposition für später vor. Fuhr jemand den Rollladen in der
+  Zwischenzeit von Hand woanders hin, blieb die alte Vormerkung
+  unberührt stehen – schloss das Fenster irgendwann später, fuhr der
+  längst anders positionierte Rollladen unerwartet auf die überholte
+  Vormerkung zu. Eine erkannte Handfahrt verwirft jetzt auch eine noch
+  offene Vormerkung für denselben Rollladen.
+
 ## [2.22.2]
 
 Kein Forumsbeitrag – eine beauftragte, systematische Analyse der gesamten

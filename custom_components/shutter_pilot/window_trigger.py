@@ -18,6 +18,7 @@ from .const import (
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_POSITION_CLOSED,
+    CONF_POSITION_OPEN,
     DEFAULT_WINDOW_CLOSE_DEBOUNCE,
     MAX_WINDOW_CLOSE_DEBOUNCE,
 )
@@ -53,6 +54,25 @@ def _is_cover_effectively_closed(shutter: dict, current_position: float) -> bool
     except (TypeError, ValueError):
         pos_closed = 0.0
     return current_position <= (pos_closed + _CLOSED_TOLERANCE_PCT)
+
+
+def _is_cover_effectively_open(shutter: dict, current_position: float) -> bool:
+    """True if cover is close enough to its configured open position.
+
+    A shaded cover that somebody drove back open by hand still counts as
+    "shaded" in our own bookkeeping – shading does not notice a foreign move
+    and correct for it, on purpose (see forget_shading_for_cover()). Trusting
+    that flag unconditionally then let a window open/close cycle pull a
+    manually reopened shutter straight back down, exactly what the
+    opens_cover check two lines below exists to prevent. Once the cover
+    already stands open there is nothing left for the window contact to
+    reach past, so the flag stops counting as a reason to act.
+    """
+    try:
+        pos_open = float(shutter.get(CONF_POSITION_OPEN, 100))
+    except (TypeError, ValueError):
+        pos_open = 100.0
+    return abs(current_position - pos_open) <= _CLOSED_TOLERANCE_PCT
 
 
 def _debounce_seconds(shutter: dict) -> int:
@@ -291,7 +311,9 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 # parks it at, say, 25 %, which is neither closed nor open, so
                 # the check below sent it away. Opening the terrace door in the
                 # afternoon then left the shutter hanging in front of it.
-                shaded = is_cover_sun_protected(data, cover_entity)
+                shaded = is_cover_sun_protected(
+                    data, cover_entity
+                ) and not _is_cover_effectively_open(shutter, current_pos)
                 # Die Pruefung war richtungsblind, und das war der Fehler: sie
                 # soll verhindern, dass ein offenes Fenster einen offenen
                 # Rollladen herunterzieht. Nach *oben* faehrt hier aber nur der

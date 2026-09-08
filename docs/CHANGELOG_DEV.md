@@ -4,6 +4,42 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-09-05 – GitHub-Aufräumen: #9 geschlossen, #11 einsortiert
+
+Zwei offene GitHub-Issues durchgesehen, keins davon brauchte neuen Code.
+
+**#9 „Markisen-Entitäten werden nicht gespeichert"**, gemeldet gegen 2.14.0:
+Wind-/Regen-/Temperatursensor unter Einstellungen standen nach „Speichern"
+wieder leer. Genau der Fehler aus **2.15.0** – `_ws_get_status` schickte die
+globalen Einstellungen als Erlaubnisliste von sechs Schlüsseln, der
+Markisenschutz kam nie dazu. Seit 2.15.0 eine Ausschlussliste
+(`__init__.py:493-500`), mit `tests/test_ws_status.py::
+TestSettingsSurviveTheRoundTrip` als Regressionsschutz. Nachgerechnet statt
+geglaubt: der vorhandene Test setzte die Optionen nur vorab und prüfte
+`get_status` – der tatsächlich gemeldete Weg (Formular → **Speichern-Klick**
+→ neu laden) war nie durchgespielt. Neuer Test
+`test_saving_from_the_panel_survives_the_round_trip` fährt genau diesen Weg
+über `save_settings` gefolgt von `get_status`, mit denselben Feldern aus dem
+Issue. Gegenprobe: mit einer simulierten alten Erlaubnisliste fallen beide
+Tests der Klasse. Das Issue ist sechs Versionen alt und war schlicht nie
+geschlossen worden – im Forum gemeldete Fehler laufen hier normalerweise über
+das Changelog, nicht über den GitHub-Tracker, und diese Meldung ist dort
+liegen geblieben.
+
+**#11 „Beschattung auch für Jaroliftcontroller"** ist kein Fehler, sondern ein
+Wunsch nach Fahrzeit-Simulation für Antriebe ohne Positionsrückmeldung – über
+das hinausgehend, was der bestehende `blind_drive`-Rückfall
+(`open_cover`/`close_cover`, seit 2.12.0) heute kann. Dafür jetzt ein
+**„Geplant"-Abschnitt** in beiden READMEs, direkt vor „Unterstützt mich" –
+derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
+(damals Markisen) stand, bevor er gebaut wurde. Zweck: Wünsche an einem Ort
+bündeln, statt sie zwischen echten Fehlermeldungen im Issue-Tracker
+verstreut zu lassen.
+
+**Verifiziert:** `pytest` 777 Tests grün (1 neu), Gegenprobe gemacht (ohne
+die Ausschlussliste fallen beide Tests der Klasse, nicht nur der neue).
+Keine Verhaltensänderung, deshalb keine neue Version.
+
 ### 2026-09-06 – 2.22.2: drei Schlösser, die eine Hintertür hatten
 
 Kein Forumsbeitrag – eine beauftragte, vollständige Analyse der gesamten

@@ -15,6 +15,7 @@ from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
     forget_commanded_position,
+    forget_drive_after_close,
     is_recent_automation,
     note_manual_position,
     positions_differ_significantly,
@@ -109,6 +110,13 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             shutter = shutter_by_cover.get(entity_id)
             if shutter is not None:
                 note_manual_position(data, shutter, position)
+            # A drive that was only waiting for the window to close is a
+            # decision from whenever it was queued - a hand move on this
+            # exact cover since then is a newer, more direct decision and
+            # supersedes it. Without this an old evening close could fire
+            # hours later, against a shutter somebody had since driven
+            # somewhere else entirely by hand.
+            forget_drive_after_close(hass, entry, data, entity_id)
 
         hass.async_create_task(
             store.async_set_position(entity_id, position, source)
