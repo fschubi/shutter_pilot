@@ -309,12 +309,77 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.22.3**, im Forum aktiv genutzt. Einreichung für den
+Version **2.22.4**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-09-09 – 2.22.4: der Merker, der die Freigabe nicht bemerkte
+
+Forumsmeldung c.radi (community.simon42.com/90112/144): „Mein Rolladen
+Schlafzimmer links fährt abends nicht herunter." Export mitgeliefert, Wert
+für Wert gegen die echten Helfer nachgerechnet statt geglaubt.
+
+**Der auffällige Widerspruch im Export:** Position „Schlafzimmer Links"
+100 % (offen), Quelle „automation" – aber unter „Laufender Zustand" stand
+genau dieser Rollladen trotzdem in `covers_driven_down` („gilt als unten"),
+`covers_driven_up` war für alle vier Rollläden leer. `scheduled_role_now()`
+dokumentiert diesen Merker ausdrücklich als „nur wo zuletzt hingefahren
+wurde" – ein Rollladen, der von der Automatik selbst nach oben gefahren
+wurde, aber weiter als „unten" gilt, ist genau der Widerspruch, den
+`brightness.py::_run_down()` als „heute schon unten gewesen" liest und
+deshalb überspringt.
+
+**Nachgerechnet, welcher Fahrweg das erzeugen kann.** Jeder reguläre
+Fahrweg pflegt `covers_driven_up`/`covers_driven_down` mit – `_drive_group()`
+(services.py, für `open_group`/`close_group`/…), `brightness.py` und
+`scheduler.py` je für ihre eigene Richtung, `note_manual_position()` für
+eine erkannte Fremdfahrt. Zwei Fahrwege tun das nicht:
+
+1. **`resume_automation()`** (services.py) ruft `set_cover_position()`
+   direkt auf, ohne die beiden Sets anzufassen – anders als `_drive_group()`
+   in derselben Datei. Reproduziert: Rollladen künstlich in
+   `covers_driven_down`, Dienst mit `scheduled_role_now() == "open"`
+   aufgerufen – er fährt korrekt auf 100 %, aber der alte Merker blieb
+   unverändert stehen.
+2. **Die Beschattungsfreigabe** (`elevation.py::_release_sun_protect()`,
+   ausgelöst durch `shade_release_opens`) fährt den Rollladen am Ende des
+   Beschattungszeitraums in seine Ruhestellung (`rest_role()` – bei einem
+   Rollladen `ROLE_OPEN`), räumt dabei bereits den Fenster-Zyklus und eine
+   vorgemerkte Nachhol-Fahrt auf, aber nicht `covers_driven_down`.
+   Reproduziert mit demselben Muster: Merker künstlich gesetzt, Freigabe
+   per Elevationsabfall ausgelöst – Rollladen fährt auf 100 %, der Merker
+   bleibt stehen.
+
+**Warum das zu c.radis Bereich passt, ohne eine bestimmte Diensterei zu
+unterstellen:** sein Bereich „Schlafen" hat `sun_protect_enabled: ja`,
+`shade_release_opens: ja` **und** `we_no_up: ja` (Wochenend-Sperre fürs
+Hochfahren). Die Sperre hält den Rollladen morgens korrekt unten – die
+Beschattung kennt diese Sperre nicht und darf das auch nicht (Beschattung
+und Hochfahr-Sperre sind bewusst getrennte Fragen). Fällt die Elevation am
+Nachmittag unter `elevation_min`, fährt die Freigabe unabhängig von der
+Sperre ganz auf. Ohne den Fix blieb der alte „unten"-Merker von der
+Sperre über die Freigabe hinweg stehen, und die abendliche
+Helligkeitsautomatik überspringt den nun weit offenen Rollladen.
+
+Behoben an beiden Stellen mit derselben zweizeiligen Pflege wie in
+`_drive_group()`: nach der Fahrt in `_release_sun_protect()` und in
+`resume_automation()` `covers_driven_up`/`covers_driven_down` je nach
+Zielrolle setzen bzw. löschen. **Dieselbe Fehlerklasse wie so oft in diesem
+Log** (2.17.0, 2.21.3, 2.22.0 Fund 2, 2.22.2 Fund 2, 2.22.3 Fund 2): ein
+Merker, der eine Handlung überlebt, für die er nicht gedacht war – diesmal
+an zwei Stellen zugleich, weil beide denselben zentralen Vertrag
+(„nach einer Endlagenfahrt stimmt die Richtung") ohne ihn beteiligt zu
+haben, gebrochen haben.
+
+**Verifiziert:** `pytest` 832 Tests grün (3 neue). Für beide Funde je eine
+echte Gegenprobe – Fix testweise entschärft, genau die zugehörigen neuen
+Tests fielen (`tests/test_resume_automation.py`, zwei neue Tests;
+`tests/test_area_mode_none.py`, ein neuer Test), alle anderen 8xx blieben
+grün, danach Fix wiederhergestellt und volle Suite erneut grün. **Nicht im
+Browser geprüft** – reine Backend-Logik, keine Panel-Änderung.
 
 ### 2026-09-08 – 2.22.3: der Merker, der die Hand nicht bemerkte
 
@@ -662,80 +727,3 @@ neue Tests. i18n 444/444 in allen elf Sprachen (4 neu). Panel in Node
 gerendert, mit einer eigenen Prüfung je Geräteart (Markise zeigt den
 Abschnitt, Dachfenster nicht) – Gegenprobe gemacht. **Nicht im Browser
 geprüft.**
-
-### 2026-09-05 – 2.21.7: das Icon, das aus dem falschen Set kam
-
-bjoergs letzter Forumspost (drei Stunden nach seiner Rückmeldung zu 2.21.4),
-zwei Screenshots und zwei echte Funde, beide gegen den Code nachgestellt.
-
-**Fund 1: fehlendes Icon vor „Hochfahren unterbinden".** Sein Screenshot
-zeigt die Stelle leer, rot eingekreist. `_sec("mdi:weekend", ...)` –
-`mdi:weekend` gegen pictogrammers.com (die offizielle MDI-Icon-Datenbank)
-geprüft: **404, existiert nicht**. Vermutlich mit dem gleichnamigen Icon aus
-Google Material Symbols verwechselt, einem anderen Icon-Set. `<ha-icon>`
-wirft dabei keinen Fehler, es zeichnet einfach nichts – lautlos, wie ein
-Rendertest es nicht findet, weil nichts crasht. Alle ~60 im Panel benutzten
-`mdi:`-Namen einzeln gegen die MDI-Datenbank geprüft: **nur dieser eine war
-falsch**. Ersetzt durch `mdi:calendar-weekend` – existiert, passt inhaltlich
-besser zum Untertext „Wochenende, Ferien, Urlaub" und wird an anderer Stelle
-im Panel (Dashboard-Sonneninfo) bereits verwendet.
-
-**Fund 2: der Lux-Schieberegler sah aus wie ein Schalter.** Zweiter
-Screenshot: ein winziger blauer Punkt statt einer Schieber-Spur, daneben ein
-Zahlenfeld, das fast die ganze Zeile füllt. Das ist **dieselbe Fehlerklasse
-wie die Checkbox-Beschriftung aus 2.18.0**, nur an einem zweiten Eingabetyp:
-
-```css
-.field input:not([type=checkbox]),.field select{width:100%;padding:8px 12px;
-  border:1px solid var(--divider);background:...;border-radius:8px;...}
-```
-
-`:not([type=checkbox])` schließt Checkboxen aus – aber `type=range` eben
-nicht. Der native Schieberegler bekam damit Polsterung, Rahmen und einen
-dunklen Hintergrund übergestülpt, die für ein Textfeld gedacht sind, und
-seine Spur quetschte sich auf einen Streifen zusammen. **Zweiter Effekt
-derselben Zeile:** `.slider-row .slider-num{width:88px}` (zwei Klassen) hat
-dieselbe CSS-Spezifität wie `.field input:not([type=checkbox])` (eine Klasse
-plus eine Pseudoklasse zählt gleich hoch) – die feste 88px-Breite stand im
-Code, hat aber nie gewonnen, das Zahlenfeld füllte über `width:100%` die
-ganze Zeile.
-
-Zwei Zeilen behoben: `:not([type=checkbox]):not([type=range])` schließt jetzt
-beide Sonderfälle aus, und `.slider-row .slider-num` wurde zu
-`.field .slider-row .slider-num` (drei Klassen statt zwei) – schlägt die
-Sammelregel jetzt ohne `!important`. **Merke, zum dritten Mal an dieser
-Stelle:** eine Sammelregel auf `input` trifft jeden Eingabetyp mit eigener
-nativer Darstellung, nicht nur den, an den beim Schreiben gedacht wurde –
-2.18.0 war die Checkbox, heute der Schieberegler. Betroffen waren alle
-Schieberegler-plus-Zahlenfeld-Kombinationen mit ungebremstem Maximum (aktuell
-nur die Lux-Schwellen im Helligkeitsmodus, `rngOpen()`), nicht nur die im
-Screenshot gezeigten.
-
-**Zwei weitere Punkte in seinem Post, kein Code:**
-
-- **„Hast du an deiner Markisen-Steuerung etwas geändert? Das Tauschen der
-  beiden %-Werte hat jetzt eine Umkehr bewirkt, was vorher nicht klappte."**
-  Reine Rückmeldung, kein Fehler – bestätigt den Rat aus 2.18.0 (Positionen
-  tauschen dreht die Fahrtrichtung rechnerisch um), keine Aktion nötig.
-- **„Gibt es eine elegante Möglichkeit, eine Markise abends bei Dunkelheit
-  einfahren zu lassen, ohne automatische Wiederausfahrt?"** Sein eigener
-  Workaround (Helfer-Schalter unter „Hochfahren unterbinden") **greift
-  nicht** – nachgerechnet: `only_shutters()` schließt Markisen an genau
-  dieser Stelle aus (`brightness.py:342`), der Haken ist für seine Markise
-  wirkungslos. Und sein Bereich hat den Sonnenschutz gar nicht eingeschaltet,
-  die Markise bewegt sich also automatisch nur über den Wetterschutz, nie
-  über Helligkeit. Es gibt dafür aktuell keinen eingebauten Weg – die
-  bestehende Beschattungslogik würde genau das tun, was er nicht will
-  (am nächsten Tag automatisch wieder ausfahren). Als
-  [#12](https://github.com/fschubi/shutter_pilot/issues/12) angelegt und in
-  „Geplant" (beide READMEs) neben #11 einsortiert, mit Erklärung, warum sein
-  Workaround nicht greift.
-
-**Verifiziert:** `pytest` 779 Tests grün (2 neue), **zwei Gegenproben** –
-ohne die Icon-Korrektur fällt `test_no_invalid_mdi_icon_names`, ohne die
-CSS-Spezifitätskorrektur fällt `test_the_slider_row_keeps_its_own_input_
-styling`. Beide Tests prüfen Text im Quellcode, nicht gerendertes Layout –
-von hier aus (kein Browser) ist ein CSS-Kaskadenfehler nur so greifbar.
-**Nicht im Browser geprüft** – bei einem CSS-Fehler wiegt das schwerer als
-sonst, weil genau das die Art Fehler ist, die sich nur dort zeigt.
-

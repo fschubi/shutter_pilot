@@ -25,6 +25,7 @@ from .const import (
     CONF_DRIVE_AFTER_CLOSE,
     CONF_AREA_DRIVE_DELAY,
     DEFAULT_AREA_DRIVE_DELAY,
+    ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
 )
@@ -284,6 +285,20 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             clear_stale_window_cycle_after_automated_up(data, cover_entity)
             forget_drive_after_close(hass, entry, data, cover_entity)
             data.get("_shade_pos_last", {}).pop(cover_entity, None)
+            # Wie in _drive_group()/resume_automation(): die Freigabe faehrt
+            # tatsaechlich in eine Endlage, nicht nur in die Beschattung. Ohne
+            # das hier blieb ein Rollladen, der abends vor der Freigabe schon
+            # als "unten" galt (z. B. durch eine Wochenend-Sperre am
+            # Hochfahren), nach dem Aufmachen weiter in `covers_driven_down`
+            # stehen - die naechste Abwaertsfahrt las das als "heute schon
+            # unten gewesen" und liess ihn oben stehen. c.radis Rollo, das
+            # abends nicht mehr herunterfuhr.
+            if role == ROLE_OPEN:
+                data.setdefault("covers_driven_up", set()).add(cover_entity)
+                data.setdefault("covers_driven_down", set()).discard(cover_entity)
+            elif role == ROLE_CLOSED:
+                data.setdefault("covers_driven_down", set()).add(cover_entity)
+                data.setdefault("covers_driven_up", set()).discard(cover_entity)
             idx += 1
             moved += 1
         return moved

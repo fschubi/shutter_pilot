@@ -72,9 +72,9 @@
     "semantic_hash": "dcf8c4fd2f4fd86027f0a08a7ebfddf8"
   },
   "custom_components/shutter_pilot/elevation.py": {
-    "mtime": 1788722398.5995715,
-    "seen": 1788723206.6700742,
-    "ast_hash": "952f7ad0a908ece7fc95a2563c8792c0",
+    "mtime": 1788924635.147889,
+    "seen": 1788924780.419242,
+    "ast_hash": "d614948a307315638a3d4089f19c5217",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/export.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": "617bb2b3ab18d1ef9356519ce514e4f8"
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1788879862.880991,
-    "seen": 1788879885.9298098,
-    "ast_hash": "a6945e243e07d528d14c2665fe329c09",
+    "mtime": 1788924685.2400985,
+    "seen": 1788924780.4192462,
+    "ast_hash": "ce9a9ef1636fe4d0f0d333d9cc2ab741",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -132,9 +132,9 @@
     "semantic_hash": "d1e5bfd4e205e62696269c4132edbe47"
   },
   "custom_components/shutter_pilot/services.py": {
-    "mtime": 1788721633.762728,
-    "seen": 1788723206.670084,
-    "ast_hash": "3689da0e229dcbdf2d95fe4ef3516b5f",
+    "mtime": 1788924435.5744681,
+    "seen": 1788924780.41925,
+    "ast_hash": "3267460ebb827f4e025ab8dec33aecb0",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/strings.json": {
@@ -228,10 +228,10 @@
     "semantic_hash": "30d3640034393d1997f8bfbc828b1163"
   },
   "tests/test_area_mode_none.py": {
-    "mtime": 1787911688.9454134,
-    "seen": 1788705844.6864839,
-    "ast_hash": "8021c9c45109465fef825bd595456e8c",
-    "semantic_hash": "8021c9c45109465fef825bd595456e8c"
+    "mtime": 1788924614.9622185,
+    "seen": 1788924780.419262,
+    "ast_hash": "2b15cde631690ae32e80b6f945ca64a0",
+    "semantic_hash": ""
   },
   "tests/test_awning_dusk.py": {
     "mtime": 1788722373.2830708,
@@ -414,9 +414,9 @@
     "semantic_hash": "2581c1d961868be8413c97ba0a96ee46"
   },
   "tests/test_resume_automation.py": {
-    "mtime": 1788721618.2380176,
-    "seen": 1788723206.6701388,
-    "ast_hash": "6922c7bfe78f2a586f9b89481b6d8a06",
+    "mtime": 1788924413.8496606,
+    "seen": 1788924780.419286,
+    "ast_hash": "53dc1ba54935408429371ae134b9b293",
     "semantic_hash": ""
   },
   "tests/test_roof_windows.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1788879877.5695333,
-    "seen": 1788879885.929868,
-    "ast_hash": "695b034cc3c096ef3a9bb9dc0c7f0ad5",
+    "mtime": 1788924695.3916743,
+    "seen": 1788924780.4193048,
+    "ast_hash": "5d738c8f87e8995ad5510278d49ee2f9",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1788879859.1752336,
-    "seen": 1788879885.9298692,
-    "ast_hash": "4e41a0d226318d156ad3ef23be9cf9e4",
+    "mtime": 1788924763.668948,
+    "seen": 1788924780.4193048,
+    "ast_hash": "4d86368956be236bfb8356c22a2a9772",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1788879852.2239442,
-    "seen": 1788879885.929874,
-    "ast_hash": "2767a1c350270ecb86800a73a7724176",
+    "mtime": 1788924763.6695385,
+    "seen": 1788924780.419311,
+    "ast_hash": "0cc4d0807dda98029b03864939b1a286",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {

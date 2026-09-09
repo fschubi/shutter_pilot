@@ -252,6 +252,36 @@ class TestShadingStillRuns:
         assert not is_cover_sun_protected(data, COVER)
         assert 100 in [c.data["position"] for c in cover_calls]
 
+    async def test_the_release_clears_a_stale_down_flag(self, hass, cover_calls):
+        """c.radi im Forum: "Mein Rolladen Schlafzimmer links faehrt abends
+        nicht herunter." Sein Bereich hatte eine Wochenend-Sperre am
+        Hochfahren (`we_no_up`), die den Rollladen korrekt unten liess -
+        `covers_driven_down` stand entsprechend. Die Beschattungsfreigabe
+        (`shade_release_opens`) faehrt ihn trotzdem, unabhaengig von dieser
+        Sperre, spaeter am Tag ganz auf – aber `_release_sun_protect()` liess
+        den alten Merker unveraendert stehen. Die naechste Abwaertsfahrt sah
+        den Rollladen weiter als "heute schon unten gewesen" und liess ihn
+        stehen, obwohl er tatsaechlich sperrangelweit offen war.
+        """
+        _entry, data = await _setup(hass, AREA_MODE_NONE, elevation=42.0)
+        await _ticks(hass, data)
+        # Der Zustand von vorhin: legitim unten, z. B. durch eine
+        # Wochenend-Sperre am Hochfahren.
+        data.setdefault("covers_driven_down", set()).add(COVER)
+
+        hass.states.async_set(
+            "sun.sun", "above_horizon", {"elevation": 2.0, "azimuth": 180.0}
+        )
+        cover_calls.clear()
+        await _ticks(hass, data)
+
+        assert 100 in [c.data["position"] for c in cover_calls]
+        assert COVER not in data.get("covers_driven_down", set()), (
+            "die Freigabe faehrt tatsaechlich hoch – der alte Merker darf das "
+            "nicht ueberleben"
+        )
+        assert COVER in data.get("covers_driven_up", set())
+
     async def test_a_scheduled_area_is_unchanged(self, hass, cover_calls):
         """Gegenprobe zur vorigen: im Zeitmodus bleibt er stehen wie bisher."""
         _entry, data = await _setup(hass, AREA_MODE_TIME, elevation=42.0)

@@ -354,6 +354,71 @@ class TestTheClosedShutterCase:
 
         assert 0 in [c.data["position"] for c in cover_calls]
 
+    async def test_it_clears_the_stale_down_flag_after_driving_up(
+        self, hass, cover_calls
+    ):
+        """c.radi im Forum: "Mein Rolladen Schlafzimmer links faehrt abends
+        nicht herunter." Ursache: `resume_automation()` rief `set_cover_position()`
+        direkt auf, anders als `_drive_group()` (open_group & Co.), ohne
+        `covers_driven_up`/`covers_driven_down` nachzuziehen. Der Rollladen
+        fuhr tagsueber korrekt hoch, blieb dabei aber in `covers_driven_down`
+        stehen – und die abendliche Automatik in brightness.py::_run_down
+        ueberspringt jeden Cover, der dort noch drin steht, weil sie das als
+        "heute schon unten gewesen" liest.
+        """
+        _entry, data = await _setup(hass)
+        hass.states.async_set(
+            "sun.sun", "below_horizon", {"elevation": -20.0, "azimuth": 10.0}
+        )
+        await _ticks(hass, data)
+        await _drive_from_outside(hass, 0)
+        await _ticks(hass, data)
+        data.setdefault("covers_driven_down", set()).add(COVER)
+        cover_calls.clear()
+
+        with patch(
+            "custom_components.shutter_pilot.services.scheduled_role_now",
+            return_value="open",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "resume_automation", {"entity_id": COVER}, blocking=True
+            )
+            await hass.async_block_till_done()
+
+        assert 100 in [c.data["position"] for c in cover_calls]
+        assert COVER not in data.get("covers_driven_down", set()), (
+            "der alte Abwaerts-Merker darf eine automatische Aufwaertsfahrt "
+            "nicht ueberleben"
+        )
+        assert COVER in data.get("covers_driven_up", set())
+
+    async def test_it_clears_the_stale_up_flag_after_driving_down(
+        self, hass, cover_calls
+    ):
+        """Gegenprobe zur anderen Richtung, dieselbe Fehlerklasse."""
+        _entry, data = await _setup(hass)
+        hass.states.async_set(
+            "sun.sun", "below_horizon", {"elevation": -20.0, "azimuth": 10.0}
+        )
+        await _ticks(hass, data)
+        await _drive_from_outside(hass, 100)
+        await _ticks(hass, data)
+        data.setdefault("covers_driven_up", set()).add(COVER)
+        cover_calls.clear()
+
+        with patch(
+            "custom_components.shutter_pilot.services.scheduled_role_now",
+            return_value="closed",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "resume_automation", {"entity_id": COVER}, blocking=True
+            )
+            await hass.async_block_till_done()
+
+        assert 0 in [c.data["position"] for c in cover_calls]
+        assert COVER not in data.get("covers_driven_up", set())
+        assert COVER in data.get("covers_driven_down", set())
+
     async def test_without_a_schedule_nothing_is_invented(
         self, hass, cover_calls
     ):

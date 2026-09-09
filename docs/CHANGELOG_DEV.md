@@ -4,6 +4,82 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-09-05 – 2.21.7: das Icon, das aus dem falschen Set kam
+
+bjoergs letzter Forumspost (drei Stunden nach seiner Rückmeldung zu 2.21.4),
+zwei Screenshots und zwei echte Funde, beide gegen den Code nachgestellt.
+
+**Fund 1: fehlendes Icon vor „Hochfahren unterbinden".** Sein Screenshot
+zeigt die Stelle leer, rot eingekreist. `_sec("mdi:weekend", ...)` –
+`mdi:weekend` gegen pictogrammers.com (die offizielle MDI-Icon-Datenbank)
+geprüft: **404, existiert nicht**. Vermutlich mit dem gleichnamigen Icon aus
+Google Material Symbols verwechselt, einem anderen Icon-Set. `<ha-icon>`
+wirft dabei keinen Fehler, es zeichnet einfach nichts – lautlos, wie ein
+Rendertest es nicht findet, weil nichts crasht. Alle ~60 im Panel benutzten
+`mdi:`-Namen einzeln gegen die MDI-Datenbank geprüft: **nur dieser eine war
+falsch**. Ersetzt durch `mdi:calendar-weekend` – existiert, passt inhaltlich
+besser zum Untertext „Wochenende, Ferien, Urlaub" und wird an anderer Stelle
+im Panel (Dashboard-Sonneninfo) bereits verwendet.
+
+**Fund 2: der Lux-Schieberegler sah aus wie ein Schalter.** Zweiter
+Screenshot: ein winziger blauer Punkt statt einer Schieber-Spur, daneben ein
+Zahlenfeld, das fast die ganze Zeile füllt. Das ist **dieselbe Fehlerklasse
+wie die Checkbox-Beschriftung aus 2.18.0**, nur an einem zweiten Eingabetyp:
+
+```css
+.field input:not([type=checkbox]),.field select{width:100%;padding:8px 12px;
+  border:1px solid var(--divider);background:...;border-radius:8px;...}
+```
+
+`:not([type=checkbox])` schließt Checkboxen aus – aber `type=range` eben
+nicht. Der native Schieberegler bekam damit Polsterung, Rahmen und einen
+dunklen Hintergrund übergestülpt, die für ein Textfeld gedacht sind, und
+seine Spur quetschte sich auf einen Streifen zusammen. **Zweiter Effekt
+derselben Zeile:** `.slider-row .slider-num{width:88px}` (zwei Klassen) hat
+dieselbe CSS-Spezifität wie `.field input:not([type=checkbox])` (eine Klasse
+plus eine Pseudoklasse zählt gleich hoch) – die feste 88px-Breite stand im
+Code, hat aber nie gewonnen, das Zahlenfeld füllte über `width:100%` die
+ganze Zeile.
+
+Zwei Zeilen behoben: `:not([type=checkbox]):not([type=range])` schließt jetzt
+beide Sonderfälle aus, und `.slider-row .slider-num` wurde zu
+`.field .slider-row .slider-num` (drei Klassen statt zwei) – schlägt die
+Sammelregel jetzt ohne `!important`. **Merke, zum dritten Mal an dieser
+Stelle:** eine Sammelregel auf `input` trifft jeden Eingabetyp mit eigener
+nativer Darstellung, nicht nur den, an den beim Schreiben gedacht wurde –
+2.18.0 war die Checkbox, heute der Schieberegler. Betroffen waren alle
+Schieberegler-plus-Zahlenfeld-Kombinationen mit ungebremstem Maximum (aktuell
+nur die Lux-Schwellen im Helligkeitsmodus, `rngOpen()`), nicht nur die im
+Screenshot gezeigten.
+
+**Zwei weitere Punkte in seinem Post, kein Code:**
+
+- **„Hast du an deiner Markisen-Steuerung etwas geändert? Das Tauschen der
+  beiden %-Werte hat jetzt eine Umkehr bewirkt, was vorher nicht klappte."**
+  Reine Rückmeldung, kein Fehler – bestätigt den Rat aus 2.18.0 (Positionen
+  tauschen dreht die Fahrtrichtung rechnerisch um), keine Aktion nötig.
+- **„Gibt es eine elegante Möglichkeit, eine Markise abends bei Dunkelheit
+  einfahren zu lassen, ohne automatische Wiederausfahrt?"** Sein eigener
+  Workaround (Helfer-Schalter unter „Hochfahren unterbinden") **greift
+  nicht** – nachgerechnet: `only_shutters()` schließt Markisen an genau
+  dieser Stelle aus (`brightness.py:342`), der Haken ist für seine Markise
+  wirkungslos. Und sein Bereich hat den Sonnenschutz gar nicht eingeschaltet,
+  die Markise bewegt sich also automatisch nur über den Wetterschutz, nie
+  über Helligkeit. Es gibt dafür aktuell keinen eingebauten Weg – die
+  bestehende Beschattungslogik würde genau das tun, was er nicht will
+  (am nächsten Tag automatisch wieder ausfahren). Als
+  [#12](https://github.com/fschubi/shutter_pilot/issues/12) angelegt und in
+  „Geplant" (beide READMEs) neben #11 einsortiert, mit Erklärung, warum sein
+  Workaround nicht greift.
+
+**Verifiziert:** `pytest` 779 Tests grün (2 neue), **zwei Gegenproben** –
+ohne die Icon-Korrektur fällt `test_no_invalid_mdi_icon_names`, ohne die
+CSS-Spezifitätskorrektur fällt `test_the_slider_row_keeps_its_own_input_
+styling`. Beide Tests prüfen Text im Quellcode, nicht gerendertes Layout –
+von hier aus (kein Browser) ist ein CSS-Kaskadenfehler nur so greifbar.
+**Nicht im Browser geprüft** – bei einem CSS-Fehler wiegt das schwerer als
+sonst, weil genau das die Art Fehler ist, die sich nur dort zeigt.
+
 ### 2026-09-05 – GitHub-Aufräumen: #9 geschlossen, #11 einsortiert
 
 Zwei offene GitHub-Issues durchgesehen, keins davon brauchte neuen Code.

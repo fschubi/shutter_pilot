@@ -436,6 +436,18 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             await set_cover_position(
                 hass, entry, cover, position, "Resume automation"
             )
+            # Wie in _drive_group(): ohne diese zwei Zeilen blieb der alte
+            # Richtungsmerker stehen, der resume gerade beheben sollte. Ein
+            # Rollladen, der hier nach oben faehrt, aber weiter in
+            # `covers_driven_down` steht, wird von der naechsten Abendfahrt
+            # als "heute schon unten gewesen" uebersprungen - c.radis Rollo,
+            # das abends nicht mehr herunterfuhr.
+            if role == ROLE_OPEN:
+                data.setdefault("covers_driven_up", set()).add(cover)
+                data.setdefault("covers_driven_down", set()).discard(cover)
+            else:
+                data.setdefault("covers_driven_down", set()).add(cover)
+                data.setdefault("covers_driven_up", set()).discard(cover)
         _LOGGER.info(
             "resume_automation: %d cover(s) handed back to the automation",
             len(targets),

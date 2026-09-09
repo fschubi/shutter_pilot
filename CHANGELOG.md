@@ -4,6 +4,29 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.22.4]
+
+Eine Forumsmeldung (c.radi, community.simon42.com/90112/144): „Mein Rolladen
+Schlafzimmer links fährt abends nicht herunter."
+
+### Behoben
+- **Ein Rollladen, der tagsüber automatisch wieder ganz geöffnet wurde, konnte
+  abends als „schon unten" gelten und wurde übersprungen.** Die Bereichs- und
+  Helligkeitsautomatik merken sich für jeden Rollladen, in welche Richtung er
+  zuletzt gefahren wurde (`covers_driven_down`/`covers_driven_up`), um dieselbe
+  Richtung nicht laufend neu anzustoßen. Zwei Fahrwege setzten diesen Merker
+  beim Hochfahren aber nicht zurück: der Dienst `resume_automation` (übergibt
+  einen von Hand gefahrenen Rollladen zurück an die Automatik) und die
+  Beschattungsfreigabe am Ende des Beschattungszeitraums
+  (`shade_release_opens`). Betroffen war insbesondere die Kombination aus
+  aktivierter Beschattung mit Freigabe und einer Sperre fürs morgendliche
+  Hochfahren (z. B. die Wochenend-Sperre „Hochfahren unterbinden"): der
+  Rollladen blieb morgens korrekt unten, die Beschattungsfreigabe fuhr ihn
+  später am Tag trotzdem ganz auf – der alte „unten"-Merker überlebte diese
+  Fahrt unverändert und ließ die abendliche Automatik glauben, für heute sei
+  nichts mehr zu tun. Beide Stellen pflegen den Merker jetzt genauso wie
+  `open_group`/`close_group` und die Zeit-/Helligkeitsautomatik es tun.
+
 ## [2.22.3]
 
 Zwei Forumsmeldungen vom selben Tag (community-smarthome.com/11378), beide
