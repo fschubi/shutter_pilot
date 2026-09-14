@@ -16,6 +16,7 @@ from .helpers import (
     get_cover_current_position,
     forget_commanded_position,
     forget_drive_after_close,
+    forget_window_cycle,
     is_recent_automation,
     note_manual_position,
     positions_differ_significantly,
@@ -75,21 +76,25 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
     last_positions: dict[str, float] = data["last_positions"]
     pending: set[str] = data.setdefault("pending_automation_covers", set())
 
+    def _reported_position(state) -> float | None:
+        if state is None or state.state in ("unavailable", "unknown"):
+            return None
+        cur = (state.attributes or {}).get("current_position")
+        if cur is None:
+            return None
+        try:
+            return float(cur)
+        except (TypeError, ValueError):
+            return None
+
     @callback
     def _on_cover_state_change(event) -> None:
         new_state = event.data.get("new_state")
         entity_id = str(event.data.get("entity_id") or "")
         if new_state is None or not entity_id:
             return
-        if new_state.state in ("unavailable", "unknown"):
-            return
-        attrs = new_state.attributes or {}
-        cur = attrs.get("current_position")
-        if cur is None:
-            return
-        try:
-            position = float(cur)
-        except (TypeError, ValueError):
+        position = _reported_position(new_state)
+        if position is None:
             return
 
         last_positions[entity_id] = position
@@ -98,6 +103,16 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             source = SOURCE_AUTOMATION
             pending.discard(entity_id)
         else:
+            # Der Bus meldet jede Aenderung am Zustandsobjekt, nicht nur eine
+            # Fahrt: ein Funkpegel, ein Batteriewert, ein Fahrzustand ohne
+            # neue Position. Steht der Rollladen noch genau da, wo er vorher
+            # stand, hat ihn niemand bewegt - dann gibt es hier auch keine
+            # Handfahrt zu verbuchen, keine Vormerkung aufzuheben und keine
+            # Quelle im Speicher auf "manual" umzuschreiben (was die naechste
+            # automatische Fahrt als Uebersteuerung gelesen haette).
+            old_position = _reported_position(event.data.get("old_state"))
+            if old_position is not None and old_position == position:
+                return
             source = SOURCE_MANUAL
             # Unser zuletzt gesendetes Ziel sagt ab jetzt nichts mehr darueber,
             # wo dieser Rollladen steht.
@@ -117,6 +132,12 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             # hours later, against a shutter somebody had since driven
             # somewhere else entirely by hand.
             forget_drive_after_close(hass, entry, data, entity_id)
+            # Same reasoning for the window trigger's restore marker: the
+            # height it noted when the window opened describes a cover nobody
+            # had touched since. After a hand move it describes nothing, and
+            # acting on it when the window closes drove a shutter opened by
+            # hand in the morning back down to its night position (c.radi).
+            forget_window_cycle(data, entity_id)
 
         hass.async_create_task(
             store.async_set_position(entity_id, position, source)

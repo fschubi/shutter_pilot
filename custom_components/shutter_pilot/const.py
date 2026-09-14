@@ -159,6 +159,14 @@ DEFAULT_AREA_SUNSET_OFFSET = 0
 CONF_AREA_BRIGHTNESS_SENSOR = "brightness_sensor"
 CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD = "lux_down"
 CONF_AREA_BRIGHTNESS_UP_THRESHOLD = "lux_up"
+# Minutes the lux value has to stay beyond a threshold before the drive runs.
+# 0 keeps the old behaviour: the first reading past the threshold drives. A
+# single stray reading (a weather station rebooting, a radio hiccup reporting
+# 0 lx) then closes the whole house in broad daylight – bjoerg, 15:12 at
+# 21 000 lx.
+CONF_AREA_LUX_HOLD = "lux_hold"
+DEFAULT_AREA_LUX_HOLD = 0
+MAX_AREA_LUX_HOLD = 60
 
 # Brightness allowed time windows (week + weekend, each with from/to)
 CONF_AREA_W_UP_FROM = "w_up_from"

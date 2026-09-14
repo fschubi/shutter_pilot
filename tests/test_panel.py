@@ -14,6 +14,7 @@ erst ab dem zweiten gerendert, und genau darin sass der Fehler.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -63,21 +64,58 @@ def test_no_invalid_mdi_icon_names() -> None:
     assert '"mdi:calendar-weekend","sec_noup"' in text
 
 
+def _specificity(selector: str) -> tuple[int, int, int]:
+    """(ids, classes/attributes/pseudo-classes, elements) nach CSS-Regeln.
+
+    `:not(...)` zaehlt wie sein Argument - genau der Punkt, an dem der erste
+    Anlauf (2.21.x) danebenlag: zwei `:not([type=...])` sind zwei Klassen.
+    """
+    ids = classes = elements = 0
+    rest = selector
+    while ":not(" in rest:
+        start = rest.index(":not(")
+        end = rest.index(")", start)
+        inner = rest[start + 5:end]
+        i, c, e = _specificity(inner)
+        ids, classes, elements = ids + i, classes + c, elements + e
+        rest = rest[:start] + rest[end + 1:]
+    for token in re.findall(r"#[\w-]+|\.[\w-]+|\[[^\]]*\]|:[\w-]+|[a-z][\w-]*", rest):
+        if token.startswith("#"):
+            ids += 1
+        elif token[0] in ".[:":
+            classes += 1
+        else:
+            elements += 1
+    return ids, classes, elements
+
+
 def test_the_slider_row_keeps_its_own_input_styling() -> None:
     """bjoerg (Forum): am Lux-Feld war der Schieber winzig, das Zahlenfeld
     riesig. Ursache: die Sammelregel `.field input:not([type=checkbox])`
     (aus 2.18.0, fuer die Checkbox gebaut) traf auch `type=range` mit, und
-    `.slider-row .slider-num` verlor gegen deren `width:100%`, weil beide
-    dieselbe Spezifitaet hatten. Dieselbe Fehlerklasse wie 2.18.0, an einem
-    zweiten Eingabetyp - ein CSS-Cascade-Fehler laesst sich von hier aus nur
-    als Text pruefen, nicht als gerendertes Layout."""
+    `.slider-row .slider-num` verlor gegen deren `width:100%`.
+
+    Wolf (2.22.5): der erste Fix `.field .slider-row .slider-num` (0,3,0)
+    verlor immer noch - `:not([type=...])` zaehlt wie eine Klasse, die
+    Sammelregel steht bei (0,3,1). Das Zahlenfeld nahm weiterhin die ganze
+    Zeile ein und schob die Einheit auf dem Telefon aus dem Rahmen. Deshalb
+    wird hier nicht mehr der Selektor-Text geprueft, sondern die
+    Spezifitaet beider Regeln gegeneinander gerechnet."""
     panel = (
         Path(__file__).parent.parent
         / "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js"
     )
     text = panel.read_text(encoding="utf-8")
-    assert ":not([type=checkbox]):not([type=range])" in text
-    assert ".field .slider-row .slider-num{width:88px" in text
+    general = re.search(r"(\.field input:not\(\[type=checkbox\]\):not\(\[type=range\]\))", text)
+    assert general, "die Sammelregel fuer Eingabefelder fehlt"
+    num = re.search(r"\n\s*([^\n{]*\.slider-num)\{width:88px", text)
+    assert num, "die feste Breite des Zahlenfelds neben dem Schieber fehlt"
+    assert _specificity(num.group(1)) > _specificity(general.group(1)), (
+        f"{num.group(1)!r} muss {general.group(1)!r} schlagen, sonst wirkt "
+        "width:88px nie"
+    )
+    # Gegenprobe des Rechners selbst: der alte Selektor haette verloren.
+    assert _specificity(".field .slider-row .slider-num") < _specificity(general.group(1))
 
 
 def test_every_view_and_form_renders() -> None:

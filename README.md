@@ -143,7 +143,7 @@ elevation and azimuth, today's forecast high and condition.
 | `shutter_pilot.sun_protect_group` | Move all shutters in an area to sun protection position |
 | `shutter_pilot.ventilate_group` | Move all shutters in an area to the ventilation position |
 | `shutter_pilot.retract_awnings` | Retract every awning at once – no stagger, for an announced storm warning |
-| `shutter_pilot.resume_automation` | Hand shutters back to the automation after an outside drive. Clears the manual override and drives straight to the position that applies right now |
+| `shutter_pilot.resume_automation` | Hand shutters back to the automation after an outside drive. Clears the manual override and drives straight to the position that applies right now. With `area_id` it means every shutter the area drives in *either* direction |
 
 `area_id` (e.g. `living`, `bedroom`) is **optional on every service**: left out, the
 service walks all areas – "all shutters up" is one call, not one per area. Every
@@ -732,6 +732,12 @@ Each area therefore has two deadlines that can be switched on:
 Both are **off by default**. Switched on they run once a day, outside the clock windows as well. Each has its own weekend value; left empty, the weekday value applies.
 
 What a deadline does **not** do: move a shutter that already went that way. If the lux value opened it in the morning, nothing happens at 09:00. Shading and a manual position still win, and a deadline that has already passed is not caught up after a restart.
+
+## A stray sensor reading does not close the whole house
+
+A brightness sensor talks nonsense now and then: a weather station rebooting reports 0 lx for a moment, a radio hiccup does the same. Without a countermeasure that single reading is a complete evening drive – at 15:12 in 21,000 lx, which is exactly how it happened.
+
+Each area therefore has a **minimum time at the threshold** (minutes, default `0` = the first reading drives). Set, the lux value has to stay below the down threshold for that many minutes *in a row* before anything closes – and above the up threshold before anything opens. A reading in between that leaves the threshold resets the clock. If the sensor reports the same value for minutes on end at dusk, the wait still runs out: the minute tick re-checks the last known reading. 2–3 minutes are enough; real dusk lasts longer than that, a stray reading does not.
 
 ## Chasing clouds up and down
 

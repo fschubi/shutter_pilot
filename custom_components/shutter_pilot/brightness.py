@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time as time_mod
 from datetime import datetime, time, timedelta
 from typing import Any
 
@@ -31,8 +32,11 @@ from .const import (
     CONF_AREA_BRIGHTNESS_SENSOR,
     CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD,
     CONF_AREA_BRIGHTNESS_UP_THRESHOLD,
+    CONF_AREA_LUX_HOLD,
     DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
     DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD,
+    DEFAULT_AREA_LUX_HOLD,
+    MAX_AREA_LUX_HOLD,
     CONF_AREA_W_UP_FROM,
     CONF_AREA_W_UP_TO,
     CONF_AREA_W_DOWN_FROM,
@@ -386,6 +390,93 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             hass.async_create_task(run_group_light_action(hass, entry, area_id, "up"))
         return moved
 
+    # --- Mindestdauer an der Schwelle ----------------------------------------
+    #
+    # Ein Helligkeitssensor liefert auch mal Unsinn: eine Wetterstation, die
+    # neu startet, meldet kurz 0 lx, ein Funkaussetzer ebenso. Ohne Frist ist
+    # diese eine Meldung eine vollstaendige Abendfahrt – bjoergs Haus fuhr um
+    # 15:12 bei 21 000 lx komplett zu. Die Frist fragt, ob die Schwelle
+    # *anhaltend* ueber- bzw. unterschritten ist; der Zeitpunkt der ersten
+    # Ueberschreitung liegt je Bereich und Richtung in `cond_since`.
+    cond_since: dict[str, float] = data.setdefault("_b_cond_since", {})
+    # Letzter Messwert je Sensor: der Minutentakt braucht ihn, weil ein Sensor,
+    # der in der Daemmerung minutenlang denselben Wert meldet, kein Event
+    # ausloest – und genau dann laeuft die Frist ab.
+    last_lux: dict[str, float] = data.setdefault("_b_last_lux", {})
+
+    def _hold_seconds(area: dict) -> float:
+        try:
+            minutes = float(area.get(CONF_AREA_LUX_HOLD, DEFAULT_AREA_LUX_HOLD) or 0)
+        except (TypeError, ValueError):
+            return 0.0
+        return max(0.0, min(minutes, MAX_AREA_LUX_HOLD)) * 60.0
+
+    def _held(area: dict, area_id: str, direction: str, met: bool) -> bool:
+        """True once `met` has stayed true for the area's hold time.
+
+        A gap resets the clock: the next reading past the threshold starts a
+        fresh wait. That is the point – one reading is not a trend.
+        """
+        key = f"{direction}_{area_id}"
+        if not met:
+            cond_since.pop(key, None)
+            return False
+        hold = _hold_seconds(area)
+        if hold <= 0:
+            return True
+        first = cond_since.setdefault(key, time_mod.monotonic())
+        waited = time_mod.monotonic() - first
+        if waited < hold:
+            _LOGGER.info(
+                "[brightness] area=%s: %s threshold met – holding for another "
+                "%.0f s (of %.0f s) before driving",
+                area_id, direction, hold - waited, hold,
+            )
+            return False
+        return True
+
+    def _evaluate_area(area: dict, area_id: str, lux: float, now: datetime) -> None:
+        today = now.date()
+        sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+        try:
+            down_threshold = int(
+                area.get(CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD)
+            )
+        except (TypeError, ValueError):
+            down_threshold = DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD
+        try:
+            up_threshold = int(
+                area.get(CONF_AREA_BRIGHTNESS_UP_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD)
+            )
+        except (TypeError, ValueError):
+            up_threshold = DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD
+
+        _LOGGER.info(
+            "Brightness eval: area=%s sensor=%s lux=%.1f up_thresh=%d down_thresh=%d",
+            area_id, sensor_id, lux, up_threshold, down_threshold,
+        )
+
+        down_met = _area_window(area, now, "down", hass) and lux <= down_threshold
+        if _held(area, area_id, "down", down_met):
+            _run_down(area, area_id, "Brightness down")
+
+        is_pending = pending_up.get(area_id) == today
+        within_up = _area_window(area, now, "up", hass)
+
+        if within_up and lux <= up_threshold:
+            pending_up[area_id] = today
+            _LOGGER.info(
+                "Brightness: area %s marked pending (lux %.1f <= %d)",
+                area_id, lux, up_threshold,
+            )
+        up_met = (within_up or is_pending) and lux > up_threshold
+        if _held(area, area_id, "up", up_met):
+            if _run_up(
+                area, area_id, "Brightness up",
+                within_up_window=within_up or is_pending,
+            ) and is_pending:
+                pending_up.pop(area_id, None)
+
     def _process_brightness(entity_id: str, new_state) -> None:
         if new_state is None:
             return
@@ -397,8 +488,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         except (TypeError, ValueError):
             return
 
+        last_lux[entity_id] = lux
         now = datetime.now()
-        today = now.date()
 
         for area in brightness_areas:
             area_id = str(area.get(CONF_AREA_ID) or "").strip()
@@ -410,49 +501,38 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
             if entity_id != sensor_id:
                 continue
-
-            try:
-                down_threshold = int(
-                    area.get(CONF_AREA_BRIGHTNESS_DOWN_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD)
-                )
-            except (TypeError, ValueError):
-                down_threshold = DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD
-            try:
-                up_threshold = int(
-                    area.get(CONF_AREA_BRIGHTNESS_UP_THRESHOLD, DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD)
-                )
-            except (TypeError, ValueError):
-                up_threshold = DEFAULT_AREA_BRIGHTNESS_UP_THRESHOLD
-
-            _LOGGER.info(
-                "Brightness eval: area=%s sensor=%s lux=%.1f up_thresh=%d down_thresh=%d",
-                area_id, sensor_id, lux, up_threshold, down_threshold,
-            )
-
-            if _area_window(area, now, "down", hass) and lux <= down_threshold:
-                _run_down(area, area_id, "Brightness down")
-
-            is_pending = pending_up.get(area_id) == today
-            within_up = _area_window(area, now, "up", hass)
-
-            if within_up and lux <= up_threshold:
-                pending_up[area_id] = today
-                _LOGGER.info(
-                    "Brightness: area %s marked pending (lux %.1f <= %d)",
-                    area_id, lux, up_threshold,
-                )
-            elif (within_up or is_pending) and lux > up_threshold:
-                if _run_up(
-                    area, area_id, "Brightness up",
-                    within_up_window=within_up or is_pending,
-                ) and is_pending:
-                    pending_up.pop(area_id, None)
+            _evaluate_area(area, area_id, lux, now)
 
     @callback
     def _on_brightness_change(event) -> None:
         new_state = event.data.get("new_state")
         entity_id = event.data.get("entity_id", "")
         _process_brightness(entity_id, new_state)
+
+    def _hold_tick(now_local: datetime) -> None:
+        """Re-ask the last reading for areas with a hold time.
+
+        Only those: without a hold the state event already did everything
+        there was to do, and re-running it every minute would change when a
+        drive happens (a window opening at 16:00 would drive on an hour-old
+        reading) – behaviour nobody asked for on a default installation.
+        """
+        for area in brightness_areas:
+            if _hold_seconds(area) <= 0:
+                continue
+            area_id = str(area.get(CONF_AREA_ID) or "").strip()
+            if not area_id or not is_auto_enabled(hass, entry, area):
+                continue
+            sensor_id = str(area.get(CONF_AREA_BRIGHTNESS_SENSOR) or "").strip()
+            lux = last_lux.get(sensor_id)
+            if lux is None:
+                state = hass.states.get(sensor_id)
+                try:
+                    lux = float(getattr(state, "state", None))
+                except (TypeError, ValueError):
+                    continue
+                last_lux[sensor_id] = lux
+            _evaluate_area(area, area_id, lux, now_local.replace(tzinfo=None))
 
     tracked_sensors: set[str] = set()
     for area in brightness_areas:
@@ -488,8 +568,12 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 fired_latest[f"{direction}_{area_id}"] = setup_now.date()
 
     @callback
-    def _latest_tick(now: datetime) -> None:
+    def _minute_tick(now: datetime) -> None:
         now_local = dt_util.as_local(now)
+        _hold_tick(now_local)
+        _latest_tick(now_local)
+
+    def _latest_tick(now_local: datetime) -> None:
         today = now_local.date()
         t = now_local.time()
         for area in brightness_areas:
@@ -527,7 +611,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         _latest_deadline(hass, area, setup_now, direction) is not None
         for area in brightness_areas
         for direction in ("up", "down")
-    ):
-        register_minute_callback(data, "brightness", _latest_tick)
+    ) or any(_hold_seconds(area) > 0 for area in brightness_areas):
+        register_minute_callback(data, "brightness", _minute_tick)
     else:
         register_minute_callback(data, "brightness", None)

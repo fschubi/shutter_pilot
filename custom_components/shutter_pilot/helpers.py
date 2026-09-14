@@ -1964,10 +1964,17 @@ def apply_covers_driven_from_persisted(
     _LOGGER.debug("Loaded %d persisted positions into last_positions", len(last_positions))
 
 
-def clear_stale_window_cycle_after_automated_up(
-    data: dict[str, Any], cover_entity_id: str
-) -> None:
-    """Drop window open/tilt restore state after automation opened the cover (day phase)."""
+def forget_window_cycle(data: dict[str, Any], cover_entity_id: str) -> None:
+    """Drop the window trigger's restore marker for this cover.
+
+    The marker says "this window cycle moved the cover, put it back when the
+    window closes" and carries the height to go back to. It is only right for
+    as long as nothing else has moved the cover since. A hand move is the
+    newest decision about where this cover stands – restoring past it would
+    drive a shutter somebody just opened straight back down: c.radi opened
+    his by hand in the morning, closed the tilted window, and the trigger
+    restored to the 26 % it had noted at night.
+    """
     if not cover_entity_id:
         return
     ta = data.get("trigger_actions")
@@ -1976,6 +1983,15 @@ def clear_stale_window_cycle_after_automated_up(
     th = data.get("trigger_heights")
     if isinstance(th, dict):
         th.pop(cover_entity_id, None)
+
+
+def clear_stale_window_cycle_after_automated_up(
+    data: dict[str, Any], cover_entity_id: str
+) -> None:
+    """Drop window open/tilt restore state after automation opened the cover (day phase)."""
+    if not cover_entity_id:
+        return
+    forget_window_cycle(data, cover_entity_id)
     pending = data.get("drive_after_close_pending")
     if isinstance(pending, dict):
         pending.pop(cover_entity_id, None)

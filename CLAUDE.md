@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (799 Tests)
+tests/               pytest-Suite (843 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -251,7 +251,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.22.0: je 444 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.23.0: je 446 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -280,7 +280,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 799 Tests, ~19 s
+.venv/bin/pytest            # 843 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -309,12 +309,110 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.22.4**, im Forum aktiv genutzt. Einreichung für den
+Version **2.23.0**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-09-14 – 2.23.0: der Merker, der die Hand nicht bemerkte – und der Sensor, der log
+
+Vier Meldungen aus zwei Threads (simon42 #150–#153, smarthome #146–#147),
+jede erst nachgerechnet, drei davon vor jeder Codeänderung mit einem
+Reproduktionstest nachgestellt.
+
+**Fund 1 (c.radi #150, echter Fehler): nach manuellem Hochfahren fuhr der
+Rollladen beim Schließen des Fensters wieder auf 26 %.** Sein Vergleich
+zweier Tage war der Schlüssel: Tag 1 automatisch hoch → Fensterkontakt
+reagiert nicht mehr (richtig); Tag 2 von Hand hoch → beim Umstellen von
+gekippt auf geschlossen fährt er herunter. Der Unterschied steht im Code:
+`brightness._run_up`/`scheduler` rufen `clear_stale_window_cycle_after_
+automated_up()`, `cover_tracker._on_cover_state_change` bei einer erkannten
+Handfahrt aber nur `note_manual_position`, `forget_commanded_position` und
+(seit 2.22.3) `forget_drive_after_close` – **nicht** `trigger_actions`/
+`trigger_heights`. Nachts beim Kippen hatte der Trigger 26 als
+Rückfahrhöhe gemerkt; `_apply_window_closed()` restaurierte sie am Morgen
+gegen den längst offenen Rollladen. Reproduziert (Log: `Window closed –
+restore: … -> 26%`), behoben mit neuem `forget_window_cycle()` an genau der
+Stelle, die 2.22.3 schon für die Nachholfahrt gefixt hat. **Dieselbe
+Fehlerklasse zum sechsten Mal in diesem Log**, diesmal am dritten Merker
+derselben Handfahrt-Stelle – die Lehre: bei einem neuen Merker ist die erste
+Frage, welche *fremde* Handlung ihn ungültig macht, und ob die Stelle, die
+diese Handlung erkennt, ihn kennt.
+
+**Nebenbefund an derselben Stelle, vorbeugend geschlossen:** der Tracker
+läuft bei *jeder* Zustandsänderung des Cover-Objekts – auch wenn nur ein
+Attribut wechselt (Homematic meldet RSSI, andere Batterie). Ohne
+Positionswechsel galt das bisher als Handfahrt: Vormerkung weg, Quelle im
+Positionsspeicher auf „manual" (→ nächste Automatikfahrt sieht eine
+Übersteuerung, die es nie gab), und mit dem neuen Fix wäre auch der
+Fensterzyklus jedes Mal gelöscht worden. Jetzt wird die Position mit
+`old_state` verglichen; ohne Wechsel passiert nichts davon. Test mit
+`rssi_device_value`-Attribut, Gegenprobe mit echter Fahrt im selben File.
+
+**Fund 2 (pcsv17 #152): `resume_automation` mit `area_id` „macht nur ein
+Rollo".** Zwei-Rollläden-Reproduktion im Standardfall (gleicher Hoch- und
+Runter-Bereich) lief korrekt – beide gefahren, mit und ohne Beschattung.
+Der Filter fragte aber nur `area_down_id` (`use_up=False`), wie die
+Gruppendienste, die eine Richtung haben. Bei „morgens raumweise, abends alle
+zusammen" ist der Raum nur Hoch-Bereich des zweiten Rollladens → nur einer
+getroffen. Jetzt Vereinigung beider Richtungen; Gegenprobe im Test: der
+Abend-Bereich erreicht weiterhin nur, was er auch fährt. Ob das pcsv17s
+Konfiguration ist, weiß ich nicht – im Forum um Export gebeten, falls es
+nach dem Update weiterhin nur einer ist.
+
+**Fund 3 (wolfvs #153, Panel): Lux-Schwellen im Bereichsformular auf
+Telefon/Tablet hochkant außerhalb des Rahmens.** Im Browser bei 375 px
+nachgemessen statt geraten: `.slider-num` hatte 349 px = ganze Zeile. Der
+Fix aus 2.21.x (`.field .slider-row .slider-num{width:88px}`) hat **nie
+gewirkt** – der Kommentar dort behauptete, drei Klassen schlügen die
+Sammelregel; `:not([type=…])` zählt aber wie sein Argument, die Sammelregel
+`.field input:not([type=checkbox]):not([type=range])` steht bei (0,3,1) und
+gewann. Der zugehörige Test in `tests/test_panel.py` prüfte nur den
+Selektor-Text und war deshalb grün bei einem Fehler, den er finden sollte.
+Jetzt `input[type=number].slider-num` (0,4,2), nachgemessen 88 px, und der
+Test rechnet die Spezifität beider Regeln gegeneinander (mit Gegenprobe:
+der alte Selektor verliert rechnerisch). Dazu `min-width:0` am Schieber.
+**Merke:** ein CSS-Test, der nur prüft, ob eine Zeile im File steht, prüft
+nichts.
+
+**Fund 4 (bjoerg smarthome #147): um 15:12 alle Jalousien zu, bei
+21 000 lx.** Kein Codefehler im engen Sinn, aber nachgerechnet bis zur
+einzigen möglichen Ursache: das Muster im Export (Schlafzimmer auf 30 % =
+Lüftungsposition **mit** vorgemerkter Nachholfahrt, alle vier in
+`covers_driven_down`, Quelle automation) erzeugt ausschließlich
+`brightness._run_down()` – Scheduler filtert Helligkeitsbereiche aus, die
+Frist „spätestens runter" ist bei ihm aus. `_run_down` läuft nur bei einer
+Sensormeldung ≤ `lux_down` (199). Die MQTT-Wetterstation hat also einen
+Ausreißer geliefert, und eine Meldung war bisher eine Abendfahrt. Neue
+Einstellung **`lux_hold`** (Minuten, Vorgabe 0 = wie bisher): Schwelle muss
+so lange am Stück anliegen, Lücke setzt zurück, Minutentakt prüft den
+letzten bekannten Wert nach (sonst liefe die Frist bei einem Sensor, der in
+der Dämmerung nichts Neues meldet, nie ab). Bewusst nur mit `lux_hold > 0`
+im Minutentakt – sonst änderte sich, *wann* ein Standard-Bereich fährt (ein
+um 16:00 öffnendes Zeitfenster führe auf einem stundenalten Wert). Panel-
+Feld, i18n 446/446 ×11, README beide Sprachen, Export generisch.
+
+**TanjaHH (smarthome #146, keine Codeänderung):** Adventsbeleuchtung –
+Terrassenrollladen soll erst zufahren, wenn der Fernseher angeht.
+Nachgerechnet: „Abweichendes Schließen" mit ihrem Adventszeit-Sensor am
+Bereich plus `position_closed_alt` = 100 am Rollladen macht die
+Abendfahrt zum No-op (`resolve_close_role` → `ROLE_CLOSED_ALT`,
+`_run_down` fährt auf 100); `close_group`/`cover.close_cover` aus einer
+HA-Automation beim TV-Einschalten schließt dann wirklich
+(`_drive_group` nimmt `ROLE_CLOSED`, nicht die Alt-Rolle). Die „zweite
+Beschattungsposition" ist dafür das falsche Werkzeug (Beschattung, nicht
+Abendfahrt). `manual_position_is_a_close` bleibt sauber: 100 trifft zuerst
+den Offen-Zweig von `note_manual_position`.
+
+**Verifiziert:** `pytest` 843 Tests grün (11 neue: `tests/test_manual_move_
+clears_window_cycle.py` 4, `tests/test_brightness_lux_hold.py` 5,
+`tests/test_resume_automation.py` +2; `tests/test_panel.py` umgebaut). Je
+Fund eine echte Gegenprobe: Fix entschärft → genau die zugehörigen Tests
+fielen (Fund 1: 2, Nebenbefund: 1, Fund 2: 1, Fund 4: 4), Rest grün, Fix
+wiederhergestellt, volle Suite grün. **Fund 3 im Browser geprüft** (in-App-
+Browser, 375 px, CSS des Panels 1:1 extrahiert). Panel in Node gerendert.
 
 ### 2026-09-09 – 2.22.4: der Merker, der die Freigabe nicht bemerkte
 
@@ -667,63 +765,20 @@ Rollladen beschattet normal, Markise und Dachfenster bleiben gesperrt.
 Volle Suite `pytest` grün (803, zuvor 799). **Nicht im Browser geprüft** –
 reine Backend-Logik, keine Panel-Änderung.
 
-### 2026-09-05 – 2.22.0: die Markise, die abends von selbst geht
+## graphify
 
-Direkte Umsetzung von [#12](https://github.com/fschubi/shutter_pilot/issues/12),
-bjoergs Wunsch aus dem Forum: eine Markise soll abends bei Dämmerung
-einfahren, aber **niemals** automatisch wieder ausfahren – schon gar nicht,
-wenn niemand zuhause ist. Sein eigener Workaround (Helfer-Schalter unter
-„Hochfahren unterbinden") griff nachweislich nicht: `only_shutters()`
-schließt Markisen von genau diesem Fahrweg aus (`brightness.py`,
-`scheduler.py`).
+This project has a knowledge graph at `graphify-out/` with god nodes,
+community structure, and cross-file relationships.
 
-**Warum nicht die Beschattung.** `elevation.py` fährt eine Markise bei
-Bedarf aus *und wieder ein* – dieselbe Bedingung, die abends auslöst, würde
-am nächsten Tag genauso auslösen und die Markise erneut ausfahren. Genau das
-war der Kern der Meldung: keine automatische Wiederausfahrt.
-
-**Warum nicht ein vierter Guard-Slot.** `awning_guard.py` (Wind/Regen/Eis)
-ignoriert Hauptschalter, Bereichsautomatik und die Automatik der Markise mit
-Absicht – eine Böe darf nicht davon abhängen, ob jemand die Markise
-ausgeschaltet hat. Ein Komfort-Wunsch wie „bei Dunkelheit einfahren" soll das
-nicht: schaltet jemand die Automatik ab, soll auch diese Funktion still
-sein. Deshalb ein eigener Bedingungs-Slot (`AWNING_DUSK_SLOT = "dusk"`),
-dieselbe Mechanik wie überall (Zahl mit Hysterese, Zustandsliste, Boolean,
-Invertierung), aber mit eigener, respektierender Prüfung.
-
-**Neues Modul, kein neuer Timer.** `awning_dusk.py` haengt am gemeinsamen
-Minutentakt wie `ventilation.py` und `awning_guard.py`. Fährt genau einmal
-ein, wenn die Bedingung eintritt (`_dusk_retracted`-Merker gegen Motor-
-Genöle), und bei Freigabe passiert **nichts** – keine Fahrt, keine
-Ausnahme, einfach der fehlende Code für „wieder ausfahren". Ein zweiter
-Dämmerungs-Zyklus nach einer hellen Phase darf wieder auslösen, sonst hülfe
-das Feature nur einmal im Leben der Anlage.
-
-**Der Merker-Fallstrick, diesmal im Voraus vermieden.** `_own_slot_met()`
-liest `area.get(CONF_AREA_ID)` roh für den Hysterese-Speicher – bei einem
-Rollladen mit echter Bereichs-ID ist das richtig, bei einer Markise ohne
-eigene wäre es `""`, und **jede** Markise ohne Bereichs-ID würde sich einen
-gemeinsamen Hysterese-Topf teilen. Deshalb `awning_dusk_condition_met()`
-eigenständig, mit dem Cover als Speicherschlüssel
-(`condition_memory(data, "dusk", cover)`) statt der Bereichs-ID – ein Test
-hält das mit zwei Markisen ohne Bereich fest.
-
-**Panel:** ein eigener, zusammenklappbarer Abschnitt „Bei Dämmerung
-einfahren", nur an Markisen (nicht an Dachfenstern) – über `_renderCondDetail()`,
-nicht `_renderGuardSlot()`, weil letzteres eine Sperrzeit mitbringt, die es
-hier gar nicht gibt. Export: eine eigene Verdikt-Zeile mit Sensor, Schwelle
-und aktuellem Zustand, nach demselben Muster wie der Wetterschutz.
-
-**#12 ist damit erledigt**, aus „Geplant" in beiden READMEs wieder entfernt
-– derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
-(damals Markisen selbst) stand, bevor er gebaut wurde.
-
-**Verifiziert:** `pytest` 799 Tests grün (20 neue), **fünf Gegenproben** –
-ohne den Wiederholungsschutz feuert der Motor jede Minute; ohne den
-`is_awning()`-Filter fährt auch ein Dachfenster mit; ohne die
-Automatik-Prüfung am Rollladen fährt eine abgeschaltete Markise trotzdem;
-ohne dieselbe Prüfung am Bereich ebenso; ohne die Export-Zeile fallen drei
-neue Tests. i18n 444/444 in allen elf Sprachen (4 neu). Panel in Node
-gerendert, mit einer eigenen Prüfung je Geräteart (Markise zeigt den
-Abschnitt, Dachfenster nicht) – Gegenprobe gemacht. **Nicht im Browser
-geprüft.**
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when
+  `graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for
+  relationships and `graphify explain "<concept>"` for focused concepts.
+  These return a scoped subgraph, usually much smaller than
+  `GRAPH_REPORT.md` or raw grep output.
+- If `graphify-out/wiki/index.md` exists, use it for broad navigation instead
+  of raw source browsing.
+- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or
+  when `query`/`path`/`explain` do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current
+  (AST-only, no API cost).

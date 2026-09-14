@@ -355,7 +355,18 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             # ein Dachfenster hätte hier weder eine manuelle Übersteuerung
             # noch einen Beschattungsmerker, die es aufzuheben gäbe - dafür
             # aber einen Wetterschutz, den dieser Dienst nicht kennt.
+            #
+            # Beide Richtungen, nicht nur der Runter-Bereich: die
+            # Gruppendienste haben eine Richtung und fragen deshalb genau
+            # den Bereich, der sie faehrt. Dieser hier hat keine - er gibt
+            # zurueck, was der Bereich in irgendeiner Richtung steuert. Wer
+            # morgens raumweise und abends alle zusammen faehrt, hat den
+            # Raum nur als Hoch-Bereich, und "Kinderzimmer zurueck an die
+            # Automatik" traf dort nur den einen Rollladen, dessen
+            # Runter-Bereich zufaellig derselbe war.
             for shutter in filter_shutters_by_area(
+                _shutter_list(), area_id, use_up=True, shutters_only=True
+            ) + filter_shutters_by_area(
                 _shutter_list(), area_id, use_up=False, shutters_only=True
             ):
                 cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()

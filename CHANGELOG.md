@@ -4,6 +4,58 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.23.0]
+
+Vier Forumsmeldungen aus zwei Threads (community.simon42.com/90112 ab
+Beitrag 150, community-smarthome.com/11378/147), jede gegen den Code
+nachgerechnet und mit einem Test nachgestellt, bevor etwas geändert wurde.
+
+### Neu
+- **Mindestdauer an der Lux-Schwelle** (`lux_hold`, je Bereich im
+  Helligkeitsmodus, Vorgabe `0` = wie bisher). bjoerg: um 15:12 Uhr fuhren
+  alle Jalousien herunter – bei 21 000 lx. Nachgerechnet lässt sich dieses
+  Muster nur durch eine einzelne Sensormeldung unterhalb der Runter-Schwelle
+  erzeugen, also einen Ausreißer der MQTT-Wetterstation (Neustart,
+  Funkaussetzer). Bisher war eine einzige solche Meldung eine vollständige
+  Abendfahrt. Mit gesetzter Mindestdauer muss der Lux-Wert so viele Minuten
+  am Stück unter der Runter- bzw. über der Hoch-Schwelle liegen; eine Meldung
+  dazwischen setzt die Uhr zurück. Meldet der Sensor in der Dämmerung lange
+  denselben Wert, prüft der Minutentakt den letzten bekannten Wert nach,
+  damit die Frist auch ohne neues Sensor-Ereignis abläuft. Panel-Feld mit
+  Hinweis in allen elf Sprachen, im Export sichtbar.
+
+### Behoben
+- **Nach einem manuellen Hochfahren fuhr der Rollladen beim Schließen des
+  Fensters wieder auf die Nachtposition.** c.radi, an zwei Tagen beobachtet:
+  fährt die Automatik morgens hoch, reagiert der Fensterkontakt danach
+  richtigerweise nicht mehr; fährt man von Hand hoch, fuhr der Rollladen beim
+  Umstellen des Fensters von gekippt auf geschlossen herunter. Der
+  Fenstertrigger hatte sich nachts beim Kippen die Rückfahrhöhe gemerkt
+  (26 %); die automatische Hochfahrt räumt diesen Merker auf, die erkannte
+  Handfahrt tat es nicht. Jetzt beendet auch eine Handfahrt den
+  Fensterzyklus – dieselbe Stelle, die seit 2.22.3 die vorgemerkte
+  Nachhol-Fahrt aufhebt.
+- **Eine Zustandsmeldung des Antriebs ohne Positionswechsel galt als
+  Handfahrt.** Der Bus meldet jede Änderung am Zustandsobjekt, etwa einen
+  Funkpegel oder Batteriewert. Bisher hob das die Nachhol-Vormerkung auf und
+  schrieb die Quelle im Positionsspeicher auf „manuell" um – womit die nächste
+  automatische Fahrt eine Übersteuerung sah, die es nie gab. Ohne
+  Positionswechsel wird jetzt nichts davon angefasst.
+- **`resume_automation` mit `area_id` erreichte nur die Rollläden, deren
+  Runter-Bereich passte.** pcsv17: „macht nur ein Rollo, obwohl ich zwei im
+  Bereich habe." Der Dienst filterte wie die Gruppendienste über eine
+  Richtung, hat aber selbst keine. Wer morgens raumweise und abends alle
+  zusammen fährt, hat den Raum nur als Hoch-Bereich – jetzt sind alle
+  Rollläden gemeint, die der Bereich in irgendeiner Richtung fährt.
+- **Panel: die Lux-Schwellen im Bereichsformular standen auf Telefon und
+  Tablet hochkant außerhalb des Rahmens.** wolfvs. Die feste Breite des
+  Zahlenfelds neben dem Schieber (seit 2.21.x im CSS) hat nie gewirkt:
+  `:not([type=…])` zählt wie eine Klasse, die Sammelregel für Eingabefelder
+  gewann weiterhin und blies das Feld auf die ganze Zeile auf. Im Browser
+  bei 375 px nachgemessen: vorher 349 px, jetzt 88 px, die Einheit steht
+  wieder im Rahmen. Der zugehörige Test rechnet die Spezifität beider Regeln
+  jetzt gegeneinander, statt nur den Selektor-Text zu prüfen.
+
 ## [2.22.4]
 
 Eine Forumsmeldung (c.radi, community.simon42.com/90112/144): „Mein Rolladen

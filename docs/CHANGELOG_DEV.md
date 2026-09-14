@@ -4,6 +4,67 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-09-05 – 2.22.0: die Markise, die abends von selbst geht
+
+Direkte Umsetzung von [#12](https://github.com/fschubi/shutter_pilot/issues/12),
+bjoergs Wunsch aus dem Forum: eine Markise soll abends bei Dämmerung
+einfahren, aber **niemals** automatisch wieder ausfahren – schon gar nicht,
+wenn niemand zuhause ist. Sein eigener Workaround (Helfer-Schalter unter
+„Hochfahren unterbinden") griff nachweislich nicht: `only_shutters()`
+schließt Markisen von genau diesem Fahrweg aus (`brightness.py`,
+`scheduler.py`).
+
+**Warum nicht die Beschattung.** `elevation.py` fährt eine Markise bei
+Bedarf aus *und wieder ein* – dieselbe Bedingung, die abends auslöst, würde
+am nächsten Tag genauso auslösen und die Markise erneut ausfahren. Genau das
+war der Kern der Meldung: keine automatische Wiederausfahrt.
+
+**Warum nicht ein vierter Guard-Slot.** `awning_guard.py` (Wind/Regen/Eis)
+ignoriert Hauptschalter, Bereichsautomatik und die Automatik der Markise mit
+Absicht – eine Böe darf nicht davon abhängen, ob jemand die Markise
+ausgeschaltet hat. Ein Komfort-Wunsch wie „bei Dunkelheit einfahren" soll das
+nicht: schaltet jemand die Automatik ab, soll auch diese Funktion still
+sein. Deshalb ein eigener Bedingungs-Slot (`AWNING_DUSK_SLOT = "dusk"`),
+dieselbe Mechanik wie überall (Zahl mit Hysterese, Zustandsliste, Boolean,
+Invertierung), aber mit eigener, respektierender Prüfung.
+
+**Neues Modul, kein neuer Timer.** `awning_dusk.py` haengt am gemeinsamen
+Minutentakt wie `ventilation.py` und `awning_guard.py`. Fährt genau einmal
+ein, wenn die Bedingung eintritt (`_dusk_retracted`-Merker gegen Motor-
+Genöle), und bei Freigabe passiert **nichts** – keine Fahrt, keine
+Ausnahme, einfach der fehlende Code für „wieder ausfahren". Ein zweiter
+Dämmerungs-Zyklus nach einer hellen Phase darf wieder auslösen, sonst hülfe
+das Feature nur einmal im Leben der Anlage.
+
+**Der Merker-Fallstrick, diesmal im Voraus vermieden.** `_own_slot_met()`
+liest `area.get(CONF_AREA_ID)` roh für den Hysterese-Speicher – bei einem
+Rollladen mit echter Bereichs-ID ist das richtig, bei einer Markise ohne
+eigene wäre es `""`, und **jede** Markise ohne Bereichs-ID würde sich einen
+gemeinsamen Hysterese-Topf teilen. Deshalb `awning_dusk_condition_met()`
+eigenständig, mit dem Cover als Speicherschlüssel
+(`condition_memory(data, "dusk", cover)`) statt der Bereichs-ID – ein Test
+hält das mit zwei Markisen ohne Bereich fest.
+
+**Panel:** ein eigener, zusammenklappbarer Abschnitt „Bei Dämmerung
+einfahren", nur an Markisen (nicht an Dachfenstern) – über `_renderCondDetail()`,
+nicht `_renderGuardSlot()`, weil letzteres eine Sperrzeit mitbringt, die es
+hier gar nicht gibt. Export: eine eigene Verdikt-Zeile mit Sensor, Schwelle
+und aktuellem Zustand, nach demselben Muster wie der Wetterschutz.
+
+**#12 ist damit erledigt**, aus „Geplant" in beiden READMEs wieder entfernt
+– derselbe Platz, an dem laut 2.12.0-Log früher schon einmal ein Wunsch
+(damals Markisen selbst) stand, bevor er gebaut wurde.
+
+**Verifiziert:** `pytest` 799 Tests grün (20 neue), **fünf Gegenproben** –
+ohne den Wiederholungsschutz feuert der Motor jede Minute; ohne den
+`is_awning()`-Filter fährt auch ein Dachfenster mit; ohne die
+Automatik-Prüfung am Rollladen fährt eine abgeschaltete Markise trotzdem;
+ohne dieselbe Prüfung am Bereich ebenso; ohne die Export-Zeile fallen drei
+neue Tests. i18n 444/444 in allen elf Sprachen (4 neu). Panel in Node
+gerendert, mit einer eigenen Prüfung je Geräteart (Markise zeigt den
+Abschnitt, Dachfenster nicht) – Gegenprobe gemacht. **Nicht im Browser
+geprüft.**
+
 ### 2026-09-05 – 2.21.7: das Icon, das aus dem falschen Set kam
 
 bjoergs letzter Forumspost (drei Stunden nach seiner Rückmeldung zu 2.21.4),

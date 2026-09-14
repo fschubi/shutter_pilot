@@ -144,7 +144,7 @@ Wetterlage von heute.
 | `shutter_pilot.sun_protect_group` | Alle Rollläden eines Bereichs in Sonnenschutz-Position fahren |
 | `shutter_pilot.ventilate_group` | Alle Rollläden eines Bereichs in die Lüftungsposition fahren |
 | `shutter_pilot.retract_awnings` | Alle Markisen sofort einfahren – ohne Staffelung, für eine angekündigte Sturmwarnung |
-| `shutter_pilot.resume_automation` | Rollläden an die Automatik zurückgeben, nachdem sie von aussen gefahren wurden. Löscht die manuelle Übersteuerung und fährt sofort auf die Position, die gerade gilt |
+| `shutter_pilot.resume_automation` | Rollläden an die Automatik zurückgeben, nachdem sie von aussen gefahren wurden. Löscht die manuelle Übersteuerung und fährt sofort auf die Position, die gerade gilt. Mit `area_id` sind alle Rollläden gemeint, die der Bereich in *irgendeiner* Richtung fährt |
 
 `area_id` (z. B. `living`, `schlafzimmer`) ist bei **allen** Diensten **optional**:
 ohne Bereich gilt der Dienst für alle Bereiche – „alle Rollläden hoch" ist damit
@@ -746,6 +746,12 @@ Dafür gibt es je Bereich zwei abschaltbare Fristen:
 Beide sind **standardmäßig aus** – eingeschaltet fahren sie einmal am Tag, auch außerhalb der Zeitfenster. Für das Wochenende gibt es je einen eigenen Wert; bleibt er leer, gilt der Wert der Woche.
 
 Was die Frist **nicht** tut: einen Rollladen bewegen, der bereits in diese Richtung gefahren ist. Wurde morgens per Lux geöffnet, passiert um 09:00 nichts mehr. Beschattung und eine manuelle Position haben weiterhin Vorrang, und nach einem Neustart wird eine bereits vergangene Frist nicht nachgeholt.
+
+## Ein Ausreißer des Sensors fährt nicht das ganze Haus zu
+
+Ein Helligkeitssensor meldet auch mal Unsinn: eine Wetterstation, die neu startet, liefert kurz 0 lx, ein Funkaussetzer ebenso. Ohne Gegenmaßnahme ist diese eine Meldung eine vollständige Abendfahrt – um 15:12 Uhr bei 21 000 lx, so ist es passiert.
+
+Dagegen gibt es je Bereich die **Mindestdauer an der Schwelle** (Minuten, Vorgabe `0` = die erste Meldung fährt). Ist sie gesetzt, muss der Lux-Wert so viele Minuten *am Stück* unter der Runter-Schwelle liegen, bevor geschlossen wird – und über der Hoch-Schwelle, bevor geöffnet wird. Eine Meldung dazwischen, die die Schwelle wieder verlässt, setzt die Uhr zurück. Meldet der Sensor in der Dämmerung minutenlang denselben Wert, läuft die Frist trotzdem ab: der Minutentakt prüft den letzten bekannten Wert nach. 2–3 Minuten reichen; die echte Abenddämmerung dauert länger, der Ausreißer nicht.
 
 ## Ständiges Hoch und Runter bei Wolken
 

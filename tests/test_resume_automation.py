@@ -615,3 +615,107 @@ class TestGuardedKindsAreLeftAlone:
         )
         assert AWNING not in driven
         assert WINDOW not in driven
+
+
+class TestAnAreaMeansBothDirections:
+    """pcsv17 (simon42 #152): „Wenn ich die resume-Funktion nutze, um einen
+    Bereich wieder zu aktivieren, dann macht er nur ein Rollo, obwohl ich zwei
+    in dem Bereich habe."
+
+    Der Dienst filterte nur ueber den Runter-Bereich – wie die Gruppendienste,
+    die eine Richtung haben. Er selbst hat keine: wer morgens raumweise und
+    abends alle zusammen faehrt, hat den Raum nur als Hoch-Bereich, und der
+    zweite Rollladen mit anderem Runter-Bereich blieb aussen vor."""
+
+    async def _setup(self, hass):
+        for cover in ("cover.kz_links", "cover.kz_rechts"):
+            hass.states.async_set(
+                cover, "open", {"current_position": 100, "supported_features": 15}
+            )
+        hass.states.async_set(
+            "sun.sun", "below_horizon", {"elevation": -20.0, "azimuth": 10.0}
+        )
+        # Naechste Fahrt ist in beiden Bereichen eine Abwaertsfahrt: beide
+        # Rollladen gehoeren nach oben.
+        room = {
+            CONF_AREA_ID: "kz", CONF_AREA_NAME: "Kinderzimmer",
+            CONF_AREA_MODE: AREA_MODE_TIME,
+            CONF_AREA_TIME_DOWN: _in(60), CONF_AREA_TIME_UP: _in(120),
+            CONF_AREA_DRIVE_DELAY: 0,
+        }
+        house = {
+            CONF_AREA_ID: "alle", CONF_AREA_NAME: "Alle",
+            CONF_AREA_MODE: AREA_MODE_TIME,
+            CONF_AREA_TIME_DOWN: _in(90), CONF_AREA_TIME_UP: _in(150),
+            CONF_AREA_DRIVE_DELAY: 0,
+        }
+        shutters = [
+            {
+                CONF_COVER_ENTITY_ID: "cover.kz_links", CONF_NAME: "links",
+                CONF_AREA_UP_ID: "kz", CONF_AREA_DOWN_ID: "kz",
+                CONF_POSITION_OPEN: 100, CONF_POSITION_CLOSED: 0,
+            },
+            {
+                # Morgens raumweise, abends alle zusammen.
+                CONF_COVER_ENTITY_ID: "cover.kz_rechts", CONF_NAME: "rechts",
+                CONF_AREA_UP_ID: "kz", CONF_AREA_DOWN_ID: "alle",
+                CONF_POSITION_OPEN: 100, CONF_POSITION_CLOSED: 0,
+            },
+        ]
+        entry = MockConfigEntry(
+            domain=DOMAIN, title="Shutter Pilot",
+            options={CONF_AREAS: [room, house], CONF_SHUTTERS: shutters},
+        )
+        entry.add_to_hass(hass)
+        with patch(
+            "custom_components.shutter_pilot._async_register_panel",
+            return_value=None,
+        ):
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+        return entry, hass.data[DOMAIN][entry.entry_id]
+
+    async def test_the_room_brings_back_both_of_its_shutters(
+        self, hass, cover_calls
+    ):
+        _entry, data = await self._setup(hass)
+        await _ticks(hass, data)
+        for cover in ("cover.kz_links", "cover.kz_rechts"):
+            hass.states.async_set(
+                cover, "open", {"current_position": 20, "supported_features": 15}
+            )
+        await hass.async_block_till_done()
+        await _ticks(hass, data)
+        cover_calls.clear()
+
+        await hass.services.async_call(
+            DOMAIN, "resume_automation", {"area_id": "kz"}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+        driven = {c.data["entity_id"] for c in cover_calls}
+        assert driven == {"cover.kz_links", "cover.kz_rechts"}, (
+            "der Raum steuert beide Rollladen (den einen in beide Richtungen, "
+            f"den anderen nur nach oben) - zurueck kamen: {sorted(driven)}"
+        )
+        assert all(c.data["position"] == 100 for c in cover_calls)
+
+    async def test_the_evening_area_reaches_the_shared_shutter_only(
+        self, hass, cover_calls
+    ):
+        """Gegenprobe: „alle" faehrt nur den Rollladen, den es auch steuert."""
+        _entry, data = await self._setup(hass)
+        await _ticks(hass, data)
+        for cover in ("cover.kz_links", "cover.kz_rechts"):
+            hass.states.async_set(
+                cover, "open", {"current_position": 20, "supported_features": 15}
+            )
+        await hass.async_block_till_done()
+        await _ticks(hass, data)
+        cover_calls.clear()
+
+        await hass.services.async_call(
+            DOMAIN, "resume_automation", {"area_id": "alle"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert {c.data["entity_id"] for c in cover_calls} == {"cover.kz_rechts"}

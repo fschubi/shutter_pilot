@@ -113,8 +113,9 @@ resume_automation:
     area_id:
       name: Bereich-ID
       description: >-
-        Optional. ID des Bereichs (z. B. living, kinderzimmer). Leer lassen
-        für alle Bereiche.
+        Optional. ID des Bereichs (z. B. living, kinderzimmer). Gemeint sind
+        alle Rollläden, die dieser Bereich hoch- oder runterfährt – auch die,
+        die nur in einer Richtung dazugehören. Leer lassen für alle Bereiche.
       required: false
       selector:
         text:

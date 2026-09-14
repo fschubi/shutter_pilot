@@ -384,6 +384,7 @@ de:{
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Helligkeitssensor",f_lux_up:"Lux Hoch-Schwelle",f_lux_down:"Lux Runter-Schwelle",
   f_lux_hint:"Der Schieber deckt den Feinbereich ab; im Feld daneben steht jeder Wert. Aussensensoren melden im Sommer Zehntausende Lux – dort sind ein paar hundert als Schwelle zu niedrig.",
+  f_lux_hold:"Mindestdauer an der Schwelle",f_lux_hold_hint:"0 = die erste Meldung fährt. Sonst muss der Lux-Wert so viele Minuten am Stück unter der Runter- bzw. über der Hoch-Schwelle liegen. Fängt einen Ausreißer des Sensors ab (Wetterstation startet neu, Funkaussetzer meldet 0 lx) – der fuhr sonst am helllichten Tag das ganze Haus zu. 2–3 Minuten reichen.",
   f_lux_wrong_way:"Die Hoch-Schwelle sollte über der Runter-Schwelle liegen: hoch geht es oberhalb, runter unterhalb. Liegt sie darunter, gilt zwischen den beiden Werten beides gleichzeitig – überschneiden sich dann noch die Zeitfenster, pendelt der Rollladen.",
   f_w_up_from:"Woche Hoch ab",f_w_up_to:"Woche Hoch bis",f_w_down_from:"Woche Runter ab",f_w_down_to:"Woche Runter bis",
   f_we_up_from:"WE Hoch ab",f_we_up_to:"WE Hoch bis",f_we_down_from:"WE Runter ab",f_we_down_to:"WE Runter bis",
@@ -744,6 +745,7 @@ en:{
   dash_current_lux:"Current",
   f_brightness_sensor:"Brightness sensor",f_lux_up:"Lux up threshold",f_lux_down:"Lux down threshold",
   f_lux_hint:"The slider covers the fine range; the field beside it takes any value. Outdoor sensors report tens of thousands of lux in summer, where a few hundred is far too low a threshold.",
+  f_lux_hold:"Minimum time at the threshold",f_lux_hold_hint:"0 = the first reading drives. Otherwise the lux value has to stay below the down threshold (or above the up threshold) for this many minutes in a row. Catches a stray sensor reading (weather station rebooting, a radio hiccup reporting 0 lx) that would otherwise close the whole house in broad daylight. 2–3 minutes are enough.",
   f_lux_wrong_way:"The up threshold belongs above the down threshold: up happens above it, down below. Put it lower and both rules hold between the two values at once – once the time windows overlap as well, the shutter starts oscillating.",
   f_w_up_from:"Weekday up from",f_w_up_to:"Weekday up to",f_w_down_from:"Weekday down from",f_w_down_to:"Weekday down to",
   f_we_up_from:"Weekend up from",f_we_up_to:"Weekend up to",f_we_down_from:"Weekend down from",f_we_down_to:"Weekend down to",
@@ -1050,6 +1052,7 @@ fr:{
   dash_current_lux:"Actuel",
   f_brightness_sensor:"Capteur luminosité",f_lux_up:"Seuil lux montée",f_lux_down:"Seuil lux descente",
   f_lux_hint:"Le curseur couvre la plage fine ; le champ à côté accepte n’importe quelle valeur. Les capteurs extérieurs relèvent des dizaines de milliers de lux en été.",
+  f_lux_hold:"Durée minimale au seuil",f_lux_hold_hint:"0 = la première mesure déclenche. Sinon la valeur lux doit rester sous le seuil de descente (ou au-dessus du seuil de montée) pendant autant de minutes d’affilée. Filtre une mesure aberrante du capteur (station météo qui redémarre, coupure radio à 0 lx) qui fermerait sinon toute la maison en plein jour. 2–3 minutes suffisent.",
   f_lux_wrong_way:"Le seuil de montée doit être au-dessus du seuil de descente : on monte au-dessus, on descend en dessous. S'il est plus bas, les deux règles s'appliquent en même temps entre les deux valeurs – et si les plages horaires se recoupent, le volet oscille.",
   f_w_up_from:"Sem. montée de",f_w_up_to:"Sem. montée à",f_w_down_from:"Sem. descente de",f_w_down_to:"Sem. descente à",
   f_we_up_from:"WE montée de",f_we_up_to:"WE montée à",f_we_down_from:"WE descente de",f_we_down_to:"WE descente à",
@@ -1352,6 +1355,7 @@ es:{
   dash_current_lux:"Actual",
   f_brightness_sensor:"Sensor brillo",f_lux_up:"Umbral lux subida",f_lux_down:"Umbral lux bajada",
   f_lux_hint:"El deslizador cubre el rango fino; el campo contiguo acepta cualquier valor. Los sensores exteriores miden decenas de miles de lux en verano.",
+  f_lux_hold:"Duración mínima en el umbral",f_lux_hold_hint:"0 = la primera lectura mueve. Si no, el valor lux debe permanecer bajo el umbral de bajada (o sobre el de subida) tantos minutos seguidos. Filtra una lectura errónea del sensor (estación meteorológica que reinicia, corte de radio con 0 lx) que de otro modo cerraría toda la casa a plena luz del día. Con 2–3 minutos basta.",
   f_lux_wrong_way:"El umbral de subida debe estar por encima del de bajada: se sube por encima y se baja por debajo. Si queda más bajo, entre ambos valores se cumplen las dos reglas a la vez, y si además se solapan las franjas horarias la persiana oscila.",
   f_w_up_from:"L-V subida desde",f_w_up_to:"L-V subida hasta",f_w_down_from:"L-V bajada desde",f_w_down_to:"L-V bajada hasta",
   f_we_up_from:"Fin sem. subida desde",f_we_up_to:"Fin sem. subida hasta",f_we_down_from:"Fin sem. bajada desde",f_we_down_to:"Fin sem. bajada hasta",
@@ -1654,6 +1658,7 @@ it:{
   dash_current_lux:"Attuale",
   f_brightness_sensor:"Sensore luminosità",f_lux_up:"Soglia lux apertura",f_lux_down:"Soglia lux chiusura",
   f_lux_hint:"Il cursore copre l’intervallo fine; il campo accanto accetta qualsiasi valore. I sensori esterni misurano decine di migliaia di lux d’estate.",
+  f_lux_hold:"Durata minima alla soglia",f_lux_hold_hint:"0 = la prima lettura muove. Altrimenti il valore lux deve restare sotto la soglia di chiusura (o sopra quella di apertura) per tanti minuti di fila. Filtra una lettura anomala del sensore (stazione meteo che si riavvia, interruzione radio con 0 lx) che altrimenti chiuderebbe tutta la casa in pieno giorno. Bastano 2–3 minuti.",
   f_lux_wrong_way:"La soglia di apertura va sopra quella di chiusura: si apre al di sopra, si chiude al di sotto. Se sta più in basso, fra i due valori valgono entrambe le regole insieme e, se si sovrappongono anche le fasce orarie, la tapparella oscilla.",
   f_w_up_from:"Feriale su da",f_w_up_to:"Feriale su a",f_w_down_from:"Feriale giù da",f_w_down_to:"Feriale giù a",
   f_we_up_from:"Weekend su da",f_we_up_to:"Weekend su a",f_we_down_from:"Weekend giù da",f_we_down_to:"Weekend giù a",
@@ -1957,6 +1962,7 @@ nl:{
   dash_current_lux:"Huidig",
   f_brightness_sensor:"Helderheidssensor",f_lux_up:"Lux omhoog drempel",f_lux_down:"Lux omlaag drempel",
   f_lux_hint:"De schuif dekt het fijne bereik; het veld ernaast neemt elke waarde. Buitensensoren melden in de zomer tienduizenden lux.",
+  f_lux_hold:"Minimale duur op de drempel",f_lux_hold_hint:"0 = de eerste meting rijdt. Anders moet de luxwaarde zoveel minuten achtereen onder de omlaag-drempel (of boven de omhoog-drempel) blijven. Vangt een uitschieter van de sensor af (weerstation herstart, radiostoring meldt 0 lx) die anders op klaarlichte dag het hele huis sluit. 2–3 minuten volstaan.",
   f_lux_wrong_way:"De omhoog-drempel hoort boven de omlaag-drempel: omhoog gebeurt erboven, omlaag eronder. Ligt hij lager, dan gelden tussen beide waarden allebei de regels tegelijk – overlappen ook de tijdvensters, dan gaat het rolluik heen en weer.",
   f_w_up_from:"Doordeweeks omhoog van",f_w_up_to:"Doordeweeks omhoog tot",f_w_down_from:"Doordeweeks omlaag van",f_w_down_to:"Doordeweeks omlaag tot",
   f_we_up_from:"Weekend omhoog van",f_we_up_to:"Weekend omhoog tot",f_we_down_from:"Weekend omlaag van",f_we_down_to:"Weekend omlaag tot",
@@ -2260,6 +2266,7 @@ da:{
   dash_current_lux:"Aktuel",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux op-tærskel",f_lux_down:"Lux ned-tærskel",
   f_lux_hint:"Skyderen dækker finområdet; feltet ved siden af tager enhver værdi. Udendørs sensorer melder titusinder af lux om sommeren.",
+  f_lux_hold:"Mindste varighed ved tærsklen",f_lux_hold_hint:"0 = første måling kører. Ellers skal lux-værdien ligge under ned-tærsklen (eller over op-tærsklen) så mange minutter i træk. Fanger en fejlmåling fra sensoren (vejrstation genstarter, radioudfald melder 0 lx), som ellers lukker hele huset ved højlys dag. 2–3 minutter rækker.",
   f_lux_wrong_way:"Op-tærsklen hører over ned-tærsklen: op sker over den, ned under den. Ligger den lavere, gælder begge regler samtidig mellem de to værdier – og overlapper tidsrummene også, kører persiennen frem og tilbage.",
   f_w_up_from:"Hverdag op fra",f_w_up_to:"Hverdag op til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Weekend op fra",f_we_up_to:"Weekend op til",f_we_down_from:"Weekend ned fra",f_we_down_to:"Weekend ned til",
@@ -2563,6 +2570,7 @@ sv:{
   dash_current_lux:"Aktuell",
   f_brightness_sensor:"Ljussensor",f_lux_up:"Lux upp-tröskel",f_lux_down:"Lux ner-tröskel",
   f_lux_hint:"Reglaget täcker finområdet; fältet bredvid tar vilket värde som helst. Utomhusgivare rapporterar tiotusentals lux på sommaren.",
+  f_lux_hold:"Minsta tid vid tröskeln",f_lux_hold_hint:"0 = första avläsningen kör. Annars måste luxvärdet ligga under ner-tröskeln (eller över upp-tröskeln) så många minuter i rad. Fångar ett felvärde från givaren (väderstation som startar om, radioavbrott som rapporterar 0 lx) som annars stänger hela huset mitt på ljusa dagen. 2–3 minuter räcker.",
   f_lux_wrong_way:"Upp-tröskeln hör hemma över ner-tröskeln: upp sker ovanför, ner nedanför. Ligger den lägre gäller båda reglerna samtidigt mellan värdena – överlappar dessutom tidsfönstren pendlar persiennen.",
   f_w_up_from:"Vardag upp från",f_w_up_to:"Vardag upp till",f_w_down_from:"Vardag ner från",f_w_down_to:"Vardag ner till",
   f_we_up_from:"Helg upp från",f_we_up_to:"Helg upp till",f_we_down_from:"Helg ner från",f_we_down_to:"Helg ner till",
@@ -2866,6 +2874,7 @@ pl:{
   dash_current_lux:"Aktualnie",
   f_brightness_sensor:"Czujnik jasności",f_lux_up:"Próg lux w górę",f_lux_down:"Próg lux w dół",
   f_lux_hint:"Suwak obejmuje zakres precyzyjny; pole obok przyjmuje dowolną wartość. Czujniki zewnętrzne latem podają dziesiątki tysięcy luksów.",
+  f_lux_hold:"Minimalny czas przy progu",f_lux_hold_hint:"0 = pierwszy odczyt uruchamia. W przeciwnym razie wartość lux musi utrzymywać się poniżej progu w dół (lub powyżej progu w górę) przez tyle minut z rzędu. Wychwytuje błędny odczyt czujnika (restart stacji pogodowej, zanik radia zgłaszający 0 lx), który inaczej zamknąłby cały dom w biały dzień. Wystarczą 2–3 minuty.",
   f_lux_wrong_way:"Próg podnoszenia powinien być powyżej progu opuszczania: w górę powyżej, w dół poniżej. Jeśli jest niżej, między obiema wartościami obowiązują obie reguły naraz – a gdy nakładają się jeszcze okna czasowe, roleta zaczyna się wahać.",
   f_w_up_from:"Dzień roboczy góra od",f_w_up_to:"Dzień roboczy góra do",f_w_down_from:"Dzień roboczy dół od",f_w_down_to:"Dzień roboczy dół do",
   f_we_up_from:"Weekend góra od",f_we_up_to:"Weekend góra do",f_we_down_from:"Weekend dół od",f_we_down_to:"Weekend dół do",
@@ -3169,6 +3178,7 @@ pt:{
   dash_current_lux:"Atual",
   f_brightness_sensor:"Sensor de luminosidade",f_lux_up:"Limiar lux subir",f_lux_down:"Limiar lux descer",
   f_lux_hint:"O cursor cobre a faixa fina; o campo ao lado aceita qualquer valor. Sensores exteriores medem dezenas de milhares de lux no verão.",
+  f_lux_hold:"Duração mínima no limiar",f_lux_hold_hint:"0 = a primeira leitura move. Caso contrário o valor lux tem de ficar abaixo do limiar de descida (ou acima do de subida) durante tantos minutos seguidos. Filtra uma leitura errada do sensor (estação meteorológica a reiniciar, falha de rádio a reportar 0 lx) que de outro modo fecharia a casa inteira em pleno dia. 2–3 minutos chegam.",
   f_lux_wrong_way:"O limiar de subida fica acima do de descida: sobe-se acima dele e desce-se abaixo. Se ficar mais baixo, entre os dois valores valem as duas regras ao mesmo tempo – e se as janelas horárias também se sobrepuserem, a persiana oscila.",
   f_w_up_from:"Semana subir de",f_w_up_to:"Semana subir até",f_w_down_from:"Semana descer de",f_w_down_to:"Semana descer até",
   f_we_up_from:"Fim-de-semana subir de",f_we_up_to:"Fim-de-semana subir até",f_we_down_from:"Fim-de-semana descer de",f_we_down_to:"Fim-de-semana descer até",
@@ -3472,6 +3482,7 @@ nb:{
   dash_current_lux:"Nå",
   f_brightness_sensor:"Lyssensor",f_lux_up:"Lux opp-terskel",f_lux_down:"Lux ned-terskel",
   f_lux_hint:"Glidebryteren dekker finområdet; feltet ved siden av tar enhver verdi. Utendørssensorer melder titusenvis av lux om sommeren.",
+  f_lux_hold:"Minste tid ved terskelen",f_lux_hold_hint:"0 = første avlesning kjører. Ellers må lux-verdien ligge under ned-terskelen (eller over opp-terskelen) så mange minutter på rad. Fanger opp en feilavlesning fra sensoren (værstasjon som starter på nytt, radiobrudd som melder 0 lx) som ellers lukker hele huset midt på lyse dagen. 2–3 minutter holder.",
   f_lux_wrong_way:"Opp-terskelen hører over ned-terskelen: opp skjer over den, ned under den. Ligger den lavere, gjelder begge reglene samtidig mellom verdiene – overlapper tidsvinduene i tillegg, pendler rullegardinen.",
   f_w_up_from:"Hverdag opp fra",f_w_up_to:"Hverdag opp til",f_w_down_from:"Hverdag ned fra",f_w_down_to:"Hverdag ned til",
   f_we_up_from:"Helg opp fra",f_we_up_to:"Helg opp til",f_we_down_from:"Helg ned fra",f_we_down_to:"Helg ned til",
@@ -3788,14 +3799,21 @@ class ShutterPilotPanel extends PanelBase {
     .slider-row{display:flex;align-items:center;gap:12px}
     .slider-row input[type=range]{flex:1;accent-color:var(--sp);height:6px;cursor:pointer}
     .slider-row .slider-val{min-width:44px;text-align:center;font-size:14px;font-weight:500;color:var(--sp)}
-    /* .field vorangestellt, nicht Geschmackssache: ".slider-row .slider-num"
-       hat dieselbe Spezifitaet (zwei Klassen) wie ".field input:not(...)"
-       weiter oben und verlor gegen dessen width:100% (eine Klasse plus eine
-       Pseudoklasse zaehlt hoeher) - die feste Breite stand im CSS, wirkte
-       aber nie. Drei Klassen schlagen die zwei-plus-Pseudoklasse der
-       Sammelregel, ohne !important zu brauchen. */
-    .field .slider-row .slider-num{width:88px;flex:0 0 auto;padding:6px 8px;font-size:14px;text-align:right;
+    /* Die Spezifitaet hier ist der zweite Anlauf, und diesmal nachgemessen:
+       ":not([type=…])" zaehlt wie sein Argument, also wie eine Klasse - die
+       Sammelregel oben kommt damit auf (0,3,1), und ".field .slider-row
+       .slider-num" mit (0,3,0) verlor weiterhin gegen deren width:100%. Die
+       feste Breite stand seit 2.18.0 im CSS und wirkte nie: das Zahlenfeld
+       nahm die ganze Zeile ein und schob die Einheit aus dem Rahmen, auf dem
+       Telefon und dem Tablet hochkant unlesbar (Wolf, Lux-Schwellen). Mit
+       Element und Attribut dazu steht die Regel bei (0,4,2) - eindeutig
+       ueber der Sammelregel, ohne !important. */
+    .field .slider-row input[type=number].slider-num{width:88px;flex:0 0 auto;padding:6px 8px;font-size:14px;text-align:right;
       border:1px solid var(--divider);border-radius:6px;background:var(--card-bg);color:var(--txt)}
+    /* Ein Schieber hat eine native Mindestbreite (~130 px). Ohne min-width:0
+       darf er als Flex-Kind nicht darunter schrumpfen, und auf einem schmalen
+       Telefon neben Feld und Einheit reicht die Zeile dann knapp nicht. */
+    .slider-row input[type=range]{min-width:0}
     .slider-row .slider-unit{font-size:13px;color:var(--txt2);min-width:22px}
     .form-actions{display:flex;gap:8px;margin-top:16px}
     .chip{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:500}
@@ -4882,7 +4900,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",shade_from:"",shade_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",shade_from:"",shade_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,lux_hold:0,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -4996,6 +5014,8 @@ class ShutterPilotPanel extends PanelBase {
           ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rngOpen("lux_up",T("f_lux_up"),0,2000,10,"lx")}${rngOpen("lux_down",T("f_lux_down"),0,2000,10,"lx")}
           <div class="hint">${T("f_lux_hint")}</div>
+          ${rng("lux_hold",T("f_lux_hold"),0,60,1," min")}
+          <div class="hint">${T("f_lux_hold_hint")}</div>
           ${/* Hoch gilt oberhalb, Runter unterhalb. Liegt die Hoch-Schwelle
                darunter, ist dazwischen beides zugleich wahr – solange sich die
                Zeitfenster nicht überschneiden fällt das niemandem auf, danach
