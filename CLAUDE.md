@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (843 Tests)
+tests/               pytest-Suite (850 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -280,7 +280,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 843 Tests, ~21 s
+.venv/bin/pytest            # 850 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -309,12 +309,85 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.23.0**, im Forum aktiv genutzt. Einreichung für den
+Version **2.23.1**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-09-20 – 2.23.1: die Abendfahrt, die kein Ende kannte
+
+Drei Meldungen, eine Codeänderung. Reihenfolge wie immer: erst nachrechnen,
+dann Reproduktionstest, dann Code.
+
+**Fund (Linos, simon42 #167, echter Fehler): abends alle zu, einer per
+Wandschalter geöffnet, kurz darauf von Shutter Pilot wieder geschlossen –
+über das Dashboard geöffnet bleibt er offen.** Sein Export: alle fünf
+Bereiche im Helligkeitsmodus, `lux_down 40`, Runter-Fenster 16:00–22:00,
+`manual_override never`. Nachgerechnet: `cover_tracker` erkennt die
+Handfahrt und ruft `note_manual_position(…, 100)` → `covers_driven_up.add`,
+`covers_driven_down.discard` (richtig, 2.17.0). In `brightness.py` ist die
+Abendfahrt aber ein **Pegel**: `_evaluate_area` ruft `_run_down` bei jeder
+Sensormeldung mit `lux ≤ lux_down` im Fenster, und `_run_down` fährt alles,
+was nicht in `covers_driven_down` steht – also den eben von Hand geöffneten
+Rollladen. Im Zeit- und Sonnenmodus ist die Abendfahrt ein Ereignis, danach
+gilt eine Handfahrt bis zum nächsten Tag; nur der Helligkeitsmodus verhielt
+sich anders. Das Dashboard war nie anders dran: die Zeilenknöpfe rufen
+`cover.open_cover` direkt, für den Tracker identisch mit dem Wandschalter –
+der Unterschied lag an der Uhrzeit (nach 22:00 kein Runter-Fenster mehr).
+
+**Fix:** je Rollladen die **Dunkel-Episode** merken, in der die Helligkeit
+ihn zugefahren hat (`data["_b_down_fired"][cover] = Episodenbeginn`). Die
+Episode gibt es schon: `cond_since` aus `lux_hold` (2.23.0) – beginnt beim
+Unterschreiten, wird beim Überschreiten oder Fensterende gelöscht. Sie wird
+jetzt auch ohne Frist gesetzt; `_run_down` überspringt, was in dieser
+Episode schon gefahren wurde. **Bewusst je Rollladen, nicht je Bereich:**
+ein Rollladen, dessen Automatik-Schalter beim Einbruch der Dunkelheit aus
+war und danach eingeschaltet wird, fährt in derselben Episode weiterhin
+(wie bisher). Der Uhrzeit-Notnagel („spätestens runter") ruft `_run_down`
+ohne Episode und ist unberührt. **bjoergs Fall aus 2.23.0 bleibt
+erhalten** und ist eigens im Test: Ausreißer am Nachmittag = Episode 1,
+hell dazwischen, Dämmerung = Episode 2 → fährt die von Hand geöffneten
+wieder zu.
+
+**Spiegelbild beim Hochfahren, beim Lesen von `should_skip_automated_up()`
+gefunden:** eine Handfahrt auf die Schließposition ist laut
+`manual_position_is_a_close()` bewusst *keine* Übersteuerung – im
+Hochfahr-Fenster öffnete die nächste helle Meldung den gerade von Hand
+geschlossenen Rollladen wieder. Gleicher Merker (`_b_up_fired`), aber erst
+bei der Fahrt selbst gesetzt, nicht vor `should_skip_automated_up`: ein
+wegen Beschattung oder Zwischenposition übersprungener Rollladen kommt in
+derselben Episode weiter dran, sobald der Grund wegfällt.
+
+**bjoerg (smarthome #155, keine Codeänderung):** „Hätten die Jalousien nach
+dem Ausreißer nicht wieder hochfahren müssen?" Nein: `up_met` verlangt das
+Hochfahr-Fenster (bei ihm bis 10:00/12:00), der Ausreißer war um 15:12. Mit
+`lux_hold 1` (inzwischen gesetzt) feuert der 7-Sekunden-Ausreißer gar nicht
+mehr. Seine Handöffnung über das Dashboard danach war korrekt verbucht
+(Export 19.9.: beide Wohnzimmer „gilt als oben", Quelle automation nach der
+Morgenfahrt). Zweite Frage – „einmal fuhren die OG-Rollläden tagsüber nicht
+hoch, Wohnzimmer schon" – ohne Datum und Export nur Kandidaten: OG-Fenster
+enden 10:00, Wohnzimmer 12:00; ein dunkler Morgen oder die Wetterstation
+ohne Werte während seiner Proxmox/HA-Update-Session (Lux erst nach 10:00
+über 201) trifft genau dieses Muster, `b_latest_up_enabled` ist bei ihm aus.
+Empfehlung: „spätestens hoch" für Schlaf-/Kinderbereich einschalten.
+
+**heinzie (simon42 #164–166, keine Codeänderung, Nachtrag zu 2.23.0):** sein
+Debug-Log zeigte bei jedem Minutentakt `Shutter cover.* overrides condition
+slots a` für **alle 13** Rollläden – die Bereichsbedingung (Temperatur
+90/89) wurde nie gefragt, weil jeder Rollladen einen eigenen Slot a
+(Helligkeitssensor) mitbrachte, vermutlich über „Einstellungen übernehmen
+von X" verteilt. Er hat es verstanden und räumt um. **Merke:** ein
+Rollladen-Override ist im Panel nirgends sichtbar, nur in einer
+DEBUG-Zeile – das gehört als Hinweis ins Formular (offen).
+
+**Verifiziert:** `pytest` 850 Tests grün (7 neue in
+`tests/test_brightness_manual_reopen.py`). Zwei Gegenproben: Runter-Marker
+entschärft → genau die zwei Linos-Tests fallen, 846 grün; Hoch-Marker
+entschärft → genau der eine Spiegel-Test fällt, 849 grün; beides
+wiederhergestellt, 850 grün. **Nicht im Browser geprüft** – reine
+Backend-Logik, keine Panel-Änderung.
 
 ### 2026-09-14 – 2.23.0: der Merker, der die Hand nicht bemerkte – und der Sensor, der log
 
@@ -710,60 +783,6 @@ Suite erneut grün. Neue Dateien: `tests/test_window_trigger_stale_restore.py`,
 `tests/test_elevation_log_disabled.py`; erweitert:
 `tests/test_resume_automation.py`, `tests/test_awning_dusk.py`. **Nicht im
 Browser geprüft** – reine Backend-Logik, keine Panel-Änderung.
-
-### 2026-09-06 – 2.22.1: der Schutz, der nur die Markise kannte
-
-Kein Forumsbeitrag – ein Fund beim systematischen Durchgehen der gesamten
-Beschattungs-/Schutzlogik für Rollläden, Markisen und Dachfenster, auf
-eigene Anforderung hin (Bedingungslücken, Widersprüche, Zirkelbezüge).
-
-**Der Fund:** `_drive_sun_protect()` in `elevation.py` fragte den
-Wind-/Regen-/Frostschutz (`evaluate_guard`/`clamp_to_rest`) vor einer
-Beschattungsfahrt nur unter `if awning:` – aus der Zeit, als die Markise
-(2.12.0) die einzige geschützte Geräteart war. Seit das Dachfenster
-(2.20.0) genau denselben Schutz bekam (`has_guard()` deckt beide ab), lief
-diese eine Prüfstelle nicht mit: ein Dachfenster geriet in den
-allgemeinen (Nicht-Markisen-)Zweig und konnte trotz aktiver Regengefahr
-auf die Lüftungsspalt-Position hinausgefahren werden.
-
-**Warum das schwerer wiegt als ein einmaliges Fehlverhalten.** Der Schutz
-fährt pro Gefahrenepisode nur *einmal* zu (`state["retracted"]` in
-`awning_guard.py`, damit er nicht gegen eine manuelle Korrektur ankämpft
-– dieselbe Regel wie bei einer Markise). Ohne die Schutzabfrage im
-Beschattungs-Fahrweg konnte die Beschattung ein einmal vom Schutz
-zugefahrenes Dachfenster beliebig oft wieder öffnen, solange es
-weiterregnete – der Schutz hielt sich für diese Episode für erledigt und
-griff kein zweites Mal ein. Genau das Szenario, vor dem der 2.20.0-Log
-warnt: „bei einem Dachfenster kostet ein verpasster Schutz Wasser im
-Haus."
-
-**Behoben mit der kleinstmöglichen Änderung:** das Schutz-Gate hängt jetzt
-an `has_guard(shutter)` statt an `is_awning(shutter)` – eine reine
-Umhängung, keine neue Prüfung. Die geräteartabhängige Positionsberechnung
-(Markise vs. Dachfenster/Rollladen) bleibt unverändert im jeweiligen
-Zweig stehen; nur die Frage „braucht dieses Gerät den Schutz" wurde von
-der Frage „wie wird seine Zielposition berechnet" getrennt. Für Markisen
-ist das exakt dieselbe Prüfung wie vorher, nur eine Codezeile weiter
-unten. Für gewöhnliche Rollläden (`has_guard()` == False) läuft der Block
-gar nicht erst an.
-
-**Merke, wieder einmal:** dieselbe Fehlerklasse wie
-`resolve_sun_geometry()` (2.10.3), `only_shutters` (2.16.0/2.20.0) und
-`guard_rest_role`/`rest_role` (2.21.1) – eine neue Geräteart wird an einem
-zentralen Vertrag ergänzt, aber nicht an jeder Stelle durchgezogen, die
-denselben Vertrag konsultiert. Diesmal war es nicht ein Schlüssel-Tupel
-oder ein Filter, sondern ein Sicherheits-Check vor einer Fahrt.
-
-**Verifiziert:** `pytest` 803 Tests grün (4 neue), in
-`tests/test_roof_windows.py`. Der Kern-Regressionstest fährt genau die
-Reihenfolge nach, die den Fund ausmacht: Dachfenster öffnet bei
-trockenem, warmem Zustand → Regen setzt ein, Schutz fährt einmal zu → es
-regnet über mehrere weitere Minutentakte unverändert weiter → die
-Beschattung darf nicht erneut öffnen. Dazu eine Gegenprobe mit allen drei
-Gerätearten im selben Bereich am selben Regensensor: nur der ungeschützte
-Rollladen beschattet normal, Markise und Dachfenster bleiben gesperrt.
-Volle Suite `pytest` grün (803, zuvor 799). **Nicht im Browser geprüft** –
-reine Backend-Logik, keine Panel-Änderung.
 
 ## graphify
 

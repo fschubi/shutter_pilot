@@ -252,7 +252,19 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         except (TypeError, ValueError):
             return DEFAULT_AREA_DRIVE_DELAY
 
-    def _run_down(area: dict, area_id: str, reason: str) -> bool:
+    # Je Rollladen die Dunkel-Episode, in der die Helligkeit ihn zuletzt
+    # zugefahren hat. Die Abendfahrt ist hier ein Pegel, kein Ereignis: jede
+    # Sensormeldung unter der Schwelle rief _run_down erneut. Ein danach von
+    # Hand geoeffneter Rollladen faellt durch note_manual_position() aus
+    # `covers_driven_down` heraus (richtig so, 2.17.0) - und wurde bei der
+    # naechsten Meldung wieder zugefahren (Linos). Im Zeit- und Sonnenmodus
+    # ist die Abendfahrt danach vorbei; hier ist sie es jetzt auch, bis eine
+    # neue Episode beginnt (hell dazwischen, oder das Fenster schliesst).
+    down_fired: dict[str, float] = data.setdefault("_b_down_fired", {})
+
+    def _run_down(
+        area: dict, area_id: str, reason: str, episode: float | None = None
+    ) -> bool:
         """Close every shutter of this area that is not closed already."""
         drive_delay = _delay_for(area)
         idx = 0
@@ -266,8 +278,12 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 continue
             if cover_entity in covers_driven_down:
                 continue
+            if episode is not None and down_fired.get(cover_entity) == episode:
+                continue
             if not is_shutter_automation_enabled(hass, entry, shutter):
                 continue
+            if episode is not None:
+                down_fired[cover_entity] = episode
             # Same decision as the scheduler: a shutter that must not
             # freeze shut, or only close part way on a mild evening,
             # has to behave that way here too.
@@ -322,7 +338,18 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             hass.async_create_task(run_group_light_action(hass, entry, area_id, "down"))
         return moved
 
-    def _run_up(area: dict, area_id: str, reason: str, within_up_window: bool) -> bool:
+    # Spiegelbild fuer die Hochfahrt: eine Handfahrt auf die Schliessposition
+    # ist laut manual_position_is_a_close() keine Uebersteuerung, sondern
+    # "unten" - und wurde im Hochfahr-Fenster bei der naechsten Meldung wieder
+    # geoeffnet. Gesetzt erst bei der Fahrt selbst, damit ein uebersprungener
+    # Rollladen (Beschattung, Uebersteuerung) spaeter in derselben Episode
+    # weiterhin drankommt, sobald der Grund wegfaellt.
+    up_fired: dict[str, float] = data.setdefault("_b_up_fired", {})
+
+    def _run_up(
+        area: dict, area_id: str, reason: str, within_up_window: bool,
+        episode: float | None = None,
+    ) -> bool:
         """Open every shutter of this area that shading and manual use allow."""
         # Both up paths – the lux threshold and the deadline – come through
         # here, so the holiday and weekend gates cannot drift apart between
@@ -351,6 +378,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 continue
             if cover_entity in covers_driven_up:
                 continue
+            if episode is not None and up_fired.get(cover_entity) == episode:
+                continue
             if not is_shutter_automation_enabled(hass, entry, shutter):
                 continue
             if should_skip_automated_up(
@@ -370,6 +399,8 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             pos = get_position_for_role(shutter, ROLE_OPEN)
             tilt = get_tilt_for_role(shutter, ROLE_OPEN)
             _LOGGER.info("Brightness up: driving %s -> %d%%", cover_entity, pos)
+            if episode is not None:
+                up_fired[cover_entity] = episode
             up_covers.append(cover_entity)
             hass.async_create_task(
                 _set_cover_position_with_delay(
@@ -421,10 +452,12 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
         if not met:
             cond_since.pop(key, None)
             return False
+        # Auch ohne Frist gesetzt: der Beginn der Episode ist zugleich ihre
+        # Kennung fuer _run_down/_run_up (siehe down_fired/up_fired).
+        first = cond_since.setdefault(key, time_mod.monotonic())
         hold = _hold_seconds(area)
         if hold <= 0:
             return True
-        first = cond_since.setdefault(key, time_mod.monotonic())
         waited = time_mod.monotonic() - first
         if waited < hold:
             _LOGGER.info(
@@ -458,7 +491,10 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
 
         down_met = _area_window(area, now, "down", hass) and lux <= down_threshold
         if _held(area, area_id, "down", down_met):
-            _run_down(area, area_id, "Brightness down")
+            _run_down(
+                area, area_id, "Brightness down",
+                episode=cond_since.get(f"down_{area_id}"),
+            )
 
         is_pending = pending_up.get(area_id) == today
         within_up = _area_window(area, now, "up", hass)
@@ -474,6 +510,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             if _run_up(
                 area, area_id, "Brightness up",
                 within_up_window=within_up or is_pending,
+                episode=cond_since.get(f"up_{area_id}"),
             ) and is_pending:
                 pending_up.pop(area_id, None)
 

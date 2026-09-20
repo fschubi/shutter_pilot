@@ -4,6 +4,39 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.23.1]
+
+Eine Forumsmeldung (Linos, community.simon42.com/90112/167): „Alle Rollladen
+sind am Abend ordnungsgemäß geschlossen → einer wird per Wandschalter
+geöffnet → kurz darauf wird dieser von Shutter Pilot wieder geschlossen."
+Mit seinem Export nachgerechnet und mit Tests nachgestellt.
+
+### Behoben
+- **Helligkeitsmodus: ein nach der Abendfahrt von Hand geöffneter Rollladen
+  wurde bei der nächsten Sensormeldung wieder zugefahren.** Die Handfahrt
+  nimmt den Rollladen aus dem „gilt als unten"-Merker heraus (richtig so,
+  sonst würde ein morgens nie gefahrener Rollladen abends übersprungen). Im
+  Zeit- und Sonnenmodus ist die Abendfahrt danach vorbei – ein Ereignis. Im
+  Helligkeitsmodus war sie ein Pegel: jede Lux-Meldung unter der
+  Runter-Schwelle im Zeitfenster lief die Abendfahrt erneut und fand den
+  Rollladen wieder als „nicht unten" vor. Jetzt fährt die Helligkeit jeden
+  Rollladen **je Dunkel-Episode nur einmal** zu; eine Episode beginnt beim
+  Unterschreiten der Schwelle und endet, wenn es dazwischen wieder hell wird
+  oder das Zeitfenster schließt. bjoergs Fall aus 2.23.0 bleibt damit
+  erhalten: nach einem Ausreißer am Nachmittag und dem Öffnen von Hand fährt
+  die echte Dämmerung als neue Episode wieder zu.
+- **Dasselbe im Hochfahr-Fenster:** ein von Hand ganz geschlossener Rollladen
+  gilt bewusst nicht als Übersteuerung, sondern als „unten" – und wurde bei
+  der nächsten hellen Meldung wieder geöffnet. Auch hier jetzt einmal je
+  Hell-Episode. Ein aus anderem Grund übersprungener Rollladen (Beschattung,
+  manuelle Zwischenposition) kommt in derselben Episode weiterhin dran,
+  sobald der Grund wegfällt.
+
+Keine Änderung an Einstellungen nötig. Wer über das Dashboard von Shutter
+Pilot statt per Wandschalter öffnet, war übrigens nie anders dran – beide
+Wege rufen dieselben `cover`-Dienste; der Unterschied lag an der Uhrzeit
+(nach Ende des Runter-Fensters kommt keine Abendfahrt mehr).
+
 ## [2.23.0]
 
 Vier Forumsmeldungen aus zwei Threads (community.simon42.com/90112 ab

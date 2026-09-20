@@ -36,9 +36,9 @@
     "semantic_hash": "c9f8859f47563ac6ea5c5aa45c3190fb"
   },
   "custom_components/shutter_pilot/brightness.py": {
-    "mtime": 1789399466.2626145,
-    "seen": 1789399733.344417,
-    "ast_hash": "96047599b00b60f8a70e67dfa54232f7",
+    "mtime": 1789894886.9224868,
+    "seen": 1789895753.739614,
+    "ast_hash": "8301e2fa52bc83f5c5912db59cf730de",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/config_flow.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1789399635.8487437,
-    "seen": 1789399733.344427,
-    "ast_hash": "7115154dbc861e7192334c90906ecefb",
+    "mtime": 1789894912.9445198,
+    "seen": 1789895753.7396228,
+    "ast_hash": "c0e96fcdf2d2ba1a3f9bfdbd3207910d",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1789399635.8482873,
-    "seen": 1789399733.344488,
-    "ast_hash": "b41e5c1dfc2c43d180c3e8dd4070260b",
+    "mtime": 1789894908.550474,
+    "seen": 1789895753.7396889,
+    "ast_hash": "ca5ef0a5971d43a271124877acd93972",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1789399722.8414764,
-    "seen": 1789399733.3444889,
-    "ast_hash": "f096ad677e55f27908700fbb9f046191",
+    "mtime": 1789894958.0826821,
+    "seen": 1789895753.7396889,
+    "ast_hash": "fc67d4062490b665daf55e0df1b6848f",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1789399722.8411865,
-    "seen": 1789399733.344495,
-    "ast_hash": "65658b8117d87fb3bcfb1fc03bd37f04",
+    "mtime": 1789894958.0813503,
+    "seen": 1789895753.739695,
+    "ast_hash": "f7bb438b01a28f1384ff8887570b2fcd",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -723,6 +723,12 @@
     "mtime": 1789399196.2983992,
     "seen": 1789399733.3444638,
     "ast_hash": "c2e931e72cf3253b1c9a2cfbce5a0dbe",
+    "semantic_hash": ""
+  },
+  "tests/test_brightness_manual_reopen.py": {
+    "mtime": 1789894791.8834,
+    "seen": 1789895753.739646,
+    "ast_hash": "33ada72597f40d336d0af702f6d35a8a",
     "semantic_hash": ""
   }
 }
