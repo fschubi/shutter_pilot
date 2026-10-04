@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (850 Tests)
+tests/               pytest-Suite (855 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -280,7 +280,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 850 Tests, ~21 s
+.venv/bin/pytest            # 855 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -309,12 +309,53 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.23.1**, im Forum aktiv genutzt. Einreichung für den
+Version **2.23.2**, im Forum aktiv genutzt. Einreichung für den
 HACS-Default-Store läuft: PR [hacs/default#9592](https://github.com/hacs/default/pull/9592).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-10-04 – 2.23.2: das Fenster, das den geparkten Rollladen nicht kannte
+
+Zwei Meldungen, ein Release. Bjoerg (smarthome #166), Export mit
+Nachträgen vom 30.9.–4.10., und Nils (simon42 #183, keine Codeänderung).
+
+**Fund 1 (Bjoerg, echter Fehler, nachgestellt): nach der Abendfahrt bei
+offenem Fenster reagierte „offen → gekippt" nicht.** Die Abendfahrt
+(`brightness._run_down`, `window_vent_while_open`) parkt den Rollladen auf
+95 % und merkt die Vollfahrt vor, startet aber keinen Fenstertrigger-Zyklus.
+Die Richtungsprüfung in `window_trigger.py` (soll tagsüber verhindern, dass
+ein Fenster einen offenen Rollladen herunterzieht) hielt ihn für offen: Ziel
+30 < 95, nicht geschlossen, kein Zyklus → `continue`. Nach „zu" und wieder
+„auf" lief ein Zyklus, danach ging gekippt – exakt sein Protokoll. Fix:
+`waiting_for_window` (Nachholfahrt vorgemerkt **und** `window_vent_while_open`)
+zählt wie ein aktiver Zyklus. Ohne den Haken bleibt es beim Stehenbleiben.
+
+**Fund 2 (Bjoerg, Mechanismus nachgestellt, sein Fall nicht bewiesen):
+Schlafzimmer morgens bei 30 %, Quelle „manual", blockiert das Hochfahren.**
+`cover_tracker` hielt eigene Fahrten nur 90 s als Automatik fest; jede
+spätere abweichende Positionsmeldung (31 statt 30, langsamer Antrieb,
+Reload) wurde als Handfahrt gebucht – Quelle `manual` und
+`forget_window_cycle`. Fix: Meldung innerhalb 3 % um das zuletzt gesendete Ziel
+(`commanded_position`) bleibt Automatik. Eine echte Handfahrt ist weiter
+manuell (eigener Test). **Offen:** sein Debug-Log (`Position saved (manual)`)
+würde zeigen, ob es wirklich dieser Weg war. Der Fall „Griff während der
+Fahrt zurück auf Auf, bleibt bei 30 %" ließ sich im Code nicht nachstellen
+(mit aktivem Zyklus kommt der Befehl 95 %) – vermutlich Folge von Fund 2 oder
+des Antriebs.
+
+**Nils (simon42 #183, keine Codeänderung):** zweistufiges Schließen (10 Lux →
+60 %, 22 Uhr → ganz zu) gibt es nicht; der Helligkeitsmodus fährt je Dunkel-
+Episode einmal. Der Rat „zwei Bereiche" geht nicht (ein Runter-Bereich je
+Rollladen, doppelter Cover wird abgelehnt). Umweg nur gelesen, nicht
+getestet: Zeitmodus 22:00 + Beschattung mit invertierter Lux-Bedingung,
+Zeitfenster, Position 60. Funktionswunsch notiert.
+
+**Verifiziert:** `pytest` 855 Tests grün (5 neue,
+`tests/test_window_parked_and_late_report.py`). Gegenprobe: Fixes entschärft →
+genau die zwei Fix-Tests fielen. Nicht im Browser geprüft – reine
+Backend-Logik.
 
 ### 2026-09-20 – 2.23.1: die Abendfahrt, die kein Ende kannte
 
@@ -635,154 +676,6 @@ Suite erneut grün. Neue Dateien: `tests/test_window_trigger_shaded_manual_
 reopen.py` (mit Gegenprobe für den heinzie-Altfall im selben Test),
 `tests/test_manual_move_clears_pending_drive.py`. **Nicht im Browser
 geprüft** – reine Backend-Logik, keine Panel-Änderung.
-
-### 2026-09-06 – 2.22.2: drei Schlösser, die eine Hintertür hatten
-
-Kein Forumsbeitrag – eine beauftragte, vollständige Analyse der gesamten
-Beschattungs-, Lüftungs-, Dämmerungs- und Schutzlogik, mit ausdrücklichem
-Auftrag, jeden Fund gegen den tatsächlichen Codefluss zu prüfen, bevor er
-als Fehler behauptet wird. Erst mit `graphify query`/`explain` orientiert,
-dann `helpers.py`, `elevation.py`, `awning_guard.py`, `awning_dusk.py`,
-`ventilation.py`, `window_trigger.py`, `window_helper.py`, `scheduler.py`,
-`brightness.py`, `cover_tracker.py`, `services.py` vollständig gelesen und
-gegen die vorhandenen Tests abgeglichen. Drei Funde wurden nicht nur
-gelesen, sondern **durch tatsächliche Testläufe** verifiziert – ein
-temporärer Reproduktionstest je Fund, kurz nach `tests/` kopiert, ausgeführt
-und wieder gelöscht (`git status` danach sauber), bevor überhaupt Code
-geändert wurde.
-
-**Fund 1: `resume_automation` kannte den Wetterschutz nicht.**
-`services.py::resume_automation()` filterte seine Ziele über
-`filter_shutters_by_area(..., use_up=False)` **ohne** `shutters_only=True` –
-anders als `ventilate_group` in derselben Datei, das das bewusst tut
-(„Awnings have no ventilation position"). Der Dienst ist laut README,
-`services.yaml` und diesem Dokument ausdrücklich nur für „einen Rollladen"
-gedacht, konnte aber Markisen und Dachfenster erreichen. Seine letzte
-Fahrstufe – die Übergabe an den Zeitplan, wenn die Beschattung nichts
-beanspruchte – rief `set_cover_position()` direkt auf, **ohne** je
-`has_guard()`/`is_barred()` zu fragen, obwohl genau diese Prüfung in
-`_drive_group()` (derselben Datei, benutzt von `open_group`/`close_group`/
-`sun_protect_group`) längst existiert. Reproduziert: ein Dachfenster,
-durch aktiven Regen gesperrt (bereits korrekt auf 0 % zugefahren), stand
-laut Zeitplan „müsste tagsüber offen sein" – `resume_automation` fuhr es
-trotz weiterhin aktivem Regen auf 100 % auf. Log bestätigt:
-`Resume automation: cover.dachfenster_test -> 100%`, während der Guard
-weiterhin `barred=True` meldete.
-
-Behoben mit zwei Riegeln statt einem: `shutters_only=True` beim Filtern
-(Markisen/Dachfenster erreichen den Dienst jetzt gar nicht mehr – werden
-also auch nicht mehr von manueller Übersteuerung oder
-Beschattungsmerkern befreit, was der Dienst für sie ohnehin nie sollte),
-und zusätzlich dieselbe defensive `has_guard`/`is_barred`-Prüfung wie in
-`_drive_group()` direkt vor der letzten Fahrt – unter der heutigen
-Konfiguration durch den ersten Riegel bereits unerreichbar, aber
-Tiefenverteidigung für den Tag, an dem eine dritte geschützte Geräteart
-dazukommt. **Merke, wieder einmal:** ein Dienst, der „für einen Rollladen"
-dokumentiert ist, muss das auch selbst durchsetzen – sonst ist die
-Dokumentation die einzige Guard-Prüfung, die er hat.
-
-**Fund 2: der Fenstertrigger vergaß seinen eigenen Zyklus nach einer
-Nachholfahrt.** `window_trigger.py::_apply_window_closed()` hat zwei
-Enden: einen `pending_entry`-Zweig (eine vorgemerkte Fahrt wird nachgeholt)
-und den normalen Restore-Zweig. Nur der zweite räumte am Ende
-`trigger_actions`/`trigger_heights` auf; der erste endete mit einem
-`return` **davor**. Reproduziertes Szenario: ein Rollladen wird beschattet
-(40 %), das Fenster geht auf – der Trigger merkt sich 40 % als
-Rückfahrziel und fährt auf die Lüftungsposition. Abends will der Zeitplan
-voll zufahren, das Fenster ist noch offen: die Fahrt wird vorgemerkt
-(`remember_drive_after_close`, genau wie in `scheduler.py` und
-`brightness.py`). Fenster schließt – die vorgemerkte Fahrt greift korrekt
-auf 0 %, aber der Zyklus-Merker bleibt auf „triggered" mit der **alten**
-Höhe (40 %) stehen. Wird das Fenster später in derselben Nacht noch
-einmal kurz zum Lüften geöffnet und geschlossen – ohne jeden Bezug zur
-Beschattung von vorhin –, restauriert der Trigger auf die veraltete 40 %
-statt auf die aktuell korrekten 0 %: der Rollladen öffnet sich mitten in
-der Nacht von selbst. Log bestätigt vor dem Fix:
-`Window closed – restore: cover.schlafzimmer_stale -> 40%`.
-
-Behoben mit zwei Zeilen: der `pending_entry`-Zweig räumt
-`trigger_actions`/`trigger_heights` jetzt genauso auf wie der normale Zweig
-– die nachgeholte Fahrt **ist** die Restaurierung dieses Fensterzyklus.
-**Dieselbe Fehlerklasse wie `resting_position()` (2.21.3) und
-`note_manual_position()` (2.17.0):** ein Merker, der eine Handlung
-überlebt, für die er nicht gedacht war.
-
-**Fund 3: die Dämmerungs-Einfahrt einer Markise konnte die Beschattung
-dauerhaft lahmlegen.** `awning_dusk.py` fuhr eine Markise bei Dunkelheit
-ein, ohne `sun_protect_covers` anzufassen. `elevation.py` verlässt sich
-aber genau auf dieses Flag: solange es „aktiv" sagt und die Markise nicht
-sonnennachführend ist, tut die Beschattung bei weiterhin erfüllter
-Bedingung **nichts** (`elif not is_awning(shutter): …` gilt nur für
-Nicht-Markisen). Normalerweise räumt `elevation.py` das Flag am Abend
-selbst auf, weil die Elevationsprüfung dann selbst scheitert – das griff
-aber nicht bei `elevation_enabled=False` (eine dokumentierte, unterstützte
-Konfiguration seit 2.10.1: „wer einen Sensor pro Fenster hat, will, dass
-der entscheidet"). Reproduziert: Markise mit abgeschalteter
-Elevationsprüfung, Beschattung an einem durchgehend „heißen"
-Temperatursensor. Dämmerung fährt korrekt ein – aber danach fuhr über
-mehrere weitere Minutentakte **kein einziger** Befehl mehr, obwohl die
-Beschattungsbedingung unverändert erfüllt blieb (Log:
-`commands issued after dusk retract: []`, Position bleibt bei 0 %).
-
-Eine alleinige Lösung „beim Einfahren `forget_shading_for_cover()`
-aufrufen" wäre gefährlich unvollständig gewesen: ohne eine Sperre auf der
-anderen Seite hätte dieselbe (unabhängige) Beschattungsbedingung die
-Markise **sofort in derselben Minute** wieder ausgefahren, sobald der
-Merker weg ist – bei `elevation_enabled=False` gibt es keinen natürlichen
-Moment, der das verhindert. Deshalb eine abgestimmte Lösung an beiden
-Enden: `awning_dusk.py` räumt `forget_shading_for_cover()` beim Einfahren
-korrekt auf, und eine neue Funktion `is_dusk_retracted(data, cover)` wird
-von `elevation.py` **vor** jeder Verlängerung/Neuausfahrt gefragt – solange
-das Cover in `data["_dusk_retracted"]` steht, fasst die Beschattung es gar
-nicht erst an. Erst wenn `awning_dusk.py` selbst wieder hell registriert
-und den Eintrag entfernt, darf die Beschattung erneut entscheiden. Wind-,
-Regen- und Frostschutz bleiben unberührt: `awning_guard.py` läuft
-komplett unabhängig weiter und hat weiterhin Vorrang – eigens mit einem
-Test abgesichert, der einen aktiven Wind-Guard **nach** einer
-Dämmerungs-Freigabe prüft.
-
-**Nebenbefund, geprüft statt geglaubt (kein Fehler): die
-Minutentakt-Reihenfolge.** Beschattung, Wetterschutz und
-Dämmerungsfunktion hängen am selben gemeinsamen Minutentakt
-(`_setup_minute_ticker()`), aber jeder Callback stößt seine Auswertung
-nur als eigenen `hass.async_create_task(...)` an – es gibt keine Garantie,
-in welcher Reihenfolge die drei tatsächlich fertig werden, nur eine
-Reihenfolge, in der ihre Tasks gestartet werden. Zwölf Regressionstests
-(`tests/test_minute_tick_order_independence.py`) haben alle sechs
-möglichen Reihenfolgen der drei Auswertungen durchgespielt, je einmal mit
-und ohne aktive Gefahr – in keiner Reihenfolge ließ sich eine gesperrte
-Markise ausfahren, in keiner blieb eine freie Markise unbeschattet. **Das
-ist kein Zufall, sondern Architektur:** `evaluate_guard()` liest Sensor-
-und Laufzeitzustand bei jedem Aufruf direkt, keines der drei Module
-verlässt sich auf einen von einem anderen vorbereiteten Cache. Bewusst
-**nicht** serialisiert – die Gegenprobe (Guard-Prüfung in
-`_drive_sun_protect()` probeweise abgeschaltet) ließ alle sechs
-„gesperrt"-Permutationen sofort umfallen, die Tests sind also scharf genug,
-einen echten Reihenfolgefehler zu erkennen, hätte es einen gegeben. Der
-Kommentar in `__init__.py`, der die Setup-Reihenfolge von
-`setup_elevation_listener`/`setup_awning_guard` erklärte, war dabei selbst
-irreführend („der Guard muss sein Verdikt schon kennen, wenn die erste
-Beschattung fragt" – tatsächlich läuft `elevation.py` zuerst) und wurde
-präzisiert: die Reihenfolge ist unerheblich, weil jeder Fahrweg den Guard
-selbst prüft, nicht weil eine bestimmte Startreihenfolge das garantiert.
-
-**Zweiter Nebenbefund, rein kosmetisch:** die Beschattungs-Logzeile
-(`[sun-protect] area=…: elev=… in […]`) behauptete auch bei
-`elevation_enabled=False` einen geprüften Höhenbereich – ausgerechnet für
-die Konfiguration, die Fund 3 überhaupt erst brauchte. Sagt jetzt
-„elevation check disabled", wenn die per-Rollladen zusammengeführte
-Geometrie die Höhe für diese Fahrt gar nicht entschieden hat.
-
-**Verifiziert:** `pytest` 826 Tests grün (23 neue). Für jeden der drei
-bestätigten Fehler und für die Reihenfolgen-Frage eine **echte Gegenprobe**
-gemacht – Fix jeweils testweise entschärft (`if False and …` bzw. einen
-Aufruf auskommentiert), genau die zugehörigen neuen Tests fielen, alle
-anderen 8xx blieben grün, danach der Fix wiederhergestellt und die volle
-Suite erneut grün. Neue Dateien: `tests/test_window_trigger_stale_restore.py`,
-`tests/test_minute_tick_order_independence.py`,
-`tests/test_elevation_log_disabled.py`; erweitert:
-`tests/test_resume_automation.py`, `tests/test_awning_dusk.py`. **Nicht im
-Browser geprüft** – reine Backend-Logik, keine Panel-Änderung.
 
 ## graphify
 

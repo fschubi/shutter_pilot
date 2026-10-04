@@ -54,9 +54,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/cover_tracker.py": {
-    "mtime": 1789399212.6123476,
-    "seen": 1789399733.3444202,
-    "ast_hash": "9764a8ac9ba8434c7b2706cdf5bef4a7",
+    "mtime": 1791126040.1236184,
+    "seen": 1791126083.1131709,
+    "ast_hash": "361d53d55dea288a4b56b79971742169",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/cover_verify.py": {
@@ -180,9 +180,9 @@
     "semantic_hash": "9ad958dcd0e632e0bb4692ab26e54cce"
   },
   "custom_components/shutter_pilot/window_trigger.py": {
-    "mtime": 1788879246.9255164,
-    "seen": 1788879885.9298189,
-    "ast_hash": "e3555084823cfd9e5b86de8ae19f09ba",
+    "mtime": 1791126040.1238048,
+    "seen": 1791126083.1131861,
+    "ast_hash": "045f6bfa1a17fea389c9778b280eb5b5",
     "semantic_hash": ""
   },
   "hacs.json": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1789894908.550474,
-    "seen": 1789895753.7396889,
-    "ast_hash": "ca5ef0a5971d43a271124877acd93972",
+    "mtime": 1791126079.9711585,
+    "seen": 1791126083.113239,
+    "ast_hash": "b2524ac6f8716118c8c14f7c4a8e5132",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1789894958.0826821,
-    "seen": 1789895753.7396889,
-    "ast_hash": "fc67d4062490b665daf55e0df1b6848f",
+    "mtime": 1791126079.9678528,
+    "seen": 1791126083.113239,
+    "ast_hash": "6bf4ec2066a23cdcc78f29b7e4c4ec66",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1789894958.0813503,
-    "seen": 1789895753.739695,
-    "ast_hash": "f7bb438b01a28f1384ff8887570b2fcd",
+    "mtime": 1791126079.9696052,
+    "seen": 1791126083.113245,
+    "ast_hash": "32fced30d62b9a681746e830f07f1492",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -729,6 +729,12 @@
     "mtime": 1789894791.8834,
     "seen": 1789895753.739646,
     "ast_hash": "33ada72597f40d336d0af702f6d35a8a",
+    "semantic_hash": ""
+  },
+  "tests/test_window_parked_and_late_report.py": {
+    "mtime": 1791126036.3865688,
+    "seen": 1791126083.1132312,
+    "ast_hash": "499abfa865470183fae1de20f141de86",
     "semantic_hash": ""
   }
 }

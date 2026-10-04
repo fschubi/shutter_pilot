@@ -17,6 +17,7 @@ from .const import (
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
+    CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
     DEFAULT_WINDOW_CLOSE_DEBOUNCE,
@@ -293,6 +294,19 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 # Rationale: During daytime (cover already opened by automation), opening a window/door
                 # must NOT force the cover into a "ventilation" position.
                 cycle_active = trigger_actions.get(cover_entity) == "triggered"
+                # Die Abendfahrt bei offenem Fenster parkt den Rollladen auf
+                # der Lueftungsposition und merkt die Vollfahrt vor, startet
+                # aber keinen Fenstertrigger-Zyklus. Er steht dort *wegen*
+                # des Fensters, nicht weil er tagsueber offen waere - die
+                # Richtungspruefung unten haelt ihn faelschlich fuer einen
+                # offenen Rollladen und liess „offen -> gekippt" ins Leere
+                # laufen (bjoerg, 95 % statt 30 %). Nur mit dem Haken
+                # „schon auf Lueftungsposition fahren": ohne ihn soll der
+                # Rollladen bei offenem Fenster bewusst stehen bleiben.
+                waiting_for_window = bool(
+                    shutter.get(CONF_WINDOW_VENT_WHILE_OPEN, False)
+                    and cover_entity in data.get("drive_after_close_pending", {})
+                )
                 current_pos = get_tracked_position(hass, shutter, cover_entity)
                 if current_pos is None:
                     # Fail-safe: if we can't read current position, do nothing.
@@ -327,6 +341,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 )
                 if (
                     not cycle_active
+                    and not waiting_for_window
                     and not shaded
                     and not opens_cover
                     and not _is_cover_effectively_closed(shutter, current_pos)

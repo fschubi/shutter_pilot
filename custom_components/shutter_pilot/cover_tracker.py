@@ -14,6 +14,7 @@ from .const import DOMAIN, CONF_SHUTTERS, CONF_COVER_ENTITY_ID
 from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
+    commanded_position,
     forget_commanded_position,
     forget_drive_after_close,
     forget_window_cycle,
@@ -34,6 +35,7 @@ STARTUP_RESTORE_DELAY_SEC = 5
 STARTUP_RESTORE_RETRY_SEC = 3
 STARTUP_RESTORE_MAX_RETRIES = 3
 POSITION_TOLERANCE_PCT = 8.0
+_TARGET_NEAR_PCT = 3.0
 
 
 def _collect_cover_entity_ids(shutters: list) -> list[str]:
@@ -99,9 +101,17 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
 
         last_positions[entity_id] = position
 
+        target = commanded_position(data, entity_id)
         if entity_id in pending or is_recent_automation(data, entity_id):
             source = SOURCE_AUTOMATION
             pending.discard(entity_id)
+        elif target is not None and abs(position - target) <= _TARGET_NEAR_PCT:
+            # Die Karenz von 90 s kennt keine langsamen Antriebe, Nachmeldungen
+            # und Reloads. Meldet er eine Position, die dem zuletzt gesendeten
+            # Ziel entspricht (30 statt 31 %), war das unsere Fahrt – als
+            # Handfahrt gebucht blockierte sie morgens das Hochfahren und
+            # loeschte den Fensterzyklus (bjoerg).
+            source = SOURCE_AUTOMATION
         else:
             # Der Bus meldet jede Aenderung am Zustandsobjekt, nicht nur eine
             # Fahrt: ein Funkpegel, ein Batteriewert, ein Fahrzustand ohne

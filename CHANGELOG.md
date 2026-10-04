@@ -4,6 +4,28 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.23.2]
+
+Eine Forumsmeldung (Bjoerg, community-smarthome.com/11378/166): Kippen des
+Fensters reagierte nach der Abendfahrt nicht, und ein Rollladen blieb
+morgens auf der Kippposition stehen. Mit seinem Export nachgerechnet und mit
+Tests nachgestellt.
+
+### Behoben
+- **Fenster auf „gekippt" nach der Abendfahrt bei offenem Fenster
+  wirkungslos.** Fuhr die Abendfahrt bei offenem Fenster auf die
+  Lüftungsposition (Haken „Bei offenem Fenster schon auf die Lüftungsposition
+  fahren") und wurde das Fenster danach gekippt, passierte nichts: der
+  Rollladen galt dem Fenstertrigger als „offen". Er steht dort aber wegen des
+  Fensters. Erst nach „zu" und wieder „auf" griff gekippt. Jetzt reagiert der
+  Rollladen, solange seine Vollfahrt auf das Schließen des Fensters wartet.
+- **Eigene Fahrt als Handfahrt gebucht.** Meldete ein Antrieb nach Ablauf der
+  90 Sekunden Karenz noch eine leicht abweichende Position (31 statt 30 %),
+  galt das als Handfahrt: Quelle „manual", bei „Manuelle Übersteuerung:
+  nie" blockierte das das automatische Hochfahren, und der Fensterzyklus
+  ging verloren. Eine Meldung nahe dem zuletzt gesendeten Ziel (±3 %) bleibt
+  jetzt Automatik; eine echte Handfahrt zählt weiter als manuell.
+
 ## [2.23.1]
 
 Eine Forumsmeldung (Linos, community.simon42.com/90112/167): „Alle Rollladen
