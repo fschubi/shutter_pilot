@@ -36,6 +36,8 @@ from .awning_guard import (
 )
 from .helpers import (
     filter_shutters_by_area,
+    forget_drive_after_close,
+    forget_window_cycle,
     get_position_for_role,
     get_tilt_for_role,
     position_kept,
@@ -162,6 +164,15 @@ async def _drive_group(
                 area_id=area_id,
             )
             driven += 1
+            # Eine Fahrt ueber den Dienst ist eine neuere Entscheidung als die
+            # Rueckfahrhoehe, die der Fenstertrigger beim Oeffnen gemerkt hat,
+            # und als eine wartende Nachholfahrt. Handfahrt und interne
+            # Hochfahrt verwerfen beides schon; der Dienst war der Weg, der es
+            # nicht tat (StephanD77, GitHub #20): beim Schliessen des Fensters
+            # um 13:40 fuhr der Rollladen auf die 0 % von 22:48 zurueck.
+            if eff_pos is not None or tilt is not None:
+                forget_window_cycle(data, cover)
+                forget_drive_after_close(hass, entry, data, cover)
             if eff_pos != position:
                 _LOGGER.info(
                     "%s: %s -> %d%% (Aussperrschutz: Tür offen)",
@@ -448,14 +459,20 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
                     )
                     continue
                 position = safe
+            # Nur wenn die Hoehe unveraendert bleibt: sonst gaebe es nichts zu
+            # senden. Mit Hoehe faehrt resume wie bisher ohne Winkel.
+            tilt_for_resume = (
+                get_tilt_for_role(shutter, role) if position is None else None
+            )
             await set_cover_position(
                 hass, entry, cover, position, "Resume automation",
-                # Nur wenn die Hoehe unveraendert bleibt: sonst gaebe es nichts
-                # zu senden. Mit Hoehe faehrt resume wie bisher ohne Winkel.
-                tilt_position=(
-                    get_tilt_for_role(shutter, role) if position is None else None
-                ),
+                tilt_position=tilt_for_resume,
             )
+            # Wie in _drive_group(): die gemerkte Rueckfahrhoehe des
+            # Fenstertriggers gehoert zu einer aelteren Entscheidung.
+            if position is not None or tilt_for_resume is not None:
+                forget_window_cycle(data, cover)
+                forget_drive_after_close(hass, entry, data, cover)
             # Wie in _drive_group(): ohne diese zwei Zeilen blieb der alte
             # Richtungsmerker stehen, der resume gerade beheben sollte. Ein
             # Rollladen, der hier nach oben faehrt, aber weiter in

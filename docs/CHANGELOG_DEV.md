@@ -65,6 +65,40 @@ zum Export unter Fehlersuche.
 **Verifiziert:** `pytest` 858 grün. Nicht in einer HA < 2024.11 geprüft –
 nur über den Test ohne Handler.
 
+### 2026-10-24 – 2.24.0: die Tür als Riegel, nicht als Antrieb (Raffstore, Stufe 1)
+
+Florian (simon42 #191/#193) und Claus (#196, #202): eine Terrassentür mit
+Raffstore soll nichts bewegen, nur automatische Fahrten zurückhalten und nach
+dem Schließen nachholen. Der Gesamtplan steht in `docs/PLAN_RAFFSTORE.md`
+(sieben Stufen); das hier ist Stufe 1.
+
+**Zwei neue Haken, beide ohne Migration** (`shutter.get(KEY, Default)`):
+`window_react` (Vorgabe **an**) – aus: `window_trigger` überspringt "offen/
+gekippt", der Zweig "geschlossen" (Nachholfahrt, Wiederherstellung) bleibt;
+`drive_after_close_up` (Vorgabe **aus**) – die Hochfahrt (`scheduler.
+drive_shutters`, `brightness._run_up`) wird bei offenem Fenster mit
+`remember_drive_after_close` vorgemerkt, samt Lamellenwinkel.
+
+**Warum ein eigener Haken statt `drive_after_close` zu erweitern:** wer den
+gesetzt hat, fährt morgens bei offenem Fenster heute hoch; eine Erweiterung
+hätte ihm die Morgenfahrt genommen. Eigener Test hält das fest. Die Vormerkung
+steht **nach** `should_skip_automated_up`, sonst merkte sich ein ohnehin
+gehaltener Rollladen eine Fahrt vor; `covers_driven_up/down` werden
+spiegelbildlich zum Runter-Zweig gepflegt. Beide Schlüssel stehen auch in
+`AWNING_UNUSED_KEYS`/`WINDOW_UNUSED_KEYS` (const.py und Panel).
+
+**Nicht angefasst, mit Absicht:** `has_guard()`/`GUARDED_KINDS` (rund 15
+Stellen, u. a. hebt `window_helper` den Aussperrschutz für diese Arten auf)
+und der Gerätetyp – Raffstore bleibt ein Rollladen mit Lamellen. Der
+Windschutz (Stufe 2) bekommt ein eigenes Prädikat mit eigener Sturmposition.
+
+**Verifiziert:** `pytest` 871 grün (9 neue in `tests/test_door_lock_raffstore.py`,
+1 in `tests/test_panel.py`). Gegenproben je Datei: ohne `window_trigger` fallen
+2, ohne `scheduler` 1, ohne `brightness` 1. Kontrollfälle ohne Haken und mit
+nur `drive_after_close` fahren wie bisher. i18n 4 neue Schlüssel ×11.
+**Nicht im Browser und nicht im echten Home Assistant geprüft** – Florian soll
+es testen.
+
 ### 2026-10-12 – 2.23.3: die 0, die keine leere Grenze ist
 
 Eine Forumsmeldung (Linos, simon42 #185): Hochfahren ab 06:30 Uhr und mehr

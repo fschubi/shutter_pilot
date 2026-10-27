@@ -4,6 +4,30 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.27.1]
+
+### Behoben
+- **Fenster schließen fuhr den Rollladen auf eine veraltete Höhe**, wenn
+  dazwischen ein Gruppendienst gefahren war (StephanD77, GitHub #20). Der
+  Fenstertrigger merkt sich beim Öffnen die Rückfahrhöhe und fährt beim
+  Schließen darauf zurück. Handfahrt und Zeitplan verwarfen diese Höhe, die
+  Dienste `open_group`, `close_group`, `sun_protect_group`, `ventilate_group`
+  und `resume_automation` nicht. Wer sie aus einem externen Scheduler ruft,
+  bekam mittags den Rollladen auf die Nachthöhe zurück. Jetzt ist die Fahrt
+  über einen Dienst eine neuere Entscheidung und verwirft die gemerkte Höhe
+  samt einer wartenden Nachholfahrt.
+- **My-Position bei Antrieben, die Positionen können, aber nichts
+  zurückmelden** (Reinhard-M, GitHub #21). Jarolift-Controller bieten
+  `set_cover_position` *und* den „Shade"-Knopf an. Die My-Position wurde nur
+  benutzt, wo der Antrieb gar keine Positionsfahrt kennt, der Knopf blieb also
+  ungedrückt. Mit dem Haken **„Antrieb meldet keine Position"** und einer
+  eingetragenen My-Position gewinnt jetzt der Knopf, wenn das Ziel höchstens
+  15 % daneben liegt. Ohne den Haken bleibt alles wie bisher.
+
+**Was ändert sich für mich?** Nur wenn du Gruppendienste aus einer
+Automation rufst und den Fensterkontakt nutzt, oder „Antrieb meldet keine
+Position" zusammen mit einer My-Position eingetragen hast.
+
 ## [2.27.0]
 
 ### Neu

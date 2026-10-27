@@ -2452,6 +2452,22 @@ async def _send_position(
     written; the position path never did.
     """
     features = _supported_features(hass, entity_id)
+    # Ein Antrieb ohne Rueckmeldung ("blind fahren") kann seine Position nicht
+    # melden, die Zahl ist dort nur die Schaetzung des Controllers. Hat der
+    # Nutzer eine My-Position angelernt und eingetragen, ist der Knopf die
+    # genauere Anweisung - auch wenn der Controller `set_cover_position`
+    # anbietet (Jarolift-Controller tun beides, Reinhard-M, GitHub #21). Ohne
+    # den Haken bleibt es dabei, dass die Zahl gewinnt, wo Positionen gehen.
+    if shutter is not None and shutter.get(CONF_BLIND_DRIVE, False):
+        my_first = my_position_target(shutter, position)
+        if my_first is not None:
+            my_entity, my_pct = my_first
+            _LOGGER.info(
+                "%s: %d%% is driven as the taught My position (%s, %d%%)",
+                entity_id, int(position), my_entity, int(my_pct),
+            )
+            await _press_my_position(hass, my_entity)
+            return
     # CoverEntityFeature.SET_POSITION == 4, OPEN == 1, CLOSE == 2
     if not features or features & 4:
         await hass.services.async_call(

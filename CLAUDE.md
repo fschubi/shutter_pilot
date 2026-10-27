@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (928 Tests)
+tests/               pytest-Suite (939 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -105,9 +105,9 @@ und `tilt_after_position`: ebenfalls Opt-in, `set_cover_position(position=None)`
 
 An einem Antrieb ohne Positionierung gibt es eine dritte Stellung: die am Motor
 angelernte **„My"-Position** (`my_position_entity` + `my_position_pct`, RTS über
-Overkiz als `button.*`). `my_position_target()` greift **nur im Rückfallzweig**
-von `_send_position()`; wo Positionen gehen, ist die Zahl die genauere
-Anweisung.
+Overkiz als `button.*`). `my_position_target()` greift im Rückfallzweig
+von `_send_position()` und, seit 2.27.1, auch bei `blind_drive` an einem
+Antrieb, der Positionen kann; sonst ist die Zahl die genauere Anweisung.
 
 ### Beschattung
 
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 928 Tests, ~21 s
+.venv/bin/pytest            # 939 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,47 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.27.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.27.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
+
+Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;
+die anderen waren erledigt (#13, #17, #18, #19 geschlossen) oder Wünsche
+(#14, #16, #11) bzw. ungeklärt (#15, wartet auf Rückmeldung).
+
+**#20 (StephanD77):** `services.py` verwarf die Merker des Fenstertriggers
+nie. Handfahrt (2.23.0) und interne Hochfahrt tun es
+(`forget_window_cycle`, `clear_stale_window_cycle_after_automated_up`), die
+Dienste liefen daran vorbei – im Modus „Kein Zeitplan" mit externem Scheduler
+der einzige Fahrweg. Nachgestellt mit seiner Sequenz (Nachtfahrt, Fenster auf,
+`open_group` bei offenem Fenster, Fenster zu). Jetzt verwirft `_drive_group()`
+und `resume_automation()` `trigger_actions`/`trigger_heights` und die
+wartende Nachholfahrt, **wenn tatsächlich etwas gesendet wurde** (Höhe oder
+Winkel); `stop_group` fährt nichts und lässt die Merker stehen. Dieselbe
+Fehlerklasse wie 2.22.3/2.23.0 – siebtes Mal: eine neue Handlung, die einen
+Merker nicht kennt.
+
+**#21 (Reinhard-M):** `_send_position()` drückte die My-Position nur im
+Zweig „Antrieb kann kein `set_cover_position`". Ein Jarolift-Controller kann
+beides und meldet nichts zurück. Mit `blind_drive` und My-Position gewinnt
+jetzt der Knopf, wenn das Ziel in die Toleranz fällt (`my_position_target`);
+ohne den Haken bleibt die Zahl die genauere Anweisung.
+
+**Ein bestehender Test musste sich ändern:** `test_forum_2_18.py::
+test_a_drive_that_can_position_is_left_alone`. Die Hilfsfunktion `_awning()`
+setzt `blind_drive` standardmäßig an, der Test meinte aber den gewöhnlichen
+Antrieb *mit* Rückmeldung. Jetzt ausdrücklich `blind_drive: False`; die Absicht
+(Zahl gewinnt beim Antrieb mit Rückmeldung) bleibt geprüft.
+
+**Verifiziert:** `pytest` 939 grün (11 neue: `tests/test_services_forget_
+window_cycle.py` und `tests/test_my_position_blind_drive.py`). Gegenproben:
+ohne das Verwerfen fallen 4, ohne den Vorrang des Knopfes 2. Nicht im echten
+Home Assistant geprüft.
 
 ### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
 
@@ -502,40 +537,6 @@ Verify-Sperre 1; die Kontrollfälle (Haken aus, Markisen) bleiben grün.
 **Offen:** nicht im Browser und nicht im echten Home Assistant geprüft;
 Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %, kurz Lamellen 0) ist
 Stufe 4.
-
-### 2026-10-24 – 2.24.0: die Tür als Riegel, nicht als Antrieb (Raffstore, Stufe 1)
-
-Florian (simon42 #191/#193) und Claus (#196, #202): eine Terrassentür mit
-Raffstore soll nichts bewegen, nur automatische Fahrten zurückhalten und nach
-dem Schließen nachholen. Der Gesamtplan steht in `docs/PLAN_RAFFSTORE.md`
-(sieben Stufen); das hier ist Stufe 1.
-
-**Zwei neue Haken, beide ohne Migration** (`shutter.get(KEY, Default)`):
-`window_react` (Vorgabe **an**) – aus: `window_trigger` überspringt "offen/
-gekippt", der Zweig "geschlossen" (Nachholfahrt, Wiederherstellung) bleibt;
-`drive_after_close_up` (Vorgabe **aus**) – die Hochfahrt (`scheduler.
-drive_shutters`, `brightness._run_up`) wird bei offenem Fenster mit
-`remember_drive_after_close` vorgemerkt, samt Lamellenwinkel.
-
-**Warum ein eigener Haken statt `drive_after_close` zu erweitern:** wer den
-gesetzt hat, fährt morgens bei offenem Fenster heute hoch; eine Erweiterung
-hätte ihm die Morgenfahrt genommen. Eigener Test hält das fest. Die Vormerkung
-steht **nach** `should_skip_automated_up`, sonst merkte sich ein ohnehin
-gehaltener Rollladen eine Fahrt vor; `covers_driven_up/down` werden
-spiegelbildlich zum Runter-Zweig gepflegt. Beide Schlüssel stehen auch in
-`AWNING_UNUSED_KEYS`/`WINDOW_UNUSED_KEYS` (const.py und Panel).
-
-**Nicht angefasst, mit Absicht:** `has_guard()`/`GUARDED_KINDS` (rund 15
-Stellen, u. a. hebt `window_helper` den Aussperrschutz für diese Arten auf)
-und der Gerätetyp – Raffstore bleibt ein Rollladen mit Lamellen. Der
-Windschutz (Stufe 2) bekommt ein eigenes Prädikat mit eigener Sturmposition.
-
-**Verifiziert:** `pytest` 871 grün (9 neue in `tests/test_door_lock_raffstore.py`,
-1 in `tests/test_panel.py`). Gegenproben je Datei: ohne `window_trigger` fallen
-2, ohne `scheduler` 1, ohne `brightness` 1. Kontrollfälle ohne Haken und mit
-nur `drive_after_close` fahren wie bisher. i18n 4 neue Schlüssel ×11.
-**Nicht im Browser und nicht im echten Home Assistant geprüft** – Florian soll
-es testen.
 
 ## graphify
 

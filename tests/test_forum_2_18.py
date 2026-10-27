@@ -343,12 +343,18 @@ class TestMyPosition:
         assert len(calls["open"]) == 1
 
     async def test_a_drive_that_can_position_is_left_alone(self, hass, calls):
-        """My wäre dort nur ungenauer – die Zahl ist die bessere Anweisung."""
+        """My wäre dort nur ungenauer – die Zahl ist die bessere Anweisung.
+
+        Ein Antrieb, der seine Position meldet, hat „Antrieb meldet keine
+        Position" nicht gesetzt. Die Vorgabe der Hilfsfunktion `_awning()` hat
+        den Haken an – für einen Antrieb mit Positionsfahrt *und* Haken gilt
+        seit 2.27.1 der Knopf (tests/test_my_position_blind_drive.py)."""
         await self._drive(
             hass,
             60,
             15,
             **{
+                CONF_BLIND_DRIVE: False,
                 CONF_MY_POSITION_ENTITY: "button.markise_my_position",
                 CONF_MY_POSITION_PCT: 50,
             },
