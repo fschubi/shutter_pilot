@@ -382,7 +382,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
         _ws_get_status, _ws_set_auto_mode, _ws_set_master_enabled,
         _ws_set_shutter_automation, _ws_set_sun_protect,
         _ws_save_area, _ws_delete_area,
-        _ws_save_shutter, _ws_delete_shutter,
+        _ws_save_shutter, _ws_delete_shutter, _ws_reorder_shutters,
         _ws_save_settings, _ws_export_config,
     ):
         websocket_api.async_register_command(hass, cmd)
@@ -685,6 +685,62 @@ def _ws_set_shutter_automation(hass: HomeAssistant, connection: websocket_api.Ac
             )
         break
     connection.send_result(msg["id"], {"ok": True})
+
+
+# -- reorder_shutters ---------------------------------------------------------
+
+def _reordered_shutters(shutters: list, order: list[str]) -> list:
+    """The stored list in the requested order.
+
+    Covers named in `order` come first, in that order; whatever is not named
+    keeps its relative place behind them, so a stale or partial request from
+    an older panel can never drop a shutter. A cover is matched by position in
+    the list, not by dict, so a (legacy) duplicate entry is moved once and the
+    second one is kept.
+    """
+    remaining = list(range(len(shutters)))
+    picked: list[int] = []
+    for cover in order:
+        wanted = str(cover or "").strip()
+        for idx in remaining:
+            s = shutters[idx]
+            if isinstance(s, dict) and str(s.get(CONF_COVER_ENTITY_ID) or "").strip() == wanted:
+                picked.append(idx)
+                remaining.remove(idx)
+                break
+    return [shutters[i] for i in picked + remaining]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/reorder_shutters",
+    vol.Required("order"): [str],
+})
+@websocket_api.async_response
+async def _ws_reorder_shutters(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Store the shutters in the order the panel arranged them.
+
+    The order of the list *is* the drive order: every drive path walks it and
+    staggers by the area delay. Reloads the entry only when something moved,
+    since a reload resets the runtime markers.
+    """
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    opts = deepcopy(dict(entry.options or {}))
+    shutters = opts.get(CONF_SHUTTERS, [])
+    if not isinstance(shutters, list):
+        connection.send_result(msg["id"], {"ok": True, "changed": False})
+        return
+    new = _reordered_shutters(shutters, msg["order"])
+    if all(a is b for a, b in zip(new, shutters)):
+        connection.send_result(msg["id"], {"ok": True, "changed": False})
+        return
+    opts[CONF_SHUTTERS] = new
+    _update_entry_options(hass, entry, opts)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
+    connection.send_result(msg["id"], {"ok": True, "changed": True})
 
 
 # -- save_area (create / update) ----------------------------------------------

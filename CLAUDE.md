@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (916 Tests)
+tests/               pytest-Suite (928 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -253,7 +253,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
   Fahrknöpfe nicht – dieselbe Trennung wie auf den Karten.
 - **Die Bedienknöpfe rufen die `cover`-Dienste direkt auf** (damit HA die Rechte
   je Entität prüft). Sie kommen damit an *jedem* Riegel im Backend vorbei.
-  Dreimal doppelt gebaut: Mindestabstand, Markisensperre, Aussperrschutz. Bei
+  Viermal doppelt gebaut: Mindestabstand, Markisensperre, Aussperrschutz, Bereichs-Verzögerung (2.27.0). Bei
   einem neuen Riegel ist die erste Frage, ob das Panel ihn kennt. Trennung:
   **Gruppenknopf = Bereich handelt** (Rollladenschalter gilt), **Zeilenknopf und
   Dienste = von Hand** (gilt nicht – sonst ist ein reparierter Antrieb nicht
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 916 Tests, ~21 s
+.venv/bin/pytest            # 928 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,62 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.26.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.27.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
+
+Aus den letzten beiden Forumsbeiträgen: DerTomm (#213, GitHub #17/#18) und
+Frankchief (#212 samt Export).
+
+**A – Verzögerung gilt nicht für die Dashboard-Knöpfe (Bug #18).**
+`_coverAction()` im Panel kannte nur `min_drive_gap`; die Bereichs-
+Verzögerung (`drive_delay`) wirkt serverseitig in jedem Fahrweg, die Knöpfe
+rufen aber direkt `cover.*` auf und sind damit an ihr vorbeigelaufen – ein
+weiterer Riegel, der im Panel doppelt gebaut werden muss (Liste in „Panel":
+Mindestabstand, Markisensperre, Aussperrschutz, **jetzt auch Bereichs-
+Verzögerung**). `_driveDelaySec()`: das Größere aus Bereich und Mindestabstand,
+Hoch nach `area_up_id`, sonst `area_down_id`, Bereich ohne gespeicherten Wert =
+Vorgabe 10 (`DEFAULT_AREA_DRIVE_DELAY` im Panel gespiegelt). *Stop* wartet nie.
+**Bekannte Grenze:** die Abfolge läuft im Browser-Tab; schließt jemand das
+Panel mitten drin, fahren die restlichen nicht. Der Weg über die Dienste
+(`close_group` …) wäre robuster, ändert aber die Rechte-/Schalter-Semantik
+der Knöpfe (siehe Panel-Abschnitt) und blieb deshalb außen vor.
+
+**B – Reihenfolge (Wunsch #17).** Gespeichert wird die Reihenfolge der
+`shutters`-Liste; jeder Fahrweg läuft sie ab, das Dashboard zeigt sie unsortiert
+(der Rollläden-Tab ist alphabetisch). Neuer Admin-Befehl
+`shutter_pilot/reorder_shutters` (`_reordered_shutters()`: Genannte zuerst,
+Rest dahinter, unbekannte Namen übergangen, Duplikate behalten – ein
+unvollständiger Aufruf kann nie einen Rollladen verlieren). Kein Neuladen bei
+unveränderter Reihenfolge, weil ein Neuladen die Laufzeit-Merker nullt. Im
+Panel: Sortier-Knopf je Bereichskarte, Pfeile, Tausch in der *globalen* Liste
+mit dem Nachbarn der Bereichsansicht, **eine** Speicherung 2,5 s nach dem
+letzten Klick, `_pendingOrder` überlebt ein `_load()` dazwischen. Bereiche
+untereinander bleiben gleichzeitig (jeder Bereich ein eigener Task); der
+globale Mindestabstand staffelt sie in Bereichsreihenfolge. Eine echte
+Reihenfolge *zwischen* Bereichen wäre eine eigene Änderung.
+
+**C – Sensor-Formular.** Frankchiefs Export: Wind-Sensor ohne Schwellen
+(„Zahlenschwelle nie eingetragen" = Gefahr, die Markise bleibt drin) und
+`sun_cond_ice_invert: nein` ausdrücklich gespeichert – Frost ist voreingestellt
+umgekehrt, das Panel schreibt den Schlüssel erst beim *Klick* auf die Checkbox,
+er hat also eine von drei gleich aussehenden angeklickt. Rahmen mit Titel je
+Schutz, Warnung „keine Schwelle" (nicht je Markise: dort erbt ein leeres Feld
+den globalen Wert) und „Werte verkehrt herum" (wie bei den Bedingungen).
+**Meine Antwort im Forum war falsch:** bei einem Binärsensor (Regen State
+Piezo) gibt es nichts auszuwählen, „an" ist Gefahr; die Zustandsliste gibt es
+nur bei Text-Sensoren. In der Antwort richtiggestellt.
+
+**Verifiziert:** `pytest` 928 grün (8 + 4 neue; Node-Tests `drive_delay.mjs`,
+`reorder.mjs`, `guard_slot.mjs`). Gegenproben: ohne Bereichs-Verzögerung fällt
+der Knopf-Test, ohne Tausch der Reorder-Test, ohne Befehl-Sortierung sechs,
+ohne die beiden Warnungen der Formular-Test. **Nicht im Browser und nicht im
+echten Home Assistant geprüft** – besonders die Pfeile und der Rahmen.
 
 ### 2026-10-26 – 2.26.1: der Unten-Merker, der die Hand nicht kannte
 
@@ -486,32 +536,6 @@ Windschutz (Stufe 2) bekommt ein eigenes Prädikat mit eigener Sturmposition.
 nur `drive_after_close` fahren wie bisher. i18n 4 neue Schlüssel ×11.
 **Nicht im Browser und nicht im echten Home Assistant geprüft** – Florian soll
 es testen.
-
-### 2026-10-18 – 2.23.4: im offiziellen HACS-Store
-
-frenck hat hacs/default#9592 freigegeben und gemergt. Seine Begründung für
-die Freigabe: die schreibenden WebSocket-Befehle sind admin-only, das Panel
-für Nicht-Admins offen zu lassen ist in Ordnung (die Grenze liegt auf dem
-Server).
-
-**Sein Hinweis, nachgeprüft und behoben:** `ShutterPilotOptionsFlow` las
-`self.config_entry`, das HA erst ab 2024.11 selbst setzt – `hacs.json` sagt
-2024.6.0. Jetzt wird der Eintrag im Konstruktor übergeben und als
-`self._entry` gehalten. **Nicht** `self.config_entry` zuweisen: ab 2024.11
-veraltet, später ein Fehler. Neuer Test `tests/test_options_flow.py` (2):
-einmal über `hass.config_entries.options`, einmal ohne gebundenen Handler –
-der simuliert < 2024.11. Gegenprobe mit altem Code: genau der zweite fällt.
-
-**README (beide Sprachen) und FORUM_POST.md:** Installation ohne
-benutzerdefiniertes Repository, Badge HACS-Default, My-HA-Link. Abgleich mit
-dem Funktionsumfang: „drei Modi" und „bis zu zwei Bedingungen" waren
-veraltet; neu sind Abschnitte zur manuellen Übersteuerung (nur
-Zwischenpositionen, nur das Hochfahren – `should_skip_automated_up`), zum
-Neustart (Abweichung > 8 % → zurückfahren, `POSITION_TOLERANCE_PCT`) und
-zum Export unter Fehlersuche.
-
-**Verifiziert:** `pytest` 858 grün. Nicht in einer HA < 2024.11 geprüft –
-nur über den Test ohne Handler.
 
 ## graphify
 

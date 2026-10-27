@@ -97,6 +97,16 @@ R("Dachfenster-Tab",  () => p._renderWindows(p._data));
   ok("  … zeigt die Invertier-Checkbox am Schutz",
      out.includes("f_cond_invert_label"), "Checkbox fehlt im Schutz-Formular");
 }
+{
+  /* Reihenfolge-Modus eines Bereichs: Pfeile an jedem Rollladen. */
+  p._orderArea = "living";
+  const out = R("Dashboard mit Reihenfolge-Modus", () => p._renderDashboard(p._data));
+  ok("  … zeigt die Pfeile", out.includes("btn_move_up") && out.includes("btn_move_down"),
+     "Pfeile fehlen im Reihenfolge-Modus");
+  p._orderArea = "";
+  const plain = R("Dashboard ohne Reihenfolge-Modus", () => p._renderDashboard(p._data));
+  ok("  … zeigt keine Pfeile", !plain.includes("btn_move_up"), "Pfeile ohne Modus");
+}
 p._isMobile = true;
 R("Dashboard (mobil)",       () => p._renderDashboard(p._data));
 R("Rollläden-Tab (mobil)",   () => p._renderShutters(p._data));

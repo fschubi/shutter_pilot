@@ -4,6 +4,37 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.27.0]
+
+### Neu
+- **Reihenfolge der Rollläden festlegen** (DerTomm, GitHub #17). Im Dashboard
+  hat jede Bereichskarte (für Administratoren, ab zwei Rollläden) einen Knopf
+  mit Sortier-Symbol: Pfeile nach oben und unten an jedem Rollladen, die
+  Reihenfolge wird ein paar Sekunden nach dem letzten Klick gespeichert. Die
+  Rollläden eines Bereichs fahren in dieser Reihenfolge, mit der Verzögerung
+  des Bereichs dazwischen. Neuer WebSocket-Befehl `reorder_shutters`
+  (Administrator).
+
+### Behoben
+- **„Verzögerung zwischen Rollläden" galt nicht für die Dashboard-Knöpfe**
+  (DerTomm, GitHub #18). Hoch, Runter, Sonnenschutz und Lüften schickten alle
+  Befehle auf einmal – genau das, was die Verzögerung für den Stromkreis
+  verhindern soll. Die Knöpfe nehmen jetzt das Größere aus der Verzögerung des
+  Bereichs und dem Mindestabstand. *Stop* wartet nie. Die Abfolge läuft im
+  Browser-Tab; das Panel muss offen bleiben, bis der letzte Rollladen gefahren
+  ist.
+- **Sensor-Formular von Wind, Regen und Frost** (Frankchief, Forum #212): drei
+  gleich aussehende Kästen mit je einer Checkbox „Bedeutung umkehren" waren
+  nicht auseinanderzuhalten. Jeder Schutz hat jetzt einen Rahmen mit Titel.
+  Dazu zwei Warnungen: **kein Schwellwert eingetragen** (ohne ihn gilt der
+  Sensor als Gefahr, die Markise bleibt eingefahren) und **Schwellwerte
+  verkehrt herum** (etwa Frost bei „Bedeutung umkehren" aus mit 15 und 20).
+
+**Was ändert sich für mich?** Wenn du die Verzögerung im Bereich gesetzt hast
+(Vorgabe 10 Sekunden), fahren die Dashboard-Knöpfe jetzt nacheinander statt
+gleichzeitig. Mit Verzögerung 0 ändert sich nichts. Die Automatik fährt wie
+bisher.
+
 ## [2.26.1]
 
 ### Behoben

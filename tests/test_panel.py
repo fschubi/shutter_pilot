@@ -223,3 +223,32 @@ def test_keep_and_tilt_order_fields_are_in_the_panel() -> None:
                     "keep_tilt_closed", "keep_tilt_sun_protect",
                     "tilt_after_position"):
             assert f'"{key}"' in block.group(1), (name, key)
+
+
+def test_drive_delay_applies_to_the_dashboard_buttons() -> None:
+    """Die Verzoegerung des Bereichs gilt auch fuer die Knoepfe (GitHub #18)."""
+    result = _run("drive_delay.mjs")
+    assert result.returncode == 0, "drive_delay:\n" + result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout
+
+
+def test_shutters_can_be_reordered_on_the_dashboard() -> None:
+    """Reihenfolge verschieben (GitHub #17)."""
+    result = _run("reorder.mjs")
+    assert result.returncode == 0, "reorder:\n" + result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout
+
+
+def test_the_guard_form_warns_about_missing_and_reversed_thresholds() -> None:
+    """Frankchief (simon42 #212): Schwelle nicht eingetragen, Werte verkehrt."""
+    result = _run("guard_slot.mjs")
+    assert result.returncode == 0, "guard_slot:\n" + result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout
+
+
+def test_order_and_guard_form_keys_are_in_all_languages() -> None:
+    root = Path(__file__).parent.parent / "custom_components/shutter_pilot"
+    text = (root / "frontend/shutter-pilot-panel.js").read_text(encoding="utf-8")
+    for key in ("btn_reorder", "btn_reorder_done", "reorder_hint", "btn_move_up",
+                "btn_move_down", "f_guard_no_threshold", "f_guard_wrong_way"):
+        assert text.count(f"{key}:") == 11, key

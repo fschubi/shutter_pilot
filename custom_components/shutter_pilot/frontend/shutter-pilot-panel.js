@@ -107,6 +107,10 @@ const isAwning = s => kindOf(s) === KIND_AWNING;
 const isWindow = s => kindOf(s) === KIND_WINDOW;
 const hasGuard = s => kindOf(s) === KIND_AWNING || kindOf(s) === KIND_WINDOW;
 const AWNING_GUARD_SLOTS = ["wind","rain","ice"];
+/* Spiegelt DEFAULT_AREA_DRIVE_DELAY in const.py: ein Bereich ohne gespeicherten
+   Wert faehrt im Backend mit dieser Verzoegerung, und die Knoepfe sollen
+   dasselbe tun. */
+const DEFAULT_AREA_DRIVE_DELAY = 10;
 /* Schlüssel, die an einer Markise nichts bedeuten. Beim Übernehmen eines
    bestehenden Rollladens werden sie gelöscht statt stehengelassen – gespeichert,
    sichtbar und wirkungslos ist genau die Sorte Einstellung, die der Export seit
@@ -265,6 +269,7 @@ de:{
   sec_slats:"Lamellen",
   sec_storm:"Windschutz Raffstore",sec_storm_sub:"fährt bei Sturm hoch und hält still",f_storm_guard:"Windschutz für diesen Raffstore",f_storm_guard_hint:"Aus: wie bisher. An: Bei Wind fährt er sofort auf die Sturmposition und führt keine automatische Fahrt aus (Zeit, Helligkeit, Beschattung), solange der Sturm anhält. Von Hand bleibt alles möglich. Nach dem Sturm wird nur die Sperre aufgehoben, nichts nachgeholt. Der Schutz gilt auch bei ausgeschalteter Automatik.",f_storm_position:"Sturmposition",f_storm_tilt:"Lamellen bei Sturm",f_guard_rwind:"Wind-Sensor Raffstore",f_guard_lockout_hint_rwind:"Nach dem letzten Alarm bleibt der Raffstore noch so lange gesperrt. Jeder neue Alarm startet die Zeit von vorn.",sec_rwind:"Wind-Sensor für Raffstores",sec_rwind_sub:"getrennt von den Markisen",f_rwind_intro:"Ein Windgeschwindigkeits-Sensor mit eigener Schwelle oder ein Alarm-Binärsensor (on = Sturm), zum Beispiel von der Wetterstation. Gilt für alle Raffstores mit Windschutz, die keinen eigenen Sensor eingetragen haben. Die Markisen-Einstellungen bleiben unberührt.",f_lock_entity:"Sperr-Entität",f_lock_entity_hint:"Solange sie on ist, sendet Shutter Pilot diesem Cover nichts Automatisches, zum Beispiel bei einem Windalarm am Aktor oder beim Fensterputzen. Von Hand fahren geht weiter. Nach dem Aufheben wird nichts nachgeholt; die nächste planmäßige Fahrt gilt.",
   f_keep_position:"Höhe unverändert lassen",f_keep_position_on:"Die Höhe bleibt, wo sie ist – es werden nur die Lamellen gefahren.",f_keep_tilt:"Lamellen unverändert lassen",f_keep_tilt_on:"Die Lamellen bleiben, wie sie sind – es wird nur die Höhe gefahren.",f_tilt_after_position:"Lamellen erst nach erreichter Höhe senden",f_tilt_after_position_hint:"Viele KNX-Aktoren setzen den Winkel nach einer Höhenfahrt zurück. Mit diesem Haken wartet Shutter Pilot, bis die Höhe erreicht ist, und sendet den Lamellenwinkel dann. Nach spätestens drei Minuten wird er in jedem Fall gesendet.",
+  btn_reorder:"Reihenfolge ändern",btn_reorder_done:"Fertig",reorder_hint:"Die Rollläden fahren von oben nach unten, mit der Verzögerung des Bereichs dazwischen. Mit den Pfeilen verschieben; gespeichert wird nach ein paar Sekunden.",btn_move_up:"Nach oben",btn_move_down:"Nach unten",f_guard_no_threshold:"Es ist kein Schwellwert eingetragen. Ohne Schwelle gilt der Sensor als Gefahr: Die Markise bleibt eingefahren.",f_guard_wrong_way:"Die beiden Werte passen nicht zusammen: Der zweite ist der Aufhebepunkt und muss auf der sicheren Seite des ersten liegen. Prüfe auch das Häkchen Bedeutung umkehren: Bei einer Temperatur, die zu kalt ist, muss es gesetzt sein.",
   sec_slats_sub:"nur für Jalousien und Raffstores",
   ent_matching:"Passende",
   ent_others:"Alle weiteren",
@@ -630,6 +635,7 @@ en:{
   sec_slats:"Slats",
   sec_storm:"Venetian blind wind protection",sec_storm_sub:"goes up in a storm and stays put",f_storm_guard:"Wind protection for this blind",f_storm_guard_hint:"Off: as before. On: in wind it drives to the storm position at once and starts no automatic drive (time, brightness, shading) while the storm lasts. Hand drives stay possible. After the storm only the hold is lifted, nothing is caught up. The protection applies even with the automation switched off.",f_storm_position:"Storm position",f_storm_tilt:"Slats in a storm",f_guard_rwind:"Wind sensor for blinds",f_guard_lockout_hint_rwind:"After the last alarm the blind stays held for this long. Every new alarm restarts the time.",sec_rwind:"Wind sensor for venetian blinds",sec_rwind_sub:"separate from the awnings",f_rwind_intro:"A wind speed sensor with its own threshold or an alarm binary sensor (on = storm), for example from the weather station. Applies to every blind with wind protection that has no sensor of its own. The awning settings stay untouched.",f_lock_entity:"Lock entity",f_lock_entity_hint:"While it is on, Shutter Pilot sends this cover nothing automatic, for example during a wind alarm at the actuator or while cleaning windows. Hand drives still work. Nothing is caught up afterwards; the next scheduled drive applies.",
   f_keep_position:"Leave the height unchanged",f_keep_position_on:"The height stays where it is – only the slats are driven.",f_keep_tilt:"Leave the slats unchanged",f_keep_tilt_on:"The slats stay as they are – only the height is driven.",f_tilt_after_position:"Send the slats only after the height is reached",f_tilt_after_position_hint:"Many KNX actuators reset the slat angle after a height drive. With this option Shutter Pilot waits until the height is reached and then sends the angle. After three minutes at the latest it is sent in any case.",
+  btn_reorder:"Change order",btn_reorder_done:"Done",reorder_hint:"The shutters move from top to bottom, with the area delay between them. Move them with the arrows; the order is saved after a few seconds.",btn_move_up:"Move up",btn_move_down:"Move down",f_guard_no_threshold:"No threshold is entered. Without one the sensor counts as danger: the awning stays in.",f_guard_wrong_way:"The two values do not fit together: the second is the release point and must lie on the safe side of the first. Also check the Reverse the meaning box: for a temperature that is too cold it has to be ticked.",
   sec_slats_sub:"venetian blinds only",
   ent_matching:"Matching",
   ent_others:"All others",
@@ -959,6 +965,7 @@ fr:{
   sec_slats:"Lames",
   sec_storm:"Protection vent store à lamelles",sec_storm_sub:"monte en cas de tempête et reste immobile",f_storm_guard:"Protection vent pour ce store",f_storm_guard_hint:"Désactivé : comme avant. Activé : par vent il monte aussitôt à la position tempête et ne lance aucun mouvement automatique (heure, luminosité, ombrage) tant que la tempête dure. La commande manuelle reste possible. Après la tempête seule la retenue est levée, rien n'est rattrapé. La protection agit même avec l'automatisme éteint.",f_storm_position:"Position tempête",f_storm_tilt:"Lamelles en cas de tempête",f_guard_rwind:"Capteur de vent pour stores",f_guard_lockout_hint_rwind:"Après la dernière alarme le store reste retenu aussi longtemps. Chaque nouvelle alarme relance le délai.",sec_rwind:"Capteur de vent pour stores à lamelles",sec_rwind_sub:"séparé des stores bannes",f_rwind_intro:"Un capteur de vitesse du vent avec son propre seuil ou un capteur binaire d'alarme (on = tempête), par exemple de la station météo. Valable pour tous les stores avec protection vent sans capteur propre. Les réglages des stores bannes restent inchangés.",f_lock_entity:"Entité de blocage",f_lock_entity_hint:"Tant qu'elle est on, Shutter Pilot n'envoie rien d'automatique à ce volet, par exemple lors d'une alarme vent de l'actionneur ou du nettoyage des vitres. La commande manuelle fonctionne toujours. Rien n'est rattrapé ensuite ; le prochain mouvement prévu s'applique.",
   f_keep_position:"Laisser la hauteur inchangée",f_keep_position_on:"La hauteur reste où elle est – seules les lamelles bougent.",f_keep_tilt:"Laisser les lamelles inchangées",f_keep_tilt_on:"Les lamelles restent comme elles sont – seule la hauteur bouge.",f_tilt_after_position:"N'envoyer les lamelles qu'une fois la hauteur atteinte",f_tilt_after_position_hint:"De nombreux actionneurs KNX réinitialisent l'angle après un déplacement en hauteur. Avec cette option Shutter Pilot attend que la hauteur soit atteinte, puis envoie l'angle. Au bout de trois minutes au plus il est envoyé dans tous les cas.",
+  btn_reorder:"Modifier l'ordre",btn_reorder_done:"Terminé",reorder_hint:"Les volets partent de haut en bas, avec le délai de la zone entre eux. Déplacez-les avec les flèches ; l'ordre est enregistré après quelques secondes.",btn_move_up:"Monter",btn_move_down:"Descendre",f_guard_no_threshold:"Aucun seuil n'est saisi. Sans seuil, le capteur compte comme danger : le store reste rentré.",f_guard_wrong_way:"Les deux valeurs ne vont pas ensemble : la seconde est le point de levée et doit se trouver du côté sûr de la première. Vérifiez aussi la case Inverser le sens : pour une température trop froide, elle doit être cochée.",
   sec_slats_sub:"stores vénitiens uniquement",
   ent_matching:"Correspondants",
   ent_others:"Tous les autres",
@@ -1266,6 +1273,7 @@ es:{
   sec_slats:"Lamas",
   sec_storm:"Protección contra el viento de la persiana veneciana",sec_storm_sub:"sube con tormenta y se queda quieta",f_storm_guard:"Protección contra el viento para esta persiana",f_storm_guard_hint:"Desactivado: como antes. Activado: con viento va al instante a la posición de tormenta y no inicia ningún movimiento automático (hora, luminosidad, sombreado) mientras dure. A mano sigue siendo posible. Tras la tormenta solo se levanta el bloqueo, no se recupera nada. La protección actúa aunque la automatización esté apagada.",f_storm_position:"Posición de tormenta",f_storm_tilt:"Lamas con tormenta",f_guard_rwind:"Sensor de viento para persianas",f_guard_lockout_hint_rwind:"Tras la última alarma la persiana sigue retenida este tiempo. Cada alarma nueva reinicia el tiempo.",sec_rwind:"Sensor de viento para persianas venecianas",sec_rwind_sub:"separado de los toldos",f_rwind_intro:"Un sensor de velocidad del viento con su propio umbral o un sensor binario de alarma (on = tormenta), por ejemplo de la estación meteorológica. Vale para todas las persianas con protección que no tengan sensor propio. Los ajustes de los toldos no cambian.",f_lock_entity:"Entidad de bloqueo",f_lock_entity_hint:"Mientras esté on, Shutter Pilot no envía nada automático a este cover, por ejemplo con una alarma de viento en el actuador o al limpiar ventanas. A mano sigue funcionando. Después no se recupera nada; vale el siguiente movimiento programado.",
   f_keep_position:"Dejar la altura sin cambios",f_keep_position_on:"La altura se queda donde está – solo se mueven las lamas.",f_keep_tilt:"Dejar las lamas sin cambios",f_keep_tilt_on:"Las lamas se quedan como están – solo se mueve la altura.",f_tilt_after_position:"Enviar las lamas solo tras alcanzar la altura",f_tilt_after_position_hint:"Muchos actuadores KNX reinician el ángulo tras un movimiento en altura. Con esta opción Shutter Pilot espera a que se alcance la altura y entonces envía el ángulo. Como máximo a los tres minutos se envía en cualquier caso.",
+  btn_reorder:"Cambiar el orden",btn_reorder_done:"Listo",reorder_hint:"Las persianas se mueven de arriba abajo, con el retraso de la zona entre ellas. Muévelas con las flechas; el orden se guarda tras unos segundos.",btn_move_up:"Subir",btn_move_down:"Bajar",f_guard_no_threshold:"No hay umbral. Sin umbral el sensor cuenta como peligro: el toldo se queda recogido.",f_guard_wrong_way:"Los dos valores no encajan: el segundo es el punto de liberación y debe estar en el lado seguro del primero. Revisa también la casilla Invertir el significado: para una temperatura demasiado fría debe estar marcada.",
   sec_slats_sub:"solo persianas venecianas",
   ent_matching:"Coincidencias",
   ent_others:"Todos los demás",
@@ -1573,6 +1581,7 @@ it:{
   sec_slats:"Lamelle",
   sec_storm:"Protezione dal vento frangisole",sec_storm_sub:"sale con la tempesta e resta ferma",f_storm_guard:"Protezione dal vento per questo frangisole",f_storm_guard_hint:"Disattivato: come prima. Attivato: con il vento va subito alla posizione di tempesta e non avvia movimenti automatici (orario, luminosità, ombreggiamento) finché dura. A mano resta possibile. Dopo la tempesta si toglie solo il blocco, nulla viene recuperato. La protezione vale anche con l'automazione spenta.",f_storm_position:"Posizione di tempesta",f_storm_tilt:"Lamelle con tempesta",f_guard_rwind:"Sensore vento per frangisole",f_guard_lockout_hint_rwind:"Dopo l'ultimo allarme il frangisole resta bloccato per questo tempo. Ogni nuovo allarme riavvia il tempo.",sec_rwind:"Sensore vento per frangisole",sec_rwind_sub:"separato dalle tende da sole",f_rwind_intro:"Un sensore di velocità del vento con soglia propria o un sensore binario di allarme (on = tempesta), ad esempio della stazione meteo. Vale per tutti i frangisole con protezione senza sensore proprio. Le impostazioni delle tende restano invariate.",f_lock_entity:"Entità di blocco",f_lock_entity_hint:"Finché è on, Shutter Pilot non invia nulla di automatico a questo cover, ad esempio con un allarme vento sull'attuatore o durante la pulizia dei vetri. A mano funziona ancora. Dopo non si recupera nulla; vale il prossimo movimento programmato.",
   f_keep_position:"Lascia l'altezza invariata",f_keep_position_on:"L'altezza resta dov'è – si muovono solo le lamelle.",f_keep_tilt:"Lascia le lamelle invariate",f_keep_tilt_on:"Le lamelle restano come sono – si muove solo l'altezza.",f_tilt_after_position:"Invia le lamelle solo dopo aver raggiunto l'altezza",f_tilt_after_position_hint:"Molti attuatori KNX azzerano l'angolo dopo un movimento in altezza. Con questa opzione Shutter Pilot attende che l'altezza sia raggiunta e poi invia l'angolo. Dopo tre minuti al massimo viene inviato comunque.",
+  btn_reorder:"Cambia ordine",btn_reorder_done:"Fatto",reorder_hint:"Le tapparelle si muovono dall'alto verso il basso, con il ritardo dell'area tra l'una e l'altra. Spostale con le frecce; l'ordine viene salvato dopo alcuni secondi.",btn_move_up:"Su",btn_move_down:"Giù",f_guard_no_threshold:"Nessuna soglia inserita. Senza soglia il sensore conta come pericolo: la tenda resta chiusa.",f_guard_wrong_way:"I due valori non sono coerenti: il secondo è il punto di rilascio e deve stare sul lato sicuro del primo. Controlla anche la casella Inverti il significato: per una temperatura troppo bassa deve essere spuntata.",
   sec_slats_sub:"solo veneziane",
   ent_matching:"Corrispondenti",
   ent_others:"Tutti gli altri",
@@ -1880,6 +1889,7 @@ nl:{
   sec_slats:"Lamellen",
   sec_storm:"Windbeveiliging lamellenscherm",sec_storm_sub:"gaat omhoog bij storm en blijft staan",f_storm_guard:"Windbeveiliging voor dit lamellenscherm",f_storm_guard_hint:"Uit: zoals voorheen. Aan: bij wind gaat het direct naar de stormstand en start geen automatische rit (tijd, helderheid, schaduw) zolang de storm duurt. Met de hand blijft alles mogelijk. Na de storm wordt alleen de blokkade opgeheven, er wordt niets ingehaald. De beveiliging werkt ook bij uitgeschakelde automatiek.",f_storm_position:"Stormstand",f_storm_tilt:"Lamellen bij storm",f_guard_rwind:"Windsensor voor lamellenschermen",f_guard_lockout_hint_rwind:"Na het laatste alarm blijft het scherm zo lang geblokkeerd. Elk nieuw alarm start de tijd opnieuw.",sec_rwind:"Windsensor voor lamellenschermen",sec_rwind_sub:"los van de zonneschermen",f_rwind_intro:"Een windsnelheidssensor met eigen drempel of een binaire alarmsensor (on = storm), bijvoorbeeld van het weerstation. Geldt voor alle lamellenschermen met windbeveiliging zonder eigen sensor. De instellingen van de zonneschermen blijven ongewijzigd.",f_lock_entity:"Blokkeer-entiteit",f_lock_entity_hint:"Zolang deze on is, stuurt Shutter Pilot niets automatisch naar deze cover, bijvoorbeeld bij een windalarm in de actuator of bij het ramen zemen. Met de hand rijden kan nog. Er wordt niets ingehaald; de volgende geplande rit geldt.",
   f_keep_position:"Hoogte ongewijzigd laten",f_keep_position_on:"De hoogte blijft waar hij is – alleen de lamellen bewegen.",f_keep_tilt:"Lamellen ongewijzigd laten",f_keep_tilt_on:"De lamellen blijven zoals ze zijn – alleen de hoogte beweegt.",f_tilt_after_position:"Lamellen pas sturen als de hoogte bereikt is",f_tilt_after_position_hint:"Veel KNX-actuatoren zetten de lamelhoek terug na een hoogterit. Met deze optie wacht Shutter Pilot tot de hoogte bereikt is en stuurt dan de hoek. Na uiterlijk drie minuten wordt hij in elk geval gestuurd.",
+  btn_reorder:"Volgorde wijzigen",btn_reorder_done:"Klaar",reorder_hint:"De rolluiken rijden van boven naar beneden, met de vertraging van het gebied ertussen. Verschuif ze met de pijlen; de volgorde wordt na enkele seconden opgeslagen.",btn_move_up:"Omhoog",btn_move_down:"Omlaag",f_guard_no_threshold:"Er is geen drempel ingevuld. Zonder drempel geldt de sensor als gevaar: het zonnescherm blijft ingetrokken.",f_guard_wrong_way:"De twee waarden passen niet bij elkaar: de tweede is het vrijgavepunt en moet aan de veilige kant van de eerste liggen. Controleer ook het vakje Betekenis omkeren: bij een te lage temperatuur moet het aangevinkt zijn.",
   sec_slats_sub:"alleen jaloezieën",
   ent_matching:"Passend",
   ent_others:"Alle overige",
@@ -2188,6 +2198,7 @@ da:{
   sec_slats:"Lameller",
   sec_storm:"Vindbeskyttelse lamelgardin",sec_storm_sub:"kører op ved storm og bliver stående",f_storm_guard:"Vindbeskyttelse til dette lamelgardin",f_storm_guard_hint:"Fra: som før. Til: ved vind kører det straks til stormposition og starter ingen automatisk kørsel (tid, lysstyrke, skygge), så længe stormen varer. I hånden er alt muligt. Efter stormen ophæves kun spærringen, intet indhentes. Beskyttelsen gælder også ved slukket automatik.",f_storm_position:"Stormposition",f_storm_tilt:"Lameller ved storm",f_guard_rwind:"Vindsensor til lamelgardiner",f_guard_lockout_hint_rwind:"Efter den sidste alarm forbliver gardinet spærret så længe. Hver ny alarm starter tiden forfra.",sec_rwind:"Vindsensor til lamelgardiner",sec_rwind_sub:"adskilt fra markiserne",f_rwind_intro:"En vindhastighedssensor med egen tærskel eller en binær alarmsensor (on = storm), for eksempel fra vejrstationen. Gælder alle lamelgardiner med vindbeskyttelse uden egen sensor. Markisernes indstillinger er uændrede.",f_lock_entity:"Spærre-entitet",f_lock_entity_hint:"Så længe den er on, sender Shutter Pilot intet automatisk til dette cover, for eksempel ved vindalarm i aktuatoren eller under vinduespudsning. Manuel kørsel virker stadig. Intet indhentes bagefter; den næste planlagte kørsel gælder.",
   f_keep_position:"Lad højden være uændret",f_keep_position_on:"Højden bliver, hvor den er – kun lamellerne køres.",f_keep_tilt:"Lad lamellerne være uændrede",f_keep_tilt_on:"Lamellerne bliver, som de er – kun højden køres.",f_tilt_after_position:"Send først lamellerne, når højden er nået",f_tilt_after_position_hint:"Mange KNX-aktuatorer nulstiller vinklen efter en højdekørsel. Med denne indstilling venter Shutter Pilot, til højden er nået, og sender så vinklen. Senest efter tre minutter sendes den under alle omstændigheder.",
+  btn_reorder:"Skift rækkefølge",btn_reorder_done:"Færdig",reorder_hint:"Persiennerne kører fra top til bund, med områdets forsinkelse imellem. Flyt dem med pilene; rækkefølgen gemmes efter nogle sekunder.",btn_move_up:"Op",btn_move_down:"Ned",f_guard_no_threshold:"Ingen tærskel er indtastet. Uden tærskel tæller sensoren som fare: markisen bliver indkørt.",f_guard_wrong_way:"De to værdier passer ikke sammen: den anden er frigivelsespunktet og skal ligge på den sikre side af den første. Tjek også feltet Vend betydningen: ved for lav temperatur skal det være sat.",
   sec_slats_sub:"kun persienner",
   ent_matching:"Matchende",
   ent_others:"Alle øvrige",
@@ -2496,6 +2507,7 @@ sv:{
   sec_slats:"Lameller",
   sec_storm:"Vindskydd persienn",sec_storm_sub:"åker upp vid storm och står still",f_storm_guard:"Vindskydd för denna persienn",f_storm_guard_hint:"Av: som förut. På: vid vind kör den direkt till stormläget och startar ingen automatisk körning (tid, ljusstyrka, solskydd) så länge stormen varar. För hand går allt. Efter stormen hävs bara spärren, inget hämtas in. Skyddet gäller även med avstängd automatik.",f_storm_position:"Stormläge",f_storm_tilt:"Lameller vid storm",f_guard_rwind:"Vindsensor för persienner",f_guard_lockout_hint_rwind:"Efter det senaste larmet förblir persiennen spärrad så länge. Varje nytt larm startar tiden om.",sec_rwind:"Vindsensor för persienner",sec_rwind_sub:"skilt från markiserna",f_rwind_intro:"En vindhastighetssensor med eget tröskelvärde eller en binär larmsensor (on = storm), till exempel från väderstationen. Gäller alla persienner med vindskydd utan egen sensor. Markisernas inställningar är oförändrade.",f_lock_entity:"Spärr-entitet",f_lock_entity_hint:"Så länge den är on skickar Shutter Pilot inget automatiskt till denna cover, till exempel vid vindlarm i ställdonet eller under fönsterputsning. Manuell körning fungerar. Inget hämtas in efteråt; nästa planerade körning gäller.",
   f_keep_position:"Lämna höjden oförändrad",f_keep_position_on:"Höjden förblir där den är – bara lamellerna körs.",f_keep_tilt:"Lämna lamellerna oförändrade",f_keep_tilt_on:"Lamellerna förblir som de är – bara höjden körs.",f_tilt_after_position:"Skicka lamellerna först när höjden är nådd",f_tilt_after_position_hint:"Många KNX-ställdon nollställer vinkeln efter en höjdkörning. Med det här valet väntar Shutter Pilot tills höjden är nådd och skickar sedan vinkeln. Senast efter tre minuter skickas den i alla fall.",
+  btn_reorder:"Ändra ordning",btn_reorder_done:"Klar",reorder_hint:"Persiennerna kör uppifrån och ned, med områdets fördröjning emellan. Flytta dem med pilarna; ordningen sparas efter några sekunder.",btn_move_up:"Upp",btn_move_down:"Ned",f_guard_no_threshold:"Inget tröskelvärde är angivet. Utan tröskel räknas sensorn som fara: markisen förblir inkörd.",f_guard_wrong_way:"De två värdena passar inte ihop: det andra är frigivningspunkten och måste ligga på den säkra sidan av det första. Kontrollera också rutan Vänd betydelsen: vid för låg temperatur måste den vara ikryssad.",
   sec_slats_sub:"endast persienner",
   ent_matching:"Matchande",
   ent_others:"Alla övriga",
@@ -2804,6 +2816,7 @@ pl:{
   sec_slats:"Lamele",
   sec_storm:"Ochrona przed wiatrem żaluzji",sec_storm_sub:"podnosi się przy wichurze i stoi",f_storm_guard:"Ochrona przed wiatrem dla tej żaluzji",f_storm_guard_hint:"Wyłączone: jak dotąd. Włączone: przy wietrze od razu jedzie do pozycji sztormowej i nie rozpoczyna automatycznych przejazdów (czas, jasność, zacienianie), dopóki trwa wichura. Ręcznie wszystko nadal możliwe. Po wichurze zdejmowana jest tylko blokada, nic nie jest nadrabiane. Ochrona działa także przy wyłączonej automatyce.",f_storm_position:"Pozycja sztormowa",f_storm_tilt:"Lamele podczas wichury",f_guard_rwind:"Czujnik wiatru dla żaluzji",f_guard_lockout_hint_rwind:"Po ostatnim alarmie żaluzja pozostaje zablokowana przez ten czas. Każdy nowy alarm uruchamia czas od nowa.",sec_rwind:"Czujnik wiatru dla żaluzji",sec_rwind_sub:"oddzielnie od markiz",f_rwind_intro:"Czujnik prędkości wiatru z własnym progiem lub binarny czujnik alarmu (on = wichura), na przykład ze stacji pogodowej. Dotyczy wszystkich żaluzji z ochroną bez własnego czujnika. Ustawienia markiz pozostają bez zmian.",f_lock_entity:"Encja blokady",f_lock_entity_hint:"Dopóki jest on, Shutter Pilot nie wysyła temu coverowi nic automatycznego, na przykład przy alarmie wiatru w siłowniku lub podczas mycia okien. Ręczne sterowanie nadal działa. Potem nic nie jest nadrabiane; obowiązuje następny planowy przejazd.",
   f_keep_position:"Pozostaw wysokość bez zmian",f_keep_position_on:"Wysokość zostaje, gdzie jest – jadą tylko lamele.",f_keep_tilt:"Pozostaw lamele bez zmian",f_keep_tilt_on:"Lamele zostają, jak są – jedzie tylko wysokość.",f_tilt_after_position:"Wysyłaj lamele dopiero po osiągnięciu wysokości",f_tilt_after_position_hint:"Wiele siłowników KNX zeruje kąt po przejeździe w pionie. Z tą opcją Shutter Pilot czeka na osiągnięcie wysokości i dopiero wtedy wysyła kąt. Najpóźniej po trzech minutach jest wysyłany w każdym przypadku.",
+  btn_reorder:"Zmień kolejność",btn_reorder_done:"Gotowe",reorder_hint:"Rolety jadą od góry do dołu, z opóźnieniem obszaru pomiędzy nimi. Przesuwaj je strzałkami; kolejność zapisuje się po kilku sekundach.",btn_move_up:"W górę",btn_move_down:"W dół",f_guard_no_threshold:"Nie wpisano progu. Bez progu czujnik liczy się jako zagrożenie: markiza pozostaje zwinięta.",f_guard_wrong_way:"Obie wartości do siebie nie pasują: druga to punkt zwolnienia i musi leżeć po bezpiecznej stronie pierwszej. Sprawdź też pole Odwróć znaczenie: przy zbyt niskiej temperaturze musi być zaznaczone.",
   sec_slats_sub:"tylko żaluzje",
   ent_matching:"Pasujące",
   ent_others:"Wszystkie pozostałe",
@@ -3112,6 +3125,7 @@ pt:{
   sec_slats:"Lâminas",
   sec_storm:"Proteção contra vento do estore veneziano",sec_storm_sub:"sobe com tempestade e fica parado",f_storm_guard:"Proteção contra vento para este estore",f_storm_guard_hint:"Desligado: como antes. Ligado: com vento vai logo para a posição de tempestade e não inicia movimentos automáticos (hora, luminosidade, sombreamento) enquanto durar. À mão tudo continua possível. Depois da tempestade só se levanta o bloqueio, nada é recuperado. A proteção atua mesmo com a automação desligada.",f_storm_position:"Posição de tempestade",f_storm_tilt:"Lâminas com tempestade",f_guard_rwind:"Sensor de vento para estores",f_guard_lockout_hint_rwind:"Após o último alarme o estore fica retido durante este tempo. Cada novo alarme reinicia o tempo.",sec_rwind:"Sensor de vento para estores venezianos",sec_rwind_sub:"separado dos toldos",f_rwind_intro:"Um sensor de velocidade do vento com limite próprio ou um sensor binário de alarme (on = tempestade), por exemplo da estação meteorológica. Vale para todos os estores com proteção sem sensor próprio. As definições dos toldos ficam inalteradas.",f_lock_entity:"Entidade de bloqueio",f_lock_entity_hint:"Enquanto estiver on, o Shutter Pilot não envia nada automático a este cover, por exemplo com um alarme de vento no atuador ou ao limpar janelas. À mão continua a funcionar. Depois nada é recuperado; vale o próximo movimento programado.",
   f_keep_position:"Deixar a altura inalterada",f_keep_position_on:"A altura fica onde está – só as lâminas se movem.",f_keep_tilt:"Deixar as lâminas inalteradas",f_keep_tilt_on:"As lâminas ficam como estão – só a altura se move.",f_tilt_after_position:"Enviar as lâminas só depois de atingir a altura",f_tilt_after_position_hint:"Muitos atuadores KNX repõem o ângulo depois de um movimento em altura. Com esta opção o Shutter Pilot espera até a altura ser atingida e só então envia o ângulo. No máximo ao fim de três minutos é enviado de qualquer forma.",
+  btn_reorder:"Alterar a ordem",btn_reorder_done:"Concluído",reorder_hint:"Os estores movem-se de cima para baixo, com o atraso da área entre eles. Mova-os com as setas; a ordem é guardada após alguns segundos.",btn_move_up:"Para cima",btn_move_down:"Para baixo",f_guard_no_threshold:"Nenhum limite introduzido. Sem limite o sensor conta como perigo: o toldo fica recolhido.",f_guard_wrong_way:"Os dois valores não combinam: o segundo é o ponto de libertação e tem de estar do lado seguro do primeiro. Verifique também a caixa Inverter o significado: para uma temperatura demasiado baixa tem de estar marcada.",
   sec_slats_sub:"apenas estores venezianos",
   ent_matching:"Correspondentes",
   ent_others:"Todos os outros",
@@ -3420,6 +3434,7 @@ nb:{
   sec_slats:"Lameller",
   sec_storm:"Vindvern lamellgardin",sec_storm_sub:"kjører opp ved storm og blir stående",f_storm_guard:"Vindvern for dette lamellgardinet",f_storm_guard_hint:"Av: som før. På: ved vind kjører det straks til stormposisjon og starter ingen automatisk kjøring (tid, lysstyrke, skygge) så lenge stormen varer. For hånd er alt mulig. Etter stormen oppheves bare sperren, ingenting tas igjen. Vernet gjelder også med automatikken av.",f_storm_position:"Stormposisjon",f_storm_tilt:"Lameller ved storm",f_guard_rwind:"Vindsensor for lamellgardiner",f_guard_lockout_hint_rwind:"Etter siste alarm blir gardinet sperret så lenge. Hver ny alarm starter tiden på nytt.",sec_rwind:"Vindsensor for lamellgardiner",sec_rwind_sub:"atskilt fra markisene",f_rwind_intro:"En vindhastighetssensor med egen terskel eller en binær alarmsensor (on = storm), for eksempel fra værstasjonen. Gjelder alle lamellgardiner med vindvern uten egen sensor. Markisenes innstillinger er uendret.",f_lock_entity:"Sperre-entitet",f_lock_entity_hint:"Så lenge den er on, sender Shutter Pilot ingenting automatisk til dette coveret, for eksempel ved vindalarm i aktuatoren eller under vindusvask. Manuell kjøring virker fortsatt. Ingenting tas igjen etterpå; neste planlagte kjøring gjelder.",
   f_keep_position:"La høyden være uendret",f_keep_position_on:"Høyden blir der den er – bare lamellene kjøres.",f_keep_tilt:"La lamellene være uendret",f_keep_tilt_on:"Lamellene blir som de er – bare høyden kjøres.",f_tilt_after_position:"Send lamellene først når høyden er nådd",f_tilt_after_position_hint:"Mange KNX-aktuatorer nullstiller vinkelen etter en høydekjøring. Med dette valget venter Shutter Pilot til høyden er nådd og sender så vinkelen. Senest etter tre minutter sendes den uansett.",
+  btn_reorder:"Endre rekkefølge",btn_reorder_done:"Ferdig",reorder_hint:"Persiennene kjører fra topp til bunn, med områdets forsinkelse imellom. Flytt dem med pilene; rekkefølgen lagres etter noen sekunder.",btn_move_up:"Opp",btn_move_down:"Ned",f_guard_no_threshold:"Ingen terskel er oppgitt. Uten terskel teller sensoren som fare: markisen blir stående inne.",f_guard_wrong_way:"De to verdiene passer ikke sammen: den andre er frigivelsespunktet og må ligge på den sikre siden av den første. Sjekk også ruten Snu betydningen: ved for lav temperatur må den være krysset av.",
   sec_slats_sub:"kun persienner",
   ent_matching:"Treff",
   ent_others:"Alle andre",
@@ -3780,6 +3795,8 @@ class ShutterPilotPanel extends PanelBase {
     .copy-row{display:flex;gap:8px;align-items:center}
     .cond-add{width:100%;margin-top:6px;padding:7px 9px;border:1px solid var(--divider);border-radius:8px;background:var(--card2,transparent);color:var(--txt);font-size:13px}
     .copy-row select{flex:1;min-width:0}
+    .guard-slot{border:1px solid var(--divider);border-radius:10px;padding:10px 12px;margin:10px 0}
+    .guard-slot-title{font-weight:600;font-size:14px;color:var(--txt);margin-bottom:6px}
     .rbtn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:1px solid var(--divider);border-radius:8px;background:var(--card2,transparent);color:var(--txt2);cursor:pointer}
     .rbtn ha-icon{--mdc-icon-size:17px}
     .rbtn:hover{background:var(--sp);border-color:var(--sp);color:#fff}
@@ -4066,7 +4083,61 @@ class ShutterPilotPanel extends PanelBase {
     return html``;
   }
 
-  async _load(){if(!this.hass)return;try{this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});}catch(e){console.warn("SP load",e);}}
+  async _load(){
+    if(!this.hass)return;
+    try{
+      this._data=await this.hass.callWS({type:"shutter_pilot/get_status"});
+      /* Eine noch nicht gespeicherte Reihenfolge darf ein Nachladen (etwa nach
+         einem Schalter) nicht zurueckdrehen. */
+      if(this._pendingOrder&&Array.isArray(this._data?.shutters))
+        this._data.shutters=this._applyOrder(this._data.shutters,this._pendingOrder);
+    }catch(e){console.warn("SP load",e);}
+  }
+  /* Dieselbe Regel wie im Backend (_reordered_shutters): genannte zuerst in
+     dieser Reihenfolge, der Rest behaelt seinen Platz dahinter. */
+  _applyOrder(list,order){
+    const rest=[...list.keys()];const picked=[];
+    for(const cover of order){
+      const k=rest.find(i=>(list[i]?.cover_entity_id||"").trim()===String(cover||"").trim());
+      if(k===undefined)continue;
+      picked.push(k);rest.splice(rest.indexOf(k),1);
+    }
+    return [...picked,...rest].map(i=>list[i]);
+  }
+  /* Die Pfeile am Rollladen im Dashboard. Gespeichert wird die Reihenfolge der
+     ganzen Liste, nicht die des Bereichs: ein Rollladen kann in zwei Bereichen
+     stehen, und die Fahrten laufen in der Listenreihenfolge. */
+  _orderButtons(areaId,s,sh){
+    const pos=sh.indexOf(s);const T=k=>this.t(k);
+    return html`<span class="srow-btns">
+      <button class="rbtn" ?disabled=${pos<=0} title="${T("btn_move_up")}"
+        @click=${()=>this._moveShutter(areaId,s.cover_entity_id,-1)}><ha-icon icon="mdi:chevron-up"></ha-icon></button>
+      <button class="rbtn" ?disabled=${pos<0||pos>=sh.length-1} title="${T("btn_move_down")}"
+        @click=${()=>this._moveShutter(areaId,s.cover_entity_id,1)}><ha-icon icon="mdi:chevron-down"></ha-icon></button></span>`;
+  }
+  _moveShutter(areaId,cover,dir){
+    const list=this._data?.shutters;if(!Array.isArray(list))return;
+    const view=list.map((s,i)=>[s,i]).filter(([s])=>s.area_up_id===areaId||s.area_down_id===areaId);
+    const pos=view.findIndex(([s])=>s.cover_entity_id===cover);
+    const to=pos+dir;
+    if(pos<0||to<0||to>=view.length)return;
+    const i=view[pos][1],j=view[to][1];
+    [list[i],list[j]]=[list[j],list[i]];
+    this._pendingOrder=list.map(s=>s.cover_entity_id);
+    this.requestUpdate();
+    /* Ein Speichern laedt die Integration neu - bei jedem Klick waere das ein
+       Neuladen je Pfeil. Also erst, wenn eine Weile nichts mehr geschoben wird. */
+    clearTimeout(this._orderTimer);
+    this._orderTimer=setTimeout(()=>this._saveOrder(),2500);
+  }
+  async _saveOrder(){
+    const order=this._pendingOrder;this._orderTimer=null;
+    if(!order)return;
+    try{await this.hass.callWS({type:"shutter_pilot/reorder_shutters",order});}
+    catch(e){console.warn(e);}
+    this._pendingOrder=null;
+    await this._load();
+  }
   /* Nach Anzeigename sortiert, nicht nach Entity-ID. Nutzer suchen nach
      "Küche", nicht nach "sensor.0x00158d000...". */
   _entities(domains){
@@ -4784,7 +4855,11 @@ class ShutterPilotPanel extends PanelBase {
     const autoOn=d.auto_modes?.[id]!==false;
     return html`<div class="card">
       <div class="card-hdr"><div class="ic"><ha-icon icon="${MODE_ICONS[mode]||"mdi:blinds"}"></ha-icon></div>
-        <div class="info"><h2>${name}</h2><span>${this._modeName(mode)} · ${sh.length} ${this.t("shutter_s")}</span></div></div>
+        <div class="info"><h2>${name}</h2><span>${this._modeName(mode)} · ${sh.length} ${this.t("shutter_s")}</span></div>
+        ${this._isAdmin()&&sh.length>1?html`<button class="rbtn" style="margin-left:auto"
+          title="${this._orderArea===id?this.t("btn_reorder_done"):this.t("btn_reorder")}"
+          @click=${()=>{this._orderArea=this._orderArea===id?"":id;this.requestUpdate();}}><ha-icon icon="${this._orderArea===id?"mdi:check":"mdi:sort"}"></ha-icon></button>`:""}</div>
+      ${this._orderArea===id?html`<div class="hint">${this.t("reorder_hint")}</div>`:""}
       <div class="auto-row"><span class="lbl">${this.t("auto")}</span>
         <ha-switch .checked=${autoOn} ?disabled=${!this._isAdmin()}
           @change=${e=>this._toggleAuto(id,e.target.checked)}></ha-switch></div>
@@ -4796,7 +4871,7 @@ class ShutterPilotPanel extends PanelBase {
       <div style="margin-top:8px">${sh.length===0?html`<div style="padding:8px 0;color:var(--txt2);font-size:13px">${this.t("no_shutters")}</div>`:
         sh.map(s=>{const st=this.hass?.states?.[s.cover_entity_id];const p=st?.attributes?.current_position;
           const autoOff=this._shutterAutoOff(s);
-          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${s.name||st?.attributes?.friendly_name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span>${this._rowButtons(s)}</span></div>`;})}</div>
+          return html`<div class="srow ${autoOff?"auto-off":""}"><span class="nm-wrap">${this._dashShutterRole(s,id)}<span class="nm">${s.name||st?.attributes?.friendly_name||s.cover_entity_id}</span>${autoOff?html`<ha-icon class="auto-off-ic" icon="mdi:robot-off-outline" title="${this.t("dash_shutter_auto_off")}"></ha-icon>`:""}</span><span class="srow-right">${this._orderArea===id?this._orderButtons(id,s,sh):""}${this._shutterAutoSwitch(s)}<span class="pos">${p!=null?Math.round(p)+"%":"–"}</span>${this._rowButtons(s)}</span></div>`;})}</div>
       <div class="actions">
         <button class="btn open" @click=${()=>this._coverAction(sh,"open",true)}><ha-icon icon="mdi:arrow-up-bold"></ha-icon>${this.t("btn_up")}</button>
         <button class="btn stop" @click=${()=>this._coverAction(sh,"stop",true)}><ha-icon icon="mdi:stop"></ha-icon>${this.t("btn_stop")}</button>
@@ -5645,13 +5720,27 @@ class ShutterPilotPanel extends PanelBase {
        einem Klick auf die Checkbox weiter "kaelter als" oder "waermer als"
        fuer das, was gerade nicht mehr gilt. */
     const inverted=this._condInverted(obj,slot,true);
+    /* Welche Zeile zu welchem Sensor gehoert, war nicht zu erkennen: drei
+       gleiche Kaesten mit je einer "Bedeutung umkehren"-Checkbox untereinander
+       (Frankchief, #212). Jetzt ein Rahmen mit Titel je Schutz. */
+    const titleKey=slot==="rwind"?"f_guard_rwind":"guard_reason_"+slot;
+    const onRaw=obj[`sun_cond_${slot}_on_above`],offRaw=obj[`sun_cond_${slot}_off_below`];
+    const blank=v=>v===undefined||v===null||v==="";
+    const on=Number(onRaw),off=Number(offRaw);
+    const wrongWay=!blank(onRaw)&&!blank(offRaw)&&Number.isFinite(on)&&Number.isFinite(off)&&
+      (inverted?off<on:off>on);
     return html`
       <div class="guard-slot">
+        <div class="guard-slot-title">${T(titleKey)}</div>
         ${ep(ek,T("f_guard_"+slot),COND_DOMAINS,slot==="ice"?HINTS.temperature:null)}
         ${perAwning&&!eid?html`<div class="hint">${T("f_guard_inherits")}</div>`:""}
         ${eid&&useStates?html`
           ${this._renderCondStates(obj,slot,eid)}
           <div class="hint">${T("f_guard_states_hint")}</div>`:""}
+        ${/* Je Markise erbt ein leeres Feld den globalen Wert (resolve_guard_config
+             mischt je Schluessel) - dort ist "leer" also kein Fehler. */""}
+        ${eid&&!perAwning&&!isBool&&!useStates&&blank(onRaw)?html`<div class="hint warn">⚠️ ${T("f_guard_no_threshold")}</div>`:""}
+        ${eid&&!isBool&&!useStates&&wrongWay?html`<div class="hint warn">⚠️ ${T("f_guard_wrong_way")}</div>`:""}
         ${eid&&!isBool&&!useStates?html`
           ${this._numOpt(obj,`sun_cond_${slot}_on_above`,T("f_guard_on_"+(inverted?"below":"above")))}
           ${this._numOpt(obj,`sun_cond_${slot}_off_below`,T("f_guard_off_"+(inverted?"above":"below")))}
@@ -6003,6 +6092,12 @@ class ShutterPilotPanel extends PanelBase {
     }
     if(!list.length)return;
     const gap=Math.max(0,Number(this._data?.settings?.min_drive_gap)||0);
+    /* Die Verzoegerung des Bereichs gilt auch fuer die Knoepfe, nicht nur fuer
+       die Automatik (DerTomm, GitHub #18): sie sollte gerade den Stromkreis
+       schonen, wenn alle Rollllaeden eines Bereichs zusammen fahren – und ein
+       Klick auf "Runter" ist genau dieser Fall. Gerechnet wird je Rollladen mit
+       dem Bereich, der fuer diese Aktion zustaendig ist, wie im Backend. */
+    const delays=list.map((s,i)=>i?this._driveDelaySec(s,action,gap):0);
     const call=(s)=>{
       const eid=s.cover_entity_id;
       if(action==="stop")return this.hass.callService("cover","stop_cover",{entity_id:eid});
@@ -6020,11 +6115,23 @@ class ShutterPilotPanel extends PanelBase {
       const pos=this._lockClamp(s,Number(raw));
       return this.hass.callService("cover","set_cover_position",{entity_id:eid,position:pos});
     };
-    if(!gap){await Promise.all(list.map(call));return;}
+    if(!delays.some(d=>d>0)){await Promise.all(list.map(call));return;}
     for(let i=0;i<list.length;i++){
-      if(i)await new Promise(r=>setTimeout(r,gap*1000));
+      if(delays[i]>0)await new Promise(r=>setTimeout(r,delays[i]*1000));
       await call(list[i]);
     }
+  }
+  /* Wartezeit vor diesem Rollladen in Sekunden: das Groessere aus dem
+     Mindestabstand (Einstellungen) und der Verzoegerung seines Bereichs. Bei
+     "Stop" nur der Mindestabstand wie bisher – ein Stopp, der zehn Sekunden pro
+     Rollladen wartet, waere keiner. */
+  _driveDelaySec(s,action,gap){
+    if(action==="stop")return gap;
+    const id=(action==="open"&&s.area_up_id)?s.area_up_id:s.area_down_id;
+    const a=(this._data?.areas||[]).find(x=>x&&x.id===id);
+    const raw=Number(a?.drive_delay);
+    const area=Number.isFinite(raw)?Math.max(0,raw):DEFAULT_AREA_DRIVE_DELAY;
+    return Math.max(gap,area);
   }
   /* Gespeichert wird in Anlagereihenfolge; angezeigt alphabetisch. Sonst
      steht derselbe Bereich im Dashboard woanders als im Bereiche-Tab, je

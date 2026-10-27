@@ -722,6 +722,16 @@ Für das Wochenende gibt es eigene Werte. Bleiben die leer, gelten die Wochentag
 
 Alle Uhrzeiten sind Ortszeit – die Zeitzone aus den Home-Assistant-Einstellungen. Im Dashboard steht neben der Fahrzeit, warum sie von der Sonnenzeit abweicht: „· frühestens 07:30", wenn die Klammer greift, oder „· Präsenz: +4 min" bei aktiver Präsenzsimulation.
 
+## Reihenfolge der Rollläden
+
+Die Rollläden eines Bereichs fahren nacheinander in der Reihenfolge der gespeicherten Liste, mit der **Verzögerung zwischen Rollläden** des Bereichs dazwischen. Diese Reihenfolge war bisher die, in der du sie angelegt hast, und ließ sich nicht ändern. Im **Dashboard** hat jede Bereichskarte einen Knopf mit Sortier-Symbol (nur für Administratoren, ab zwei Rollläden). Anklicken, und jeder Rollladen bekommt einen Pfeil nach oben und einen nach unten; die Reihenfolge wird ein paar Sekunden nach dem letzten Klick gespeichert. Die Liste im Tab **Rollläden** bleibt alphabetisch, das Dashboard zeigt die tatsächliche Fahrreihenfolge.
+
+- Die Reihenfolge gilt für die ganze Liste, weil ein Rollladen in zwei Bereichen stehen kann. Das Verschieben innerhalb eines Bereichs lässt die anderen, wo sie sind.
+- Speichern lädt die Integration neu, wie jedes andere Speichern: Die Laufzeit-Merker („gilt als oben/unten") fangen danach bei null an. Deshalb werden mehrere Klicks zusammen gespeichert.
+- **Bereiche** laufen gleichzeitig, jeder mit seiner eigenen Verzögerung; der **Mindestabstand zwischen Fahrbefehlen** unter *Einstellungen* staffelt sie über die Bereiche hinweg, in der Reihenfolge, in der die Bereiche gespeichert sind.
+
+Die **Knöpfe im Dashboard** (Hoch, Runter, Sonnenschutz, Lüften für einen Bereich oder das ganze Haus) nutzen jetzt dieselbe Verzögerung wie die Automatik: das Größere aus der Verzögerung des Bereichs und dem Mindestabstand. Vor 2.27.0 schickten sie alle Befehle auf einmal. *Stop* wartet nie. Die Abfolge läuft im Browser-Tab, das Panel muss also offen bleiben, bis der letzte Rollladen gefahren ist.
+
 ## Mindestabstand zwischen Fahrbefehlen
 
 Funk-Empfänger – 433 MHz, HmIP und Verwandte – verschlucken Befehle, die im selben Moment ankommen. Die **Verzögerung im Bereich** hilft dagegen nur teilweise: Sie staffelt die Rollläden *eines* Bereichs, aber jeder Bereich fährt in einem eigenen Vorgang. Fahren abends zwei Bereiche gleichzeitig los, treffen die Befehle trotzdem zusammen.

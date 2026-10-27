@@ -705,6 +705,16 @@ Weekends have their own values. Left empty, the weekday values apply. Empty fiel
 
 All times are local time — the timezone from your Home Assistant settings. The dashboard shows next to each drive time why it differs from the sun time: "· no earlier than 07:30" when a bound applies, or "· Presence: +4 min" with presence simulation enabled.
 
+## Order of the shutters
+
+The shutters of an area drive one after another in the order of the stored list, with the area's **delay between shutters** in between. That order used to be the order you created them in, with no way to change it. On the **Dashboard**, each area card has a button with a sort icon (administrators only, from two shutters up). Tick it and every shutter gets an arrow up and an arrow down; the order is saved a few seconds after the last click. The list on the **Shutters** tab stays alphabetical, the dashboard shows the real drive order.
+
+- The order is the order of the whole list, because a shutter can belong to two areas. Moving one within an area leaves the others where they are.
+- Saving reloads the integration, like every other save: the runtime markers ("counts as up/down") start from zero afterwards. That is why several clicks are saved together.
+- **Areas** run at the same time, each with its own delay; the **minimum gap between drive commands** under *Settings* spaces them out across areas, in the order the areas are stored.
+
+The **buttons on the dashboard** (Up, Down, Shading, Ventilate for an area or the whole house) now use the same delay as the automation: the larger of the area's delay and the minimum gap. Before 2.27.0 they sent all commands at once. *Stop* never waits. The sequence runs in the browser tab, so keep the panel open until the last shutter has moved.
+
 ## Minimum gap between drive commands
 
 Radio receivers — 433 MHz, HmIP and relatives — swallow commands that arrive at the same moment. The **per-area delay** only helps so far: it staggers the shutters *within* one area, but every area drives in its own task. When two areas start at the same time in the evening, their commands still collide.

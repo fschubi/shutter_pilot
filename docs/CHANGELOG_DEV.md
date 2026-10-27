@@ -39,6 +39,32 @@ Verhaltenswechsel.
 Gegenprobe: Fix entschärft → genau die zwei Fix-Tests fallen, der Test
 „übereinstimmende Meldung" bleibt grün. Nicht in echtem Home Assistant geprüft.
 
+### 2026-10-18 – 2.23.4: im offiziellen HACS-Store
+
+frenck hat hacs/default#9592 freigegeben und gemergt. Seine Begründung für
+die Freigabe: die schreibenden WebSocket-Befehle sind admin-only, das Panel
+für Nicht-Admins offen zu lassen ist in Ordnung (die Grenze liegt auf dem
+Server).
+
+**Sein Hinweis, nachgeprüft und behoben:** `ShutterPilotOptionsFlow` las
+`self.config_entry`, das HA erst ab 2024.11 selbst setzt – `hacs.json` sagt
+2024.6.0. Jetzt wird der Eintrag im Konstruktor übergeben und als
+`self._entry` gehalten. **Nicht** `self.config_entry` zuweisen: ab 2024.11
+veraltet, später ein Fehler. Neuer Test `tests/test_options_flow.py` (2):
+einmal über `hass.config_entries.options`, einmal ohne gebundenen Handler –
+der simuliert < 2024.11. Gegenprobe mit altem Code: genau der zweite fällt.
+
+**README (beide Sprachen) und FORUM_POST.md:** Installation ohne
+benutzerdefiniertes Repository, Badge HACS-Default, My-HA-Link. Abgleich mit
+dem Funktionsumfang: „drei Modi" und „bis zu zwei Bedingungen" waren
+veraltet; neu sind Abschnitte zur manuellen Übersteuerung (nur
+Zwischenpositionen, nur das Hochfahren – `should_skip_automated_up`), zum
+Neustart (Abweichung > 8 % → zurückfahren, `POSITION_TOLERANCE_PCT`) und
+zum Export unter Fehlersuche.
+
+**Verifiziert:** `pytest` 858 grün. Nicht in einer HA < 2024.11 geprüft –
+nur über den Test ohne Handler.
+
 ### 2026-10-12 – 2.23.3: die 0, die keine leere Grenze ist
 
 Eine Forumsmeldung (Linos, simon42 #185): Hochfahren ab 06:30 Uhr und mehr
