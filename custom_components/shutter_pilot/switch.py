@@ -394,7 +394,12 @@ class ShutterPilotShutterAutomationSwitch(RestoreEntity, SwitchEntity):
                     continue
                 if str(s.get(CONF_COVER_ENTITY_ID) or "").strip() != self._cover_entity_id:
                     continue
-                if not str(s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip():
+                # Nicht nur "leer fuellen": ein Eintrag, der die Schalter-Entitaet
+                # eines *anderen* Covers traegt, schaltete mit diesem zusammen
+                # (Fatmax, simon42 #205: Velux-Rollladen und -Fenster). Der
+                # Schluessel entsteht nur hier, jedes Cover hat genau einen
+                # Schalter - also ist der eigene der einzig richtige Wert.
+                if str(s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip() != self.entity_id:
                     s[CONF_SHUTTER_AUTO_ENTITY_ID] = self.entity_id
                     changed = True
             if changed:

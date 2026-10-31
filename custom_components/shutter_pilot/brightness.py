@@ -282,8 +282,13 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             if not cover_entity:
                 continue
             if cover_entity in covers_driven_down:
+                _LOGGER.debug("Brightness down: %s skipped (counts as down)", cover_entity)
                 continue
             if episode is not None and down_fired.get(cover_entity) == episode:
+                _LOGGER.debug(
+                    "Brightness down: %s skipped (already driven in this dark phase)",
+                    cover_entity,
+                )
                 continue
             # Von Hand bewegt, seit diese Dunkel-Episode laeuft: die Hand hat
             # in dieser Episode das letzte Wort, auch wenn die Helligkeit den
@@ -292,6 +297,10 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             # zufahren. Strikt groesser: eine Handfahrt im selben Takt wie der
             # Episodenbeginn liegt davor.
             if episode is not None and hand_moved.get(cover_entity, -1.0) > episode:
+                _LOGGER.debug(
+                    "Brightness down: %s skipped (moved by hand in this dark phase)",
+                    cover_entity,
+                )
                 continue
             if not is_shutter_automation_enabled(hass, entry, shutter) or shutter_held(
                 hass, entry, shutter

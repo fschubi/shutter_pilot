@@ -65,6 +65,48 @@ zum Export unter Fehlersuche.
 **Verifiziert:** `pytest` 858 grün. Nicht in einer HA < 2024.11 geprüft –
 nur über den Test ohne Handler.
 
+### 2026-10-24 – 2.25.0: Sturm für Raffstores und die Sperr-Entität (Stufe 2)
+
+Florian (#193) und Claus (#196, #202). Entwurf in `docs/PLAN_RAFFSTORE.md`,
+Entscheidungen bestätigt: Sturm sperrt nur die **Automatik** (Hand frei),
+ignoriert Haupt- und Automatikschalter wie bei Markisen, fährt auch durch
+eine Sperr-Entität hindurch.
+
+**2a Wind.** Opt-in `storm_guard` (Vorgabe aus), eigene Zielwerte
+`storm_position`/`storm_tilt` (100/100, **nicht** `position_open` – bei
+Raffstores unten). Eigener Slot `rwind` in `STORM_GUARD_SLOTS`, bewusst
+**nicht** in `AWNING_GUARD_SLOTS`: die Markisenschleife läuft über dieses
+Tupel. Dieselbe Slot-Mechanik, deshalb gehen Windgeschwindigkeit mit
+Hysterese (Florian) und Alarm-Binärsensor (Claus) ohne neuen
+Auswertungscode. `evaluate_guard`/`resolve_guard_config` bekamen einen
+`slots`-Parameter mit der alten Liste als Vorgabe; zweite Schleife in
+`async_enforce_guard`. `has_guard()` blieb unangetastet (rund 15 Stellen).
+Sturm sperrt über `shutter_held()` in Scheduler, Helligkeit, Beschattung,
+Lüften und Fenstertrigger; die Abfrage steht *neben*
+`is_shutter_automation_enabled`, nicht an ihrer Stelle – ein bestehender Test
+patcht den Namen in `brightness` (ein erster Versuch, ihn zu ersetzen, ließ
+genau diesen fallen).
+
+**2b Sperr-Entität.** `automation_lock_entity` je Rollladen, `on` = nichts
+Automatisches. Fail open (fehlende Entität sperrt nicht), keine Nachholung.
+`cover_verify._verify` wiederholt und meldet bei gesperrtem Cover nichts
+(Claus' Aktor verriegelt sich selbst). Der Fenstertrigger *behält* eine
+Vormerkung bei Sperre (anders als bei ausgeschalteter Automatik).
+
+**Panel/Export:** Abschnitt „Windschutz Raffstore" im Formular (sichtbar mit
+Lamellen), globaler Wind-Sensor für Raffstores unter Einstellungen,
+Sperr-Entität im Formular, i18n 13 neue Schlüssel ×11. Der Haken trägt die
+Vorgaben 100/100 selbst ein, sonst zeigte der Schieber 0 % und das Backend
+führe mit 100 %. Export: Windschutz-Tabelle und Sperr-Zeile.
+
+**Verifiziert:** `pytest` 891 grün (19 neue in
+`tests/test_raffstore_storm_and_lock.py`, 1 in `test_panel.py`). Gegenproben:
+ohne Sturmschleife fallen 5, ohne Sperr-Entität 1, ohne Sturmhalt 1, ohne
+Verify-Sperre 1; die Kontrollfälle (Haken aus, Markisen) bleiben grün.
+**Offen:** nicht im Browser und nicht im echten Home Assistant geprüft;
+Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %, kurz Lamellen 0) ist
+Stufe 4.
+
 ### 2026-10-24 – 2.24.0: die Tür als Riegel, nicht als Antrieb (Raffstore, Stufe 1)
 
 Florian (simon42 #191/#193) und Claus (#196, #202): eine Terrassentür mit

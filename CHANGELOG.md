@@ -4,6 +4,40 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.27.2]
+
+### Behoben
+- **Rollladen und Dachfenster schalteten ihre Automatik zusammen**
+  (Fatmax, Forum #205/#218). Beide Einträge trugen in `shutter_auto_entity_id`
+  denselben Schalter, obwohl jedes Cover seinen eigenen hat. Der Schlüssel
+  konnte hängen bleiben, wenn an einem bestehenden Eintrag die Cover-Entität
+  getauscht oder er als Dachfenster übernommen wurde. Das Panel liest den
+  Schalter über diesen Schlüssel, das Umschalten ruft den Dienst auf genau
+  diese Entität. Jetzt setzt der Schalter den Schlüssel beim Start auf seinen
+  eigenen Wert (auch wenn dort ein fremder stand), das Speichern nimmt den
+  Schalter aus der Registry, und das Umschalten fragt ebenfalls die Registry.
+  **Du musst nichts tun**: nach dem Update und einem Neustart stimmt es.
+- **Helligkeitsmodus: von Hand ganz hochgefahren galt als „zu"** (Claus, Forum
+  #217). Bei einem Raffstore, dessen Zustände „auf" und „zu" fast dieselbe Höhe
+  haben (auf 0 %, zu 15 %), galt jede von Hand gefahrene Position ab 7 % als
+  „zu" – auch das ganz hochgefahrene 96 %. Der Rollladen blieb als „unten"
+  vermerkt, die Dämmerung fuhr nicht mehr zu. Jetzt gibt es ein „jenseits von
+  zu" nur noch, wo „auf" und „zu" mehr als 16 Prozentpunkte auseinanderliegen.
+  Normale Rollläden (auf 100, zu 0 oder 36) sind nicht betroffen.
+
+### Neu (Diagnose)
+- Der **Export** zeigt unter „Laufender Zustand" seit wann die Helligkeits-Phase
+  eines Bereichs läuft und wann ein Rollladen zuletzt von Hand bewegt wurde
+  („vor N min"). Damit lässt sich ein ausgefallener Abend nachvollziehen, ohne
+  dass die Merker beim Speichern verloren sind.
+- Hält die Sperr-Entität (oder Sturmschutz, oder ausgeschaltete Automatik) die
+  Rückfahrt nach dem Schließen eines Fensters zurück, steht jetzt eine Zeile im
+  Protokoll. Vorher blieb der Rollladen einfach stehen.
+
+**Was ändert sich für mich?** Nur wenn du einen Raffstore mit fast gleicher
+Höhe für „auf" und „zu" im Helligkeitsmodus hast, oder Rollladen und
+Dachfenster teilten sich einen Schalter (wird beim Start berichtigt).
+
 ## [2.27.1]
 
 ### Behoben

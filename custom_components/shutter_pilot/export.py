@@ -185,6 +185,26 @@ _VALUE_LABELS = {
 }
 
 
+def _ages(values: Any) -> str:
+    """"cover: vor N min" for monotonic timestamps, or a dash.
+
+    The brightness phases and the hand moves are kept on the monotonic clock;
+    the age is the only thing that means anything outside this process, and it
+    is exactly what a report about a missed evening drive needs.
+    """
+    if not isinstance(values, dict) or not values:
+        return "–"
+    now = time.monotonic()
+    parts = []
+    for key, stamp in sorted(values.items()):
+        try:
+            minutes = max(0.0, (now - float(stamp)) / 60.0)
+        except (TypeError, ValueError):
+            continue
+        parts.append(f"{key}: vor {minutes:.0f} min")
+    return ", ".join(parts) or "–"
+
+
 def _fmt_labelled(key: str, value: Any) -> str:
     text = _fmt(value)
     label = _VALUE_LABELS.get(key, {}).get(text)
@@ -1445,6 +1465,8 @@ async def async_build_export(
         f"| gilt als oben | {_fmt(sorted(data.get('covers_driven_up', set())))} |",
         f"| gilt als unten | {_fmt(sorted(data.get('covers_driven_down', set())))} |",
         f"| wartende Nachhol-Fahrten | {_fmt(sorted(data.get('drive_after_close_pending', {})))} |",
+        f"| Helligkeits-Phase seit | {_ages(data.get('_b_cond_since'))} |",
+        f"| zuletzt von Hand bewegt | {_ages(data.get('_hand_moved_at'))} |",
         f"| Minuten-Ticker läuft | {_fmt(bool(data.get('_minute_ticker_unsub')))} |",
         "| zuletzt geladen | "
         + ("–" if age_minutes is None else f"vor {age_minutes:.0f} min")

@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (939 Tests)
+tests/               pytest-Suite (953 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 939 Tests, ~21 s
+.venv/bin/pytest            # 953 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,62 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.27.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.27.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-10-31 – 2.27.2: ein geteilter Schalter und ein „zu", das keins war
+
+Neue Forumsbeiträge #212–#218. Drei Funde, einer unbewiesen.
+
+**Fatmax (#218, Export):** Rollladen *und* Dachfenster tragen
+`shutter_auto_entity_id: switch.shutter_pilot_rollladen_obergeschoss_
+schlafzimmer_dff` – meine Vermutung aus #209 war richtig. Der Schlüssel wird
+nur vom Schalter selbst gesetzt, und nur wenn leer; er bleibt hängen, wenn an
+einem Eintrag die Cover-Entität getauscht wird. Das Panel liest den Schalter
+über den Schlüssel, `set_shutter_automation` ruft den Dienst auf genau diese
+Entität – beide schalten zusammen. Fix an drei Stellen: der Schalter heilt den
+Schlüssel beim Start (`!= self.entity_id`, nicht nur „leer"), `save_shutter`
+setzt ihn aus der Registry (`_own_automation_switch`, sonst entfernt),
+`set_shutter_automation` fragt dieselbe Registry. Die Gegenprobe „Umschalten
+ohne Registry" bleibt grün, weil die Heilung schon vorher greift – der dritte
+Punkt ist Gürtel zum Hosenträger.
+
+**Claus #217 (Essen Tür):** seine Theorie (alte Dunkelphase läuft weiter)
+stimmt nicht – ein tagsüber helles Sensor-Update löscht `cond_since`. Die
+Ursache stand woanders: `manual_position_is_a_close()` kennt ein „jenseits
+von zu"; bei `open < closed` (auf 0, zu 15) gilt jede Position ab `closed - 8`
+als zu, also 7…100 %, auch das ganz hochgefahrene 96 %. `note_manual_position`
+nahm den Zweig `down.add` und kam nie an mein 2.26.1-Löschen. Jetzt ohne
+„jenseits", wenn `|open - closed| <= 2 * POSITION_TOLERANCE_PCT` – ein
+Raffstore, dessen Zustände sich durch die Lamellen unterscheiden, hat keine
+Schließrichtung. Normale Rollläden (auf 100, zu 0/36/70) unverändert, als Tests
+festgehalten.
+
+**Claus #215 (Diele, Tür kurz auf/zu):** **nicht bewiesen.** Nachgestellt mit
+seiner Konfiguration (Debounce 5 s, Cover fährt noch, Handsperre, `tilt_after_
+position`): die Rückfahrt auf 70 % läuft. Plausibel ist seine **Sperr-Entität**
+(KNX-Handsperre „1 h nach Tastendruck", durch die Türfahrt selbst ausgelöst):
+`_delayed_close` kehrt bei `automation_allowed() == False` still zurück, der
+Zyklus bleibt „triggered", und auch 16:53 fährt nichts. Dazu passt, dass beide
+Beobachtungen innerhalb einer Stunde liegen. Jetzt steht dort eine
+INFO-Zeile. **Offen:** Claus fragen, ob `binary_sensor.raff_diele_gesperrt`
+um 16:22 an war; wenn ja, ist die eigentliche Frage, ob eine zurückgehaltene
+Rückfahrt nach Ende der Sperre **nachgeholt** werden soll (heute: nein, wie
+bei allen Sperren, #14 ist die verwandte Lücke).
+
+**Diagnose:** Export zeigt „Helligkeits-Phase seit" und „zuletzt von Hand
+bewegt" (`_ages()`), `brightness._run_down` loggt die Überspring-Gründe auf
+DEBUG. Beides, weil Claus nach dem Neustart keine Merker mehr liefern konnte.
+
+**Verifiziert:** `pytest` 953 grün (14 neue: `tests/test_shared_automation_
+switch.py`, `tests/test_claus_inverted_raffstore.py`). Gegenproben: ohne
+Heilung fällt der Zwei-Einträge-Test, ohne Registry beim Speichern der
+Cover-Wechsel-Test, ohne die Abstandsregel fallen zwei. Nicht im echten Home
+Assistant geprüft.
 
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
@@ -494,48 +544,6 @@ Export nennt die betroffenen Zustände. i18n 6 neue Schlüssel ×11.
 ohne `role_position`-Keep fallen 4, ohne Tilt-Keep 3, ohne Winkel-nach-Höhe 1,
 ohne Lamellen-Prüfung 2. **Nicht im Browser und nicht im echten Home
 Assistant geprüft.** Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %) ist
-Stufe 4.
-
-### 2026-10-24 – 2.25.0: Sturm für Raffstores und die Sperr-Entität (Stufe 2)
-
-Florian (#193) und Claus (#196, #202). Entwurf in `docs/PLAN_RAFFSTORE.md`,
-Entscheidungen bestätigt: Sturm sperrt nur die **Automatik** (Hand frei),
-ignoriert Haupt- und Automatikschalter wie bei Markisen, fährt auch durch
-eine Sperr-Entität hindurch.
-
-**2a Wind.** Opt-in `storm_guard` (Vorgabe aus), eigene Zielwerte
-`storm_position`/`storm_tilt` (100/100, **nicht** `position_open` – bei
-Raffstores unten). Eigener Slot `rwind` in `STORM_GUARD_SLOTS`, bewusst
-**nicht** in `AWNING_GUARD_SLOTS`: die Markisenschleife läuft über dieses
-Tupel. Dieselbe Slot-Mechanik, deshalb gehen Windgeschwindigkeit mit
-Hysterese (Florian) und Alarm-Binärsensor (Claus) ohne neuen
-Auswertungscode. `evaluate_guard`/`resolve_guard_config` bekamen einen
-`slots`-Parameter mit der alten Liste als Vorgabe; zweite Schleife in
-`async_enforce_guard`. `has_guard()` blieb unangetastet (rund 15 Stellen).
-Sturm sperrt über `shutter_held()` in Scheduler, Helligkeit, Beschattung,
-Lüften und Fenstertrigger; die Abfrage steht *neben*
-`is_shutter_automation_enabled`, nicht an ihrer Stelle – ein bestehender Test
-patcht den Namen in `brightness` (ein erster Versuch, ihn zu ersetzen, ließ
-genau diesen fallen).
-
-**2b Sperr-Entität.** `automation_lock_entity` je Rollladen, `on` = nichts
-Automatisches. Fail open (fehlende Entität sperrt nicht), keine Nachholung.
-`cover_verify._verify` wiederholt und meldet bei gesperrtem Cover nichts
-(Claus' Aktor verriegelt sich selbst). Der Fenstertrigger *behält* eine
-Vormerkung bei Sperre (anders als bei ausgeschalteter Automatik).
-
-**Panel/Export:** Abschnitt „Windschutz Raffstore" im Formular (sichtbar mit
-Lamellen), globaler Wind-Sensor für Raffstores unter Einstellungen,
-Sperr-Entität im Formular, i18n 13 neue Schlüssel ×11. Der Haken trägt die
-Vorgaben 100/100 selbst ein, sonst zeigte der Schieber 0 % und das Backend
-führe mit 100 %. Export: Windschutz-Tabelle und Sperr-Zeile.
-
-**Verifiziert:** `pytest` 891 grün (19 neue in
-`tests/test_raffstore_storm_and_lock.py`, 1 in `test_panel.py`). Gegenproben:
-ohne Sturmschleife fallen 5, ohne Sperr-Entität 1, ohne Sturmhalt 1, ohne
-Verify-Sperre 1; die Kontrollfälle (Haken aus, Markisen) bleiben grün.
-**Offen:** nicht im Browser und nicht im echten Home Assistant geprüft;
-Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %, kurz Lamellen 0) ist
 Stufe 4.
 
 ## graphify

@@ -1961,6 +1961,14 @@ def manual_position_is_a_close(shutter: dict[str, Any], position: float) -> bool
         if open_pos >= closed
         else position >= closed - POSITION_TOLERANCE_PCT
     )
+    # "Jenseits von zu" gibt es nur, wo auf und zu auch in der Hoehe etwas
+    # trennt. Ein Raffstore, dessen Zustaende sich fast nur durch die Lamellen
+    # unterscheiden (auf 0 %, zu 15 %), hat keine Schliessrichtung: alles
+    # ueber 7 % galt hier als "zu", auch das ganz hochgefahrene 96 % - und der
+    # von Hand gehobene Raffstore blieb als "unten" vermerkt, die Daemmerung
+    # fuhr nicht mehr zu (Claus, simon42 #217).
+    if abs(open_pos - closed) <= 2 * POSITION_TOLERANCE_PCT:
+        beyond_closed = False
     return beyond_closed or any(
         abs(position - c) <= POSITION_TOLERANCE_PCT for c in candidates
     )

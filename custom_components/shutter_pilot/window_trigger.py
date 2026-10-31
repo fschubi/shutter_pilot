@@ -239,6 +239,15 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             if not is_system_enabled(hass, entry):
                 return
             if not automation_allowed(hass, entry, shutter):
+                # Nicht still: wer eine Sperr-Entitaet hat, sieht sonst nur,
+                # dass der Rollladen nach dem Schliessen des Fensters stehen
+                # bleibt, und findet den Grund nirgends (Claus, #215).
+                _LOGGER.info(
+                    "%s: Fenster geschlossen, die Rueckfahrt wird zurueckgehalten "
+                    "(Automatik aus, Sperr-Entitaet an oder Sturmschutz) – es "
+                    "wird nichts nachgeholt",
+                    cover_entity,
+                )
                 return
             _apply_window_closed(shutter, cover_entity, pos_closed)
         except asyncio.CancelledError:

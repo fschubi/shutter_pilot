@@ -678,7 +678,9 @@ def _ws_set_shutter_automation(hass: HomeAssistant, connection: websocket_api.Ac
             continue
         if str(s.get(CONF_COVER_ENTITY_ID) or "").strip() != cover:
             continue
-        eid = str(s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or "").strip()
+        eid = _own_automation_switch(hass, entry, cover) or str(
+            s.get(CONF_SHUTTER_AUTO_ENTITY_ID) or ""
+        ).strip()
         if eid:
             hass.async_create_task(
                 hass.services.async_call("switch", "turn_on" if enabled else "turn_off", {"entity_id": eid})
@@ -815,6 +817,19 @@ def _shutter_registry_uids(entry: ConfigEntry, cover: str) -> list[tuple[str, st
     ]
 
 
+def _own_automation_switch(
+    hass: HomeAssistant, entry: ConfigEntry, cover: str
+) -> str:
+    """The automation switch that belongs to this cover, or "".
+
+    Looked up in the registry by the unique id the switch is created with, not
+    read from the stored shutter: that stored value is a copy, and a copy can
+    point at another cover's switch (see the heal in switch.py).
+    """
+    domain, uid = _shutter_registry_uids(entry, cover)[0]
+    return er.async_get(hass).async_get_entity_id(domain, DOMAIN, uid) or ""
+
+
 # -- delete_area --------------------------------------------------------------
 
 @websocket_api.require_admin
@@ -919,6 +934,16 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
                 f"\"{clash.get(CONF_NAME) or cover}\"",
             )
             return
+
+    # Die Schalter-Entitaet gehoert zu *diesem* Cover. Wer an einem bestehenden
+    # Eintrag die Cover-Entitaet tauscht (oder ihn als Dachfenster uebernimmt),
+    # nimmt sonst den Schalter des alten Covers mit, und beide Eintraege
+    # schalten zusammen (Fatmax, simon42 #205).
+    own = _own_automation_switch(hass, entry, cover) if cover else ""
+    if own:
+        shutter_data[CONF_SHUTTER_AUTO_ENTITY_ID] = own
+    else:
+        shutter_data.pop(CONF_SHUTTER_AUTO_ENTITY_ID, None)
 
     if idx is not None and 0 <= idx < len(shutters):
         shutters[idx] = shutter_data
