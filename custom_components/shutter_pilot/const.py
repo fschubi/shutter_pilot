@@ -188,6 +188,16 @@ CONF_KEEP_POSITION_PRIVACY = "keep_position_privacy"
 CONF_KEEP_TILT_PRIVACY = "keep_tilt_privacy"
 DEFAULT_POSITION_PRIVACY = 30
 DEFAULT_TILT_PRIVACY = 50
+# Referenzfahrt (Stufe 7): ein Raffstore verliert ueber Monate den Bezug zwischen
+# gezaehlter und echter Position und Lamellenwinkel. Opt-in je Rollladen: in
+# festem Abstand einmal auf die konfigurierte "auf"- und "zu"-Position und
+# zurueck, nachts. Vorgabe aus.
+CONF_REFERENCE_RUN = "reference_run"
+CONF_REFERENCE_RUN_DAYS = "reference_run_days"
+CONF_REFERENCE_RUN_TIME = "reference_run_time"
+DEFAULT_REFERENCE_RUN_DAYS = 30
+DEFAULT_REFERENCE_RUN_TIME = "03:00"
+MAX_REFERENCE_RUN_DAYS = 365
 # Haltezeit einer Stufe in Minuten, wenn ihre Bedingung wegfaellt und eine
 # niedrigere gilt (Wolken bei 2.000 lx). 0 = sofort wie bei sp_alt.
 CONF_AREA_SHADE_LEVEL_HOLD = "shade_level_hold"
@@ -647,6 +657,9 @@ AWNING_UNUSED_KEYS = (
     CONF_TILT_PRIVACY,
     CONF_KEEP_POSITION_PRIVACY,
     CONF_KEEP_TILT_PRIVACY,
+    CONF_REFERENCE_RUN,
+    CONF_REFERENCE_RUN_DAYS,
+    CONF_REFERENCE_RUN_TIME,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,
@@ -699,6 +712,9 @@ WINDOW_UNUSED_KEYS = (
     CONF_TILT_PRIVACY,
     CONF_KEEP_POSITION_PRIVACY,
     CONF_KEEP_TILT_PRIVACY,
+    CONF_REFERENCE_RUN,
+    CONF_REFERENCE_RUN_DAYS,
+    CONF_REFERENCE_RUN_TIME,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,

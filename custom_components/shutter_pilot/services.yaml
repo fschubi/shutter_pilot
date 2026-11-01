@@ -119,3 +119,23 @@ resume_automation:
       required: false
       selector:
         text:
+
+reference_run:
+  name: Referenzfahrt
+  description: >-
+    Startet für die genannten Rollläden sofort eine Referenzfahrt: auf die
+    konfigurierte „auf“-Position, auf die „zu“-Position und zurück auf die
+    vorherige Höhe samt Lamellenwinkel. Gedacht für Raffstores, deren Position
+    über die Monate driftet. Der Lauf dauert einige Minuten und wird
+    übersprungen, wenn Automatik aus, Sperre, Sturm, Sichtschutz oder ein
+    offenes Fenster dagegen sprechen.
+  fields:
+    entity_id:
+      name: Rollladen
+      description: >-
+        Eine oder mehrere Cover-Entitäten.
+      required: true
+      selector:
+        entity:
+          domain: cover
+          multiple: true

@@ -43,12 +43,14 @@ custom_components/shutter_pilot/
   cover_tracker.py   Positionen mitschreiben, nach Neustart wiederherstellen
   cover_verify.py    Fahrtkontrolle: erreicht der Rollladen die Position?
   position_store.py  JSON-Speicher der letzten Positionen
+  privacy.py         Sichtschutz: Entität stellt den Rollladen auf eigene Position
+  reference_run.py   Referenzfahrt für Raffstores (auf, zu, zurück)
   weather_data.py    Tagesvorhersage über weather.get_forecasts
   group_actions.py   Folgeaktion Licht je Bereich
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (990 Tests)
+tests/               pytest-Suite (998 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -290,7 +292,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 990 Tests, ~21 s
+.venv/bin/pytest            # 998 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +321,43 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.30.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.31.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-01 – 2.31.0: Referenzfahrt (Raffstore, Stufe 7)
+
+Eigenes Modul `reference_run.py` im Minutentakt (`register_minute_callback`, kein
+eigener Timer), Haken `reference_run` (Vorgabe aus), `reference_run_days` (30),
+`reference_run_time` ("03:00"). Letzter Lauf je Cover in einem eigenen `Store`
+(`shutter_pilot_reference_run_<entry>`); **erstes Erscheinen setzt „zuletzt“ auf
+heute**, der erste Lauf kommt also einen Abstand später und nicht in der ersten
+Nacht. Ablauf: Höhe/Lamellen merken (`resting_position`), „auf“, warten, „zu“,
+warten, zurück. „Enden“ sind die konfigurierten `position_open`/`position_closed`
+(Zahl, nicht Keep-aware), damit auch eine umgekehrte Skala (Claus: auf 0) ohne
+Sonderfall geht.
+
+**Das Nadelöhr ist der Tracker:** eine Fahrt über mehrere Minuten überschreitet
+die 90-s-Karenz, und jede Zwischenmeldung würde als Handfahrt gebucht. Die
+Warteschleife erneuert deshalb `recent_automation_covers[cover]` alle 2 s (ohne
+Rückmeldung einmal und feste 60 s). Übersprungen wird bei: System aus,
+`automation_allowed` falsch, Sichtschutz, offenes Fenster, aktiver Fensterzyklus,
+Lauf läuft schon. Dienst `reference_run` (Pflichtfeld `entity_id`) startet einen
+Lauf als Hintergrundtask, ignoriert Intervall und Haken, nicht aber die
+Sperren.
+
+**Bewusst offen:** während des Laufs sperrt nichts andere Automatismen (um 03:00
+läuft normalerweise nichts); keine Übersetzungseinträge für den Dienst (wie bei
+`resume_automation`).
+
+**Verifiziert:** `pytest` 998 grün (8 neue, `tests/test_reference_run.py`).
+Gegenproben: ohne Sperrprüfung, ohne Intervallprüfung und ohne „erstes Erscheinen“
+fällt je ein Test. Panel: Haken, Abstand, Uhrzeit; i18n 4 Schlüssel ×11. Nicht im
+Browser und nicht im echten Home Assistant geprüft – insbesondere nicht, ob der
+echte KNX-Aktor die Positionen in der erwarteten Zeit erreicht.
 
 ### 2026-11-01 – 2.30.0: Sichtschutz (Raffstore, Stufe 6)
 
@@ -421,40 +454,6 @@ Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz u
 Aktor vorliegt.
 
 
-### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
-
-Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;
-die anderen waren erledigt (#13, #17, #18, #19 geschlossen) oder Wünsche
-(#14, #16, #11) bzw. ungeklärt (#15, wartet auf Rückmeldung).
-
-**#20 (StephanD77):** `services.py` verwarf die Merker des Fenstertriggers
-nie. Handfahrt (2.23.0) und interne Hochfahrt tun es
-(`forget_window_cycle`, `clear_stale_window_cycle_after_automated_up`), die
-Dienste liefen daran vorbei – im Modus „Kein Zeitplan" mit externem Scheduler
-der einzige Fahrweg. Nachgestellt mit seiner Sequenz (Nachtfahrt, Fenster auf,
-`open_group` bei offenem Fenster, Fenster zu). Jetzt verwirft `_drive_group()`
-und `resume_automation()` `trigger_actions`/`trigger_heights` und die
-wartende Nachholfahrt, **wenn tatsächlich etwas gesendet wurde** (Höhe oder
-Winkel); `stop_group` fährt nichts und lässt die Merker stehen. Dieselbe
-Fehlerklasse wie 2.22.3/2.23.0 – siebtes Mal: eine neue Handlung, die einen
-Merker nicht kennt.
-
-**#21 (Reinhard-M):** `_send_position()` drückte die My-Position nur im
-Zweig „Antrieb kann kein `set_cover_position`". Ein Jarolift-Controller kann
-beides und meldet nichts zurück. Mit `blind_drive` und My-Position gewinnt
-jetzt der Knopf, wenn das Ziel in die Toleranz fällt (`my_position_target`);
-ohne den Haken bleibt die Zahl die genauere Anweisung.
-
-**Ein bestehender Test musste sich ändern:** `test_forum_2_18.py::
-test_a_drive_that_can_position_is_left_alone`. Die Hilfsfunktion `_awning()`
-setzt `blind_drive` standardmäßig an, der Test meinte aber den gewöhnlichen
-Antrieb *mit* Rückmeldung. Jetzt ausdrücklich `blind_drive: False`; die Absicht
-(Zahl gewinnt beim Antrieb mit Rückmeldung) bleibt geprüft.
-
-**Verifiziert:** `pytest` 939 grün (11 neue: `tests/test_services_forget_
-window_cycle.py` und `tests/test_my_position_blind_drive.py`). Gegenproben:
-ohne das Verwerfen fallen 4, ohne den Vorrang des Knopfes 2. Nicht im echten
-Home Assistant geprüft.
 
 ### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
 

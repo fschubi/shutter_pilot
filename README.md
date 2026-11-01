@@ -912,3 +912,7 @@ Above the ordinary shading, an area can define up to **three more levels**, each
 ### Privacy position
 
 Give a shutter a **privacy entity** (bathroom occupied, light, switch or binary sensor). While it is on – or off, with *Invert* ticked – the shutter stands at its own **privacy position** and slat angle (or "unchanged"). That outranks the morning opening, shading and ventilation; the evening close keeps running. When the privacy ends the shutter returns to its previous height or catches up a held morning opening, unless it was moved by hand or by the evening close in the meantime. Nothing changes without an entity.
+
+### Reference run
+
+Tick **Reference run** on a venetian blind and, at the set interval (default 30 days) and time (default 03:00), it drives once to its configured *open* position, then *closed*, then back to where it stood, slat angle included. That resets the count of a motor that is positioned by running time. The run waits for each position and is skipped (and retried the next day) if automation is off or the cover is locked, in a storm, in privacy mode or has an open window. The first run comes one interval after you switch it on. The service `shutter_pilot.reference_run` starts it for a named cover right away.

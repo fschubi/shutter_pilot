@@ -66,6 +66,7 @@ SERVICE_SUN_PROTECT_GROUP = "sun_protect_group"
 SERVICE_VENTILATE_GROUP = "ventilate_group"
 SERVICE_RETRACT_AWNINGS = "retract_awnings"
 SERVICE_RESUME_AUTOMATION = "resume_automation"
+SERVICE_REFERENCE_RUN = "reference_run"
 
 # area_id is optional throughout: "all shutters up" is the button people build
 # their dashboard around, and building it out of one call per area means the
@@ -85,6 +86,12 @@ RESUME_SCHEMA = vol.Schema(
         vol.Optional("area_id"): str,
         vol.Optional("entity_id"): vol.Any(str, [str]),
     }
+)
+# A reference run takes minutes, so the service only starts it. The cover has
+# to be named: a run for "every blind in the house" at once is not a thing
+# anybody wants to start by accident.
+REFERENCE_RUN_SCHEMA = vol.Schema(
+    {vol.Required("entity_id"): vol.Any(str, [str])}
 )
 
 
@@ -496,7 +503,24 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
             len(targets),
         )
 
+    async def reference_run(call) -> None:
+        """Start the reference run (up, down, back) for the named covers now."""
+        wanted = call.data.get("entity_id")
+        if isinstance(wanted, str):
+            wanted = [wanted]
+        run = data_for_run().get("_reference_run")
+        if run is None:
+            return
+        for cover in {str(x).strip() for x in (wanted or []) if str(x).strip()}:
+            hass.async_create_background_task(
+                run(cover), f"{DOMAIN}_reference_run_service_{cover}"
+            )
+
+    def data_for_run() -> dict:
+        return hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+
     def _unregister() -> None:
+        hass.services.async_remove(DOMAIN, SERVICE_REFERENCE_RUN)
         hass.services.async_remove(DOMAIN, SERVICE_RESUME_AUTOMATION)
         hass.services.async_remove(DOMAIN, SERVICE_RETRACT_AWNINGS)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_GROUP)
@@ -527,8 +551,12 @@ async def async_setup_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.services.async_register(
         DOMAIN, SERVICE_RESUME_AUTOMATION, resume_automation, schema=RESUME_SCHEMA
     )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REFERENCE_RUN, reference_run, schema=REFERENCE_RUN_SCHEMA
+    )
     entry.async_on_unload(_unregister)
     _LOGGER.info(
         "Services registered: open_group, close_group, stop_group, "
-        "sun_protect_group, ventilate_group, retract_awnings, resume_automation"
+        "sun_protect_group, ventilate_group, retract_awnings, resume_automation, "
+        "reference_run"
     )

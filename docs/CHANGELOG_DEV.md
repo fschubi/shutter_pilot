@@ -4,6 +4,41 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
+
+Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;
+die anderen waren erledigt (#13, #17, #18, #19 geschlossen) oder Wünsche
+(#14, #16, #11) bzw. ungeklärt (#15, wartet auf Rückmeldung).
+
+**#20 (StephanD77):** `services.py` verwarf die Merker des Fenstertriggers
+nie. Handfahrt (2.23.0) und interne Hochfahrt tun es
+(`forget_window_cycle`, `clear_stale_window_cycle_after_automated_up`), die
+Dienste liefen daran vorbei – im Modus „Kein Zeitplan" mit externem Scheduler
+der einzige Fahrweg. Nachgestellt mit seiner Sequenz (Nachtfahrt, Fenster auf,
+`open_group` bei offenem Fenster, Fenster zu). Jetzt verwirft `_drive_group()`
+und `resume_automation()` `trigger_actions`/`trigger_heights` und die
+wartende Nachholfahrt, **wenn tatsächlich etwas gesendet wurde** (Höhe oder
+Winkel); `stop_group` fährt nichts und lässt die Merker stehen. Dieselbe
+Fehlerklasse wie 2.22.3/2.23.0 – siebtes Mal: eine neue Handlung, die einen
+Merker nicht kennt.
+
+**#21 (Reinhard-M):** `_send_position()` drückte die My-Position nur im
+Zweig „Antrieb kann kein `set_cover_position`". Ein Jarolift-Controller kann
+beides und meldet nichts zurück. Mit `blind_drive` und My-Position gewinnt
+jetzt der Knopf, wenn das Ziel in die Toleranz fällt (`my_position_target`);
+ohne den Haken bleibt die Zahl die genauere Anweisung.
+
+**Ein bestehender Test musste sich ändern:** `test_forum_2_18.py::
+test_a_drive_that_can_position_is_left_alone`. Die Hilfsfunktion `_awning()`
+setzt `blind_drive` standardmäßig an, der Test meinte aber den gewöhnlichen
+Antrieb *mit* Rückmeldung. Jetzt ausdrücklich `blind_drive: False`; die Absicht
+(Zahl gewinnt beim Antrieb mit Rückmeldung) bleibt geprüft.
+
+**Verifiziert:** `pytest` 939 grün (11 neue: `tests/test_services_forget_
+window_cycle.py` und `tests/test_my_position_blind_drive.py`). Gegenproben:
+ohne das Verwerfen fallen 4, ohne den Vorrang des Knopfes 2. Nicht im echten
+Home Assistant geprüft.
+
 ### 2026-10-31 – 2.27.2: ein geteilter Schalter und ein „zu", das keins war
 
 Neue Forumsbeiträge #212–#218. Drei Funde, einer unbewiesen.

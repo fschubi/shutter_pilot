@@ -4,6 +4,25 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.31.0]
+
+### Neu
+- **Referenzfahrt** (Raffstore, Stufe 7, Claus #172). Ein Raffstore, der über
+  die Motorlaufzeit positioniert wird, verliert über Monate den Bezug zwischen
+  gezählter und echter Position und Lamellenwinkel. Mit dem Haken
+  **„Referenzfahrt“** im Rollladen-Formular (Vorgabe aus) fährt er im
+  eingestellten Abstand (Vorgabe 30 Tage) zur eingestellten Uhrzeit (Vorgabe
+  03:00) einmal auf die konfigurierte „auf“-Position, dann auf „zu“ und zurück
+  auf die vorherige Höhe samt Lamellenwinkel. Die Enden sind die eigenen
+  „auf“- und „zu“-Positionen des Rollladens, ein Raffstore mit umgekehrter
+  Skala braucht keine Sonderbehandlung. Der Lauf wartet auf das Erreichen jeder
+  Position und wird übersprungen (und am nächsten Tag wiederholt), wenn
+  Automatik aus, Sperre, Sturm, Sichtschutz, ein offenes Fenster oder ein
+  laufender Fensterzyklus dagegen sprechen. Der erste Lauf kommt einen Abstand
+  nach dem Einschalten, nicht in der ersten Nacht.
+- **Dienst `shutter_pilot.reference_run`** startet die Referenzfahrt für einen
+  genannten Rollladen sofort, zum Testen und für den Einzelfall.
+
 ## [2.30.0]
 
 ### Neu
