@@ -108,6 +108,7 @@ from .helpers import (
     manual_position_is_a_close,
     resolve_shade_position,
     has_shade_level,
+    privacy_active,
     position_kept,
     shading_enabled,
     should_skip_automated_up,
@@ -1016,6 +1017,11 @@ def _shade_position_note(
             "> ⚠️ Eine zweite Beschattungsposition ist hinterlegt "
             f"(`{CONF_POSITION_SUN_PROTECT_ALT}`), aber im Bereich steht keine "
             "Bedingung dafür – sie wird nie gefahren."
+        )
+    if privacy_active(hass, shutter):
+        out.append(
+            "> ℹ️ Sichtschutz **aktiv** – der Rollladen steht auf der "
+            "Sichtschutz-Position; Hochfahren, Beschattung und Lüften warten."
         )
     for level in SHADE_LEVELS:
         if has_shade_level(shutter, level) and not str(

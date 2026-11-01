@@ -4,6 +4,21 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.30.0]
+
+### Neu
+- **Sichtschutz** (Raffstore, Stufe 6, Claus #172). Im Rollladen-Formular kannst
+  du eine **Sichtschutz-Entität** eintragen (Badbelegung, Licht, Schalter oder
+  Binärsensor). Solange sie „an“ ist (oder „aus“, wenn du die Bedeutung
+  umkehrst), steht der Rollladen auf einer eigenen **Sichtschutz-Position** mit
+  eigenen Lamellen – beides auch „unverändert“. Das hat **Vorrang vor der
+  Morgenfahrt, der Beschattung und dem Lüften**; das Zufahren am Abend läuft
+  weiter. Endet der Sichtschutz, fährt der Rollladen auf die vorherige Höhe
+  zurück oder holt die zurückgehaltene Morgenfahrt nach – nicht aber, wenn er
+  inzwischen von Hand oder durch die Abendfahrt bewegt wurde. Ohne eingetragene
+  Entität ändert sich nichts. „Hochfahren nur, wenn der Raum leer ist“ geht
+  weiter über die Bedingung *Nicht hochfahren* des Bereichs.
+
 ## [2.29.0]
 
 ### Neu

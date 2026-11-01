@@ -53,6 +53,7 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     shutter_held,
+    privacy_active,
     is_sun_protect_enabled,
     resolve_shade_position,
     shade_release_opens,
@@ -377,6 +378,10 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             if not is_shutter_automation_enabled(hass, entry, shutter) or shutter_held(
                 hass, entry, shutter
             ):
+                continue
+            # Sichtschutz geht vor: weder beschatten noch freigeben, der
+            # Rollladen steht auf seiner Sichtschutz-Position.
+            if privacy_active(hass, shutter):
                 continue
             # Taken out of the shading by hand, while the schedule keeps
             # running for it. Released like a condition that dropped out, not

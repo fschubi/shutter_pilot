@@ -908,3 +908,7 @@ Tick **Detect slat changes made by hand** on a venetian blind and an angle-only 
 ### Shading levels
 
 Above the ordinary shading, an area can define up to **three more levels**, each with its own condition (binary sensor, number with on/off thresholds or text state – e.g. brightness 2,000 / 4,000 / 6,000 lx). Position and slat angle per level are set on each shutter (or "unchanged"). The **highest level that holds wins**, also against the second shading position. A **level hold time** (0–120 min, default 0) keeps a higher level after its condition drops, so a cloud does not make the blind chase between levels. A shutter with no entry for a level skips it.
+
+### Privacy position
+
+Give a shutter a **privacy entity** (bathroom occupied, light, switch or binary sensor). While it is on – or off, with *Invert* ticked – the shutter stands at its own **privacy position** and slat angle (or "unchanged"). That outranks the morning opening, shading and ventilation; the evening close keeps running. When the privacy ends the shutter returns to its previous height or catches up a held morning opening, unless it was moved by hand or by the evening close in the meantime. Nothing changes without an entity.

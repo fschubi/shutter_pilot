@@ -65,6 +65,8 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     shutter_held,
+    privacy_active,
+    note_privacy_missed_up,
     only_shutters,
     register_minute_callback,
     remember_drive_after_close,
@@ -407,6 +409,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             if not is_shutter_automation_enabled(hass, entry, shutter) or shutter_held(
                 hass, entry, shutter
             ):
+                continue
+            if privacy_active(hass, shutter):
+                note_privacy_missed_up(data, cover_entity)
                 continue
             if should_skip_automated_up(
                 hass,

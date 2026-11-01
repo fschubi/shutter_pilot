@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (980 Tests)
+tests/               pytest-Suite (990 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 980 Tests, ~21 s
+.venv/bin/pytest            # 990 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,40 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.29.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.30.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-01 – 2.30.0: Sichtschutz (Raffstore, Stufe 6)
+
+Eigenes Modul `privacy.py`. Je Rollladen `privacy_entity` (+ `privacy_invert`,
+`position_privacy`, `tilt_privacy`, Keep-Haken); `privacy_active()` wie die
+Sperr-Entität fail open. Listener auf die Entität **und** Minutentakt (Neustart,
+verlorene Ereignisse). Beim Start merkt `_privacy[cover]` Höhe (`resting_position`),
+Winkel und Zeitpunkt, fährt auf die Sichtschutz-Rolle; beim Ende Rückfahrt nur
+wenn **keine Handfahrt danach** (`_hand_moved_at`) und der Rollladen **noch auf der
+Sichtschutz-Position** steht (die Abendfahrt ist eine neuere Entscheidung).
+
+**Vorrang** an genau vier Stellen, nicht in `shutter_held()` (das hielte auch das
+Zufahren): Scheduler (`drive_shutters`, nur hoch), Helligkeit (`_run_up`),
+Beschattung (`elevation._evaluate`: weder beschatten noch freigeben), Lüften
+(`_blocked`). Eine zurückgehaltene Hochfahrt wird mit `note_privacy_missed_up`
+vermerkt und beim Ende nachgeholt (Offen-Position, `covers_driven_up`).
+„Hochfahren nur wenn Raum leer“ ist der vorhandene Slot `no_up` – nicht neu gebaut.
+
+**Nicht gebaut/Annahme:** Sichtschutz sperrt keine Fensterkontakt-Fahrten; kein
+eigener Export-Block (die Zeile hängt am Beschattungs-Abschnitt und erscheint
+nur dort). **Fehler beim Test:** der Beschattungstest bewies erst nichts, weil
+`_setup` die Sonne selbst auf 41° setzte und schon beim Start beschattete – nach
+der Gegenprobe (Hold entfernt, Test blieb grün) mit `sun=-5` neu aufgebaut.
+
+**Verifiziert:** `pytest` 990 grün (10 neue, `tests/test_privacy.py`). Gegenproben:
+ohne Beschattungs-Vorrang 1, ohne Scheduler-Vorrang 1, ohne Positionsprüfung am
+Ende 1. Panel: Entität, Umkehren, Position/Höhe-unverändert, Lamellen; i18n
+5 Schlüssel ×11. Nicht im Browser und nicht im echten Home Assistant geprüft.
 
 ### 2026-11-01 – 2.29.0: mehrstufiger Sonnenschutz (Raffstore, Stufe 5)
 
@@ -392,55 +420,6 @@ Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz u
 15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
 Aktor vorliegt.
 
-### 2026-10-31 – 2.27.2: ein geteilter Schalter und ein „zu", das keins war
-
-Neue Forumsbeiträge #212–#218. Drei Funde, einer unbewiesen.
-
-**Fatmax (#218, Export):** Rollladen *und* Dachfenster tragen
-`shutter_auto_entity_id: switch.shutter_pilot_rollladen_obergeschoss_
-schlafzimmer_dff` – meine Vermutung aus #209 war richtig. Der Schlüssel wird
-nur vom Schalter selbst gesetzt, und nur wenn leer; er bleibt hängen, wenn an
-einem Eintrag die Cover-Entität getauscht wird. Das Panel liest den Schalter
-über den Schlüssel, `set_shutter_automation` ruft den Dienst auf genau diese
-Entität – beide schalten zusammen. Fix an drei Stellen: der Schalter heilt den
-Schlüssel beim Start (`!= self.entity_id`, nicht nur „leer"), `save_shutter`
-setzt ihn aus der Registry (`_own_automation_switch`, sonst entfernt),
-`set_shutter_automation` fragt dieselbe Registry. Die Gegenprobe „Umschalten
-ohne Registry" bleibt grün, weil die Heilung schon vorher greift – der dritte
-Punkt ist Gürtel zum Hosenträger.
-
-**Claus #217 (Essen Tür):** seine Theorie (alte Dunkelphase läuft weiter)
-stimmt nicht – ein tagsüber helles Sensor-Update löscht `cond_since`. Die
-Ursache stand woanders: `manual_position_is_a_close()` kennt ein „jenseits
-von zu"; bei `open < closed` (auf 0, zu 15) gilt jede Position ab `closed - 8`
-als zu, also 7…100 %, auch das ganz hochgefahrene 96 %. `note_manual_position`
-nahm den Zweig `down.add` und kam nie an mein 2.26.1-Löschen. Jetzt ohne
-„jenseits", wenn `|open - closed| <= 2 * POSITION_TOLERANCE_PCT` – ein
-Raffstore, dessen Zustände sich durch die Lamellen unterscheiden, hat keine
-Schließrichtung. Normale Rollläden (auf 100, zu 0/36/70) unverändert, als Tests
-festgehalten.
-
-**Claus #215 (Diele, Tür kurz auf/zu):** **nicht bewiesen.** Nachgestellt mit
-seiner Konfiguration (Debounce 5 s, Cover fährt noch, Handsperre, `tilt_after_
-position`): die Rückfahrt auf 70 % läuft. Plausibel ist seine **Sperr-Entität**
-(KNX-Handsperre „1 h nach Tastendruck", durch die Türfahrt selbst ausgelöst):
-`_delayed_close` kehrt bei `automation_allowed() == False` still zurück, der
-Zyklus bleibt „triggered", und auch 16:53 fährt nichts. Dazu passt, dass beide
-Beobachtungen innerhalb einer Stunde liegen. Jetzt steht dort eine
-INFO-Zeile. **Offen:** Claus fragen, ob `binary_sensor.raff_diele_gesperrt`
-um 16:22 an war; wenn ja, ist die eigentliche Frage, ob eine zurückgehaltene
-Rückfahrt nach Ende der Sperre **nachgeholt** werden soll (heute: nein, wie
-bei allen Sperren, #14 ist die verwandte Lücke).
-
-**Diagnose:** Export zeigt „Helligkeits-Phase seit" und „zuletzt von Hand
-bewegt" (`_ages()`), `brightness._run_down` loggt die Überspring-Gründe auf
-DEBUG. Beides, weil Claus nach dem Neustart keine Merker mehr liefern konnte.
-
-**Verifiziert:** `pytest` 953 grün (14 neue: `tests/test_shared_automation_
-switch.py`, `tests/test_claus_inverted_raffstore.py`). Gegenproben: ohne
-Heilung fällt der Zwei-Einträge-Test, ohne Registry beim Speichern der
-Cover-Wechsel-Test, ohne die Abstandsregel fallen zwei. Nicht im echten Home
-Assistant geprüft.
 
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 

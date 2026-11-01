@@ -924,3 +924,7 @@ Mit dem Haken **Handverstellung der Lamellen erkennen** zählt bei einem Raffsto
 ### Beschattungsstufen
 
 Über der normalen Beschattung kann ein Bereich bis zu **drei weitere Stufen** definieren, jede mit eigener Bedingung (Binärsensor, Zahl mit Ein-/Ausschaltschwelle oder Textzustand – z. B. Helligkeit 2.000 / 4.000 / 6.000 lx). Position und Lamellenwinkel je Stufe stellst du am Rollladen ein (oder „unverändert"). Die **höchste zutreffende Stufe gewinnt**, auch gegen die zweite Beschattungsposition. Eine **Haltezeit der Stufen** (0–120 min, Vorgabe 0) hält eine höhere Stufe nach Wegfall ihrer Bedingung, damit eine Wolke den Behang nicht pendeln lässt. Ein Rollladen ohne Eintrag für eine Stufe überspringt sie.
+
+### Sichtschutz
+
+Trage am Rollladen eine **Sichtschutz-Entität** ein (Badbelegung, Licht, Schalter oder Binärsensor). Solange sie „an“ ist – oder „aus“, wenn du *Bedeutung umkehren* setzt –, steht der Rollladen auf seiner eigenen **Sichtschutz-Position** mit eigenen Lamellen (oder „unverändert“). Das hat Vorrang vor Morgenfahrt, Beschattung und Lüften; das Zufahren am Abend läuft weiter. Endet der Sichtschutz, fährt der Rollladen auf die vorherige Höhe zurück oder holt eine zurückgehaltene Morgenfahrt nach, außer er wurde inzwischen von Hand oder durch die Abendfahrt bewegt. Ohne Entität ändert sich nichts.

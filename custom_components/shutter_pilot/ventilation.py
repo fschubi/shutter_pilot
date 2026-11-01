@@ -38,6 +38,7 @@ from .helpers import (
     is_cover_sun_protected,
     is_shutter_automation_enabled,
     shutter_held,
+    privacy_active,
     only_shutters,
     register_minute_callback,
     set_cover_position,
@@ -93,6 +94,8 @@ async def setup_ventilation(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass, entry, shutter
         ):
             return "automation off, locked or storm"
+        if privacy_active(hass, shutter):
+            return "privacy active"
         if is_cover_sun_protected(data, cover):
             return "shading active"
         if data.get("trigger_actions", {}).get(cover) == "triggered":

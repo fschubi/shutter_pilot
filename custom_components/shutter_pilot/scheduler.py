@@ -39,6 +39,8 @@ from .helpers import (
     is_auto_enabled,
     is_shutter_automation_enabled,
     shutter_held,
+    privacy_active,
+    note_privacy_missed_up,
     register_minute_callback,
     set_cover_position,
     should_skip_automated_up,
@@ -113,6 +115,12 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 hass, entry, shutter
             ):
                 _LOGGER.info("%s: %s übersprungen (Automatik aus, gesperrt oder Sturm)", direction, cover)
+                continue
+            # Sichtschutz haelt nur das Hochfahren zurueck; das Zufahren laeuft
+            # weiter. Die Hochfahrt wird vorgemerkt und nach dem Ende nachgeholt.
+            if direction_up and privacy_active(hass, shutter):
+                note_privacy_missed_up(data, cover)
+                _LOGGER.info("%s: %s uebersprungen (Sichtschutz aktiv)", direction, cover)
                 continue
             # Some shutters should only close part way – against frost, or on a
             # mild evening. The area decides when, the shutter decides how far.

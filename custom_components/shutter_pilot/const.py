@@ -175,6 +175,19 @@ CONF_KEEP_POSITION_SUN_PROTECT_LEVELS = tuple(
 CONF_KEEP_TILT_SUN_PROTECT_LEVELS = tuple(
     f"keep_tilt_sun_protect_l{n}" for n in SHADE_LEVELS
 )
+# Sichtschutz (Stufe 6, Claus #172): eine Entitaet (Badbelegung, Licht) stellt
+# den Rollladen auf eine eigene Position und Lamellen, solange sie "an" ist.
+# Hat Vorrang vor Morgenfahrt, Beschattung und Lueften; das Zufahren am Abend
+# laeuft weiter. Opt-in je Rollladen.
+ROLE_PRIVACY = "privacy"
+CONF_PRIVACY_ENTITY = "privacy_entity"
+CONF_PRIVACY_INVERT = "privacy_invert"
+CONF_POSITION_PRIVACY = "position_privacy"
+CONF_TILT_PRIVACY = "tilt_privacy"
+CONF_KEEP_POSITION_PRIVACY = "keep_position_privacy"
+CONF_KEEP_TILT_PRIVACY = "keep_tilt_privacy"
+DEFAULT_POSITION_PRIVACY = 30
+DEFAULT_TILT_PRIVACY = 50
 # Haltezeit einer Stufe in Minuten, wenn ihre Bedingung wegfaellt und eine
 # niedrigere gilt (Wolken bei 2.000 lx). 0 = sofort wie bei sp_alt.
 CONF_AREA_SHADE_LEVEL_HOLD = "shade_level_hold"
@@ -628,6 +641,12 @@ AWNING_UNUSED_KEYS = (
     *CONF_TILT_SUN_PROTECT_LEVELS,
     *CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
     *CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
+    CONF_PRIVACY_ENTITY,
+    CONF_PRIVACY_INVERT,
+    CONF_POSITION_PRIVACY,
+    CONF_TILT_PRIVACY,
+    CONF_KEEP_POSITION_PRIVACY,
+    CONF_KEEP_TILT_PRIVACY,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,
@@ -674,6 +693,12 @@ WINDOW_UNUSED_KEYS = (
     *CONF_TILT_SUN_PROTECT_LEVELS,
     *CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
     *CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
+    CONF_PRIVACY_ENTITY,
+    CONF_PRIVACY_INVERT,
+    CONF_POSITION_PRIVACY,
+    CONF_TILT_PRIVACY,
+    CONF_KEEP_POSITION_PRIVACY,
+    CONF_KEEP_TILT_PRIVACY,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,

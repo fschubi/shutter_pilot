@@ -58,6 +58,15 @@ from .const import (
     CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
     CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
     CONF_AREA_SHADE_LEVEL_HOLD,
+    CONF_PRIVACY_ENTITY,
+    CONF_PRIVACY_INVERT,
+    CONF_POSITION_PRIVACY,
+    CONF_TILT_PRIVACY,
+    CONF_KEEP_POSITION_PRIVACY,
+    CONF_KEEP_TILT_PRIVACY,
+    DEFAULT_POSITION_PRIVACY,
+    DEFAULT_TILT_PRIVACY,
+    ROLE_PRIVACY,
     DEFAULT_AREA_SHADE_LEVEL_HOLD,
     MAX_AREA_SHADE_HOLD,
     SUN_PROTECT_ALT_CONDITION_SLOT,
@@ -257,6 +266,28 @@ def is_shutter_locked(hass: HomeAssistant, shutter: dict) -> bool:
         return False
     state = hass.states.get(entity_id)
     return state is not None and str(state.state).lower() in ("on", "true", "1")
+
+
+def privacy_active(hass: HomeAssistant, shutter: dict[str, Any]) -> bool:
+    """True while this shutter's privacy entity says "occupied".
+
+    Fails open like the lock entity: a missing or unavailable entity must not
+    hold the shutter, the usual case is a feature that was never configured.
+    "Invert" turns the meaning round for a sensor that reads "free".
+    """
+    entity_id = str(shutter.get(CONF_PRIVACY_ENTITY) or "").strip()
+    if not entity_id or not is_shutter(shutter):
+        return False
+    state = hass.states.get(entity_id)
+    if state is None or str(state.state).lower() in ("unavailable", "unknown"):
+        return False
+    on = str(state.state).lower() in ("on", "true", "1", "home", "occupied")
+    return on != bool(shutter.get(CONF_PRIVACY_INVERT, False))
+
+
+def note_privacy_missed_up(data: dict[str, Any], cover: str) -> None:
+    """An opening drive was held back by privacy - catch it up when it ends."""
+    data.setdefault("_privacy_missed_up", set()).add(cover)
 
 
 def has_storm_guard(shutter: dict) -> bool:
@@ -1231,6 +1262,7 @@ _ROLE_POSITION_KEYS = {
     ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
     ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
     ROLE_SUN_PROTECT_ALT: (CONF_POSITION_SUN_PROTECT_ALT, 30),
+    ROLE_PRIVACY: (CONF_POSITION_PRIVACY, DEFAULT_POSITION_PRIVACY),
     **{
         role: (key, 50)
         for role, key in zip(ROLE_SUN_PROTECT_LEVELS, CONF_POSITION_SUN_PROTECT_LEVELS)
@@ -1450,6 +1482,7 @@ _ROLE_TILT_KEYS = {
     ROLE_CLOSED_FROST: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     # The second shading position is still shading: same slat angle.
     ROLE_SUN_PROTECT_ALT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
+    ROLE_PRIVACY: (CONF_TILT_PRIVACY, DEFAULT_TILT_PRIVACY),
     # Eine Stufe ohne eigenen Winkel faehrt den der normalen Beschattung; siehe
     # get_tilt_for_role().
     **{
@@ -1562,6 +1595,7 @@ _ROLE_KEEP_POSITION_KEYS = {
     ROLE_OPEN: CONF_KEEP_POSITION_OPEN,
     ROLE_CLOSED: CONF_KEEP_POSITION_CLOSED,
     ROLE_SUN_PROTECT: CONF_KEEP_POSITION_SUN_PROTECT,
+    ROLE_PRIVACY: CONF_KEEP_POSITION_PRIVACY,
     **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_POSITION_SUN_PROTECT_LEVELS)),
 }
 # Follows _ROLE_TILT_KEYS: the roles that read the closed angle also read its
@@ -1574,6 +1608,7 @@ _ROLE_KEEP_TILT_KEYS = {
     ROLE_SUN_PROTECT: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_VENTILATION: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT: CONF_KEEP_TILT_SUN_PROTECT,
+    ROLE_PRIVACY: CONF_KEEP_TILT_PRIVACY,
     **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_TILT_SUN_PROTECT_LEVELS)),
 }
 
