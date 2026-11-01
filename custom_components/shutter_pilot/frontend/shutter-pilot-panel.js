@@ -119,7 +119,7 @@ const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt"
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
-  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
+  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
   "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 /* Dasselbe fuer das Dachfenster. Es behaelt `position_closed` – zu ist dort
    die Ruhestellung –, verliert aber die Fensterkontakt-Schluessel: der Cover
@@ -128,7 +128,7 @@ const WINDOW_UNUSED_KEYS = ["area_up_id","position_closed_alt",
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
-  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
+  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
   "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 
 /* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
@@ -406,6 +406,8 @@ de:{
   f_min_pos:"Mindest-Position wenn Tür offen",
   f_area_up:"Bereich (Hoch)",f_area_down:"Bereich (Runter)",
   f_pos_open:"Position Offen",f_pos_closed:"Position Geschlossen",f_pos_sun:"Sonnenschutz-Position",
+  f_tilt_hand:"Handverstellung der Lamellen erkennen",f_tilt_hand_hint:"Wird nur der Lamellenwinkel von Hand verstellt (Höhe unverändert), zählt das wie eine Handfahrt: ausstehende Nachholfahrten und der Fensterzyklus werden verworfen, und die Übersteuerungs-Einstellung des Bereichs gilt. Nach jeder Höhenfahrt wird 15 s lang nichts erkannt, weil manche Aktoren dann kurz falsche Winkel melden. Aus: Winkeländerungen werden wie bisher ignoriert.",
+  f_lock_replay:"Rückfahrt nach der Sperre nachholen",f_lock_replay_hint:"Hält die Sperr-Entität die Rückfahrt nach dem Schließen des Fensters zurück (etwa ein Aktor, der sich bei offener Tür selbst sperrt), fährt der Rollladen auf die gemerkte Höhe zurück, sobald die Sperre endet und das Fenster zu ist. Aus: Er bleibt stehen.",
   f_window_react:"Fensterkontakt fährt den Rollladen",f_window_react_hint:"Aus: Der Kontakt bewegt nichts, auch nicht auf Lüftungs- oder Kippposition. Er dient nur als Riegel: Automatische Fahrten werden bei offenem Fenster zurückgehalten (mit Nachholen) und nach dem Schließen ausgeführt. Sinnvoll für Türen und Raffstores.",f_drive_after_up:"Auch das Hochfahren nachholen",f_drive_after_up_hint:"Ist die Hochfahrt (Zeit oder Helligkeit) fällig, das Fenster aber offen oder gekippt, wird sie nach dem Schließen ausgeführt, samt Lamellenwinkel. Sinnvoll, wenn auf und zu dieselbe Position haben (Raffstore). Unabhängig vom Haken Nachholen.",
   f_drive_after:"Nachholen wenn Fenster offen oder gekippt",
   f_drive_after_hint:"Wenn die Schließzeit erreicht wird, das Fenster aber offen oder gekippt ist, wird die Fahrt nachgeholt, sobald es geschlossen wird. Ohne den Haken darunter fährt der Rollladen bis dahin gar nicht.",
@@ -772,6 +774,8 @@ en:{
   f_min_pos:"Minimum position when door open",
   f_area_up:"Area (Up)",f_area_down:"Area (Down)",
   f_pos_open:"Position Open",f_pos_closed:"Position Closed",f_pos_sun:"Sun protection position",
+  f_tilt_hand:"Detect slat changes made by hand",f_tilt_hand_hint:"If only the slat angle is changed by hand (height unchanged), it counts like a hand drive: pending catch-up drives and the window cycle are dropped, and the area's override setting applies. For 15 s after any height drive nothing is detected, as some actuators briefly report wrong angles. Off: angle changes are ignored as before.",
+  f_lock_replay:"Catch up the restore after the lock",f_lock_replay_hint:"If the lock entity holds back the restore when the window closes (for example an actuator that locks itself while the door is open), the shutter returns to the saved height as soon as the lock ends and the window is closed. Off: it stays where it is.",
   f_window_react:"Window contact drives the shutter",f_window_react_hint:"Off: the contact moves nothing, not even to the ventilation or tilt position. It only acts as a lock: automatic drives are held back while the window is open (with catch-up) and run after it closes. Useful for doors and venetian blinds.",f_drive_after_up:"Catch up opening too",f_drive_after_up_hint:"When an opening drive (time or brightness) is due but the window is open or tilted, it runs after the window closes, slat angle included. Useful when open and closed share the same position (venetian blind). Independent of the catch-up option above.",
   f_drive_after:"Catch up when window open or tilted",
   f_drive_after_hint:"When close time is reached but the window is open or tilted, the drive is executed as soon as it is closed. Without the checkbox below, the shutter does not move at all until then.",
@@ -1082,6 +1086,8 @@ fr:{
   f_lock:"Protection anti-enfermement",f_min_pos:"Position min. porte ouverte",
   f_area_up:"Zone (Montée)",f_area_down:"Zone (Descente)",
   f_pos_open:"Position Ouvert",f_pos_closed:"Position Fermé",f_pos_sun:"Position protection solaire",
+  f_tilt_hand:"Détecter le réglage manuel des lamelles",f_tilt_hand_hint:"Si seul l'angle des lamelles est modifié à la main (hauteur inchangée), cela compte comme un mouvement manuel : les rattrapages en attente et le cycle de fenêtre sont abandonnés, et le réglage de priorité manuelle de la zone s'applique. Pendant 15 s après tout déplacement en hauteur rien n'est détecté, certains actionneurs signalant brièvement de faux angles. Désactivé : ignoré comme avant.",
+  f_lock_replay:"Rattraper le retour après le verrou",f_lock_replay_hint:"Si l'entité de verrouillage retient le retour à la fermeture de la fenêtre (par exemple un actionneur qui se verrouille lui-même porte ouverte), le volet revient à la hauteur mémorisée dès que le verrou cesse et que la fenêtre est fermée. Désactivé : il reste en place.",
   f_window_react:"Le contact fait bouger le volet",f_window_react_hint:"Désactivé : le contact ne déplace rien, pas même vers la position d'aération ou d'entrebâillement. Il sert seulement de verrou : les mouvements automatiques sont retenus tant que la fenêtre est ouverte (avec rattrapage) et exécutés à la fermeture. Utile pour les portes et les stores à lamelles.",f_drive_after_up:"Rattraper aussi l'ouverture",f_drive_after_up_hint:"Si l'ouverture (heure ou luminosité) est due alors que la fenêtre est ouverte ou entrebâillée, elle est exécutée à la fermeture, angle des lamelles compris. Utile quand ouvert et fermé ont la même position (store à lamelles). Indépendant de l'option de rattrapage ci-dessus.",
   f_drive_after:"Rattraper si fenêtre ouverte ou entrebâillée",f_drive_after_hint:"Si l'heure de fermeture arrive alors que la fenêtre est ouverte ou entrebâillée, la course est rattrapée dès sa fermeture. Sans l'option ci-dessous, le volet ne bouge pas du tout jusque-là.",
   f_win_debounce:"Délai à la fermeture (sec.)",f_win_debounce_hint:"Durée pendant laquelle « fermé » doit se maintenir avant le retour du volet. 0 = immédiat.",
@@ -1390,6 +1396,8 @@ es:{
   f_lock:"Protección anti-bloqueo",f_min_pos:"Posición mín. puerta abierta",
   f_area_up:"Zona (Subida)",f_area_down:"Zona (Bajada)",
   f_pos_open:"Posición Abierta",f_pos_closed:"Posición Cerrada",f_pos_sun:"Posición protección solar",
+  f_tilt_hand:"Detectar el ajuste manual de las lamas",f_tilt_hand_hint:"Si solo se cambia a mano el ángulo de las lamas (altura sin cambios), cuenta como un movimiento manual: se descartan las recuperaciones pendientes y el ciclo de ventana, y se aplica el ajuste de anulación del área. Durante 15 s tras cualquier movimiento de altura no se detecta nada, porque algunos actuadores informan brevemente de ángulos erróneos. Desactivado: se ignora como antes.",
+  f_lock_replay:"Recuperar la vuelta tras el bloqueo",f_lock_replay_hint:"Si la entidad de bloqueo retiene la vuelta al cerrar la ventana (por ejemplo un actuador que se bloquea solo con la puerta abierta), la persiana vuelve a la altura guardada en cuanto termina el bloqueo y la ventana está cerrada. Desactivado: se queda donde está.",
   f_window_react:"El contacto mueve la persiana",f_window_react_hint:"Desactivado: el contacto no mueve nada, ni siquiera a la posición de ventilación o abatible. Solo actúa como bloqueo: los movimientos automáticos se retienen mientras la ventana está abierta (con recuperación) y se ejecutan al cerrarla. Útil para puertas y persianas venecianas.",f_drive_after_up:"Recuperar también la subida",f_drive_after_up_hint:"Si toca subir (hora o luminosidad) y la ventana está abierta o basculante, se ejecuta al cerrarla, con el ángulo de las lamas. Útil cuando abierto y cerrado tienen la misma posición (persiana veneciana). Independiente de la opción de recuperación anterior.",
   f_drive_after:"Recuperar si ventana abierta o basculante",f_drive_after_hint:"Si llega la hora de cierre con la ventana abierta o basculante, el recorrido se ejecuta en cuanto se cierre. Sin la opción de abajo, la persiana no se mueve nada hasta entonces.",
   f_win_debounce:"Retardo al cerrar (seg.)",f_win_debounce_hint:"Tiempo que debe mantenerse «cerrado» antes de que la persiana vuelva. 0 = inmediato.",
@@ -1698,6 +1706,8 @@ it:{
   f_lock:"Protezione anti-blocco",f_min_pos:"Posizione min. porta aperta",
   f_area_up:"Zona (Su)",f_area_down:"Zona (Giù)",
   f_pos_open:"Posizione Aperta",f_pos_closed:"Posizione Chiusa",f_pos_sun:"Posizione protezione solare",
+  f_tilt_hand:"Rileva la regolazione manuale delle lamelle",f_tilt_hand_hint:"Se si modifica a mano solo l'angolo delle lamelle (altezza invariata), conta come movimento manuale: i recuperi in sospeso e il ciclo finestra vengono scartati e vale l'impostazione di priorità manuale dell'area. Per 15 s dopo ogni movimento in altezza non viene rilevato nulla, perché alcuni attuatori segnalano brevemente angoli errati. Disattivato: ignorato come prima.",
+  f_lock_replay:"Recupera il ritorno dopo il blocco",f_lock_replay_hint:"Se l'entità di blocco trattiene il ritorno alla chiusura della finestra (ad esempio un attuatore che si blocca da solo a porta aperta), la tapparella torna all'altezza salvata appena il blocco termina e la finestra è chiusa. Disattivato: resta dov'è.",
   f_window_react:"Il contatto muove la tapparella",f_window_react_hint:"Disattivato: il contatto non muove nulla, nemmeno verso la posizione di aerazione o vasistas. Funziona solo da blocco: i movimenti automatici sono trattenuti finché la finestra è aperta (con recupero) ed eseguiti alla chiusura. Utile per porte e frangisole.",f_drive_after_up:"Recupera anche l'apertura",f_drive_after_up_hint:"Se l'apertura (orario o luminosità) è dovuta ma la finestra è aperta o a vasistas, viene eseguita alla chiusura, con l'angolo delle lamelle. Utile quando aperto e chiuso hanno la stessa posizione (frangisole). Indipendente dall'opzione di recupero sopra.",
   f_drive_after:"Recupera se finestra aperta o a vasistas",f_drive_after_hint:"Se arriva l'ora di chiusura con la finestra aperta o a vasistas, la corsa viene recuperata appena la finestra si chiude. Senza l'opzione qui sotto la tapparella non si muove affatto fino ad allora.",
   f_win_debounce:"Ritardo alla chiusura (sec.)",f_win_debounce_hint:"Per quanto tempo deve permanere «chiuso» prima che la tapparella torni indietro. 0 = subito.",
@@ -2007,6 +2017,8 @@ nl:{
   f_lock:"Buitensluitbeveiliging (voorkomt volledig sluiten bij open deur)",f_min_pos:"Minimumpositie bij open deur",
   f_area_up:"Zone (Omhoog)",f_area_down:"Zone (Omlaag)",
   f_pos_open:"Positie Open",f_pos_closed:"Positie Gesloten",f_pos_sun:"Zonweringpositie",
+  f_tilt_hand:"Handmatige lamelverstelling herkennen",f_tilt_hand_hint:"Wordt alleen de lamelhoek met de hand versteld (hoogte ongewijzigd), dan telt dat als een handmatige rit: wachtende inhaalritten en de raamcyclus vervallen en de overschrijfinstelling van het gebied geldt. 15 s na elke hoogterit wordt niets herkend, omdat sommige actoren dan kort verkeerde hoeken melden. Uit: hoekwijzigingen worden genegeerd zoals voorheen.",
+  f_lock_replay:"Terugkeer na de vergrendeling inhalen",f_lock_replay_hint:"Houdt de vergrendelingsentiteit de terugkeer bij het sluiten van het raam tegen (bijvoorbeeld een actor die zichzelf vergrendelt bij open deur), dan gaat het rolluik terug naar de opgeslagen hoogte zodra de vergrendeling eindigt en het raam dicht is. Uit: het blijft staan.",
   f_window_react:"Raamcontact bestuurt het rolluik",f_window_react_hint:"Uit: het contact beweegt niets, ook niet naar de ventilatie- of kiepstand. Het werkt alleen als vergrendeling: automatische ritten worden vastgehouden zolang het raam open is (met inhalen) en uitgevoerd na het sluiten. Handig voor deuren en lamellenschermen.",f_drive_after_up:"Ook openen inhalen",f_drive_after_up_hint:"Is een open-rit (tijd of helderheid) aan de beurt terwijl het raam open of gekiept is, dan wordt die na het sluiten uitgevoerd, inclusief lamelhoek. Handig als open en dicht dezelfde positie hebben (lamellenscherm). Los van de inhaaloptie hierboven.",
   f_drive_after:"Inhalen als raam open of gekiept",f_drive_after_hint:"Als de sluitingstijd bereikt wordt maar het raam open of gekiept staat, wordt de rit ingehaald zodra het raam gesloten wordt. Zonder het vinkje hieronder beweegt het rolluik tot dan helemaal niet.",
   f_win_debounce:"Vertraging bij sluiten (sec.)",f_win_debounce_hint:"Hoe lang «gesloten» moet aanhouden voordat het rolluik terugkeert. 0 = direct.",
@@ -2316,6 +2328,8 @@ da:{
   f_lock:"Låsebeskyttelse",f_min_pos:"Minimumposition ved åben dør",
   f_area_up:"Område (Op)",f_area_down:"Område (Ned)",
   f_pos_open:"Position Åben",f_pos_closed:"Position Lukket",f_pos_sun:"Solbeskyttelsesposition",
+  f_tilt_hand:"Registrer manuel justering af lameller",f_tilt_hand_hint:"Ændres kun lamelvinklen i hånden (højden uændret), tæller det som en manuel kørsel: ventende indhentninger og vinduescyklussen droppes, og områdets tilsidesættelse gælder. I 15 s efter enhver højdekørsel registreres intet, fordi nogle aktuatorer kortvarigt melder forkerte vinkler. Fra: vinkelændringer ignoreres som før.",
+  f_lock_replay:"Indhent tilbagekørslen efter låsen",f_lock_replay_hint:"Holder låseentiteten tilbagekørslen tilbage, når vinduet lukkes (fx en aktuator, der låser sig selv ved åben dør), kører rullegardinet tilbage til den gemte højde, så snart låsen slutter, og vinduet er lukket. Fra: det bliver stående.",
   f_window_react:"Vindueskontakt kører rullegardinet",f_window_react_hint:"Fra: kontakten flytter intet, heller ikke til udluftnings- eller klemposition. Den virker kun som lås: automatiske kørsler holdes tilbage, mens vinduet er åbent (med indhentning), og udføres efter lukning. Nyttigt til døre og lamelgardiner.",f_drive_after_up:"Indhent også åbning",f_drive_after_up_hint:"Hvis en åbnekørsel (tid eller lysstyrke) er forfalden, men vinduet er åbent eller på klem, udføres den efter lukning inklusive lamelvinkel. Nyttigt når åben og lukket har samme position (lamelgardin). Uafhængig af indhentningsvalget ovenfor.",
   f_drive_after:"Indhent hvis vindue åbent eller på klem",f_drive_after_hint:"Hvis lukketiden nås, mens vinduet står åbent eller på klem, indhentes kørslen, så snart vinduet lukkes. Uden fluebenet nedenfor bevæger rullegardinet sig slet ikke indtil da.",
   f_win_debounce:"Forsinkelse ved lukning (sek.)",f_win_debounce_hint:"Hvor længe «lukket» skal holde, før rullegardinet kører tilbage. 0 = med det samme.",
@@ -2625,6 +2639,8 @@ sv:{
   f_lock:"Utelåsningsskydd",f_min_pos:"Minimiposition vid öppen dörr",
   f_area_up:"Område (Upp)",f_area_down:"Område (Ner)",
   f_pos_open:"Position Öppen",f_pos_closed:"Position Stängd",f_pos_sun:"Solskyddsposition",
+  f_tilt_hand:"Känn av manuell justering av lamellerna",f_tilt_hand_hint:"Ändras bara lamellvinkeln för hand (höjden oförändrad) räknas det som en manuell körning: väntande hämtningar och fönstercykeln förkastas och områdets åsidosättning gäller. I 15 s efter varje höjdkörning känns inget av, eftersom vissa ställdon kort rapporterar fel vinkel. Av: vinkeländringar ignoreras som förut.",
+  f_lock_replay:"Hämta återkörningen efter spärren",f_lock_replay_hint:"Om spärrentiteten håller tillbaka återkörningen när fönstret stängs (till exempel ett ställdon som spärrar sig självt vid öppen dörr) kör rullgardinen tillbaka till den sparade höjden så snart spärren upphör och fönstret är stängt. Av: den blir stående.",
   f_window_react:"Fönsterkontakten kör rullgardinen",f_window_react_hint:"Av: kontakten flyttar ingenting, inte heller till vädrings- eller glänt-läge. Den fungerar bara som spärr: automatiska körningar hålls tillbaka medan fönstret är öppet (med hämtning) och utförs efter stängning. Bra för dörrar och persienner.",f_drive_after_up:"Hämta även öppning",f_drive_after_up_hint:"Om en öppningskörning (tid eller ljusstyrka) är aktuell men fönstret är öppet eller på glänt, utförs den efter stängning inklusive lamellvinkel. Bra när öppet och stängt har samma position (persienn). Oberoende av hämtningsvalet ovan.",
   f_drive_after:"Hämta om fönster öppet eller på glänt",f_drive_after_hint:"Om stängningstiden nås medan fönstret står öppet eller på glänt körs körningen i kapp så snart fönstret stängs. Utan bocken nedanför rör sig persiennen inte alls fram till dess.",
   f_win_debounce:"Fördröjning vid stängning (sek.)",f_win_debounce_hint:"Hur länge «stängt» måste hålla innan jalusin åker tillbaka. 0 = direkt.",
@@ -2934,6 +2950,8 @@ pl:{
   f_lock:"Blokada bezpieczeństwa",f_min_pos:"Minimalna pozycja przy otwartych drzwiach",
   f_area_up:"Strefa (W górę)",f_area_down:"Strefa (W dół)",
   f_pos_open:"Pozycja Otwarta",f_pos_closed:"Pozycja Zamknięta",f_pos_sun:"Pozycja osłony słonecznej",
+  f_tilt_hand:"Wykrywaj ręczną zmianę lamel",f_tilt_hand_hint:"Jeśli ręcznie zmieniono tylko kąt lamel (wysokość bez zmian), liczy się to jak ręczny przejazd: oczekujące nadrabianie i cykl okna są odrzucane, a obowiązuje ustawienie nadpisania obszaru. Przez 15 s po każdym przejeździe nic nie jest wykrywane, bo niektóre aktory krótko zgłaszają błędne kąty. Wyłączone: zmiany kąta są ignorowane jak dotąd.",
+  f_lock_replay:"Nadrabiaj powrót po blokadzie",f_lock_replay_hint:"Jeśli encja blokady wstrzymuje powrót po zamknięciu okna (np. aktor blokujący się sam przy otwartych drzwiach), roleta wraca do zapamiętanej wysokości, gdy tylko blokada ustąpi, a okno jest zamknięte. Wyłączone: zostaje, gdzie jest.",
   f_window_react:"Kontaktron steruje roletą",f_window_react_hint:"Wyłączone: kontaktron niczego nie porusza, także do pozycji wietrzenia lub uchylenia. Działa tylko jako blokada: automatyczne przejazdy są wstrzymywane, gdy okno jest otwarte (z nadrabianiem), i wykonywane po zamknięciu. Przydatne dla drzwi i żaluzji.",f_drive_after_up:"Nadrabiaj także otwieranie",f_drive_after_up_hint:"Jeśli otwarcie (czas lub jasność) jest należne, a okno jest otwarte lub uchylone, zostanie wykonane po zamknięciu, wraz z kątem lamel. Przydatne, gdy otwarte i zamknięte mają tę samą pozycję (żaluzja). Niezależne od opcji nadrabiania powyżej.",
   f_drive_after:"Nadrobić gdy okno otwarte lub uchylone",f_drive_after_hint:"Jeśli pora zamknięcia nadejdzie przy oknie otwartym lub uchylonym, przejazd zostanie nadrobiony zaraz po zamknięciu okna. Bez opcji poniżej roleta do tego czasu w ogóle się nie porusza.",
   f_win_debounce:"Opóźnienie przy zamykaniu (sek.)",f_win_debounce_hint:"Jak długo musi utrzymać się stan „zamknięte”, zanim roleta wróci. 0 = natychmiast.",
@@ -3243,6 +3261,8 @@ pt:{
   f_lock:"Proteção anti-bloqueio",f_min_pos:"Posição mín. porta aberta",
   f_area_up:"Zona (Subir)",f_area_down:"Zona (Descer)",
   f_pos_open:"Posição Aberta",f_pos_closed:"Posição Fechada",f_pos_sun:"Posição proteção solar",
+  f_tilt_hand:"Detetar ajuste manual das lâminas",f_tilt_hand_hint:"Se apenas o ângulo das lâminas for alterado à mão (altura inalterada), conta como um movimento manual: as recuperações pendentes e o ciclo da janela são descartados e aplica-se a definição de substituição da área. Durante 15 s após qualquer movimento de altura nada é detetado, porque alguns atuadores comunicam brevemente ângulos errados. Desligado: ignorado como antes.",
+  f_lock_replay:"Recuperar o regresso após o bloqueio",f_lock_replay_hint:"Se a entidade de bloqueio retiver o regresso ao fechar a janela (por exemplo um atuador que se bloqueia sozinho com a porta aberta), o estore volta à altura guardada assim que o bloqueio termina e a janela está fechada. Desligado: fica onde está.",
   f_window_react:"O contacto move o estore",f_window_react_hint:"Desligado: o contacto não move nada, nem para a posição de ventilação ou basculante. Funciona apenas como bloqueio: os movimentos automáticos ficam retidos enquanto a janela está aberta (com recuperação) e são executados ao fechar. Útil para portas e estores venezianos.",f_drive_after_up:"Recuperar também a abertura",f_drive_after_up_hint:"Se uma abertura (hora ou luminosidade) estiver pendente e a janela estiver aberta ou basculante, é executada ao fechar, com o ângulo das lâminas. Útil quando aberto e fechado têm a mesma posição (estore veneziano). Independente da opção de recuperação acima.",
   f_drive_after:"Recuperar se janela aberta ou basculante",f_drive_after_hint:"Se a hora de fecho chegar com a janela aberta ou basculante, o percurso é recuperado assim que a janela for fechada. Sem a opção abaixo o estore não se move de todo até lá.",
   f_win_debounce:"Atraso ao fechar (seg.)",f_win_debounce_hint:"Quanto tempo «fechado» tem de se manter antes de o estore recuar. 0 = imediato.",
@@ -3552,6 +3572,8 @@ nb:{
   f_lock:"Utestengingsbeskyttelse",f_min_pos:"Minimumsposisjon ved åpen dør",
   f_area_up:"Område (Opp)",f_area_down:"Område (Ned)",
   f_pos_open:"Posisjon Åpen",f_pos_closed:"Posisjon Lukket",f_pos_sun:"Solbeskyttelsesposisjon",
+  f_tilt_hand:"Registrer manuell justering av lamellene",f_tilt_hand_hint:"Endres bare lamellvinkelen for hånd (høyden uendret), teller det som en manuell kjøring: ventende igjentakinger og vindussyklusen forkastes, og områdets overstyring gjelder. I 15 s etter hver høydekjøring registreres ingenting, fordi noen aktuatorer kort melder feil vinkel. Av: vinkelendringer ignoreres som før.",
+  f_lock_replay:"Ta igjen tilbakekjøringen etter sperren",f_lock_replay_hint:"Holder sperreentiteten tilbake tilbakekjøringen når vinduet lukkes (for eksempel en aktuator som sperrer seg selv ved åpen dør), kjører rullegardinen tilbake til den lagrede høyden så snart sperren slutter og vinduet er lukket. Av: den blir stående.",
   f_window_react:"Vinduskontakten kjører rullegardinen",f_window_react_hint:"Av: kontakten flytter ingenting, heller ikke til luftings- eller gløttposisjon. Den virker bare som lås: automatiske kjøringer holdes tilbake mens vinduet er åpent (med igjentaking) og utføres etter lukking. Nyttig for dører og lamellgardiner.",f_drive_after_up:"Ta igjen åpning også",f_drive_after_up_hint:"Hvis en åpnekjøring (tid eller lysstyrke) er forfalt, men vinduet er åpent eller på gløtt, utføres den etter lukking, inkludert lamellvinkel. Nyttig når åpen og lukket har samme posisjon (lamellgardin). Uavhengig av valget om igjentaking ovenfor.",
   f_drive_after:"Ta igjen hvis vindu åpent eller på gløtt",f_drive_after_hint:"Hvis lukketiden nås mens vinduet står åpent eller på gløtt, tas kjøringen igjen så snart vinduet lukkes. Uten haken nedenfor beveger rullegardinen seg ikke i det hele tatt fram til da.",
   f_win_debounce:"Forsinkelse ved lukking (sek.)",f_win_debounce_hint:"Hvor lenge «lukket» må holde før rullegardinen kjører tilbake. 0 = umiddelbart.",
@@ -5948,6 +5970,8 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_blind_drive_hint")}</div></div>
       ${ep("automation_lock_entity",T("f_lock_entity"),["binary_sensor","switch","input_boolean"])}
       <div class="hint">${T("f_lock_entity_hint")}</div>
+      ${s.automation_lock_entity?html`<div class="field"><label><input type="checkbox" .checked=${s.lock_replay_restore!==false} @change=${e=>{s.lock_replay_restore=e.target.checked;this.requestUpdate();}}> ${T("f_lock_replay")}</label>
+        <div class="hint">${T("f_lock_replay_hint")}</div></div>`:""}
       ${this._renderMyPosition(s,ep,pct)}
 
       `)}${this._sec("mdi:blinds-horizontal","sec_slats","sec_slats_sub",html`
@@ -5959,7 +5983,10 @@ class ShutterPilotPanel extends PanelBase {
         ${keepRow("tilt_sun_protect","keep_tilt_sun_protect",T("f_tilt_sun"),"f_keep_tilt","f_keep_tilt_on",pct)}
         <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_after_position}
           @change=${e=>{s.tilt_after_position=e.target.checked;this.requestUpdate();}}> ${T("f_tilt_after_position")}</label>
-          <div class="hint">${T("f_tilt_after_position_hint")}</div></div>`:""}`)}${(s.tilt_enabled||s.storm_guard)?this._sec("mdi:weather-windy","sec_storm","sec_storm_sub",html`
+          <div class="hint">${T("f_tilt_after_position_hint")}</div></div>
+        <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_hand_detect}
+          @change=${e=>{s.tilt_hand_detect=e.target.checked;this.requestUpdate();}}> ${T("f_tilt_hand")}</label>
+          <div class="hint">${T("f_tilt_hand_hint")}</div></div>`:""}`)}${(s.tilt_enabled||s.storm_guard)?this._sec("mdi:weather-windy","sec_storm","sec_storm_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.storm_guard}
         @change=${e=>{s.storm_guard=e.target.checked;if(e.target.checked){if(s.storm_position==null)s.storm_position=100;if(s.storm_tilt==null)s.storm_tilt=100;}this.requestUpdate();}}> ${T("f_storm_guard")}</label>
         <div class="hint">${T("f_storm_guard_hint")}</div></div>

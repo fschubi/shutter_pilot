@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (953 Tests)
+tests/               pytest-Suite (966 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 953 Tests, ~21 s
+.venv/bin/pytest            # 966 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,47 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.27.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.28.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-01 – 2.28.0: Rückfahrt nach der Sperre, Lamellen von Hand (Stufe 4)
+
+Claus (#222) bestätigte meinen Verdacht aus #215: `binary_sensor.raff_diele_gesperrt`
+war genau mit der Tür an (16:21:43–49, 16:53:01–07) – sein KNX-Aktor sperrt sich
+bei offener Tür selbst. Das Schließen der Tür fiel in `_on_window_state_change`
+an `automation_allowed()` (dort `continue`, nicht einmal eine Entprellung wurde
+geplant), und `_delayed_close` kehrte bei Sperre still zurück. Nichts holte die
+gemerkte Höhe nach.
+
+**Nachholen:** `_on_lock_released` hört auf jede Sperr-Entität (Wechsel von an
+nach aus); der Zyklusmerker `trigger_actions == "triggered"` (oder eine
+Vormerkung in `drive_after_close_pending`) *ist* das Gedächtnis „da ist noch
+eine Rückfahrt offen". Dann über denselben Pfad wie das Schließen
+(`_schedule_close`, aus dem alten Zweig herausgezogen, mit Entprellung). Haken
+`lock_replay_restore` (Vorgabe an, wirkt nur mit Sperr-Entität). Bewusst nicht
+für den Sturm: dort ist „kein Nachholen" entschieden (2.25.0).
+
+**Stufe 4:** `cover_tracker` las nur `current_position` und sprang bei gleicher
+Höhe früh zurück – eine reine Winkeländerung war unsichtbar. Neu `commanded_tilts`
+(geschrieben in `set_cover_position`) und `_note_hand_tilt`, Haken
+`tilt_hand_detect` (Vorgabe aus): Handverstellung, wenn Höhe unverändert, Winkel
+anders, Antrieb steht, 15 s seit der letzten Höhenänderung, keine Karenz, mehr
+als 8 % vom gesendeten Winkel. Folge wie bei einer Höhen-Handfahrt, aber ohne
+`note_manual_position` (Winkel sagt nichts über oben/unten) und ohne das
+Höhenziel zu verwerfen. **Nicht gebaut:** Fahrtkontrolle der Lamellen
+(`cover_verify` liest weiter nur die Höhe); Plan in `docs/PLAN_RAFFSTORE.md`.
+
+**Verifiziert:** `pytest` 966 grün (13 neue: `tests/test_lock_replay_restore.py`,
+`tests/test_tilt_hand_detect.py`). Gegenproben: ohne Sperr-Hörer fallen 2, ohne
+Wartezeit nach der Höhenfahrt 1. **Fehler beim Arbeiten:** ein `git checkout`
+zum Zurücknehmen einer Mutation verwarf auch die ungesicherten Änderungen im
+Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz und
+15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
+Aktor vorliegt.
 
 ### 2026-10-31 – 2.27.2: ein geteilter Schalter und ein „zu", das keins war
 
@@ -502,49 +537,6 @@ Gegenproben: ohne Löschen des Merkers fallen der Claus-Test und der
 umgeschriebene 2.17-Test, ohne Zeitpunkt der Test „von Hand zu, im Dunkeln
 gehoben". Nicht in echtem Home Assistant geprüft.
 
-### 2026-10-24 – 2.26.0: Höhe und Lamellen getrennt (Raffstore, Stufe 3)
-
-Claus (#172, #196), sein erklärter Kern: je Zustand „Position oder Lamellen
-unverändert". Eine leere Zahl heißt im Panel „Vorgabe nehmen", nicht „nicht
-fahren" – deshalb **eigene Haken** statt eines Leerwerts:
-`keep_position_{open,closed,sun_protect}` und `keep_tilt_{open,closed,
-sun_protect}` (ein Tilt-Haken gilt für alle Rollen, die diesen Winkel lesen,
-also auch `closed_alt`/`closed_frost`; `keep_position_*` nur für die drei
-Grundrollen). Alle aus, wenn der Schlüssel fehlt.
-
-**Umsetzung:** `get_position_for_role()` bleibt die Zahl, die Entscheidungen
-lesen (`manual_position_is_a_close`, "gilt als oben"...). Neu
-`role_position()` gibt `None` für "Höhe lassen" und wird nur dort gefragt, wo
-der Befehl tatsächlich gesendet wird: Scheduler, Helligkeit (auf/ab),
-Beschattung (Anwenden und Freigabe), Gruppendienste, `resume_automation`.
-`get_tilt_for_role()` liefert bei "Lamellen lassen" `None`, das jeder
-Aufrufer schon als "keinen Winkel senden" las. `set_cover_position()` nimmt
-`position=None`: nur Winkel senden, nichts speichern, nichts prüfen;
-beides `None` = nichts tun. Der Aussperrschutz-Deckel
-(`get_effective_close_position`) und die Nachholfahrt (`position=None` auch
-auf der Platte) kennen `None`. Flag ohne `tilt_enabled` wird ignoriert
-(`position_kept` prüft es), damit ein Rest keine Rolle zum No-op macht.
-
-**Lamellen nach der Höhe:** `tilt_after_position` (Vorgabe aus). Hintergrundtask
-(`hass.async_create_background_task`, **nicht** `async_create_task`: ein
-getrackter Task hielt `async_block_till_done` und den HA-Shutdown bis zu
-drei Minuten auf – so hing der erste Testlauf), pollt alle 2 s, spätestens
-nach 180 s wird der Winkel trotzdem gesendet; eine neue Fahrt ersetzt ihn.
-
-**Bewusst offen:** `shade_only_when_open` (`shading_would_open_cover`) liest
-weiter die Zahl von `position_sun_protect`, auch bei "Höhe lassen" – sie
-beschreibt dann nichts mehr. Wer beides nutzt, merkt es als "beschattet nie".
-Nicht angefasst: Lüftungs- und Fensterpositionen (eigene Zahlen).
-
-**Panel/Export:** `keepRow` blendet den Schieber bei gesetztem Haken aus;
-Export nennt die betroffenen Zustände. i18n 6 neue Schlüssel ×11.
-
-**Verifiziert:** `pytest` 910 grün (18 neue in
-`tests/test_keep_position_and_tilt.py`, 1 in `test_panel.py`). Gegenproben:
-ohne `role_position`-Keep fallen 4, ohne Tilt-Keep 3, ohne Winkel-nach-Höhe 1,
-ohne Lamellen-Prüfung 2. **Nicht im Browser und nicht im echten Home
-Assistant geprüft.** Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %) ist
-Stufe 4.
 
 ## graphify
 

@@ -441,7 +441,7 @@ Ein Raffstore verträgt mehr Wind als eine Markise, aber nicht beliebig viel, un
 
 ### Sperr-Entität
 
-Jeder Rollladen kann eine **Sperr-Entität** (`binary_sensor`, `switch` oder `input_boolean`) eintragen. Solange sie `on` ist, sendet Shutter Pilot diesem Cover nichts Automatisches – gedacht für die Windsperre des Aktors oder einen Helfer „Fenster putzen". Von Hand fahren geht weiter. Die Fahrtkontrolle wertet ein gesperrtes Cover nicht als Fehler und wiederholt den Befehl nicht. Danach wird nichts nachgeholt. Eine fehlende oder nicht erreichbare Entität sperrt nicht. Der Windschutz fährt den Raffstore auch durch eine Sperre hindurch hoch.
+Jeder Rollladen kann eine **Sperr-Entität** (`binary_sensor`, `switch` oder `input_boolean`) eintragen. Solange sie `on` ist, sendet Shutter Pilot diesem Cover nichts Automatisches – gedacht für die Windsperre des Aktors oder einen Helfer „Fenster putzen". Von Hand fahren geht weiter. Die Fahrtkontrolle wertet ein gesperrtes Cover nicht als Fehler und wiederholt den Befehl nicht. Eine Rückfahrt nach einem Fenster oder einer Tür, die unter der Sperre geschlossen wurden, wird nachgeholt, sobald die Sperre endet (Haken *Rückfahrt nach der Sperre nachholen* entfernen, damit der Rollladen stehen bleibt). Sonst wird nichts nachgeholt. Eine fehlende oder nicht erreichbare Entität sperrt nicht. Der Windschutz fährt den Raffstore auch durch eine Sperre hindurch hoch.
 
 ## Dachfenster
 
@@ -916,3 +916,7 @@ Genauso hilfreich und völlig kostenlos: einen ⭐ hierlassen, einen [Fehler mel
 ## Lizenz
 
 MIT – siehe die [LICENSE](LICENSE) Datei für Details.
+
+### Lamellen von Hand verstellt
+
+Mit dem Haken **Handverstellung der Lamellen erkennen** zählt bei einem Raffstore eine reine Winkeländerung (Höhe unverändert) wie eine Handfahrt: wartende Nachholfahrten und der Fensterzyklus werden verworfen, und die Übersteuerungs-Einstellung des Bereichs gilt. Die Nachmeldung der eigenen Fahrt (innerhalb von 8 %), ein fahrender Antrieb und die ersten 15 s nach einer Höhenänderung werden ignoriert, weil manche Aktoren dort kurz falsche Winkel melden. Vorgabe aus.

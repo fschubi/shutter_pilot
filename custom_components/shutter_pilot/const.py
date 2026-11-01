@@ -175,6 +175,15 @@ CONF_DRIVE_AFTER_CLOSE_UP = "drive_after_close_up"
 # Automatik (Nachholfahrt), er bewegt nichts. Vorgabe: an, wie bisher.
 CONF_WINDOW_REACT = "window_react"
 DEFAULT_WINDOW_REACT = True
+# Sperr-Entitaet beendet: die zurueckgehaltene Fenster-Rueckfahrt nachholen
+# (Claus, #222). Nur wirksam mit Sperr-Entitaet, also ohne Auswirkung auf
+# alle, die keine hinterlegt haben.
+# Handverstellung nur der Lamellen erkennen (Stufe 4, Claus #172). Opt-in:
+# KNX-Aktoren melden nach einer Fahrt kurz falsche Winkel, ohne Haken bleibt der
+# Tracker so blind fuer Winkel wie bisher.
+CONF_TILT_HAND_DETECT = "tilt_hand_detect"
+CONF_LOCK_REPLAY = "lock_replay_restore"
+DEFAULT_LOCK_REPLAY = True
 
 # Per-area schedule: time mode (weekday = default, weekend = optional override)
 CONF_AREA_TIME_UP = "time_up"  # HH:MM weekday
@@ -593,6 +602,8 @@ AWNING_UNUSED_KEYS = (
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,
     CONF_WINDOW_REACT,
+    CONF_LOCK_REPLAY,
+    CONF_TILT_HAND_DETECT,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,
@@ -633,6 +644,8 @@ WINDOW_UNUSED_KEYS = (
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,
     CONF_WINDOW_REACT,
+    CONF_LOCK_REPLAY,
+    CONF_TILT_HAND_DETECT,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,

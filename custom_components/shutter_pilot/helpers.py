@@ -1835,6 +1835,17 @@ def commanded_position(
         return None
 
 
+def commanded_tilt(data: dict[str, Any], cover_entity_id: str) -> float | None:
+    """The slat angle we last sent to this cover, or None."""
+    values = data.get("commanded_tilts")
+    if not isinstance(values, dict):
+        return None
+    try:
+        return float(values[cover_entity_id])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 def forget_commanded_position(data: dict[str, Any], cover_entity_id: str) -> None:
     """Somebody else moved this cover – our target is no longer its target."""
     values = data.get("commanded_positions")
@@ -2297,6 +2308,10 @@ async def set_cover_position(
                 await _set_cover_tilt(hass, entity_id, tilt_position, reason)
 
         data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+        if tilt_position is not None and isinstance(data, dict):
+            # Ohne das gesendete Ziel laesst sich eine Handverstellung der
+            # Lamellen nicht von der Nachmeldung unserer eigenen Fahrt trennen.
+            data.setdefault("commanded_tilts", {})[entity_id] = float(tilt_position)
         if position is not None:
             if isinstance(data, dict):
                 data.setdefault("last_positions", {})[entity_id] = float(position)

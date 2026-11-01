@@ -17,6 +17,9 @@ from .const import (
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_REACT,
     DEFAULT_WINDOW_REACT,
+    CONF_LOCK_REPLAY,
+    DEFAULT_LOCK_REPLAY,
+    CONF_AUTOMATION_LOCK_ENTITY,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_VENT_WHILE_OPEN,
@@ -404,18 +407,73 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
             elif window_state == "closed":
                 # Window closed -> restore saved position OR execute drive_after_close,
                 # but only once "closed" has held for the configured time.
-                delay = _debounce_seconds(shutter)
-                if delay <= 0:
-                    # No task, no await: exactly the order of events we had
-                    # before the debounce existed.
-                    _apply_window_closed(shutter, cover_entity, pos_closed)
-                else:
-                    cancel_window_close(data, cover_entity)
-                    data.setdefault("_window_close_tasks", {})[cover_entity] = (
-                        hass.async_create_task(
-                            _delayed_close(shutter, cover_entity, pos_closed, delay)
-                        )
-                    )
+                _schedule_close(shutter, cover_entity, pos_closed)
+
+    def _schedule_close(shutter: dict, cover_entity: str, pos_closed: Any) -> None:
+        delay = _debounce_seconds(shutter)
+        if delay <= 0:
+            # No task, no await: exactly the order of events we had
+            # before the debounce existed.
+            _apply_window_closed(shutter, cover_entity, pos_closed)
+        else:
+            cancel_window_close(data, cover_entity)
+            data.setdefault("_window_close_tasks", {})[cover_entity] = (
+                hass.async_create_task(
+                    _delayed_close(shutter, cover_entity, pos_closed, delay)
+                )
+            )
+
+    lock_to_shutters: dict[str, list[dict]] = {}
+    for shutter in only_shutters(shutters):
+        lock_id = str(shutter.get(CONF_AUTOMATION_LOCK_ENTITY) or "").strip()
+        if lock_id and shutter.get(CONF_LOCK_REPLAY, DEFAULT_LOCK_REPLAY):
+            lock_to_shutters.setdefault(lock_id, []).append(shutter)
+
+    @callback
+    def _on_lock_released(event) -> None:
+        """Catch up the window restore that the lock held back.
+
+        An actuator that locks itself while the door is open (lock-out
+        protection in the ETS) is still locked when the door closes, so the
+        close event is dropped above and nothing ever fetches the saved height
+        again (Claus, #222). The cycle marker is the memory: a cycle that is
+        still "triggered" with a closed window is exactly a restore that did
+        not happen.
+        """
+        new_state = event.data.get("new_state")
+        old_state = event.data.get("old_state")
+        if new_state is None or old_state is None:
+            return
+        if str(old_state.state).lower() not in ("on", "true", "1"):
+            return
+        if str(new_state.state).lower() in ("on", "true", "1"):
+            return
+        if not is_system_enabled(hass, entry):
+            return
+        for shutter in lock_to_shutters.get(event.data.get("entity_id", ""), []):
+            cover_entity = shutter.get(CONF_COVER_ENTITY_ID)
+            if not cover_entity:
+                continue
+            owed = trigger_actions.get(cover_entity) == "triggered" or (
+                cover_entity in data.get("drive_after_close_pending", {})
+            )
+            if not owed or get_window_state(hass, shutter) != "closed":
+                continue
+            if not automation_allowed(hass, entry, shutter):
+                continue
+            _LOGGER.info(
+                "%s: Sperre beendet, Fenster ist zu - die zurueckgehaltene "
+                "Rueckfahrt wird nachgeholt",
+                cover_entity,
+            )
+            _schedule_close(
+                shutter, cover_entity, shutter.get(CONF_POSITION_CLOSED, 0)
+            )
+
+    for lock_id in lock_to_shutters:
+        unsub = async_track_state_change_event(hass, lock_id, _on_lock_released)
+        if unsub:
+            data["_window_unsubs"].append(unsub)
 
     for window_id in window_to_shutters:
         unsub = async_track_state_change_event(

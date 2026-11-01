@@ -4,17 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN, CONF_SHUTTERS, CONF_COVER_ENTITY_ID
+from .const import CONF_COVER_ENTITY_ID, CONF_SHUTTERS, CONF_TILT_HAND_DETECT, DOMAIN
 from .helpers import (
     apply_covers_driven_from_persisted,
     get_cover_current_position,
     commanded_position,
+    commanded_tilt,
     forget_commanded_position,
     forget_drive_after_close,
     forget_window_cycle,
@@ -36,6 +38,11 @@ STARTUP_RESTORE_RETRY_SEC = 3
 STARTUP_RESTORE_MAX_RETRIES = 3
 POSITION_TOLERANCE_PCT = 8.0
 _TARGET_NEAR_PCT = 3.0
+# Winkel: ein KNX-Aktor meldet nach einer Fahrt 2 % statt 0 % und kurz Lamellen 0.
+# Deshalb weite Toleranz zum befohlenen Winkel und eine Wartezeit nach jeder
+# Hoehenaenderung, bevor ein anderer Winkel als Handverstellung gilt.
+TILT_HAND_TOLERANCE_PCT = 8.0
+TILT_SETTLE_SEC = 15.0
 
 
 def _collect_cover_entity_ids(shutters: list) -> list[str]:
@@ -89,6 +96,58 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
         except (TypeError, ValueError):
             return None
 
+    def _reported_tilt(state) -> float | None:
+        if state is None or state.state in ("unavailable", "unknown"):
+            return None
+        cur = (state.attributes or {}).get("current_tilt_position")
+        try:
+            return None if cur is None else float(cur)
+        except (TypeError, ValueError):
+            return None
+
+    def _note_hand_tilt(event, entity_id: str, position: float) -> bool:
+        """Book a slat angle somebody changed by hand. True = this event is handled.
+
+        Only for shutters that opted in (`tilt_hand_detect`), and only for an
+        event where the height stayed put: the tracker's early return for an
+        unchanged position is what kept slat-only changes invisible so far.
+        """
+        shutter = shutter_by_cover.get(entity_id)
+        if shutter is None or not shutter.get(CONF_TILT_HAND_DETECT, False):
+            return False
+        old_state = event.data.get("old_state")
+        new_state = event.data.get("new_state")
+        old_position = _reported_position(old_state)
+        now = time.monotonic()
+        changed_at = data.setdefault("_height_changed_at", {})
+        if old_position is None or old_position != position:
+            changed_at[entity_id] = now
+            return False
+        new_tilt, old_tilt = _reported_tilt(new_state), _reported_tilt(old_state)
+        if new_tilt is None or old_tilt is None or new_tilt == old_tilt:
+            return False
+        if new_state.state in ("opening", "closing"):
+            return True
+        if now - changed_at.get(entity_id, float("-inf")) < TILT_SETTLE_SEC:
+            return True
+        if entity_id in pending or is_recent_automation(data, entity_id):
+            return True
+        target = commanded_tilt(data, entity_id)
+        if target is not None and abs(new_tilt - target) <= TILT_HAND_TOLERANCE_PCT:
+            return True
+        data.get("commanded_tilts", {}).pop(entity_id, None)
+        data.setdefault("_hand_moved_at", {})[entity_id] = now
+        forget_drive_after_close(hass, entry, data, entity_id)
+        forget_window_cycle(data, entity_id)
+        hass.async_create_task(
+            store.async_set_position(entity_id, position, SOURCE_MANUAL)
+        )
+        _LOGGER.debug(
+            "Slat angle changed by hand: %s -> %.0f%% (was %.0f%%)",
+            entity_id, new_tilt, old_tilt,
+        )
+        return True
+
     @callback
     def _on_cover_state_change(event) -> None:
         new_state = event.data.get("new_state")
@@ -97,6 +156,8 @@ async def setup_cover_position_tracker(hass: HomeAssistant, entry: ConfigEntry) 
             return
         position = _reported_position(new_state)
         if position is None:
+            return
+        if _note_hand_tilt(event, entity_id, position):
             return
 
         last_positions[entity_id] = position

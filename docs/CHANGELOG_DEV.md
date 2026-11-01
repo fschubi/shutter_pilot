@@ -4,6 +4,50 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-10-24 – 2.26.0: Höhe und Lamellen getrennt (Raffstore, Stufe 3)
+
+Claus (#172, #196), sein erklärter Kern: je Zustand „Position oder Lamellen
+unverändert". Eine leere Zahl heißt im Panel „Vorgabe nehmen", nicht „nicht
+fahren" – deshalb **eigene Haken** statt eines Leerwerts:
+`keep_position_{open,closed,sun_protect}` und `keep_tilt_{open,closed,
+sun_protect}` (ein Tilt-Haken gilt für alle Rollen, die diesen Winkel lesen,
+also auch `closed_alt`/`closed_frost`; `keep_position_*` nur für die drei
+Grundrollen). Alle aus, wenn der Schlüssel fehlt.
+
+**Umsetzung:** `get_position_for_role()` bleibt die Zahl, die Entscheidungen
+lesen (`manual_position_is_a_close`, "gilt als oben"...). Neu
+`role_position()` gibt `None` für "Höhe lassen" und wird nur dort gefragt, wo
+der Befehl tatsächlich gesendet wird: Scheduler, Helligkeit (auf/ab),
+Beschattung (Anwenden und Freigabe), Gruppendienste, `resume_automation`.
+`get_tilt_for_role()` liefert bei "Lamellen lassen" `None`, das jeder
+Aufrufer schon als "keinen Winkel senden" las. `set_cover_position()` nimmt
+`position=None`: nur Winkel senden, nichts speichern, nichts prüfen;
+beides `None` = nichts tun. Der Aussperrschutz-Deckel
+(`get_effective_close_position`) und die Nachholfahrt (`position=None` auch
+auf der Platte) kennen `None`. Flag ohne `tilt_enabled` wird ignoriert
+(`position_kept` prüft es), damit ein Rest keine Rolle zum No-op macht.
+
+**Lamellen nach der Höhe:** `tilt_after_position` (Vorgabe aus). Hintergrundtask
+(`hass.async_create_background_task`, **nicht** `async_create_task`: ein
+getrackter Task hielt `async_block_till_done` und den HA-Shutdown bis zu
+drei Minuten auf – so hing der erste Testlauf), pollt alle 2 s, spätestens
+nach 180 s wird der Winkel trotzdem gesendet; eine neue Fahrt ersetzt ihn.
+
+**Bewusst offen:** `shade_only_when_open` (`shading_would_open_cover`) liest
+weiter die Zahl von `position_sun_protect`, auch bei "Höhe lassen" – sie
+beschreibt dann nichts mehr. Wer beides nutzt, merkt es als "beschattet nie".
+Nicht angefasst: Lüftungs- und Fensterpositionen (eigene Zahlen).
+
+**Panel/Export:** `keepRow` blendet den Schieber bei gesetztem Haken aus;
+Export nennt die betroffenen Zustände. i18n 6 neue Schlüssel ×11.
+
+**Verifiziert:** `pytest` 910 grün (18 neue in
+`tests/test_keep_position_and_tilt.py`, 1 in `test_panel.py`). Gegenproben:
+ohne `role_position`-Keep fallen 4, ohne Tilt-Keep 3, ohne Winkel-nach-Höhe 1,
+ohne Lamellen-Prüfung 2. **Nicht im Browser und nicht im echten Home
+Assistant geprüft.** Lamellen-Rückmeldung des KNX-Aktors (2 % statt 0 %) ist
+Stufe 4.
+
 ### 2026-10-24 – 2.23.5: die Startmeldung, die die Wiederherstellung blind machte
 
 mag2000 (simon42 #201): abends zugefahren, Home Assistant neu gestartet,

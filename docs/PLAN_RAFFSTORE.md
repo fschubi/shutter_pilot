@@ -117,3 +117,32 @@ Entschieden laut Forum: nach dem Sturm wird die Sperre nur aufgehoben, kein Nach
 ### Bestandsschutz
 
 Neue Schlüssel mit Vorgabe aus, `AWNING_GUARD_SLOTS` und `has_guard()` unverändert, Markisenschleife unverändert, Tests wie bei Stufe 1 (Kontrollfälle ohne Haken, Gegenproben).
+
+## Entwurf Stufe 4 – Handbedienung nur an den Lamellen (2026-11-01, noch nichts gebaut)
+
+### Befund im Code
+
+* `cover_tracker._on_cover_state_change` liest nur `current_position`. Bei unveränderter Höhe kehrt er früh zurück ("Funkpegel, Batteriewert …") – eine reine Winkeländerung wird weder als Handfahrt gebucht noch schreibt sie `_hand_moved_at`, hebt Vormerkungen oder den Fensterzyklus auf.
+* Gemerkt wird nur das letzte **Höhen**ziel (`commanded_positions`); ein gesendeter Winkel wird nirgends festgehalten. Ohne ihn lässt sich eine Handverstellung nicht von der Nachmeldung unserer eigenen Fahrt unterscheiden.
+* `cover_verify` prüft nur die Höhe (`_current_position`); `current_tilt_position` wird nur in `diagnostics.py` gelesen. Der Winkel einer automatischen Fahrt ist also unkontrolliert.
+
+### Vorschlag
+
+1. **Winkelziel merken**: `commanded_tilts[cover]` neben `commanded_positions`, geschrieben in `_set_cover_tilt`, verworfen bei Handfahrt wie die Höhe.
+2. **Erkennung (Opt-in, `tilt_hand_detect`, Vorgabe aus)**: ändert sich `current_tilt_position` bei unveränderter Höhe, ist es eine Handverstellung, wenn
+   * kein Pending/Karenz (`is_recent_automation`) läuft,
+   * der neue Winkel mehr als die Toleranz (Vorschlag 8 %) vom gemerkten Ziel abweicht,
+   * der Antrieb nicht fährt (`opening`/`closing`) und die Höhe seit N s stillsteht – KNX-Aktoren melden nach einer Höhenfahrt kurz Lamellen 0 oder 2 % statt 0 % (Claus #196); ohne diese Entprellung wäre jede Fahrt eine "Handfahrt".
+3. **Folge einer erkannten Handverstellung**: `_hand_moved_at` setzen, `forget_window_cycle`, `forget_drive_after_close`, Quelle im Positionsspeicher `manual` – also dasselbe wie bei einer Höhen-Handfahrt, **ohne** `note_manual_position` (Winkel sagt nichts über "oben/unten").
+4. **Sperrzeit**: bewusst nicht neu erfunden. Die vorhandenen drei Übersteuerungsmodi (`never`/`daily`/`next_action`) gelten. Claus' Wunsch "1 h nach Tastendruck" lässt sich heute über die Sperr-Entität (2.25.0) abbilden; ein Dienst "Automatik pausieren für N min" wäre ein eigener, kleiner Wunsch.
+5. **Fahrtkontrolle für Lamellen** (später, getrennt): `cover_verify` zusätzlich gegen `current_tilt_position` mit eigener Toleranz.
+
+### Bestandsschutz
+
+Haken fehlt = Tracker wie heute (früher Rücksprung bleibt). Die 3-%-Regel und das 90-s-Fenster (2.23.2) bleiben unberührt, die neue Erkennung läuft nur *nach* ihnen.
+
+### Vorher klären
+
+* Soll eine Hand-Lamellenverstellung die **Beschattung/Abendfahrt blockieren** (wie eine Höhen-Handfahrt) oder nur nicht überschrieben werden, bis die nächste Fahrt kommt? (Vorschlag: gleiche Modi wie Höhe.)
+* Meldet Claus' Aktor `current_tilt_position` überhaupt zuverlässig und wie hoch ist das Rauschen nach einer Fahrt? Ein Export mit Zustandsverlauf einer Fahrt entscheidet über Toleranz und Wartezeit.
+* Umfang: Erkennung allein (klein, ~1 Tag) oder mit Fahrtkontrolle der Lamellen (größer).

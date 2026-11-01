@@ -432,7 +432,7 @@ Venetian blinds stand more wind than awnings but not unlimited wind, and what "s
 
 ### Lock entity
 
-Any shutter can name a **lock entity** (`binary_sensor`, `switch` or `input_boolean`). While it is `on`, Shutter Pilot sends that cover nothing automatic – meant for an actuator's own wind lock or a "cleaning the windows" helper. Hand drives still work. The drive check does not count a locked cover as a failure and does not repeat the command. Nothing is caught up afterwards. An entity that is missing or unavailable does not lock. The wind protection still drives the blind up through a lock.
+Any shutter can name a **lock entity** (`binary_sensor`, `switch` or `input_boolean`). While it is `on`, Shutter Pilot sends that cover nothing automatic – meant for an actuator's own wind lock or a "cleaning the windows" helper. Hand drives still work. The drive check does not count a locked cover as a failure and does not repeat the command. A restore after a window or door that closed under the lock is caught up once the lock ends (tick off *Catch up the restore after the lock* to leave the cover where it is). Nothing else is caught up. An entity that is missing or unavailable does not lock. The wind protection still drives the blind up through a lock.
 
 ## Roof windows
 
@@ -900,3 +900,7 @@ Just as helpful and completely free: leave a ⭐, [report a bug](https://github.
 ## License
 
 MIT – see the [LICENSE](LICENSE) file for details.
+
+### Slat changes by hand
+
+Tick **Detect slat changes made by hand** on a venetian blind and an angle-only change (height unchanged) counts like a hand drive: pending catch-up drives and the window cycle are dropped, and the area's override setting applies. Our own drive's echo (within 8 %), a moving cover and the first 15 s after any height change are ignored, because some actuators briefly report wrong angles. Off by default.

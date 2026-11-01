@@ -4,6 +4,27 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.28.0]
+
+### Neu
+- **Rückfahrt nach der Sperre nachholen** (Claus, Forum #215/#222). Sperrt sich
+  ein Aktor bei offener Tür selbst (Aussperrschutz in der ETS) und ist diese
+  Sperre als Sperr-Entität hinterlegt, wurde das Schließen der Tür verworfen,
+  solange die Sperre stand – die gemerkte Höhe wurde nie wieder angefahren. Jetzt
+  fährt der Rollladen zurück, sobald die Sperre endet und das Fenster zu ist
+  (einmal, mit Entprellung). Wer eine Handsperre will, die den Rollladen
+  absichtlich stehen lässt, nimmt im Rollladen-Formular den Haken
+  **„Rückfahrt nach der Sperre nachholen"** heraus. Das gilt nur für Rollläden
+  mit Sperr-Entität; alle anderen merken nichts.
+- **Handverstellung der Lamellen erkennen** (Raffstore, Stufe 4, Claus #172).
+  Wird nur der Winkel von Hand verstellt, blieb das unsichtbar. Mit dem neuen
+  Haken **„Handverstellung der Lamellen erkennen"** (Vorgabe aus) zählt es wie
+  eine Handfahrt: wartende Nachholfahrten und der Fensterzyklus werden verworfen,
+  und die Übersteuerungs-Einstellung des Bereichs gilt. Nicht erkannt werden die
+  Nachmeldung unserer eigenen Fahrt (8 % Toleranz zum gesendeten Winkel), ein
+  fahrender Antrieb und die ersten 15 Sekunden nach einer Höhenänderung – manche
+  KNX-Aktoren melden dort kurz falsche Winkel. Ohne den Haken ändert sich nichts.
+
 ## [2.27.2]
 
 ### Behoben
