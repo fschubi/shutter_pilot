@@ -28,6 +28,7 @@ from .const import (
     ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
+    ROLE_SUN_PROTECT_LEVELS,
 )
 from .awning_dusk import is_dusk_retracted
 from .awning_guard import clamp_to_rest, describe_reasons, evaluate_guard
@@ -156,13 +157,21 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 # Only the plain shading position can be left alone; one that
                 # came from a helper entity or the second position is a number
                 # somebody asked for.
-                if why == ROLE_SUN_PROTECT and position_kept(shutter, ROLE_SUN_PROTECT):
+                if why in (ROLE_SUN_PROTECT, *ROLE_SUN_PROTECT_LEVELS) and position_kept(
+                    shutter, why
+                ):
                     pos = None
-                tilt = get_tilt_for_role(shutter, ROLE_SUN_PROTECT)
+                # Eine Stufe bringt ihren eigenen Winkel mit (sonst den der
+                # Beschattung); die zweite Position faehrt wie bisher den normalen.
+                tilt = get_tilt_for_role(
+                    shutter, why if why in ROLE_SUN_PROTECT_LEVELS else ROLE_SUN_PROTECT
+                )
                 if why != ROLE_SUN_PROTECT:
                     _LOGGER.debug(
-                        "[sun-protect] %s: shading position %d%% (%s)",
-                        cover_entity, int(pos), why,
+                        "[sun-protect] %s: shading position %s (%s)",
+                        cover_entity,
+                        "unchanged" if pos is None else f"{int(pos)}%",
+                        why,
                     )
 
             # Wind, rain and frost protection outrank shading, always – for
@@ -239,8 +248,17 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 shaded.append(cover_entity)
                 if awning:
                     data.setdefault("_awning_track_last", {})[cover_entity] = pos
-                elif pos is not None:
-                    data.setdefault("_shade_pos_last", {})[cover_entity] = pos
+                else:
+                    if pos is not None:
+                        data.setdefault("_shade_pos_last", {})[cover_entity] = pos
+                    # Welche Stufe zuletzt gefahren wurde: ohne das bliebe ein
+                    # Wechsel zwischen zwei Stufen mit "Hoehe unveraendert" oder
+                    # gleicher Hoehe unbemerkt.
+                    level_last = data.setdefault("_shade_level_last", {})
+                    if why in ROLE_SUN_PROTECT_LEVELS:
+                        level_last[cover_entity] = why
+                    else:
+                        level_last.pop(cover_entity, None)
             else:
                 _LOGGER.warning(
                     "[sun-protect] %s: drive failed – shading not marked active, "
@@ -294,6 +312,8 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             clear_stale_window_cycle_after_automated_up(data, cover_entity)
             forget_drive_after_close(hass, entry, data, cover_entity)
             data.get("_shade_pos_last", {}).pop(cover_entity, None)
+            data.get("_shade_level_last", {}).pop(cover_entity, None)
+            data.get("_shade_level_hold", {}).pop(cover_entity, None)
             # Wie in _drive_group()/resume_automation(): die Freigabe faehrt
             # tatsaechlich in eine Endlage, nicht nur in die Beschattung. Ohne
             # das hier blieb ein Rollladen, der abends vor der Freigabe schon
@@ -440,9 +460,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                     # force or the helper entity moved. Without this the switch
                     # would only take effect at the next release – hours later,
                     # which is not what "switch to the deeper position" means.
-                    wanted, _why = resolve_shade_position(hass, area, shutter, data)
+                    wanted, why = resolve_shade_position(hass, area, shutter, data)
                     last = data.get("_shade_pos_last", {}).get(cover)
-                    if last is not None and abs(wanted - last) >= SHADE_POSITION_MIN_STEP:
+                    now_level = why if why in ROLE_SUN_PROTECT_LEVELS else None
+                    level_changed = now_level != data.get(
+                        "_shade_level_last", {}
+                    ).get(cover)
+                    if level_changed or (
+                        last is not None and abs(wanted - last) >= SHADE_POSITION_MIN_STEP
+                    ):
                         to_shade.setdefault(area_id, []).append(shutter)
                 continue
 

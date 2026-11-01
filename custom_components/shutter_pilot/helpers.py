@@ -50,6 +50,16 @@ from .const import (
     ROLE_CLOSED_ALT,
     ROLE_CLOSED_FROST,
     ROLE_SUN_PROTECT_ALT,
+    ROLE_SUN_PROTECT_LEVELS,
+    SHADE_LEVELS,
+    SHADE_LEVEL_CONDITION_SLOTS,
+    CONF_POSITION_SUN_PROTECT_LEVELS,
+    CONF_TILT_SUN_PROTECT_LEVELS,
+    CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
+    CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
+    CONF_AREA_SHADE_LEVEL_HOLD,
+    DEFAULT_AREA_SHADE_LEVEL_HOLD,
+    MAX_AREA_SHADE_HOLD,
     SUN_PROTECT_ALT_CONDITION_SLOT,
     CONF_AREA_UP_ID,
     CONF_BLIND_DRIVE,
@@ -1221,6 +1231,10 @@ _ROLE_POSITION_KEYS = {
     ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
     ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
     ROLE_SUN_PROTECT_ALT: (CONF_POSITION_SUN_PROTECT_ALT, 30),
+    **{
+        role: (key, 50)
+        for role, key in zip(ROLE_SUN_PROTECT_LEVELS, CONF_POSITION_SUN_PROTECT_LEVELS)
+    },
 }
 
 
@@ -1282,15 +1296,76 @@ def shade_alt_condition_met(
     return _own_slot_met(hass, area, data, SUN_PROTECT_ALT_CONDITION_SLOT)
 
 
+def has_shade_level(shutter: dict[str, Any], level: int) -> bool:
+    """True if this shutter defines shading level 1..3 (a height or "unchanged")."""
+    idx = level - 1
+    if _has_partial_close_position(shutter, CONF_POSITION_SUN_PROTECT_LEVELS[idx]):
+        return True
+    return position_kept(shutter, ROLE_SUN_PROTECT_LEVELS[idx])
+
+
+def shade_level_hold_seconds(area: dict[str, Any]) -> float:
+    try:
+        minutes = float(
+            area.get(CONF_AREA_SHADE_LEVEL_HOLD, DEFAULT_AREA_SHADE_LEVEL_HOLD) or 0
+        )
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(minutes, MAX_AREA_SHADE_HOLD)) * 60.0
+
+
+def resolve_shade_level(
+    hass: HomeAssistant,
+    area: dict[str, Any],
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> int:
+    """The shading level (0 = ordinary shading) that holds for this shutter now.
+
+    The highest level whose condition holds wins. With a hold time a level that
+    just dropped out stays for that long, so a cloud at 2.000 lx does not make
+    the blind chase between two positions every few minutes.
+    """
+    candidate = 0
+    for level in reversed(SHADE_LEVELS):
+        if has_shade_level(shutter, level) and _own_slot_met(
+            hass, area, data, SHADE_LEVEL_CONDITION_SLOTS[level - 1]
+        ):
+            candidate = level
+            break
+    hold = shade_level_hold_seconds(area)
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if hold <= 0 or not cover:
+        return candidate
+    memory: dict[str, tuple[int, float]] = data.setdefault("_shade_level_hold", {})
+    now = time.monotonic()
+    held = memory.get(cover)
+    if held is not None and held[0] > candidate and has_shade_level(shutter, held[0]):
+        level, stamp = held
+        if _own_slot_met(hass, area, data, SHADE_LEVEL_CONDITION_SLOTS[level - 1]):
+            memory[cover] = (level, now)
+            return level
+        if now - stamp < hold:
+            return level
+    if candidate:
+        memory[cover] = (candidate, now)
+    else:
+        memory.pop(cover, None)
+    return candidate
+
+
 def resolve_shade_role(
     hass: HomeAssistant,
     area: dict[str, Any] | None,
     shutter: dict[str, Any],
     data: dict[str, Any],
 ) -> str:
-    """Pick which of the two shading positions this shutter uses."""
+    """Pick which shading position this shutter uses: a level, the second, or the plain one."""
     if area is None:
         return ROLE_SUN_PROTECT
+    level = resolve_shade_level(hass, area, shutter, data)
+    if level:
+        return ROLE_SUN_PROTECT_LEVELS[level - 1]
     if has_alt_shade_position(shutter) and shade_alt_condition_met(hass, area, data):
         return ROLE_SUN_PROTECT_ALT
     return ROLE_SUN_PROTECT
@@ -1375,6 +1450,12 @@ _ROLE_TILT_KEYS = {
     ROLE_CLOSED_FROST: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     # The second shading position is still shading: same slat angle.
     ROLE_SUN_PROTECT_ALT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
+    # Eine Stufe ohne eigenen Winkel faehrt den der normalen Beschattung; siehe
+    # get_tilt_for_role().
+    **{
+        role: (key, DEFAULT_TILT_SUN_PROTECT)
+        for role, key in zip(ROLE_SUN_PROTECT_LEVELS, CONF_TILT_SUN_PROTECT_LEVELS)
+    },
 }
 
 
@@ -1481,6 +1562,7 @@ _ROLE_KEEP_POSITION_KEYS = {
     ROLE_OPEN: CONF_KEEP_POSITION_OPEN,
     ROLE_CLOSED: CONF_KEEP_POSITION_CLOSED,
     ROLE_SUN_PROTECT: CONF_KEEP_POSITION_SUN_PROTECT,
+    **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_POSITION_SUN_PROTECT_LEVELS)),
 }
 # Follows _ROLE_TILT_KEYS: the roles that read the closed angle also read its
 # "unchanged" flag, so the evening drive and the frost position agree.
@@ -1492,6 +1574,7 @@ _ROLE_KEEP_TILT_KEYS = {
     ROLE_SUN_PROTECT: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_VENTILATION: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT: CONF_KEEP_TILT_SUN_PROTECT,
+    **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_TILT_SUN_PROTECT_LEVELS)),
 }
 
 
@@ -1534,6 +1617,8 @@ def get_tilt_for_role(shutter: dict[str, Any], role: str) -> float | None:
     if keep_key and shutter.get(keep_key, False):
         return None
     key, fallback = _ROLE_TILT_KEYS.get(role, (CONF_TILT_OPEN, DEFAULT_TILT_OPEN))
+    if role in ROLE_SUN_PROTECT_LEVELS and str(shutter.get(key) if shutter.get(key) is not None else "").strip() == "":
+        key, fallback = _ROLE_TILT_KEYS[ROLE_SUN_PROTECT]
     try:
         value = float(shutter.get(key, fallback))
     except (TypeError, ValueError):

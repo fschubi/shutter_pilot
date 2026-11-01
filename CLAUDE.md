@@ -48,7 +48,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (966 Tests)
+tests/               pytest-Suite (980 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -290,7 +290,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 966 Tests, ~21 s
+.venv/bin/pytest            # 980 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -319,12 +319,43 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.28.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.29.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-01 – 2.29.0: mehrstufiger Sonnenschutz (Raffstore, Stufe 5)
+
+Auf ausdrücklichen Auftrag („alle Stufen umsetzen, je Stufe ein Release") ohne
+vorherige Forumsklärung von Haltezeit und Rangfolge; Annahmen unten.
+
+**Aufbau wie `sp_alt`:** Bedingung je Stufe am Bereich (Slots `sp_l1..3`, die
+vorhandene Slot-Mechanik `_own_slot_met` – fail closed), Position und Lamellen
+je Stufe am Rollladen (`position_sun_protect_l<n>`, `tilt_sun_protect_l<n>`,
+`keep_position_/keep_tilt_sun_protect_l<n>`). `resolve_shade_level()` nimmt die
+höchste zutreffende Stufe, die in `resolve_shade_role()` **vor** `sp_alt` kommt;
+`ROLE_SUN_PROTECT_LEVELS` hängen in denselben Rollentabellen wie die übrigen
+Rollen. Eine Stufe ohne eigenen Winkel fährt den der Beschattung. Haltezeit:
+`shade_level_hold` (Bereich, Vorgabe 0), Gedächtnis `_shade_level_hold[cover]`
+= (Stufe, Zeitstempel der letzten Zutreffens). **Annahme:** eine einzige Haltezeit
+für alle Stufen, nicht je Stufe.
+
+**Nachfahren:** `elevation._evaluate` fuhr bei laufender Beschattung nur nach, wenn
+sich die *Zahl* um ≥ 2 % änderte. Mit „Höhe unverändert" oder gleicher Höhe
+bliebe ein Stufenwechsel unbemerkt; deshalb `_shade_level_last[cover]` und
+Nachfahren auch bei Stufenwechsel. Ohne Stufen bleibt der alte Pfad identisch.
+
+**Gefunden vom Test:** das Debug-Log in `_drive_sun_protect` rechnete `int(pos)`
+und stürzte bei „Höhe unverändert" auf einer Stufe ab – derselbe Fehler hätte
+`resolve` für Stufen mit Keep-Höhe bei jedem Minutentakt erwischt.
+
+**Verifiziert:** `pytest` 980 grün (14 neue, `tests/test_shade_levels.py`).
+Gegenproben: ohne Stufenvorrang fallen 8, ohne Nachfahren bei Stufenwechsel 1,
+ohne Haltezeit 1. Panel: Bereich (drei Bedingungen + Haltezeit), Rollladen
+(Haken je Stufe mit Position/Lamellen/Höhe-unverändert), i18n 9 Schlüssel ×11.
+Nicht im Browser und nicht im echten Home Assistant geprüft.
 
 ### 2026-11-01 – 2.28.0: Rückfahrt nach der Sperre, Lamellen von Hand (Stufe 4)
 
@@ -495,47 +526,6 @@ nur bei Text-Sensoren. In der Antwort richtiggestellt.
 der Knopf-Test, ohne Tausch der Reorder-Test, ohne Befehl-Sortierung sechs,
 ohne die beiden Warnungen der Formular-Test. **Nicht im Browser und nicht im
 echten Home Assistant geprüft** – besonders die Pfeile und der Rahmen.
-
-### 2026-10-26 – 2.26.1: der Unten-Merker, der die Hand nicht kannte
-
-Claus (simon42 #207, Export der Diele): Abendfahrt durch Sichtschutz
-(Template-Sensor 0 lx bei Licht an), Raffstore von Hand auf 98 % gehoben
-(`position_open` 50 – also **Zwischenposition**), Dämmerung 17:19 fuhr nicht
-zu. Nachgestellt, bevor irgendetwas geändert wurde. Ursache:
-`note_manual_position()` buchte nur die zwei Endlagen, eine Zwischenposition
-ließ den Unten-Merker stehen – und `brightness._run_down` springt über jeden
-Rollladen in `covers_driven_down` (die Zeile steht *vor* der Episoden-Prüfung
-aus 2.23.1).
-
-**Fix in zwei Teilen, weil Teil 1 allein ein Loch aufgemacht hätte:**
-1. Zwischenposition löscht den Unten-Merker (der Oben-Merker bleibt).
-2. Jede Handfahrt schreibt `data["_hand_moved_at"][cover]` (monotone Zeit wie
-   die Episoden); `_run_down` fasst einen Rollladen nicht an, wenn nach dem
-   Beginn der laufenden Dunkel-Episode von Hand gefahren wurde (strikt `>`).
-   Ohne Teil 2 fuhr „von Hand zu, im Dunkeln ein Stück auf" bei der nächsten
-   Lux-Meldung wieder zu: der Rollladen hatte keinen `down_fired`-Eintrag,
-   weil nicht die Helligkeit ihn zugefahren hatte (das gilt für Endlagen-Auf
-   schon seit 2.23.1 – dort jetzt ebenfalls abgedeckt).
-
-**Ein bestehender Test musste sich ändern:** `test_forum_2_17.py::
-test_a_position_in_between_says_nothing` hielt genau die alte Entscheidung
-fest („dazwischen sagt nichts", 2.17.0). Umgeschrieben auf „löscht den
-Unten-Merker, lässt den Oben-Merker" mit Begründung im Docstring; alle
-anderen Tests blieben unverändert grün.
-
-**Kleinigkeit aus derselben Meldung:** der Export schreibt `manual_override`
-mit der Panel-Beschriftung dazu (`never` las Claus als „nie").
-
-**Bewusste Verhaltensänderung:** ein von Hand auf eine Zwischenposition
-gefahrener Rollladen wird im Helligkeitsmodus in der nächsten Dunkel-Episode
-wieder zugefahren (vorher: nie, bis zum nächsten Tag), und eine „spätestens
-runter"-Frist (`episode=None`) fährt ihn einmal zu. Zeit- und Sonnenmodus
-unberührt.
-
-**Verifiziert:** `pytest` 916 grün (5 neue, `tests/test_hand_lift_new_episode.py`).
-Gegenproben: ohne Löschen des Merkers fallen der Claus-Test und der
-umgeschriebene 2.17-Test, ohne Zeitpunkt der Test „von Hand zu, im Dunkeln
-gehoben". Nicht in echtem Home Assistant geprüft.
 
 
 ## graphify

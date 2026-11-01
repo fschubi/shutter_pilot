@@ -25,6 +25,7 @@ from .const import (
     ROLE_CLOSED,
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
+    ROLE_SUN_PROTECT_LEVELS,
     ROLE_VENTILATION,
 )
 from .awning_guard import (
@@ -122,6 +123,7 @@ async def _drive_group(
         # repair. The dashboard's area buttons do skip it: there the switch sits
         # two lines above the button, and driving it anyway read as a fault to
         # two people independently.
+        tilt_role = role
         if role == ROLE_SUN_PROTECT:
             if not shading_enabled(shutter):
                 _LOGGER.info(
@@ -131,8 +133,12 @@ async def _drive_group(
                 )
                 continue
             position, why = resolve_shade_position(hass, area_cfg, shutter, data)
-            if why == ROLE_SUN_PROTECT and position_kept(shutter, ROLE_SUN_PROTECT):
+            if why in (ROLE_SUN_PROTECT, *ROLE_SUN_PROTECT_LEVELS) and position_kept(
+                shutter, why
+            ):
                 position = None
+            if why in ROLE_SUN_PROTECT_LEVELS:
+                tilt_role = why
         else:
             position = role_position(shutter, role)
         # An awning that must not be out stays in, whoever asked. Judged by the
@@ -147,7 +153,7 @@ async def _drive_group(
                     describe_reasons(guard_status(data, cover).get("reasons")),
                 )
                 continue
-        tilt = get_tilt_for_role(shutter, role)
+        tilt = get_tilt_for_role(shutter, tilt_role)
         eff_pos = position
         if apply_lock_protection:
             eff_pos = get_effective_close_position(hass, shutter, position)

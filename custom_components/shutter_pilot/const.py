@@ -160,6 +160,26 @@ ROLE_CLOSED_FROST = "closed_frost"
 # Second shading position, used while the area's own sp_alt condition holds.
 ROLE_SUN_PROTECT_ALT = "sun_protect_alt"
 
+# Mehrstufiger Sonnenschutz (Stufe 5, Claus #172): bis zu drei Stufen ueber der
+# normalen Beschattung. Die Bedingung steht je Stufe am Bereich (Slot sp_l<n>),
+# Position und Lamellen je Stufe am Rollladen - dasselbe Paar wie sp_alt. Eine
+# hoehere Stufe gewinnt gegen eine niedrigere; sie gewinnt auch gegen sp_alt.
+SHADE_LEVELS = (1, 2, 3)
+ROLE_SUN_PROTECT_LEVELS = tuple(f"sun_protect_l{n}" for n in SHADE_LEVELS)
+SHADE_LEVEL_CONDITION_SLOTS = tuple(f"sp_l{n}" for n in SHADE_LEVELS)
+CONF_POSITION_SUN_PROTECT_LEVELS = tuple(f"position_sun_protect_l{n}" for n in SHADE_LEVELS)
+CONF_TILT_SUN_PROTECT_LEVELS = tuple(f"tilt_sun_protect_l{n}" for n in SHADE_LEVELS)
+CONF_KEEP_POSITION_SUN_PROTECT_LEVELS = tuple(
+    f"keep_position_sun_protect_l{n}" for n in SHADE_LEVELS
+)
+CONF_KEEP_TILT_SUN_PROTECT_LEVELS = tuple(
+    f"keep_tilt_sun_protect_l{n}" for n in SHADE_LEVELS
+)
+# Haltezeit einer Stufe in Minuten, wenn ihre Bedingung wegfaellt und eine
+# niedrigere gilt (Wolken bei 2.000 lx). 0 = sofort wie bei sp_alt.
+CONF_AREA_SHADE_LEVEL_HOLD = "shade_level_hold"
+DEFAULT_AREA_SHADE_LEVEL_HOLD = 0
+
 # Drive after close: wenn Zeit zum Schließen, Fenster aber offen -> merken, bei Fenster zu fahren
 CONF_DRIVE_AFTER_CLOSE = "drive_after_close"
 
@@ -604,6 +624,10 @@ AWNING_UNUSED_KEYS = (
     CONF_WINDOW_REACT,
     CONF_LOCK_REPLAY,
     CONF_TILT_HAND_DETECT,
+    *CONF_POSITION_SUN_PROTECT_LEVELS,
+    *CONF_TILT_SUN_PROTECT_LEVELS,
+    *CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
+    *CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,
@@ -646,6 +670,10 @@ WINDOW_UNUSED_KEYS = (
     CONF_WINDOW_REACT,
     CONF_LOCK_REPLAY,
     CONF_TILT_HAND_DETECT,
+    *CONF_POSITION_SUN_PROTECT_LEVELS,
+    *CONF_TILT_SUN_PROTECT_LEVELS,
+    *CONF_KEEP_POSITION_SUN_PROTECT_LEVELS,
+    *CONF_KEEP_TILT_SUN_PROTECT_LEVELS,
     CONF_STORM_GUARD,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,

@@ -4,6 +4,47 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-10-26 – 2.26.1: der Unten-Merker, der die Hand nicht kannte
+
+Claus (simon42 #207, Export der Diele): Abendfahrt durch Sichtschutz
+(Template-Sensor 0 lx bei Licht an), Raffstore von Hand auf 98 % gehoben
+(`position_open` 50 – also **Zwischenposition**), Dämmerung 17:19 fuhr nicht
+zu. Nachgestellt, bevor irgendetwas geändert wurde. Ursache:
+`note_manual_position()` buchte nur die zwei Endlagen, eine Zwischenposition
+ließ den Unten-Merker stehen – und `brightness._run_down` springt über jeden
+Rollladen in `covers_driven_down` (die Zeile steht *vor* der Episoden-Prüfung
+aus 2.23.1).
+
+**Fix in zwei Teilen, weil Teil 1 allein ein Loch aufgemacht hätte:**
+1. Zwischenposition löscht den Unten-Merker (der Oben-Merker bleibt).
+2. Jede Handfahrt schreibt `data["_hand_moved_at"][cover]` (monotone Zeit wie
+   die Episoden); `_run_down` fasst einen Rollladen nicht an, wenn nach dem
+   Beginn der laufenden Dunkel-Episode von Hand gefahren wurde (strikt `>`).
+   Ohne Teil 2 fuhr „von Hand zu, im Dunkeln ein Stück auf" bei der nächsten
+   Lux-Meldung wieder zu: der Rollladen hatte keinen `down_fired`-Eintrag,
+   weil nicht die Helligkeit ihn zugefahren hatte (das gilt für Endlagen-Auf
+   schon seit 2.23.1 – dort jetzt ebenfalls abgedeckt).
+
+**Ein bestehender Test musste sich ändern:** `test_forum_2_17.py::
+test_a_position_in_between_says_nothing` hielt genau die alte Entscheidung
+fest („dazwischen sagt nichts", 2.17.0). Umgeschrieben auf „löscht den
+Unten-Merker, lässt den Oben-Merker" mit Begründung im Docstring; alle
+anderen Tests blieben unverändert grün.
+
+**Kleinigkeit aus derselben Meldung:** der Export schreibt `manual_override`
+mit der Panel-Beschriftung dazu (`never` las Claus als „nie").
+
+**Bewusste Verhaltensänderung:** ein von Hand auf eine Zwischenposition
+gefahrener Rollladen wird im Helligkeitsmodus in der nächsten Dunkel-Episode
+wieder zugefahren (vorher: nie, bis zum nächsten Tag), und eine „spätestens
+runter"-Frist (`episode=None`) fährt ihn einmal zu. Zeit- und Sonnenmodus
+unberührt.
+
+**Verifiziert:** `pytest` 916 grün (5 neue, `tests/test_hand_lift_new_episode.py`).
+Gegenproben: ohne Löschen des Merkers fallen der Claus-Test und der
+umgeschriebene 2.17-Test, ohne Zeitpunkt der Test „von Hand zu, im Dunkeln
+gehoben". Nicht in echtem Home Assistant geprüft.
+
 ### 2026-10-24 – 2.26.0: Höhe und Lamellen getrennt (Raffstore, Stufe 3)
 
 Claus (#172, #196), sein erklärter Kern: je Zustand „Position oder Lamellen

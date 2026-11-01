@@ -904,3 +904,7 @@ MIT – see the [LICENSE](LICENSE) file for details.
 ### Slat changes by hand
 
 Tick **Detect slat changes made by hand** on a venetian blind and an angle-only change (height unchanged) counts like a hand drive: pending catch-up drives and the window cycle are dropped, and the area's override setting applies. Our own drive's echo (within 8 %), a moving cover and the first 15 s after any height change are ignored, because some actuators briefly report wrong angles. Off by default.
+
+### Shading levels
+
+Above the ordinary shading, an area can define up to **three more levels**, each with its own condition (binary sensor, number with on/off thresholds or text state – e.g. brightness 2,000 / 4,000 / 6,000 lx). Position and slat angle per level are set on each shutter (or "unchanged"). The **highest level that holds wins**, also against the second shading position. A **level hold time** (0–120 min, default 0) keeps a higher level after its condition drops, so a cloud does not make the blind chase between levels. A shutter with no entry for a level skips it.

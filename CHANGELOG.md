@@ -4,6 +4,22 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.29.0]
+
+### Neu
+- **Mehrstufiger Sonnenschutz** (Raffstore, Stufe 5, Claus #172). Über der
+  normalen Beschattung gibt es bis zu **drei weitere Stufen**, jede mit eigener
+  Bedingung am Bereich (Binärsensor, Zahlenwert mit Ein-/Ausschaltschwelle oder
+  Textzustand, z. B. Helligkeit 2.000 / 4.000 / 6.000 lx) und eigener Position
+  und eigenem Lamellenwinkel am Rollladen – beides auch „unverändert". Die
+  **höchste zutreffende Stufe gewinnt**, auch gegen die zweite Beschattungsposition.
+  Die **Haltezeit der Stufen** (Bereich, 0–120 min, Vorgabe 0) hält eine höhere
+  Stufe nach Wegfall ihrer Bedingung so lange, damit eine Wolke den Behang nicht
+  zwischen zwei Stufen pendeln lässt. Ein Rollladen ohne eingetragene Stufe
+  ignoriert die Bedingung; wer nichts einträgt, merkt keinen Unterschied. Der
+  Export nennt die aktuelle Stufe und warnt, wenn eine Stufe am Rollladen steht,
+  aber im Bereich keine Bedingung.
+
 ## [2.28.0]
 
 ### Neu

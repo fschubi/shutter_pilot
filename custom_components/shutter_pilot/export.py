@@ -87,6 +87,9 @@ from .const import (
     ROLE_OPEN,
     ROLE_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT,
+    ROLE_SUN_PROTECT_LEVELS,
+    SHADE_LEVELS,
+    SHADE_LEVEL_CONDITION_SLOTS,
     SUN_CONDITION_SLOTS,
     SUN_PROTECT_ALT_CONDITION_SLOT,
     sun_condition_invert_key,
@@ -104,6 +107,8 @@ from .helpers import (
     has_alt_shade_position,
     manual_position_is_a_close,
     resolve_shade_position,
+    has_shade_level,
+    position_kept,
     shading_enabled,
     should_skip_automated_up,
     sun_protect_area_ids_from_options,
@@ -983,6 +988,17 @@ def _shade_position_note(
             f"Beschattungsposition jetzt: **{pos:.0f} %** – aus `{entity_id}`, "
             "die festen Positionen gelten nicht."
         )
+    elif why in ROLE_SUN_PROTECT_LEVELS:
+        level = ROLE_SUN_PROTECT_LEVELS.index(why) + 1
+        shown = (
+            "Höhe unverändert"
+            if position_kept(shutter, why)
+            else f"**{pos:.0f} %**"
+        )
+        out.append(
+            f"Beschattungsposition jetzt: {shown} – **Stufe {level}**, "
+            "ihre Bedingung im Bereich trifft zu."
+        )
     elif why == ROLE_SUN_PROTECT_ALT:
         out.append(
             f"Beschattungsposition jetzt: **{pos:.0f} %** – zweite Position, "
@@ -1001,6 +1017,14 @@ def _shade_position_note(
             f"(`{CONF_POSITION_SUN_PROTECT_ALT}`), aber im Bereich steht keine "
             "Bedingung dafür – sie wird nie gefahren."
         )
+    for level in SHADE_LEVELS:
+        if has_shade_level(shutter, level) and not str(
+            area.get(sun_condition_keys(SHADE_LEVEL_CONDITION_SLOTS[level - 1])[0]) or ""
+        ).strip():
+            out.append(
+                f"> ⚠️ Beschattungsstufe {level} ist am Rollladen hinterlegt, aber "
+                "im Bereich steht keine Bedingung dafür – sie wird nie gefahren."
+            )
     if not shading_enabled(shutter):
         out.append(
             "> ℹ️ Dieser Rollladen ist von der Beschattung **abgemeldet** "
