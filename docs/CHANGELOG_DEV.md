@@ -148,6 +148,37 @@ ohne Beschattungs-Vorrang 1, ohne Scheduler-Vorrang 1, ohne Positionsprüfung am
 Ende 1. Panel: Entität, Umkehren, Position/Höhe-unverändert, Lamellen; i18n
 5 Schlüssel ×11. Nicht im Browser und nicht im echten Home Assistant geprüft.
 
+### 2026-11-01 – 2.31.0: Referenzfahrt (Raffstore, Stufe 7)
+
+Eigenes Modul `reference_run.py` im Minutentakt (`register_minute_callback`, kein
+eigener Timer), Haken `reference_run` (Vorgabe aus), `reference_run_days` (30),
+`reference_run_time` ("03:00"). Letzter Lauf je Cover in einem eigenen `Store`
+(`shutter_pilot_reference_run_<entry>`); **erstes Erscheinen setzt „zuletzt“ auf
+heute**, der erste Lauf kommt also einen Abstand später und nicht in der ersten
+Nacht. Ablauf: Höhe/Lamellen merken (`resting_position`), „auf“, warten, „zu“,
+warten, zurück. „Enden“ sind die konfigurierten `position_open`/`position_closed`
+(Zahl, nicht Keep-aware), damit auch eine umgekehrte Skala (Claus: auf 0) ohne
+Sonderfall geht.
+
+**Das Nadelöhr ist der Tracker:** eine Fahrt über mehrere Minuten überschreitet
+die 90-s-Karenz, und jede Zwischenmeldung würde als Handfahrt gebucht. Die
+Warteschleife erneuert deshalb `recent_automation_covers[cover]` alle 2 s (ohne
+Rückmeldung einmal und feste 60 s). Übersprungen wird bei: System aus,
+`automation_allowed` falsch, Sichtschutz, offenes Fenster, aktiver Fensterzyklus,
+Lauf läuft schon. Dienst `reference_run` (Pflichtfeld `entity_id`) startet einen
+Lauf als Hintergrundtask, ignoriert Intervall und Haken, nicht aber die
+Sperren.
+
+**Bewusst offen:** während des Laufs sperrt nichts andere Automatismen (um 03:00
+läuft normalerweise nichts); keine Übersetzungseinträge für den Dienst (wie bei
+`resume_automation`).
+
+**Verifiziert:** `pytest` 998 grün (8 neue, `tests/test_reference_run.py`).
+Gegenproben: ohne Sperrprüfung, ohne Intervallprüfung und ohne „erstes Erscheinen“
+fällt je ein Test. Panel: Haken, Abstand, Uhrzeit; i18n 4 Schlüssel ×11. Nicht im
+Browser und nicht im echten Home Assistant geprüft – insbesondere nicht, ob der
+echte KNX-Aktor die Positionen in der erwarteten Zeit erreicht.
+
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
 Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;

@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1002 Tests)
+tests/               pytest-Suite (1029 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -292,7 +292,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1002 Tests, ~21 s
+.venv/bin/pytest            # 1029 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -321,12 +321,29 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.34.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.35.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.35.0: zweite Öffnungsstufe
+
+Claus (#225): Diele morgens nur Lamellen, ab 10 Uhr bei Anwesenheit und schönem
+Wetter ganz hoch. Haken `open_stage2` mit `open_stage2_time` (10:00),
+`open_stage2_entity` (leer = keine Bedingung, tot = nein) und eigener Rolle
+`ROLE_OPEN_STAGE2` (Position/Lamellen/Keep in den vier Tabellen). Eigenes Modul
+`open_stage2.py` im Minutentakt. **Vollendet nur, was begonnen wurde:** der
+Rollladen muss in `covers_driven_up` stehen und nicht in `covers_driven_down` –
+so löst eine am Morgen gesperrte Hochfahrt (Wochenende, Sichtschutz, `no_up`)
+keine Stufe 2 aus, und die Abendfahrt beendet den Tag. Übersprungen bei: System
+/Automatik aus, Sichtschutz, offenem Fenster, Beschattung aktiv, Handfahrt heute
+(`_hand_moved_today` aus der monotonen Zeit und der Zeit seit Mitternacht). Einmal
+am Tag (`_open2_done`), im Speicher, nicht über den Neustart – der leert aber
+auch `covers_driven_up`, sodass nach einem Neustart nichts nachfeuert.
+Panel: Haken, Uhrzeit, Entität, Position/Keep, Lamellen; i18n 6 Schlüssel ×11.
+Nicht im echten Home Assistant geprüft.
 
 ### 2026-11-03 – 2.34.0: Sichtschutz mit zweiter Stellung bei Sonne
 
@@ -386,37 +403,6 @@ echte Endanschläge für die Referenzfahrt, Lamellen-Regler im Dashboard, zweite
 
 **Verifiziert:** `pytest` 1002 grün (4 neue/umgebaute). Gegenprobe: ohne
 Zahlen-Prüfung fallen zwei. Nicht im echten Home Assistant geprüft.
-
-### 2026-11-01 – 2.31.0: Referenzfahrt (Raffstore, Stufe 7)
-
-Eigenes Modul `reference_run.py` im Minutentakt (`register_minute_callback`, kein
-eigener Timer), Haken `reference_run` (Vorgabe aus), `reference_run_days` (30),
-`reference_run_time` ("03:00"). Letzter Lauf je Cover in einem eigenen `Store`
-(`shutter_pilot_reference_run_<entry>`); **erstes Erscheinen setzt „zuletzt“ auf
-heute**, der erste Lauf kommt also einen Abstand später und nicht in der ersten
-Nacht. Ablauf: Höhe/Lamellen merken (`resting_position`), „auf“, warten, „zu“,
-warten, zurück. „Enden“ sind die konfigurierten `position_open`/`position_closed`
-(Zahl, nicht Keep-aware), damit auch eine umgekehrte Skala (Claus: auf 0) ohne
-Sonderfall geht.
-
-**Das Nadelöhr ist der Tracker:** eine Fahrt über mehrere Minuten überschreitet
-die 90-s-Karenz, und jede Zwischenmeldung würde als Handfahrt gebucht. Die
-Warteschleife erneuert deshalb `recent_automation_covers[cover]` alle 2 s (ohne
-Rückmeldung einmal und feste 60 s). Übersprungen wird bei: System aus,
-`automation_allowed` falsch, Sichtschutz, offenes Fenster, aktiver Fensterzyklus,
-Lauf läuft schon. Dienst `reference_run` (Pflichtfeld `entity_id`) startet einen
-Lauf als Hintergrundtask, ignoriert Intervall und Haken, nicht aber die
-Sperren.
-
-**Bewusst offen:** während des Laufs sperrt nichts andere Automatismen (um 03:00
-läuft normalerweise nichts); keine Übersetzungseinträge für den Dienst (wie bei
-`resume_automation`).
-
-**Verifiziert:** `pytest` 998 grün (8 neue, `tests/test_reference_run.py`).
-Gegenproben: ohne Sperrprüfung, ohne Intervallprüfung und ohne „erstes Erscheinen“
-fällt je ein Test. Panel: Haken, Abstand, Uhrzeit; i18n 4 Schlüssel ×11. Nicht im
-Browser und nicht im echten Home Assistant geprüft – insbesondere nicht, ob der
-echte KNX-Aktor die Positionen in der erwarteten Zeit erreicht.
 
 ## graphify
 

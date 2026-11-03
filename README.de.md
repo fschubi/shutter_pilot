@@ -933,6 +933,10 @@ Trage am Rollladen eine **Sichtschutz-Entität** ein (Badbelegung, Licht, Schalt
 
 **Zweite Stellung, wenn die Sonne vor dem Fenster steht:** mit dem Haken nimmt der Sichtschutz eine eigene Position und eigene Lamellen, solange die Sonne vor dem Fenster steht (Sonnenhöhe und Himmelsrichtung der Beschattung des Bereichs), z. B. Lamellen 50 beim Fernsehen, bei Blendung auf dem Bildschirm ganz zu. Scheint die Sonne nicht mehr, wechselt er zurück.
 
+### Zweite Öffnungsstufe
+
+Mit dem Haken **Zweite Öffnungsstufe** am Rollladen teilst du den Morgen in zwei Schritte: Die normale Hochfahrt bleibt wie eingestellt (zum Beispiel nur die Lamellen, Höhe unverändert), und ab der eingetragenen Uhrzeit – und solange eine optionale Bedingungs-Entität „an“ meldet, etwa jemand zu Hause und schönes Wetter – fährt der Rollladen einmal am Tag in die zweite Stellung. Sie vollendet nur eine Morgenfahrt, die wirklich stattfand, und lässt den Rollladen nach einer Handfahrt am selben Tag, bei offenem Fenster, aktivem Sichtschutz oder während der Beschattung in Ruhe.
+
 ### Referenzfahrt
 
 Mit dem Haken **Referenzfahrt** fährt ein Raffstore im eingestellten Abstand (Vorgabe 30 Tage) zur eingestellten Uhrzeit (Vorgabe 03:00) einmal auf seine konfigurierte *auf*-Position, dann auf *zu* und zurück auf die vorherige Höhe samt Lamellenwinkel. Das setzt die Zählung eines Motors zurück, der über die Laufzeit positioniert wird. Der Lauf wartet auf jede Position und wird übersprungen (und am nächsten Tag wiederholt), wenn Automatik aus ist oder der Rollladen gesperrt ist, bei Sturm, Sichtschutz oder offenem Fenster. Der erste Lauf kommt einen Abstand nach dem Einschalten. Der Dienst `shutter_pilot.reference_run` startet ihn für einen genannten Rollladen sofort.

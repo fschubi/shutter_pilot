@@ -4,6 +4,20 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.35.0]
+
+### Neu
+- **Zweite Öffnungsstufe je Rollladen** (Claus #225). Morgens nur die Lamellen
+  öffnen (normale Hochfahrt mit „Höhe unverändert“), später ganz hochfahren – bisher
+  mit einer Zusatz-Automation gelöst. Mit dem Haken **„Zweite Öffnungsstufe“**
+  trägst du eine Uhrzeit (Vorgabe 10:00), eine optionale Bedingungs-Entität und
+  eine eigene Position und Lamellen ein. Ab der Uhrzeit und solange die Bedingung
+  „an“ ist, fährt der Rollladen einmal am Tag in die zweite Stellung. Sie
+  vollendet nur eine Morgenfahrt, die wirklich stattfand, und lässt den Rollladen
+  bei einer Handfahrt am selben Tag, offenem Fenster, Sichtschutz oder Beschattung
+  stehen. Ein nicht erreichbarer Sensor hält die Stufe zurück (die Lamellen stehen
+  schon offen, warten schadet nicht). Ohne Haken ändert sich nichts.
+
 ## [2.34.0]
 
 ### Neu
