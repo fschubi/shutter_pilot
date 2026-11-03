@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.34.0]
+
+### Neu
+- **Sichtschutz: zweite Stellung, wenn die Sonne vor dem Fenster steht**
+  (Claus #226). Mit dem Haken nimmt der Sichtschutz eine eigene Position und
+  eigene Lamellen, solange die Sonne vor dem Fenster steht – gerechnet mit
+  Sonnenhöhe und Himmelsrichtung der Beschattung des Bereichs, nicht mit deren
+  Bedingungen oder Zeitfenster. Steht sie nicht mehr dort, wechselt der
+  Sichtschutz zurück auf die erste Stellung; nach dem Ende kehrt der Rollladen wie
+  bisher auf die Höhe und den Winkel von vorher zurück. Ohne Haken ändert sich
+  nichts.
+
 ## [2.33.0]
 
 ### Neu

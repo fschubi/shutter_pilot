@@ -64,6 +64,13 @@ from .const import (
     CONF_TILT_PRIVACY,
     CONF_KEEP_POSITION_PRIVACY,
     CONF_KEEP_TILT_PRIVACY,
+    CONF_KEEP_POSITION_PRIVACY_SUN,
+    CONF_KEEP_TILT_PRIVACY_SUN,
+    CONF_POSITION_PRIVACY_SUN,
+    CONF_PRIVACY_SUN,
+    CONF_TILT_PRIVACY_SUN,
+    DEFAULT_TILT_PRIVACY_SUN,
+    ROLE_PRIVACY_SUN,
     DEFAULT_POSITION_PRIVACY,
     DEFAULT_TILT_PRIVACY,
     ROLE_PRIVACY,
@@ -283,6 +290,29 @@ def privacy_active(hass: HomeAssistant, shutter: dict[str, Any]) -> bool:
         return False
     on = str(state.state).lower() in ("on", "true", "1", "home", "occupied")
     return on != bool(shutter.get(CONF_PRIVACY_INVERT, False))
+
+
+def privacy_role(
+    hass: HomeAssistant,
+    shutter: dict[str, Any],
+    area: dict[str, Any] | None,
+) -> str:
+    """Which privacy position applies now: the plain one or the "sun in front" one.
+
+    The second stands for a glare problem (TV on, sun on the screen): same
+    privacy, other slat angle. Only the sun's geometry is asked – height and
+    compass direction of the shading config – not the shading conditions, the
+    season or the clock window, which describe the household and not the sun.
+    """
+    if not shutter.get(CONF_PRIVACY_SUN, False) or area is None:
+        return ROLE_PRIVACY
+    elevation, azimuth = get_sun_angles(hass)
+    if elevation is None:
+        return ROLE_PRIVACY
+    geo = resolve_shading_config(area, shutter)
+    if sun_protect_conditions_met(elevation, azimuth, geo):
+        return ROLE_PRIVACY_SUN
+    return ROLE_PRIVACY
 
 
 def note_privacy_missed_up(data: dict[str, Any], cover: str) -> None:
@@ -1263,6 +1293,7 @@ _ROLE_POSITION_KEYS = {
     ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
     ROLE_SUN_PROTECT_ALT: (CONF_POSITION_SUN_PROTECT_ALT, 30),
     ROLE_PRIVACY: (CONF_POSITION_PRIVACY, DEFAULT_POSITION_PRIVACY),
+    ROLE_PRIVACY_SUN: (CONF_POSITION_PRIVACY_SUN, DEFAULT_POSITION_PRIVACY),
     **{
         role: (key, 50)
         for role, key in zip(ROLE_SUN_PROTECT_LEVELS, CONF_POSITION_SUN_PROTECT_LEVELS)
@@ -1504,6 +1535,7 @@ _ROLE_TILT_KEYS = {
     # The second shading position is still shading: same slat angle.
     ROLE_SUN_PROTECT_ALT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_PRIVACY: (CONF_TILT_PRIVACY, DEFAULT_TILT_PRIVACY),
+    ROLE_PRIVACY_SUN: (CONF_TILT_PRIVACY_SUN, DEFAULT_TILT_PRIVACY_SUN),
     # Eine Stufe ohne eigenen Winkel faehrt den der normalen Beschattung; siehe
     # get_tilt_for_role().
     **{
@@ -1617,6 +1649,7 @@ _ROLE_KEEP_POSITION_KEYS = {
     ROLE_CLOSED: CONF_KEEP_POSITION_CLOSED,
     ROLE_SUN_PROTECT: CONF_KEEP_POSITION_SUN_PROTECT,
     ROLE_PRIVACY: CONF_KEEP_POSITION_PRIVACY,
+    ROLE_PRIVACY_SUN: CONF_KEEP_POSITION_PRIVACY_SUN,
     **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_POSITION_SUN_PROTECT_LEVELS)),
 }
 # Follows _ROLE_TILT_KEYS: the roles that read the closed angle also read its
@@ -1630,6 +1663,7 @@ _ROLE_KEEP_TILT_KEYS = {
     ROLE_VENTILATION: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_PRIVACY: CONF_KEEP_TILT_PRIVACY,
+    ROLE_PRIVACY_SUN: CONF_KEEP_TILT_PRIVACY_SUN,
     **dict(zip(ROLE_SUN_PROTECT_LEVELS, CONF_KEEP_TILT_SUN_PROTECT_LEVELS)),
 }
 

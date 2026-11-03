@@ -321,12 +321,28 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.33.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.34.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.34.0: Sichtschutz mit zweiter Stellung bei Sonne
+
+Claus (#226) löste „TV an, Lamellen 50, bei Blendung zu“ mit einer Zusatz-Automation
+und musste die Lamellen-Handerkennung dafür abschalten (seine Automation bewegt
+am Tracker vorbei). Jetzt Haken `privacy_sun` mit eigener Rolle `ROLE_PRIVACY_SUN`
+(Position/Lamellen/Keep, alle in den vier Rollentabellen). `privacy_role()` fragt
+nur die **Geometrie** (`sun_protect_conditions_met` mit `resolve_shading_config`),
+nicht Bedingungen, Zeitraum oder Fenster: die beschreiben den Haushalt, nicht die
+Sonne. `privacy.py` wählt die Rolle beim Start und im Minutentakt; bei Wechsel
+fährt `_switch_role()` neu, behält aber den Rückkehr-Zustand (`pos`/`tilt`) und
+erneuert `at` und `sent`, damit Ende und Handfahrt-Vergleich auf der neuen
+Stellung rechnen. Eine Handfahrt nach der letzten Sichtschutzfahrt wird nicht
+überfahren. Panel: Haken mit Position/Lamellen, i18n 4 Schlüssel ×11.
+Nicht im echten Home Assistant geprüft; kein Halte-/Hysterese-Verhalten an der
+Sonnenkante (Minutentakt, die Grenze ist selten scharf).
 
 ### 2026-11-03 – 2.33.0: Lamellen-Knöpfe im Dashboard
 
@@ -401,34 +417,6 @@ Gegenproben: ohne Sperrprüfung, ohne Intervallprüfung und ohne „erstes Ersch
 fällt je ein Test. Panel: Haken, Abstand, Uhrzeit; i18n 4 Schlüssel ×11. Nicht im
 Browser und nicht im echten Home Assistant geprüft – insbesondere nicht, ob der
 echte KNX-Aktor die Positionen in der erwarteten Zeit erreicht.
-
-### 2026-11-01 – 2.30.0: Sichtschutz (Raffstore, Stufe 6)
-
-Eigenes Modul `privacy.py`. Je Rollladen `privacy_entity` (+ `privacy_invert`,
-`position_privacy`, `tilt_privacy`, Keep-Haken); `privacy_active()` wie die
-Sperr-Entität fail open. Listener auf die Entität **und** Minutentakt (Neustart,
-verlorene Ereignisse). Beim Start merkt `_privacy[cover]` Höhe (`resting_position`),
-Winkel und Zeitpunkt, fährt auf die Sichtschutz-Rolle; beim Ende Rückfahrt nur
-wenn **keine Handfahrt danach** (`_hand_moved_at`) und der Rollladen **noch auf der
-Sichtschutz-Position** steht (die Abendfahrt ist eine neuere Entscheidung).
-
-**Vorrang** an genau vier Stellen, nicht in `shutter_held()` (das hielte auch das
-Zufahren): Scheduler (`drive_shutters`, nur hoch), Helligkeit (`_run_up`),
-Beschattung (`elevation._evaluate`: weder beschatten noch freigeben), Lüften
-(`_blocked`). Eine zurückgehaltene Hochfahrt wird mit `note_privacy_missed_up`
-vermerkt und beim Ende nachgeholt (Offen-Position, `covers_driven_up`).
-„Hochfahren nur wenn Raum leer“ ist der vorhandene Slot `no_up` – nicht neu gebaut.
-
-**Nicht gebaut/Annahme:** Sichtschutz sperrt keine Fensterkontakt-Fahrten; kein
-eigener Export-Block (die Zeile hängt am Beschattungs-Abschnitt und erscheint
-nur dort). **Fehler beim Test:** der Beschattungstest bewies erst nichts, weil
-`_setup` die Sonne selbst auf 41° setzte und schon beim Start beschattete – nach
-der Gegenprobe (Hold entfernt, Test blieb grün) mit `sun=-5` neu aufgebaut.
-
-**Verifiziert:** `pytest` 990 grün (10 neue, `tests/test_privacy.py`). Gegenproben:
-ohne Beschattungs-Vorrang 1, ohne Scheduler-Vorrang 1, ohne Positionsprüfung am
-Ende 1. Panel: Entität, Umkehren, Position/Höhe-unverändert, Lamellen; i18n
-5 Schlüssel ×11. Nicht im Browser und nicht im echten Home Assistant geprüft.
 
 ## graphify
 

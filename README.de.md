@@ -931,6 +931,8 @@ Im Dashboard hat jeder Raffstore mit Lamellen neben Auf, Stopp und Ab zwei **Lam
 
 Trage am Rollladen eine **Sichtschutz-Entität** ein (Badbelegung, Licht, Schalter oder Binärsensor). Solange sie „an“ ist – oder „aus“, wenn du *Bedeutung umkehren* setzt –, steht der Rollladen auf seiner eigenen **Sichtschutz-Position** mit eigenen Lamellen (oder „unverändert“). Das hat Vorrang vor Morgenfahrt, Beschattung und Lüften; das Zufahren am Abend läuft weiter. Endet der Sichtschutz, fährt der Rollladen auf die vorherige Höhe zurück oder holt eine zurückgehaltene Morgenfahrt nach, außer er wurde inzwischen von Hand oder durch die Abendfahrt bewegt. Ohne Entität ändert sich nichts.
 
+**Zweite Stellung, wenn die Sonne vor dem Fenster steht:** mit dem Haken nimmt der Sichtschutz eine eigene Position und eigene Lamellen, solange die Sonne vor dem Fenster steht (Sonnenhöhe und Himmelsrichtung der Beschattung des Bereichs), z. B. Lamellen 50 beim Fernsehen, bei Blendung auf dem Bildschirm ganz zu. Scheint die Sonne nicht mehr, wechselt er zurück.
+
 ### Referenzfahrt
 
 Mit dem Haken **Referenzfahrt** fährt ein Raffstore im eingestellten Abstand (Vorgabe 30 Tage) zur eingestellten Uhrzeit (Vorgabe 03:00) einmal auf seine konfigurierte *auf*-Position, dann auf *zu* und zurück auf die vorherige Höhe samt Lamellenwinkel. Das setzt die Zählung eines Motors zurück, der über die Laufzeit positioniert wird. Der Lauf wartet auf jede Position und wird übersprungen (und am nächsten Tag wiederholt), wenn Automatik aus ist oder der Rollladen gesperrt ist, bei Sturm, Sichtschutz oder offenem Fenster. Der erste Lauf kommt einen Abstand nach dem Einschalten. Der Dienst `shutter_pilot.reference_run` startet ihn für einen genannten Rollladen sofort.

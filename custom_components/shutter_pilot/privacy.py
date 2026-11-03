@@ -24,6 +24,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    CONF_AREA_DOWN_ID,
+    CONF_AREA_ID,
+    CONF_AREAS,
     CONF_COVER_ENTITY_ID,
     CONF_PRIVACY_ENTITY,
     CONF_SHUTTERS,
@@ -38,6 +41,7 @@ from .helpers import (
     is_system_enabled,
     only_shutters,
     privacy_active,
+    privacy_role,
     register_minute_callback,
     resting_position,
     role_position,
@@ -88,18 +92,49 @@ async def setup_privacy(hass: HomeAssistant, entry: ConfigEntry) -> None:
             shutter
         )
 
+    def _role(shutter: dict) -> str:
+        areas = entry.options.get(CONF_AREAS, [])
+        down_id = str(shutter.get(CONF_AREA_DOWN_ID) or "").strip()
+        area = next(
+            (
+                a
+                for a in areas
+                if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "").strip() == down_id
+            ),
+            None,
+        ) if isinstance(areas, list) else None
+        return privacy_role(hass, shutter, area)
+
     async def _start(shutter: dict, cover: str) -> None:
         if not (is_system_enabled(hass, entry) and automation_allowed(hass, entry, shutter)):
             return
-        pos = role_position(shutter, ROLE_PRIVACY)
-        tilt = get_tilt_for_role(shutter, ROLE_PRIVACY)
+        role = _role(shutter)
+        pos = role_position(shutter, role)
+        tilt = get_tilt_for_role(shutter, role)
         state[cover] = {
             "pos": resting_position(hass, data, shutter, cover),
             "tilt": _current_tilt(hass, cover),
             "sent": pos,
+            "role": role,
             "at": time.monotonic(),
         }
         _LOGGER.info("%s: privacy on -> %s", cover, "height unchanged" if pos is None else f"{pos:.0f}%")
+        await set_cover_position(
+            hass, entry, cover, pos, "Privacy", tilt_position=tilt
+        )
+
+    async def _switch_role(shutter: dict, cover: str, role: str) -> None:
+        """The sun moved in front of (or away from) the window while privacy holds."""
+        record = state[cover]
+        if not (is_system_enabled(hass, entry) and automation_allowed(hass, entry, shutter)):
+            return
+        # A hand move since our last privacy drive is a newer decision: leave it.
+        if data.get("_hand_moved_at", {}).get(cover, float("-inf")) > record["at"]:
+            return
+        pos = role_position(shutter, role)
+        tilt = get_tilt_for_role(shutter, role)
+        record.update(role=role, sent=pos, at=time.monotonic())
+        _LOGGER.info("%s: privacy position -> %s", cover, role)
         await set_cover_position(
             hass, entry, cover, pos, "Privacy", tilt_position=tilt
         )
@@ -148,6 +183,10 @@ async def setup_privacy(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 await _start(shutter, cover)
             elif not active and cover in state:
                 await _end(shutter, cover)
+            elif active:
+                role = _role(shutter)
+                if role != state[cover].get("role", ROLE_PRIVACY):
+                    await _switch_role(shutter, cover, role)
 
     @callback
     def _on_change(event) -> None:

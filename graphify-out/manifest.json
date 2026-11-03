@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/const.py": {
-    "mtime": 1793729600.1798823,
-    "seen": 1793729938.084739,
-    "ast_hash": "be0fd933a396a824c1be0d76660eaa82",
+    "mtime": 1793730143.7549503,
+    "seen": 1793730297.738079,
+    "ast_hash": "04ab0abe5e4074af29fef40e1d1e60b6",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/cover_tracker.py": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js": {
-    "mtime": 1793729987.0421085,
-    "seen": 1793730035.381897,
-    "ast_hash": "0abac5d1847ee22647985705ff03b1c4",
+    "mtime": 1793730164.90477,
+    "seen": 1793730297.738084,
+    "ast_hash": "e2c5b90ccb307f3a73e4337249e82ee3",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/group_actions.py": {
@@ -96,15 +96,15 @@
     "semantic_hash": "a4a3a5c36fd0a868c9b1921b69db9b24"
   },
   "custom_components/shutter_pilot/helpers.py": {
-    "mtime": 1793727751.4060013,
-    "seen": 1793728565.258313,
-    "ast_hash": "f01cf4f4acfc0dccc00184d4eaf1c66a",
+    "mtime": 1793730143.7557926,
+    "seen": 1793730297.738086,
+    "ast_hash": "15974eaf466461ad6b3a741eed2867da",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1793730018.2590365,
-    "seen": 1793730035.381899,
-    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "mtime": 1793730245.0317118,
+    "seen": 1793730297.738086,
+    "ast_hash": "4ba2c585eb2ca431be14cce1d3aceaf2",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1793730018.2582302,
-    "seen": 1793730035.381978,
-    "ast_hash": "dff211a1cd87d4a89c51b8397622598f",
+    "mtime": 1793730245.030462,
+    "seen": 1793730297.738163,
+    "ast_hash": "87183d26022e00e8064de991c0a0a1ae",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1793730018.260807,
-    "seen": 1793730035.381979,
-    "ast_hash": "290445aa905f7dd6759c67c4c329bde8",
+    "mtime": 1793730245.032677,
+    "seen": 1793730297.738164,
+    "ast_hash": "6b4ed0ea820988f5f17b93b13720053e",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -582,15 +582,15 @@
     "semantic_hash": ""
   },
   "README.de.md": {
-    "mtime": 1793730018.2571766,
-    "seen": 1793730035.38198,
-    "ast_hash": "13afd8225d8d2669a129193f9c9dc7d7",
+    "mtime": 1793730245.0272846,
+    "seen": 1793730297.738165,
+    "ast_hash": "6c48dc1fd6a75294fe82d0939bc79342",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793730018.2560186,
-    "seen": 1793730035.381981,
-    "ast_hash": "276833707275bb78914278fbb7b04ada",
+    "mtime": 1793730245.0259202,
+    "seen": 1793730297.738166,
+    "ast_hash": "1af9d0593a38557e0a5e54780165f3fd",
     "semantic_hash": ""
   },
   "RELEASE.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1793730018.2616308,
-    "seen": 1793730035.381984,
-    "ast_hash": "74d4bd711a10ae3afcc48bf4fe4f260a",
+    "mtime": 1793730245.0349383,
+    "seen": 1793730297.7381692,
+    "ast_hash": "37408fd8437a357dc66da8fd3a7ca72b",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -852,15 +852,15 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/privacy.py": {
-    "mtime": 1793554560.261137,
-    "seen": 1793554692.1577458,
-    "ast_hash": "9f5392ddc60f00d085aa5226bb4c1411",
+    "mtime": 1793730224.3220801,
+    "seen": 1793730297.738088,
+    "ast_hash": "82674896e7d5bc39b0afc10f8b976542",
     "semantic_hash": ""
   },
   "tests/test_privacy.py": {
-    "mtime": 1793554580.1534863,
-    "seen": 1793554692.1578,
-    "ast_hash": "57be9f6cca7786b7fd655096f9f8effe",
+    "mtime": 1793730214.638151,
+    "seen": 1793730297.738137,
+    "ast_hash": "e7ee0ab971e35e8bc9be6d9956f94874",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/reference_run.py": {

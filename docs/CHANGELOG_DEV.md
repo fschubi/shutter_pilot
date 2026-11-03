@@ -120,6 +120,34 @@ ohne Haltezeit 1. Panel: Bereich (drei Bedingungen + Haltezeit), Rollladen
 (Haken je Stufe mit Position/Lamellen/Höhe-unverändert), i18n 9 Schlüssel ×11.
 Nicht im Browser und nicht im echten Home Assistant geprüft.
 
+### 2026-11-01 – 2.30.0: Sichtschutz (Raffstore, Stufe 6)
+
+Eigenes Modul `privacy.py`. Je Rollladen `privacy_entity` (+ `privacy_invert`,
+`position_privacy`, `tilt_privacy`, Keep-Haken); `privacy_active()` wie die
+Sperr-Entität fail open. Listener auf die Entität **und** Minutentakt (Neustart,
+verlorene Ereignisse). Beim Start merkt `_privacy[cover]` Höhe (`resting_position`),
+Winkel und Zeitpunkt, fährt auf die Sichtschutz-Rolle; beim Ende Rückfahrt nur
+wenn **keine Handfahrt danach** (`_hand_moved_at`) und der Rollladen **noch auf der
+Sichtschutz-Position** steht (die Abendfahrt ist eine neuere Entscheidung).
+
+**Vorrang** an genau vier Stellen, nicht in `shutter_held()` (das hielte auch das
+Zufahren): Scheduler (`drive_shutters`, nur hoch), Helligkeit (`_run_up`),
+Beschattung (`elevation._evaluate`: weder beschatten noch freigeben), Lüften
+(`_blocked`). Eine zurückgehaltene Hochfahrt wird mit `note_privacy_missed_up`
+vermerkt und beim Ende nachgeholt (Offen-Position, `covers_driven_up`).
+„Hochfahren nur wenn Raum leer“ ist der vorhandene Slot `no_up` – nicht neu gebaut.
+
+**Nicht gebaut/Annahme:** Sichtschutz sperrt keine Fensterkontakt-Fahrten; kein
+eigener Export-Block (die Zeile hängt am Beschattungs-Abschnitt und erscheint
+nur dort). **Fehler beim Test:** der Beschattungstest bewies erst nichts, weil
+`_setup` die Sonne selbst auf 41° setzte und schon beim Start beschattete – nach
+der Gegenprobe (Hold entfernt, Test blieb grün) mit `sun=-5` neu aufgebaut.
+
+**Verifiziert:** `pytest` 990 grün (10 neue, `tests/test_privacy.py`). Gegenproben:
+ohne Beschattungs-Vorrang 1, ohne Scheduler-Vorrang 1, ohne Positionsprüfung am
+Ende 1. Panel: Entität, Umkehren, Position/Höhe-unverändert, Lamellen; i18n
+5 Schlüssel ×11. Nicht im Browser und nicht im echten Home Assistant geprüft.
+
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
 Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;

@@ -36,6 +36,9 @@ from custom_components.shutter_pilot.const import (
     CONF_AREAS,
     CONF_COVER_ENTITY_ID,
     CONF_KEEP_POSITION_PRIVACY,
+    CONF_KEEP_POSITION_PRIVACY_SUN,
+    CONF_PRIVACY_SUN,
+    CONF_TILT_PRIVACY_SUN,
     CONF_NAME,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
@@ -267,3 +270,85 @@ class TestPrivacyEnd:
         await _set(hass, "off")
 
         assert calls["pos"] == []
+
+
+# --- Zweite Stellung, wenn die Sonne vor dem Fenster steht (Claus #226) ----------
+
+
+def _tv(**extra) -> dict:
+    """Fernseher an: Lamellen 50, Hoehe bleibt; bei Sonne vor dem Fenster zu."""
+    return {
+        **SHUTTER,
+        CONF_TILT_ENABLED: True,
+        CONF_TILT_OPEN: 100,
+        CONF_TILT_CLOSED: 0,
+        CONF_TILT_PRIVACY: 50,
+        CONF_KEEP_POSITION_PRIVACY: True,
+        CONF_PRIVACY_SUN: True,
+        CONF_TILT_PRIVACY_SUN: 0,
+        CONF_KEEP_POSITION_PRIVACY_SUN: True,
+        **extra,
+    }
+
+
+def _tilts(calls_) -> list:
+    return [c.data["tilt_position"] for c in calls_["tilt"]]
+
+
+SUN_AREA = {
+    CONF_AREA_ELEVATION_MIN: 0,
+    CONF_AREA_ELEVATION_MAX: 90,
+    CONF_AREA_AZIMUTH_ENABLED: True,
+    "azimuth_min": 150,
+    "azimuth_max": 250,
+}
+
+
+async def _sun(hass, data, elevation: float) -> None:
+    hass.states.async_set(
+        "sun.sun", "above_horizon", {"elevation": elevation, "azimuth": 198.0}
+    )
+    data["_minute_callbacks"]["privacy"](dt_util.now())
+    await hass.async_block_till_done()
+
+
+class TestSunSecondPosition:
+    async def test_with_the_sun_in_front_it_starts_on_the_second(self, hass, calls):
+        await _setup(hass, shutter=_tv(), area=_area(**SUN_AREA), sun=41.0)
+        await _set(hass, "on")
+        assert _tilts(calls) == [0]
+
+    async def test_without_sun_it_starts_on_the_first(self, hass, calls):
+        await _setup(hass, shutter=_tv(), area=_area(**SUN_AREA), sun=-5.0)
+        await _set(hass, "on")
+        assert _tilts(calls) == [50]
+
+    async def test_it_follows_the_sun_while_privacy_holds(self, hass, calls):
+        _, data = await _setup(hass, shutter=_tv(), area=_area(**SUN_AREA), sun=-5.0)
+        await _set(hass, "on")
+        await _sun(hass, data, 41.0)
+        await _sun(hass, data, -5.0)
+        assert _tilts(calls) == [50, 0, 50]
+
+    async def test_it_does_not_repeat_the_drive_every_minute(self, hass, calls):
+        _, data = await _setup(hass, shutter=_tv(), area=_area(**SUN_AREA), sun=41.0)
+        await _set(hass, "on")
+        await _sun(hass, data, 42.0)
+        await _sun(hass, data, 43.0)
+        assert _tilts(calls) == [0]
+
+    async def test_the_end_restores_the_original_angle(self, hass, calls):
+        _, data = await _setup(hass, shutter=_tv(), area=_area(**SUN_AREA), sun=-5.0)
+        await _set(hass, "on")
+        await _sun(hass, data, 41.0)
+        await _set(hass, "off")
+        assert _tilts(calls)[-1] == 50  # der Winkel vor dem Sichtschutz
+
+    async def test_without_the_hook_the_sun_changes_nothing(self, hass, calls):
+        """Bestandsschutz."""
+        shutter = _tv()
+        del shutter[CONF_PRIVACY_SUN]
+        _, data = await _setup(hass, shutter=shutter, area=_area(**SUN_AREA), sun=-5.0)
+        await _set(hass, "on")
+        await _sun(hass, data, 41.0)
+        assert _tilts(calls) == [50]
