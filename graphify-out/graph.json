@@ -16814,7 +16814,7 @@
       "file_type": "code",
       "norm_label": "test_a_slat_turn_a_little_after_the_last_height_report_is_ignored()",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L226"
+      "source_location": "L228"
     },
     {
       "id": "tests_test_tilt_hand_detect_test_noise_right_after_a_height_drive_is_ignored",
@@ -33857,7 +33857,7 @@
       "source_location": "L206"
     },
     {
-      "id": "tests_test_tilt_hand_detect_rationale_227",
+      "id": "tests_test_tilt_hand_detect_rationale_229",
       "label": "Dieselbe Folge, der Winkel kommt erst Sekunden nach der letzten Hoehe.",
       "_origin": "ast",
       "community": 42,
@@ -33865,7 +33865,7 @@
       "file_type": "rationale",
       "norm_label": "dieselbe folge, der winkel kommt erst sekunden nach der letzten hoehe.",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L227"
+      "source_location": "L229"
     },
     {
       "id": "tests_test_sun_protection",
@@ -77418,7 +77418,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L228",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -77430,7 +77430,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L228",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -77442,7 +77442,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L229",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -77454,7 +77454,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L231",
+      "source_location": "L233",
       "weight": 1.0
     },
     {
@@ -77562,7 +77562,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L216",
+      "source_location": "L217",
       "weight": 1.0
     },
     {
@@ -108953,7 +108953,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L226",
+      "source_location": "L228",
       "weight": 1.0
     },
     {
@@ -130649,14 +130649,14 @@
       "weight": 1.0
     },
     {
-      "source": "tests_test_tilt_hand_detect_rationale_227",
+      "source": "tests_test_tilt_hand_detect_rationale_229",
       "target": "tests_test_tilt_hand_detect_test_a_slat_turn_a_little_after_the_last_height_report_is_ignored",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/test_tilt_hand_detect.py",
-      "source_location": "L227",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -133810,5 +133810,5 @@
       "source_file": "CLAUDE.md"
     }
   ],
-  "built_at_commit": "0e8df0af48bfd853a8fb84d5d51799aa3bc9c217"
+  "built_at_commit": "2ca9633363385d710befb5a1b5a0c74c69179a0a"
 }

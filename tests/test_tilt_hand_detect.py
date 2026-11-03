@@ -211,10 +211,12 @@ async def test_the_actuator_turning_its_slats_after_a_drive_is_not_a_hand_move(h
     entry, data = await _setup(hass, _blind(**{CONF_POSITION_CLOSED: 0}))
     await _settle(hass, data)
     await set_cover_position(hass, entry, COVER, 0, "test", tilt_position=100)
+    await hass.async_block_till_done()
 
     for pos in (60, 20, 4):
         _report(hass, position=pos, tilt=100, state="closing")
     _report(hass, position=0, tilt=100, state="closing")
+    await hass.async_block_till_done()
     data["recent_automation_covers"] = {}  # Karenz vorbei
     data["pending_automation_covers"] = set()
     _report(hass, position=0, tilt=0, state="closed")  # Aktor dreht auf 0 %
@@ -229,6 +231,7 @@ async def test_a_slat_turn_a_little_after_the_last_height_report_is_ignored(hass
     await _settle(hass, data)
     data["commanded_positions"][COVER] = 0
     _report(hass, position=0, tilt=100, state="closing")
+    await hass.async_block_till_done()
     _report(hass, position=0, tilt=100, state="closed")
     await hass.async_block_till_done()
     data["recent_automation_covers"] = {}
