@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js": {
-    "mtime": 1793729645.7057056,
-    "seen": 1793729938.084745,
-    "ast_hash": "16d1a7daa6c7bc3e5c6f0b6e4a897f2b",
+    "mtime": 1793729987.0421085,
+    "seen": 1793730035.381897,
+    "ast_hash": "0abac5d1847ee22647985705ff03b1c4",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/group_actions.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1793729866.9407084,
-    "seen": 1793729938.084747,
-    "ast_hash": "74a6c96ef3a5b26c68751cbbe9af740e",
+    "mtime": 1793730018.2590365,
+    "seen": 1793730035.381899,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -402,9 +402,9 @@
     "semantic_hash": "c17cbc50d406171f3add2e4c5778be36"
   },
   "tests/test_panel.py": {
-    "mtime": 1793126171.4005053,
-    "seen": 1793126287.174232,
-    "ast_hash": "0c95ca6c8b270b3f41a16e2cc374e2f1",
+    "mtime": 1793729979.0575974,
+    "seen": 1793730035.38195,
+    "ast_hash": "65fec4984d184708905cdaadda9d37c5",
     "semantic_hash": ""
   },
   "tests/test_pending_persist.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1793729866.9395685,
-    "seen": 1793729938.084824,
-    "ast_hash": "c708282db989017262b6a358d74aab02",
+    "mtime": 1793730018.2582302,
+    "seen": 1793730035.381978,
+    "ast_hash": "dff211a1cd87d4a89c51b8397622598f",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1793729866.9415617,
-    "seen": 1793729938.084825,
-    "ast_hash": "115b6403c82399b4b24deae66540a7bc",
+    "mtime": 1793730018.260807,
+    "seen": 1793730035.381979,
+    "ast_hash": "290445aa905f7dd6759c67c4c329bde8",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -582,15 +582,15 @@
     "semantic_hash": ""
   },
   "README.de.md": {
-    "mtime": 1793729866.9374375,
-    "seen": 1793729938.0848262,
-    "ast_hash": "209be3115432c79c7220e0c7a79f82dd",
+    "mtime": 1793730018.2571766,
+    "seen": 1793730035.38198,
+    "ast_hash": "13afd8225d8d2669a129193f9c9dc7d7",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793729866.924477,
-    "seen": 1793729938.084827,
-    "ast_hash": "01ec6b7db6cb09325542ebff80fc11df",
+    "mtime": 1793730018.2560186,
+    "seen": 1793730035.381981,
+    "ast_hash": "276833707275bb78914278fbb7b04ada",
     "semantic_hash": ""
   },
   "RELEASE.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1793729866.9429834,
-    "seen": 1793729938.084831,
-    "ast_hash": "b1e90c138d1d49c0cadfb5ff66b4c9c8",
+    "mtime": 1793730018.2616308,
+    "seen": 1793730035.381984,
+    "ast_hash": "74d4bd711a10ae3afcc48bf4fe4f260a",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -873,6 +873,12 @@
     "mtime": 1793729797.1603875,
     "seen": 1793729938.084799,
     "ast_hash": "96f2cb4e201a4b004763cb7279e2f042",
+    "semantic_hash": ""
+  },
+  "tests/panel/tilt_buttons.mjs": {
+    "mtime": 1793729975.0468905,
+    "seen": 1793730035.381918,
+    "ast_hash": "d196e80ae46eec9a1ea511d6077ae19e",
     "semantic_hash": ""
   }
 }

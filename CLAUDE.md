@@ -321,12 +321,21 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.32.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.33.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.33.0: Lamellen-Knöpfe im Dashboard
+
+Claus (#225): Höhe fahren geht auf der Übersicht, Lamellen nicht. `_rowButtons()`
+zeigt bei `tilt_enabled` zwei Knöpfe (−/+ `TILT_STEP` 10 %), `_tiltStep()` liest
+`current_tilt_position` (ohne Meldung ab 50) und ruft `cover.set_cover_tilt_position`
+direkt auf – Zeilenknopf wie die anderen: von Hand, ohne Rollladenschalter, ohne
+Riegel. Kein Gruppenknopf. Node-Test `tests/panel/tilt_buttons.mjs`; i18n
+2 Schlüssel ×11. Nicht im Browser geprüft.
 
 ### 2026-11-03 – 2.32.0: Referenzfahrt mit Wochentag, Monatstag, Endanschlägen
 
@@ -420,37 +429,6 @@ der Gegenprobe (Hold entfernt, Test blieb grün) mit `sun=-5` neu aufgebaut.
 ohne Beschattungs-Vorrang 1, ohne Scheduler-Vorrang 1, ohne Positionsprüfung am
 Ende 1. Panel: Entität, Umkehren, Position/Höhe-unverändert, Lamellen; i18n
 5 Schlüssel ×11. Nicht im Browser und nicht im echten Home Assistant geprüft.
-
-### 2026-11-01 – 2.29.0: mehrstufiger Sonnenschutz (Raffstore, Stufe 5)
-
-Auf ausdrücklichen Auftrag („alle Stufen umsetzen, je Stufe ein Release") ohne
-vorherige Forumsklärung von Haltezeit und Rangfolge; Annahmen unten.
-
-**Aufbau wie `sp_alt`:** Bedingung je Stufe am Bereich (Slots `sp_l1..3`, die
-vorhandene Slot-Mechanik `_own_slot_met` – fail closed), Position und Lamellen
-je Stufe am Rollladen (`position_sun_protect_l<n>`, `tilt_sun_protect_l<n>`,
-`keep_position_/keep_tilt_sun_protect_l<n>`). `resolve_shade_level()` nimmt die
-höchste zutreffende Stufe, die in `resolve_shade_role()` **vor** `sp_alt` kommt;
-`ROLE_SUN_PROTECT_LEVELS` hängen in denselben Rollentabellen wie die übrigen
-Rollen. Eine Stufe ohne eigenen Winkel fährt den der Beschattung. Haltezeit:
-`shade_level_hold` (Bereich, Vorgabe 0), Gedächtnis `_shade_level_hold[cover]`
-= (Stufe, Zeitstempel der letzten Zutreffens). **Annahme:** eine einzige Haltezeit
-für alle Stufen, nicht je Stufe.
-
-**Nachfahren:** `elevation._evaluate` fuhr bei laufender Beschattung nur nach, wenn
-sich die *Zahl* um ≥ 2 % änderte. Mit „Höhe unverändert" oder gleicher Höhe
-bliebe ein Stufenwechsel unbemerkt; deshalb `_shade_level_last[cover]` und
-Nachfahren auch bei Stufenwechsel. Ohne Stufen bleibt der alte Pfad identisch.
-
-**Gefunden vom Test:** das Debug-Log in `_drive_sun_protect` rechnete `int(pos)`
-und stürzte bei „Höhe unverändert" auf einer Stufe ab – derselbe Fehler hätte
-`resolve` für Stufen mit Keep-Höhe bei jedem Minutentakt erwischt.
-
-**Verifiziert:** `pytest` 980 grün (14 neue, `tests/test_shade_levels.py`).
-Gegenproben: ohne Stufenvorrang fallen 8, ohne Nachfahren bei Stufenwechsel 1,
-ohne Haltezeit 1. Panel: Bereich (drei Bedingungen + Haltezeit), Rollladen
-(Haken je Stufe mit Position/Lamellen/Höhe-unverändert), i18n 9 Schlüssel ×11.
-Nicht im Browser und nicht im echten Home Assistant geprüft.
 
 ## graphify
 

@@ -89,6 +89,37 @@ Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz u
 15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
 Aktor vorliegt.
 
+### 2026-11-01 – 2.29.0: mehrstufiger Sonnenschutz (Raffstore, Stufe 5)
+
+Auf ausdrücklichen Auftrag („alle Stufen umsetzen, je Stufe ein Release") ohne
+vorherige Forumsklärung von Haltezeit und Rangfolge; Annahmen unten.
+
+**Aufbau wie `sp_alt`:** Bedingung je Stufe am Bereich (Slots `sp_l1..3`, die
+vorhandene Slot-Mechanik `_own_slot_met` – fail closed), Position und Lamellen
+je Stufe am Rollladen (`position_sun_protect_l<n>`, `tilt_sun_protect_l<n>`,
+`keep_position_/keep_tilt_sun_protect_l<n>`). `resolve_shade_level()` nimmt die
+höchste zutreffende Stufe, die in `resolve_shade_role()` **vor** `sp_alt` kommt;
+`ROLE_SUN_PROTECT_LEVELS` hängen in denselben Rollentabellen wie die übrigen
+Rollen. Eine Stufe ohne eigenen Winkel fährt den der Beschattung. Haltezeit:
+`shade_level_hold` (Bereich, Vorgabe 0), Gedächtnis `_shade_level_hold[cover]`
+= (Stufe, Zeitstempel der letzten Zutreffens). **Annahme:** eine einzige Haltezeit
+für alle Stufen, nicht je Stufe.
+
+**Nachfahren:** `elevation._evaluate` fuhr bei laufender Beschattung nur nach, wenn
+sich die *Zahl* um ≥ 2 % änderte. Mit „Höhe unverändert" oder gleicher Höhe
+bliebe ein Stufenwechsel unbemerkt; deshalb `_shade_level_last[cover]` und
+Nachfahren auch bei Stufenwechsel. Ohne Stufen bleibt der alte Pfad identisch.
+
+**Gefunden vom Test:** das Debug-Log in `_drive_sun_protect` rechnete `int(pos)`
+und stürzte bei „Höhe unverändert" auf einer Stufe ab – derselbe Fehler hätte
+`resolve` für Stufen mit Keep-Höhe bei jedem Minutentakt erwischt.
+
+**Verifiziert:** `pytest` 980 grün (14 neue, `tests/test_shade_levels.py`).
+Gegenproben: ohne Stufenvorrang fallen 8, ohne Nachfahren bei Stufenwechsel 1,
+ohne Haltezeit 1. Panel: Bereich (drei Bedingungen + Haltezeit), Rollladen
+(Haken je Stufe mit Position/Lamellen/Höhe-unverändert), i18n 9 Schlüssel ×11.
+Nicht im Browser und nicht im echten Home Assistant geprüft.
+
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
 Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;

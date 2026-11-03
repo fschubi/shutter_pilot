@@ -921,6 +921,8 @@ MIT – siehe die [LICENSE](LICENSE) Datei für Details.
 
 Mit dem Haken **Handverstellung der Lamellen erkennen** zählt bei einem Raffstore eine reine Winkeländerung (Höhe unverändert) wie eine Handfahrt: wartende Nachholfahrten und der Fensterzyklus werden verworfen, und die Übersteuerungs-Einstellung des Bereichs gilt. Die Nachmeldung der eigenen Fahrt (innerhalb von 8 %), ein fahrender Antrieb und die ersten 15 s nach einer Höhenänderung werden ignoriert, weil manche Aktoren dort kurz falsche Winkel melden. Vorgabe aus.
 
+Im Dashboard hat jeder Raffstore mit Lamellen neben Auf, Stopp und Ab zwei **Lamellen-Knöpfe** (−10 % / +10 %). Wie die anderen Zeilenknöpfe zählen sie als Handfahrt.
+
 ### Beschattungsstufen
 
 Über der normalen Beschattung kann ein Bereich bis zu **drei weitere Stufen** definieren, jede mit eigener Bedingung (Binärsensor, Zahl mit Ein-/Ausschaltschwelle oder Textzustand – z. B. Helligkeit 2.000 / 4.000 / 6.000 lx). Position und Lamellenwinkel je Stufe stellst du am Rollladen ein (oder „unverändert"). Die **höchste zutreffende Stufe gewinnt**, auch gegen die zweite Beschattungsposition. Eine **Haltezeit der Stufen** (0–120 min, Vorgabe 0) hält eine höhere Stufe nach Wegfall ihrer Bedingung, damit eine Wolke den Behang nicht pendeln lässt. Die Haltezeit gilt nur für Messwerte (Helligkeit, Temperatur); eine Stufe hinter einem Schalter oder Textzustand („TV an“) endet sofort. Ein Rollladen ohne Eintrag für eine Stufe überspringt sie.

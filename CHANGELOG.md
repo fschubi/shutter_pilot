@@ -4,6 +4,14 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.33.0]
+
+### Neu
+- **Lamellen im Dashboard verstellen** (Claus #225). Jeder Raffstore mit Lamellen
+  bekommt in der Dashboard-Zeile zwei Knöpfe, die den Winkel um 10 % verringern
+  oder erhöhen. Sie rufen wie die übrigen Zeilenknöpfe den `cover`-Dienst direkt
+  auf, zählen also als Handfahrt. Ohne Lamellen im Rollladen ändert sich nichts.
+
 ## [2.32.0]
 
 ### Neu

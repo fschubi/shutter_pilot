@@ -252,3 +252,10 @@ def test_order_and_guard_form_keys_are_in_all_languages() -> None:
     for key in ("btn_reorder", "btn_reorder_done", "reorder_hint", "btn_move_up",
                 "btn_move_down", "f_guard_no_threshold", "f_guard_wrong_way"):
         assert text.count(f"{key}:") == 11, key
+
+
+def test_slat_buttons_on_the_dashboard_row() -> None:
+    """Lamellen +/- je Raffstore in der Zeile (Claus, simon42 #225)."""
+    result = _run("tilt_buttons.mjs")
+    assert result.returncode == 0, "tilt_buttons:\n" + result.stdout + result.stderr
+    assert "FAIL" not in result.stdout, result.stdout
