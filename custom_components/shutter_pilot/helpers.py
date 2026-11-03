@@ -1346,6 +1346,24 @@ def shade_level_hold_seconds(area: dict[str, Any]) -> float:
     return max(0.0, min(minutes, MAX_AREA_SHADE_HOLD)) * 60.0
 
 
+def slot_is_numeric(area: dict[str, Any], slot: str) -> bool:
+    """True when the slot compares a number (brightness, temperature).
+
+    Same split as _slot_reading(): a state list or an on/off domain is a
+    plain yes/no, everything else is a value with thresholds.
+    """
+    entity_key, _on, _off, states_key = sun_condition_keys(slot)
+    entity_id = str(area.get(entity_key) or "").strip()
+    if not entity_id or entity_id.startswith(BOOLEAN_CONDITION_DOMAINS):
+        return False
+    allowed = area.get(states_key)
+    if isinstance(allowed, str):
+        allowed = [p.strip() for p in allowed.split(",")]
+    if isinstance(allowed, (list, tuple)) and any(str(x).strip() for x in allowed):
+        return False
+    return True
+
+
 def resolve_shade_level(
     hass: HomeAssistant,
     area: dict[str, Any],
@@ -1356,7 +1374,9 @@ def resolve_shade_level(
 
     The highest level whose condition holds wins. With a hold time a level that
     just dropped out stays for that long, so a cloud at 2.000 lx does not make
-    the blind chase between two positions every few minutes.
+    the blind chase between two positions every few minutes. The hold only
+    smooths a measured value: a level behind a switch ("TV on") is a plain
+    yes/no and ends the moment the switch does.
     """
     candidate = 0
     for level in reversed(SHADE_LEVELS):
@@ -1374,10 +1394,11 @@ def resolve_shade_level(
     held = memory.get(cover)
     if held is not None and held[0] > candidate and has_shade_level(shutter, held[0]):
         level, stamp = held
-        if _own_slot_met(hass, area, data, SHADE_LEVEL_CONDITION_SLOTS[level - 1]):
+        slot = SHADE_LEVEL_CONDITION_SLOTS[level - 1]
+        if _own_slot_met(hass, area, data, slot):
             memory[cover] = (level, now)
             return level
-        if now - stamp < hold:
+        if slot_is_numeric(area, slot) and now - stamp < hold:
             return level
     if candidate:
         memory[cover] = (candidate, now)

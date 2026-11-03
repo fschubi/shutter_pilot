@@ -237,27 +237,65 @@ class TestPicksTheHighestLevel:
 # --- Haltezeit -----------------------------------------------------------------
 
 
+def _lux_area(**extra) -> dict:
+    keys = sun_condition_keys("sp_l2")
+    return _area(
+        **{keys[0]: "sensor.lux", keys[1]: 4000, keys[2]: 4000},
+        **extra,
+    )
+
+
 class TestHoldTime:
     async def test_a_dropped_level_is_held_then_released(self, hass, calls):
-        _, data = await _setup(hass, area=_area(**{CONF_AREA_SHADE_LEVEL_HOLD: 10}))
-        area, shutter = _area(**{CONF_AREA_SHADE_LEVEL_HOLD: 10}), dict(SHUTTER)
-        _flags(hass, l2="on")
+        area = _lux_area(**{CONF_AREA_SHADE_LEVEL_HOLD: 10})
+        _, data = await _setup(hass, area=area)
+        shutter = dict(SHUTTER)
+        hass.states.async_set("sensor.lux", "5000")
         assert resolve_shade_position(hass, area, shutter, data)[0] == 25.0
 
-        _flags(hass)  # Wolke: Bedingung weg
+        hass.states.async_set("sensor.lux", "2000")  # Wolke
         assert resolve_shade_position(hass, area, shutter, data)[0] == 25.0
 
         level, stamp = data["_shade_level_hold"][COVER]
         data["_shade_level_hold"][COVER] = (level, stamp - 11 * 60)
         assert resolve_shade_position(hass, area, shutter, data)[0] == 50.0
 
+    async def test_a_switch_level_ends_with_the_switch(self, hass, calls):
+        """Claus #225: "TV an" soll sofort zurueck, nicht erst nach der Haltezeit.
+
+        Die Haltezeit glaettet einen Messwert, keinen Schalter."""
+        area = _area(**{CONF_AREA_SHADE_LEVEL_HOLD: 10})
+        _, data = await _setup(hass, area=area)
+        shutter = dict(SHUTTER)
+        _flags(hass, l2="on")
+        assert resolve_shade_position(hass, area, shutter, data)[0] == 25.0
+        _flags(hass)
+        assert resolve_shade_position(hass, area, shutter, data)[0] == 50.0
+
+    async def test_a_state_list_level_is_a_switch_too(self, hass, calls):
+        keys = sun_condition_keys("sp_l2")
+        area = _area(
+            **{
+                CONF_AREA_SHADE_LEVEL_HOLD: 10,
+                keys[0]: "weather.home",
+                keys[3]: ["sunny"],
+            }
+        )
+        _, data = await _setup(hass, area=area)
+        shutter = dict(SHUTTER)
+        hass.states.async_set("weather.home", "sunny")
+        assert resolve_shade_position(hass, area, shutter, data)[0] == 25.0
+        hass.states.async_set("weather.home", "cloudy")
+        assert resolve_shade_position(hass, area, shutter, data)[0] == 50.0
+
     async def test_without_hold_it_drops_at_once(self, hass, calls):
         """Vorgabe 0: wie sp_alt, keine Haltezeit."""
-        _, data = await _setup(hass)
-        _flags(hass, l2="on")
-        assert resolve_shade_position(hass, _area(), dict(SHUTTER), data)[0] == 25.0
-        _flags(hass)
-        assert resolve_shade_position(hass, _area(), dict(SHUTTER), data)[0] == 50.0
+        area = _lux_area()
+        _, data = await _setup(hass, area=area)
+        hass.states.async_set("sensor.lux", "5000")
+        assert resolve_shade_position(hass, area, dict(SHUTTER), data)[0] == 25.0
+        hass.states.async_set("sensor.lux", "2000")
+        assert resolve_shade_position(hass, area, dict(SHUTTER), data)[0] == 50.0
 
 
 # --- Lamellen und Hoehe -----------------------------------------------------------

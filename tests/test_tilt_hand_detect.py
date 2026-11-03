@@ -200,3 +200,41 @@ async def test_the_height_target_stays_after_a_hand_tilt(hass):
 
     assert data["commanded_positions"][COVER] == 70
     assert "commanded_tilts" not in data or COVER not in data["commanded_tilts"]
+
+
+async def test_the_actuator_turning_its_slats_after_a_drive_is_not_a_hand_move(hass):
+    """Claus #225: MDT JAL-0810M "Lamellen nach Fahrtende 0 %".
+
+    Nach jeder Abwaertsfahrt dreht der Aktor die Lamellen selbst auf 0 - gemeldet
+    wird das nach der letzten Hoehe. Weder eine Handfahrt per Taster noch unsere
+    eigene darf daraus eine zweite, getrennte Winkel-Handfahrt machen."""
+    entry, data = await _setup(hass, _blind(**{CONF_POSITION_CLOSED: 0}))
+    await _settle(hass, data)
+    await set_cover_position(hass, entry, COVER, 0, "test", tilt_position=100)
+
+    for pos in (60, 20, 4):
+        _report(hass, position=pos, tilt=100, state="closing")
+    _report(hass, position=0, tilt=100, state="closing")
+    data["recent_automation_covers"] = {}  # Karenz vorbei
+    data["pending_automation_covers"] = set()
+    _report(hass, position=0, tilt=0, state="closed")  # Aktor dreht auf 0 %
+    await hass.async_block_till_done()
+
+    assert "_hand_moved_at" not in data or COVER not in data["_hand_moved_at"]
+
+
+async def test_a_slat_turn_a_little_after_the_last_height_report_is_ignored(hass):
+    """Dieselbe Folge, der Winkel kommt erst Sekunden nach der letzten Hoehe."""
+    entry, data = await _setup(hass, _blind(**{CONF_POSITION_CLOSED: 0}))
+    await _settle(hass, data)
+    data["commanded_positions"][COVER] = 0
+    _report(hass, position=0, tilt=100, state="closing")
+    _report(hass, position=0, tilt=100, state="closed")
+    await hass.async_block_till_done()
+    data["recent_automation_covers"] = {}
+    data["pending_automation_covers"] = set()
+
+    _report(hass, position=0, tilt=0, state="closed")
+    await hass.async_block_till_done()
+
+    assert COVER not in data.get("_hand_moved_at", {})

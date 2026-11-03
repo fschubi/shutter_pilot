@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (998 Tests)
+tests/               pytest-Suite (1002 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -292,7 +292,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 998 Tests, ~21 s
+.venv/bin/pytest            # 1002 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -321,12 +321,35 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.31.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.31.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.31.1: Haltezeit nur für Messwerte (Claus #225)
+
+Claus (#225) hat die Stufen gebaut: eine Stufe „TV an“ soll beim Ausschalten
+**sofort** zurück, nicht erst nach der Haltezeit. `resolve_shade_level()` hält
+eine weggefallene Stufe jetzt nur, wenn ihr Slot ein Zahlenwert ist
+(`slot_is_numeric()`: Entität gesetzt, keine Zustandsliste, keine
+Boolean-Domäne – dieselbe Aufteilung wie `_slot_reading`). Schalter und
+Textzustand enden sofort. Die Haltezeit glättet einen Messwert, keinen Schalter.
+
+**Geprüft, nichts zu ändern:** sein Aktor (MDT JAL-0810M) dreht die Lamellen nach
+jeder Abwärtsfahrt selbst auf 0 %. Die Lamellen-Erkennung wertet das nicht, weil
+der Winkel innerhalb der 15 s nach der letzten Höhenmeldung kommt (zwei neue
+Tests mit seiner Folge). **Offen/Missverständnis:** Claus glaubt, eine Handfahrt
+blockiere die Beschattung – tut sie nicht, auch bei der Höhe nicht
+(`elevation._evaluate` fragt `SOURCE_MANUAL` nie ab); die Morgenfahrt blockiert
+sie nur bei einer Zwischenposition. Die Referenzfahrt-Uhrzeit ist schon
+einstellbar, er hat das Feld übersehen. Wünsche offen: Wochentag/Tag im Monat und
+echte Endanschläge für die Referenzfahrt, Lamellen-Regler im Dashboard, zweite
+Öffnungsstufe je Rollladen, Sichtschutz mit zweiter Stellung bei Sonne.
+
+**Verifiziert:** `pytest` 1002 grün (4 neue/umgebaute). Gegenprobe: ohne
+Zahlen-Prüfung fallen zwei. Nicht im echten Home Assistant geprüft.
 
 ### 2026-11-01 – 2.31.0: Referenzfahrt (Raffstore, Stufe 7)
 
@@ -453,57 +476,6 @@ Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz u
 15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
 Aktor vorliegt.
 
-
-
-### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
-
-Aus den letzten beiden Forumsbeiträgen: DerTomm (#213, GitHub #17/#18) und
-Frankchief (#212 samt Export).
-
-**A – Verzögerung gilt nicht für die Dashboard-Knöpfe (Bug #18).**
-`_coverAction()` im Panel kannte nur `min_drive_gap`; die Bereichs-
-Verzögerung (`drive_delay`) wirkt serverseitig in jedem Fahrweg, die Knöpfe
-rufen aber direkt `cover.*` auf und sind damit an ihr vorbeigelaufen – ein
-weiterer Riegel, der im Panel doppelt gebaut werden muss (Liste in „Panel":
-Mindestabstand, Markisensperre, Aussperrschutz, **jetzt auch Bereichs-
-Verzögerung**). `_driveDelaySec()`: das Größere aus Bereich und Mindestabstand,
-Hoch nach `area_up_id`, sonst `area_down_id`, Bereich ohne gespeicherten Wert =
-Vorgabe 10 (`DEFAULT_AREA_DRIVE_DELAY` im Panel gespiegelt). *Stop* wartet nie.
-**Bekannte Grenze:** die Abfolge läuft im Browser-Tab; schließt jemand das
-Panel mitten drin, fahren die restlichen nicht. Der Weg über die Dienste
-(`close_group` …) wäre robuster, ändert aber die Rechte-/Schalter-Semantik
-der Knöpfe (siehe Panel-Abschnitt) und blieb deshalb außen vor.
-
-**B – Reihenfolge (Wunsch #17).** Gespeichert wird die Reihenfolge der
-`shutters`-Liste; jeder Fahrweg läuft sie ab, das Dashboard zeigt sie unsortiert
-(der Rollläden-Tab ist alphabetisch). Neuer Admin-Befehl
-`shutter_pilot/reorder_shutters` (`_reordered_shutters()`: Genannte zuerst,
-Rest dahinter, unbekannte Namen übergangen, Duplikate behalten – ein
-unvollständiger Aufruf kann nie einen Rollladen verlieren). Kein Neuladen bei
-unveränderter Reihenfolge, weil ein Neuladen die Laufzeit-Merker nullt. Im
-Panel: Sortier-Knopf je Bereichskarte, Pfeile, Tausch in der *globalen* Liste
-mit dem Nachbarn der Bereichsansicht, **eine** Speicherung 2,5 s nach dem
-letzten Klick, `_pendingOrder` überlebt ein `_load()` dazwischen. Bereiche
-untereinander bleiben gleichzeitig (jeder Bereich ein eigener Task); der
-globale Mindestabstand staffelt sie in Bereichsreihenfolge. Eine echte
-Reihenfolge *zwischen* Bereichen wäre eine eigene Änderung.
-
-**C – Sensor-Formular.** Frankchiefs Export: Wind-Sensor ohne Schwellen
-(„Zahlenschwelle nie eingetragen" = Gefahr, die Markise bleibt drin) und
-`sun_cond_ice_invert: nein` ausdrücklich gespeichert – Frost ist voreingestellt
-umgekehrt, das Panel schreibt den Schlüssel erst beim *Klick* auf die Checkbox,
-er hat also eine von drei gleich aussehenden angeklickt. Rahmen mit Titel je
-Schutz, Warnung „keine Schwelle" (nicht je Markise: dort erbt ein leeres Feld
-den globalen Wert) und „Werte verkehrt herum" (wie bei den Bedingungen).
-**Meine Antwort im Forum war falsch:** bei einem Binärsensor (Regen State
-Piezo) gibt es nichts auszuwählen, „an" ist Gefahr; die Zustandsliste gibt es
-nur bei Text-Sensoren. In der Antwort richtiggestellt.
-
-**Verifiziert:** `pytest` 928 grün (8 + 4 neue; Node-Tests `drive_delay.mjs`,
-`reorder.mjs`, `guard_slot.mjs`). Gegenproben: ohne Bereichs-Verzögerung fällt
-der Knopf-Test, ohne Tausch der Reorder-Test, ohne Befehl-Sortierung sechs,
-ohne die beiden Warnungen der Formular-Test. **Nicht im Browser und nicht im
-echten Home Assistant geprüft** – besonders die Pfeile und der Rahmen.
 
 
 ## graphify

@@ -4,6 +4,15 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.31.1]
+
+### Geändert
+- **Haltezeit der Beschattungsstufen gilt nur für Messwerte** (Claus #225). Die
+  Haltezeit soll eine durchziehende Wolke bei 2.000 lx glätten. Eine Stufe hinter
+  einem Schalter oder Textzustand („TV an“, Wetterlage) endet dagegen sofort,
+  wenn die Bedingung wegfällt. Wer keine Haltezeit eingestellt hat (Vorgabe 0),
+  merkt keinen Unterschied.
+
 ## [2.31.0]
 
 ### Neu

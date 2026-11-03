@@ -923,7 +923,7 @@ Mit dem Haken **Handverstellung der Lamellen erkennen** zählt bei einem Raffsto
 
 ### Beschattungsstufen
 
-Über der normalen Beschattung kann ein Bereich bis zu **drei weitere Stufen** definieren, jede mit eigener Bedingung (Binärsensor, Zahl mit Ein-/Ausschaltschwelle oder Textzustand – z. B. Helligkeit 2.000 / 4.000 / 6.000 lx). Position und Lamellenwinkel je Stufe stellst du am Rollladen ein (oder „unverändert"). Die **höchste zutreffende Stufe gewinnt**, auch gegen die zweite Beschattungsposition. Eine **Haltezeit der Stufen** (0–120 min, Vorgabe 0) hält eine höhere Stufe nach Wegfall ihrer Bedingung, damit eine Wolke den Behang nicht pendeln lässt. Ein Rollladen ohne Eintrag für eine Stufe überspringt sie.
+Über der normalen Beschattung kann ein Bereich bis zu **drei weitere Stufen** definieren, jede mit eigener Bedingung (Binärsensor, Zahl mit Ein-/Ausschaltschwelle oder Textzustand – z. B. Helligkeit 2.000 / 4.000 / 6.000 lx). Position und Lamellenwinkel je Stufe stellst du am Rollladen ein (oder „unverändert"). Die **höchste zutreffende Stufe gewinnt**, auch gegen die zweite Beschattungsposition. Eine **Haltezeit der Stufen** (0–120 min, Vorgabe 0) hält eine höhere Stufe nach Wegfall ihrer Bedingung, damit eine Wolke den Behang nicht pendeln lässt. Die Haltezeit gilt nur für Messwerte (Helligkeit, Temperatur); eine Stufe hinter einem Schalter oder Textzustand („TV an“) endet sofort. Ein Rollladen ohne Eintrag für eine Stufe überspringt sie.
 
 ### Sichtschutz
 

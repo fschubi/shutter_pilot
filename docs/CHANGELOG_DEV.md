@@ -4,6 +4,56 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
+
+Aus den letzten beiden Forumsbeiträgen: DerTomm (#213, GitHub #17/#18) und
+Frankchief (#212 samt Export).
+
+**A – Verzögerung gilt nicht für die Dashboard-Knöpfe (Bug #18).**
+`_coverAction()` im Panel kannte nur `min_drive_gap`; die Bereichs-
+Verzögerung (`drive_delay`) wirkt serverseitig in jedem Fahrweg, die Knöpfe
+rufen aber direkt `cover.*` auf und sind damit an ihr vorbeigelaufen – ein
+weiterer Riegel, der im Panel doppelt gebaut werden muss (Liste in „Panel":
+Mindestabstand, Markisensperre, Aussperrschutz, **jetzt auch Bereichs-
+Verzögerung**). `_driveDelaySec()`: das Größere aus Bereich und Mindestabstand,
+Hoch nach `area_up_id`, sonst `area_down_id`, Bereich ohne gespeicherten Wert =
+Vorgabe 10 (`DEFAULT_AREA_DRIVE_DELAY` im Panel gespiegelt). *Stop* wartet nie.
+**Bekannte Grenze:** die Abfolge läuft im Browser-Tab; schließt jemand das
+Panel mitten drin, fahren die restlichen nicht. Der Weg über die Dienste
+(`close_group` …) wäre robuster, ändert aber die Rechte-/Schalter-Semantik
+der Knöpfe (siehe Panel-Abschnitt) und blieb deshalb außen vor.
+
+**B – Reihenfolge (Wunsch #17).** Gespeichert wird die Reihenfolge der
+`shutters`-Liste; jeder Fahrweg läuft sie ab, das Dashboard zeigt sie unsortiert
+(der Rollläden-Tab ist alphabetisch). Neuer Admin-Befehl
+`shutter_pilot/reorder_shutters` (`_reordered_shutters()`: Genannte zuerst,
+Rest dahinter, unbekannte Namen übergangen, Duplikate behalten – ein
+unvollständiger Aufruf kann nie einen Rollladen verlieren). Kein Neuladen bei
+unveränderter Reihenfolge, weil ein Neuladen die Laufzeit-Merker nullt. Im
+Panel: Sortier-Knopf je Bereichskarte, Pfeile, Tausch in der *globalen* Liste
+mit dem Nachbarn der Bereichsansicht, **eine** Speicherung 2,5 s nach dem
+letzten Klick, `_pendingOrder` überlebt ein `_load()` dazwischen. Bereiche
+untereinander bleiben gleichzeitig (jeder Bereich ein eigener Task); der
+globale Mindestabstand staffelt sie in Bereichsreihenfolge. Eine echte
+Reihenfolge *zwischen* Bereichen wäre eine eigene Änderung.
+
+**C – Sensor-Formular.** Frankchiefs Export: Wind-Sensor ohne Schwellen
+(„Zahlenschwelle nie eingetragen" = Gefahr, die Markise bleibt drin) und
+`sun_cond_ice_invert: nein` ausdrücklich gespeichert – Frost ist voreingestellt
+umgekehrt, das Panel schreibt den Schlüssel erst beim *Klick* auf die Checkbox,
+er hat also eine von drei gleich aussehenden angeklickt. Rahmen mit Titel je
+Schutz, Warnung „keine Schwelle" (nicht je Markise: dort erbt ein leeres Feld
+den globalen Wert) und „Werte verkehrt herum" (wie bei den Bedingungen).
+**Meine Antwort im Forum war falsch:** bei einem Binärsensor (Regen State
+Piezo) gibt es nichts auszuwählen, „an" ist Gefahr; die Zustandsliste gibt es
+nur bei Text-Sensoren. In der Antwort richtiggestellt.
+
+**Verifiziert:** `pytest` 928 grün (8 + 4 neue; Node-Tests `drive_delay.mjs`,
+`reorder.mjs`, `guard_slot.mjs`). Gegenproben: ohne Bereichs-Verzögerung fällt
+der Knopf-Test, ohne Tausch der Reorder-Test, ohne Befehl-Sortierung sechs,
+ohne die beiden Warnungen der Formular-Test. **Nicht im Browser und nicht im
+echten Home Assistant geprüft** – besonders die Pfeile und der Rahmen.
+
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
 Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;
