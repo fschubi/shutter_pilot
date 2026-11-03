@@ -917,6 +917,10 @@ Give a shutter a **privacy entity** (bathroom occupied, light, switch or binary 
 
 **Second position when the sun is in front of the window:** with the box ticked, privacy uses its own position and slat angle while the sun stands in front of the window (sun height and compass direction of the area's shading), e.g. slats at 50 for watching TV but fully closed when the sun glares on the screen. It switches back when the sun moves on.
 
+### Pause shading after a hand move
+
+Tick **Pause after a hand move** on an area (sun protection) and the shading leaves a shutter alone after you changed height or slats by hand, for as long as the sun is in front of the window. The pause ends when the sun leaves the window (direction, height, season, time window); a condition dropping out, such as a cloud, does not end it. Optionally with a longest duration in minutes. The evening drive still runs.
+
 ### Second opening stage
 
 Tick **Second opening stage** on a shutter to split the morning in two: the ordinary opening stays as set (for example only the slats, height unchanged), and from the time you enter - and while an optional condition entity says "on", e.g. somebody home and fine weather - the shutter goes once a day to its second position. It only completes a morning drive that really happened and leaves the shutter alone after a hand move that day, with an open window, an active privacy position or while it is shaded.

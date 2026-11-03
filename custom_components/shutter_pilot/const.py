@@ -327,6 +327,9 @@ CONF_AREA_SHADE_RELEASE_OPENS = "shade_release_opens"
 # night – the drive is the same in both directions, and the code cannot tell
 # 50% "down from open" from 50% "up from closed" by the number alone.
 CONF_AREA_SHADE_ONLY_WHEN_OPEN = "shade_only_when_open"
+CONF_AREA_SHADE_PAUSE_ON_HAND = "shade_pause_on_hand"
+CONF_AREA_SHADE_PAUSE_MAX = "shade_pause_max"
+DEFAULT_AREA_SHADE_PAUSE_MAX = 0
 CONF_AREA_ELEVATION_THRESHOLD = "elevation_threshold"  # legacy → maps to elevation_max
 CONF_AREA_ELEVATION_MIN = "elevation_min"
 CONF_AREA_ELEVATION_MAX = "elevation_max"

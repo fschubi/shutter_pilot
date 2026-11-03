@@ -4,6 +4,25 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.36.0]
+
+### Neu
+- **Beschattung pausiert nach einer Handfahrt** (Claus #229). Die Sonne blendet
+  trotz Beschattung, du drehst die Lamellen selbst – bisher setzte die nächste
+  Neuberechnung sie zurück. Mit dem Haken **„Nach einer Handfahrt pausieren“** im
+  Bereich (Abschnitt Sonnenschutz) lässt die Beschattung den Rollladen danach in
+  Ruhe, bis die **Sonne das Fenster verlässt** (Himmelsrichtung, Sonnenhöhe,
+  Zeitraum, Zeitfenster). Eine Wolke oder eine andere wegfallende Bedingung
+  beendet die Pause nicht. Optional eine Höchstdauer in Minuten (0 = bis die Sonne
+  weg ist). Gilt für Höhe und Lamellen, die Abendfahrt kommt trotzdem. Ohne
+  Haken ändert sich nichts.
+
+### Verbessert
+- **Dashboard-Zeilen**: Lange Namen („Essen Schiebetür“) werden nicht mehr vom
+  Automatik-Schalter überdeckt, die Bedienknöpfe rutschen bei Platzmangel in die
+  nächste Zeile. Die Lamellen-Knöpfe tragen ein − bzw. + neben dem Symbol, und
+  neben der Höhe steht der aktuelle Lamellenwinkel („14 % · L 60 %“).
+
 ## [2.35.0]
 
 ### Neu

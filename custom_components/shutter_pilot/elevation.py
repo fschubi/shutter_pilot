@@ -15,6 +15,8 @@ from .const import (
     CONF_AREA_ID,
     CONF_AREA_SHADE_HOLD,
     CONF_AREA_SHADE_ONLY_WHEN_OPEN,
+    CONF_AREA_SHADE_PAUSE_MAX,
+    CONF_AREA_SHADE_PAUSE_ON_HAND,
     CONF_AREA_SUN_PROTECT_ENABLED,
     DEFAULT_AREA_SHADE_HOLD,
     MAX_AREA_SHADE_HOLD,
@@ -116,6 +118,33 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
         except (TypeError, ValueError):
             return 0.0
         return max(0.0, min(minutes, MAX_AREA_SHADE_HOLD)) * 60.0
+
+    def _hand_pause_holds(
+        data: dict, area: dict, cover: str, phase_ok: bool
+    ) -> bool:
+        """True while a hand move pauses the shading of this cover."""
+        phase = data.setdefault("_shade_phase", {})
+        paused = data.setdefault("_shade_paused", {})
+        seen = data.setdefault("_shade_pause_seen", {})
+        if not phase_ok:
+            phase.pop(cover, None)
+            paused.pop(cover, None)
+            return False
+        started = phase.setdefault(cover, time.monotonic())
+        stamp = data.get("_hand_moved_at", {}).get(cover)
+        if stamp is not None and stamp > max(started, seen.get(cover, float("-inf"))):
+            paused[cover] = stamp
+            seen[cover] = stamp
+        if cover not in paused:
+            return False
+        try:
+            limit = float(area.get(CONF_AREA_SHADE_PAUSE_MAX, 0) or 0) * 60.0
+        except (TypeError, ValueError):
+            limit = 0.0
+        if limit > 0 and time.monotonic() - paused[cover] >= limit:
+            paused.pop(cover, None)
+            return False
+        return True
 
     def _delay_for(area: dict) -> int:
         try:
@@ -411,6 +440,19 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
                 protect_on and geometry_ok and conditions_ok and season_ok and window_ok
             )
             was_active = is_cover_sun_protected(data, cover)
+
+            # Pause nach Handfahrt (Claus #229): wer die Lamellen gegen die
+            # Blendung selbst verstellt hat, will sie nicht bei der naechsten
+            # Neuberechnung zurueckgesetzt sehen. Die Phase endet, wenn die
+            # *Sonne* das Fenster verlaesst (Geometrie, Jahreszeit, Zeitfenster) -
+            # nicht schon bei einer Wolke, sonst fuehre die Beschattung nach
+            # dem Aufklaren trotzdem wieder ueber seine Einstellung.
+            if area.get(CONF_AREA_SHADE_PAUSE_ON_HAND, False):
+                if _hand_pause_holds(
+                    data, area, cover,
+                    protect_on and geometry_ok and season_ok and window_ok,
+                ):
+                    continue
 
             # "Shading" a shutter that is still shut for the night *opens* it –
             # the drive is the same call with a different number. Asked only

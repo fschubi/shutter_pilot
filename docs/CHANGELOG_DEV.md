@@ -4,6 +4,29 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.31.1: Haltezeit nur für Messwerte (Claus #225)
+
+Claus (#225) hat die Stufen gebaut: eine Stufe „TV an“ soll beim Ausschalten
+**sofort** zurück, nicht erst nach der Haltezeit. `resolve_shade_level()` hält
+eine weggefallene Stufe jetzt nur, wenn ihr Slot ein Zahlenwert ist
+(`slot_is_numeric()`: Entität gesetzt, keine Zustandsliste, keine
+Boolean-Domäne – dieselbe Aufteilung wie `_slot_reading`). Schalter und
+Textzustand enden sofort. Die Haltezeit glättet einen Messwert, keinen Schalter.
+
+**Geprüft, nichts zu ändern:** sein Aktor (MDT JAL-0810M) dreht die Lamellen nach
+jeder Abwärtsfahrt selbst auf 0 %. Die Lamellen-Erkennung wertet das nicht, weil
+der Winkel innerhalb der 15 s nach der letzten Höhenmeldung kommt (zwei neue
+Tests mit seiner Folge). **Offen/Missverständnis:** Claus glaubt, eine Handfahrt
+blockiere die Beschattung – tut sie nicht, auch bei der Höhe nicht
+(`elevation._evaluate` fragt `SOURCE_MANUAL` nie ab); die Morgenfahrt blockiert
+sie nur bei einer Zwischenposition. Die Referenzfahrt-Uhrzeit ist schon
+einstellbar, er hat das Feld übersehen. Wünsche offen: Wochentag/Tag im Monat und
+echte Endanschläge für die Referenzfahrt, Lamellen-Regler im Dashboard, zweite
+Öffnungsstufe je Rollladen, Sichtschutz mit zweiter Stellung bei Sonne.
+
+**Verifiziert:** `pytest` 1002 grün (4 neue/umgebaute). Gegenprobe: ohne
+Zahlen-Prüfung fallen zwei. Nicht im echten Home Assistant geprüft.
+
 ### 2026-10-27 – 2.27.0: Reihenfolge, Knopf-Verzögerung, Sensor-Formular
 
 Aus den letzten beiden Forumsbeiträgen: DerTomm (#213, GitHub #17/#18) und

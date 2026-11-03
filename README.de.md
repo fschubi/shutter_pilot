@@ -933,6 +933,10 @@ Trage am Rollladen eine **Sichtschutz-Entität** ein (Badbelegung, Licht, Schalt
 
 **Zweite Stellung, wenn die Sonne vor dem Fenster steht:** mit dem Haken nimmt der Sichtschutz eine eigene Position und eigene Lamellen, solange die Sonne vor dem Fenster steht (Sonnenhöhe und Himmelsrichtung der Beschattung des Bereichs), z. B. Lamellen 50 beim Fernsehen, bei Blendung auf dem Bildschirm ganz zu. Scheint die Sonne nicht mehr, wechselt er zurück.
 
+### Beschattung nach einer Handfahrt pausieren
+
+Mit dem Haken **Nach einer Handfahrt pausieren** im Bereich (Sonnenschutz) lässt die Beschattung einen Rollladen in Ruhe, nachdem du Höhe oder Lamellen von Hand verstellt hast, solange die Sonne vor dem Fenster steht. Die Pause endet, wenn die Sonne das Fenster verlässt (Himmelsrichtung, Sonnenhöhe, Zeitraum, Zeitfenster); eine wegfallende Bedingung wie eine Wolke beendet sie nicht. Optional mit Höchstdauer in Minuten. Die Abendfahrt kommt trotzdem.
+
 ### Zweite Öffnungsstufe
 
 Mit dem Haken **Zweite Öffnungsstufe** am Rollladen teilst du den Morgen in zwei Schritte: Die normale Hochfahrt bleibt wie eingestellt (zum Beispiel nur die Lamellen, Höhe unverändert), und ab der eingetragenen Uhrzeit – und solange eine optionale Bedingungs-Entität „an“ meldet, etwa jemand zu Hause und schönes Wetter – fährt der Rollladen einmal am Tag in die zweite Stellung. Sie vollendet nur eine Morgenfahrt, die wirklich stattfand, und lässt den Rollladen nach einer Handfahrt am selben Tag, bei offenem Fenster, aktivem Sichtschutz oder während der Beschattung in Ruhe.

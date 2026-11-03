@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1029 Tests)
+tests/               pytest-Suite (1036 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -292,7 +292,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1029 Tests, ~21 s
+.venv/bin/pytest            # 1036 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -321,12 +321,35 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.35.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.36.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.36.0: Beschattungspause nach Handfahrt, Dashboard-Zeilen
+
+Claus (#229): Beschattung soll nach einer Handfahrt (Höhe oder Lamellen) pausieren,
+bis die Sonne das Fenster verlässt, optional mit Höchstdauer. Bereichshaken
+`shade_pause_on_hand` + `shade_pause_max` (Minuten, 0 = ohne). In
+`elevation._evaluate` über `_hand_pause_holds()`: Phase = `protect_on` und
+Geometrie und Jahreszeit und Zeitfenster (**ohne** Bedingungen – eine Wolke
+beendet die Pause nicht). Start der Phase merkt `_shade_phase[cover]`; eine
+Handfahrt (`_hand_moved_at`) *danach* setzt `_shade_paused`, `_shade_pause_seen`
+verhindert, dass ein abgelaufener Stempel erneut pausiert; eine weitere Handfahrt
+startet die Uhr neu. Pausiert wird ein Rollladen komplett (`continue`: weder
+beschatten noch nachfahren noch freigeben); endet die Phase, läuft der normale
+Freigabepfad. Handfahrten *vor* der Phase zählen nicht. **Nicht abgedeckt:** nach
+einem Neustart beginnt die Phase neu, ältere Handfahrten werden ignoriert.
+Dashboard: Zeile `flex-wrap`, Name mind. 130 px, Lamellen-Knöpfe mit −/+,
+`_tiltReading()` hängt „· L 60 %“ an die Höhe. i18n 3 Schlüssel ×11.
+Claus' Frage, ob die zweite Öffnungsstufe auch noch nach der Uhrzeit feuert, wenn
+die Bedingung erst später zutrifft: ja, jede Minute ab der Uhrzeit, einmal am
+Tag; steht die Beschattung gerade, wartet sie bis zur Freigabe.
+**Verifiziert:** `pytest` 1036 grün (7 neue, `tests/test_shade_pause.py`);
+Gegenproben: ohne Haken fallen 5, ohne Höchstdauer 1, ohne Phasenende 1. Nicht
+im Browser und nicht im echten Home Assistant geprüft.
 
 ### 2026-11-03 – 2.35.0: zweite Öffnungsstufe
 
@@ -380,29 +403,6 @@ den Abstand**, sonst driftet „der 1.“ an kurzen Monaten) und `reference_run_
 `monkeypatch` auf `dt_util.now`, nicht mit `freezer`: der friert die Schleifenuhr
 ein und `_settle()` hängt. Panel: Auswahl für den Wochentag (Namen aus `Intl`),
 Regler, Haken; i18n 6 Schlüssel ×11. Nicht im echten Home Assistant geprüft.
-
-### 2026-11-03 – 2.31.1: Haltezeit nur für Messwerte (Claus #225)
-
-Claus (#225) hat die Stufen gebaut: eine Stufe „TV an“ soll beim Ausschalten
-**sofort** zurück, nicht erst nach der Haltezeit. `resolve_shade_level()` hält
-eine weggefallene Stufe jetzt nur, wenn ihr Slot ein Zahlenwert ist
-(`slot_is_numeric()`: Entität gesetzt, keine Zustandsliste, keine
-Boolean-Domäne – dieselbe Aufteilung wie `_slot_reading`). Schalter und
-Textzustand enden sofort. Die Haltezeit glättet einen Messwert, keinen Schalter.
-
-**Geprüft, nichts zu ändern:** sein Aktor (MDT JAL-0810M) dreht die Lamellen nach
-jeder Abwärtsfahrt selbst auf 0 %. Die Lamellen-Erkennung wertet das nicht, weil
-der Winkel innerhalb der 15 s nach der letzten Höhenmeldung kommt (zwei neue
-Tests mit seiner Folge). **Offen/Missverständnis:** Claus glaubt, eine Handfahrt
-blockiere die Beschattung – tut sie nicht, auch bei der Höhe nicht
-(`elevation._evaluate` fragt `SOURCE_MANUAL` nie ab); die Morgenfahrt blockiert
-sie nur bei einer Zwischenposition. Die Referenzfahrt-Uhrzeit ist schon
-einstellbar, er hat das Feld übersehen. Wünsche offen: Wochentag/Tag im Monat und
-echte Endanschläge für die Referenzfahrt, Lamellen-Regler im Dashboard, zweite
-Öffnungsstufe je Rollladen, Sichtschutz mit zweiter Stellung bei Sonne.
-
-**Verifiziert:** `pytest` 1002 grün (4 neue/umgebaute). Gegenprobe: ohne
-Zahlen-Prüfung fallen zwei. Nicht im echten Home Assistant geprüft.
 
 ## graphify
 

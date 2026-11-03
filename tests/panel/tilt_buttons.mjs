@@ -30,4 +30,7 @@ const withTilt = flat(p._rowButtons({ cover_entity_id:"cover.a", tilt_enabled:tr
 const without = flat(p._rowButtons({ cover_entity_id:"cover.a" }));
 ok("Knoepfe nur bei Lamellen", withTilt.includes("btn_tilt_more") && !without.includes("btn_tilt_more"));
 
+ok("Winkel neben der Hoehe", p._tiltReading({ tilt_enabled:true }, p.hass.states["cover.a"]) === " · L 50%");
+ok("kein Winkel ohne Lamellen oder Meldung", p._tiltReading({}, p.hass.states["cover.a"]) === "" && p._tiltReading({ tilt_enabled:true }, p.hass.states["cover.c"]) === "");
+
 process.exit(fails ? 1 : 0);

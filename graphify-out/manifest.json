@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/const.py": {
-    "mtime": 1793730361.2542205,
-    "seen": 1793730514.383167,
-    "ast_hash": "3ef76d58da6843d727dce1b40e13bf2f",
+    "mtime": 1793736782.2816505,
+    "seen": 1793736962.412735,
+    "ast_hash": "53dcb556be29d0aa9c432dc01845ef7a",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/cover_tracker.py": {
@@ -72,9 +72,9 @@
     "semantic_hash": "dcf8c4fd2f4fd86027f0a08a7ebfddf8"
   },
   "custom_components/shutter_pilot/elevation.py": {
-    "mtime": 1793554583.4504385,
-    "seen": 1793554692.157737,
-    "ast_hash": "9be5e218a9d6b02bfc84d2d745593d22",
+    "mtime": 1793736850.193667,
+    "seen": 1793736962.412739,
+    "ast_hash": "7dfa6a1343fd8748ac8ebf651034962d",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/export.py": {
@@ -84,9 +84,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js": {
-    "mtime": 1793730438.864825,
-    "seen": 1793730514.383172,
-    "ast_hash": "ff585eac46622a71b92e5e6ecb7f0ba0",
+    "mtime": 1793736889.2221425,
+    "seen": 1793736962.4127412,
+    "ast_hash": "fe3e985c19dc0e193fbde266d4da4cb4",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/group_actions.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1793730459.105482,
-    "seen": 1793730514.383174,
-    "ast_hash": "ee112f4c83a47d235f7466c015a35617",
+    "mtime": 1793736958.5028582,
+    "seen": 1793736962.4127429,
+    "ast_hash": "fe31747c217cfa36788db25b144999ad",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1793730459.1043,
-    "seen": 1793730514.383261,
-    "ast_hash": "6e5efa064d8e33852050c8b5a86788bf",
+    "mtime": 1793736958.5037034,
+    "seen": 1793736962.412829,
+    "ast_hash": "30d13f88609aed8fbf0d232b1a6035fc",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1793730459.1059492,
-    "seen": 1793730514.383261,
-    "ast_hash": "c7ac612aee58728d1133bddece020039",
+    "mtime": 1793736958.518929,
+    "seen": 1793736962.412829,
+    "ast_hash": "ed1df2f66e50b581eaf082ea1c9540c5",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -582,15 +582,15 @@
     "semantic_hash": ""
   },
   "README.de.md": {
-    "mtime": 1793730459.1028643,
-    "seen": 1793730514.3832629,
-    "ast_hash": "3bcfd5313975f6323e38e0466a3a9578",
+    "mtime": 1793736958.505308,
+    "seen": 1793736962.412831,
+    "ast_hash": "38a017df341dc40203c20cf4f9787d4c",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793730459.0815928,
-    "seen": 1793730514.3832629,
-    "ast_hash": "00bad3860c1ca2c9d92a3a5a177368be",
+    "mtime": 1793736958.5061047,
+    "seen": 1793736962.412831,
+    "ast_hash": "79652bc5dbec0b91408ac3a786b31f59",
     "semantic_hash": ""
   },
   "RELEASE.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1793730459.1070356,
-    "seen": 1793730514.3832672,
-    "ast_hash": "3d648e98e1c3fab4c25a531f750dcc9f",
+    "mtime": 1793736958.5199206,
+    "seen": 1793736962.4128351,
+    "ast_hash": "7f2d6dd74382a9bc85903625bff69d34",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -876,9 +876,9 @@
     "semantic_hash": ""
   },
   "tests/panel/tilt_buttons.mjs": {
-    "mtime": 1793729975.0468905,
-    "seen": 1793730035.381918,
-    "ast_hash": "d196e80ae46eec9a1ea511d6077ae19e",
+    "mtime": 1793736940.3745015,
+    "seen": 1793736962.4127638,
+    "ast_hash": "f2822839c347ab5d84a1f962aab3dfb8",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/open_stage2.py": {
@@ -891,6 +891,12 @@
     "mtime": 1793730405.6153111,
     "seen": 1793730514.3832269,
     "ast_hash": "fba86af223a449156c9005bc7a90d354",
+    "semantic_hash": ""
+  },
+  "tests/test_shade_pause.py": {
+    "mtime": 1793736822.8985946,
+    "seen": 1793736962.412808,
+    "ast_hash": "7bbbfd149a6c086793b7e6fa05951b98",
     "semantic_hash": ""
   }
 }
