@@ -321,12 +321,23 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.31.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.32.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-03 – 2.32.0: Referenzfahrt mit Wochentag, Monatstag, Endanschlägen
+
+Claus (#225) wollte die Uhrzeit einstellbar – sie war es schon (`reference_run_time`,
+er hat das Feld übersehen). Neu: `reference_run_weekday` (0–6, leer = beliebig,
+mit Abstand kombiniert), `reference_run_monthday` (1–31, 31 = letzter Tag, **ersetzt
+den Abstand**, sonst driftet „der 1.“ an kurzen Monaten) und `reference_run_full`
+(echte Enden 100/0, Richtung aus der Skala, `_end_positions()`). Tests mit
+`monkeypatch` auf `dt_util.now`, nicht mit `freezer`: der friert die Schleifenuhr
+ein und `_settle()` hängt. Panel: Auswahl für den Wochentag (Namen aus `Intl`),
+Regler, Haken; i18n 6 Schlüssel ×11. Nicht im echten Home Assistant geprüft.
 
 ### 2026-11-03 – 2.31.1: Haltezeit nur für Messwerte (Claus #225)
 
@@ -440,43 +451,6 @@ Gegenproben: ohne Stufenvorrang fallen 8, ohne Nachfahren bei Stufenwechsel 1,
 ohne Haltezeit 1. Panel: Bereich (drei Bedingungen + Haltezeit), Rollladen
 (Haken je Stufe mit Position/Lamellen/Höhe-unverändert), i18n 9 Schlüssel ×11.
 Nicht im Browser und nicht im echten Home Assistant geprüft.
-
-### 2026-11-01 – 2.28.0: Rückfahrt nach der Sperre, Lamellen von Hand (Stufe 4)
-
-Claus (#222) bestätigte meinen Verdacht aus #215: `binary_sensor.raff_diele_gesperrt`
-war genau mit der Tür an (16:21:43–49, 16:53:01–07) – sein KNX-Aktor sperrt sich
-bei offener Tür selbst. Das Schließen der Tür fiel in `_on_window_state_change`
-an `automation_allowed()` (dort `continue`, nicht einmal eine Entprellung wurde
-geplant), und `_delayed_close` kehrte bei Sperre still zurück. Nichts holte die
-gemerkte Höhe nach.
-
-**Nachholen:** `_on_lock_released` hört auf jede Sperr-Entität (Wechsel von an
-nach aus); der Zyklusmerker `trigger_actions == "triggered"` (oder eine
-Vormerkung in `drive_after_close_pending`) *ist* das Gedächtnis „da ist noch
-eine Rückfahrt offen". Dann über denselben Pfad wie das Schließen
-(`_schedule_close`, aus dem alten Zweig herausgezogen, mit Entprellung). Haken
-`lock_replay_restore` (Vorgabe an, wirkt nur mit Sperr-Entität). Bewusst nicht
-für den Sturm: dort ist „kein Nachholen" entschieden (2.25.0).
-
-**Stufe 4:** `cover_tracker` las nur `current_position` und sprang bei gleicher
-Höhe früh zurück – eine reine Winkeländerung war unsichtbar. Neu `commanded_tilts`
-(geschrieben in `set_cover_position`) und `_note_hand_tilt`, Haken
-`tilt_hand_detect` (Vorgabe aus): Handverstellung, wenn Höhe unverändert, Winkel
-anders, Antrieb steht, 15 s seit der letzten Höhenänderung, keine Karenz, mehr
-als 8 % vom gesendeten Winkel. Folge wie bei einer Höhen-Handfahrt, aber ohne
-`note_manual_position` (Winkel sagt nichts über oben/unten) und ohne das
-Höhenziel zu verwerfen. **Nicht gebaut:** Fahrtkontrolle der Lamellen
-(`cover_verify` liest weiter nur die Höhe); Plan in `docs/PLAN_RAFFSTORE.md`.
-
-**Verifiziert:** `pytest` 966 grün (13 neue: `tests/test_lock_replay_restore.py`,
-`tests/test_tilt_hand_detect.py`). Gegenproben: ohne Sperr-Hörer fallen 2, ohne
-Wartezeit nach der Höhenfahrt 1. **Fehler beim Arbeiten:** ein `git checkout`
-zum Zurücknehmen einer Mutation verwarf auch die ungesicherten Änderungen im
-Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz und
-15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
-Aktor vorliegt.
-
-
 
 ## graphify
 

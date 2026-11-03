@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.32.0]
+
+### Neu
+- **Referenzfahrt: Wochentag, Tag im Monat, echte Endanschläge** (Claus #225).
+  Die Uhrzeit war schon einstellbar; jetzt lässt sich der Lauf zusätzlich auf
+  einen **Wochentag** legen (fährt am ersten passenden Tag, nachdem der Abstand
+  um ist) oder auf einen **Tag im Monat** (einmal im Monat, 31 = letzter Tag des
+  Monats; der Abstand gilt dann nicht). Mit **„Bis zu den echten Endanschlägen
+  fahren“** fährt er ganz nach oben (100 %) und ganz nach unten (0 %) statt zu den
+  eigenen „auf“- und „zu“-Positionen, bei umgekehrter Skala andersherum. Alles
+  ohne Migration: wer nichts einstellt, behält den Lauf wie bisher.
+
 ## [2.31.1]
 
 ### Geändert

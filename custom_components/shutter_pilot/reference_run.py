@@ -15,6 +15,7 @@ works without a special case. Afterwards it returns to where it stood.
 from __future__ import annotations
 
 import asyncio
+import calendar
 import logging
 import time
 from datetime import date, datetime
@@ -29,7 +30,10 @@ from .const import (
     CONF_COVER_ENTITY_ID,
     CONF_REFERENCE_RUN,
     CONF_REFERENCE_RUN_DAYS,
+    CONF_REFERENCE_RUN_FULL,
+    CONF_REFERENCE_RUN_MONTHDAY,
     CONF_REFERENCE_RUN_TIME,
+    CONF_REFERENCE_RUN_WEEKDAY,
     CONF_SHUTTERS,
     DEFAULT_REFERENCE_RUN_DAYS,
     DEFAULT_REFERENCE_RUN_TIME,
@@ -68,6 +72,36 @@ def _interval_days(shutter: dict[str, Any]) -> int:
     except (TypeError, ValueError):
         return DEFAULT_REFERENCE_RUN_DAYS
     return max(1, min(days, MAX_REFERENCE_RUN_DAYS))
+
+
+def _weekday(shutter: dict[str, Any]) -> int | None:
+    try:
+        day = int(shutter.get(CONF_REFERENCE_RUN_WEEKDAY))
+    except (TypeError, ValueError):
+        return None
+    return day if 0 <= day <= 6 else None
+
+
+def _monthday(shutter: dict[str, Any]) -> int | None:
+    try:
+        day = int(shutter.get(CONF_REFERENCE_RUN_MONTHDAY))
+    except (TypeError, ValueError):
+        return None
+    return min(day, 31) if day >= 1 else None
+
+
+def _end_positions(shutter: dict[str, Any]) -> tuple[float, float]:
+    """Where the run drives to for "open" and "closed".
+
+    The shutter's own positions by default; with the full-travel hook the real
+    end stops. Which end is "open" follows the configured scale, so a blind
+    with open 0 / closed 15 still opens towards 0.
+    """
+    opened = get_position_for_role(shutter, ROLE_OPEN)
+    closed = get_position_for_role(shutter, ROLE_CLOSED)
+    if not shutter.get(CONF_REFERENCE_RUN_FULL, False):
+        return opened, closed
+    return (100.0, 0.0) if opened >= closed else (0.0, 100.0)
 
 
 def _run_time(shutter: dict[str, Any]):
@@ -172,8 +206,9 @@ async def setup_reference_run(hass: HomeAssistant, entry: ConfigEntry) -> None:
         active.add(cover)
         try:
             _LOGGER.info("%s: reference run starts%s", cover, " (forced)" if forced else "")
+            ends = dict(zip((ROLE_OPEN, ROLE_CLOSED), _end_positions(shutter)))
             for role in (ROLE_OPEN, ROLE_CLOSED):
-                position = get_position_for_role(shutter, role)
+                position = ends[role]
                 await set_cover_position(
                     hass,
                     entry,
@@ -203,9 +238,20 @@ async def setup_reference_run(hass: HomeAssistant, entry: ConfigEntry) -> None:
             last_run = date.fromisoformat(last.get(cover, ""))
         except ValueError:
             return False
-        if (now.date() - last_run).days < _interval_days(shutter):
+        if now.time() < _run_time(shutter):
             return False
-        return now.time() >= _run_time(shutter)
+        today = now.date()
+        monthday = _monthday(shutter)
+        if monthday is not None:
+            # Once a month on that day (31 = the last day of a short month);
+            # the interval does not apply, or "the 1st" would drift whenever a
+            # month is shorter than the interval.
+            last_day = calendar.monthrange(today.year, today.month)[1]
+            return today.day == min(monthday, last_day) and last_run < today
+        if (today - last_run).days < _interval_days(shutter):
+            return False
+        weekday = _weekday(shutter)
+        return weekday is None or today.weekday() == weekday
 
     def _tick(_now: datetime) -> None:
         local = dt_util.now()

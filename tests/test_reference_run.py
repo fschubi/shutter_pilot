@@ -33,7 +33,10 @@ from custom_components.shutter_pilot.const import (
     CONF_POSITION_OPEN,
     CONF_REFERENCE_RUN,
     CONF_REFERENCE_RUN_DAYS,
+    CONF_REFERENCE_RUN_FULL,
+    CONF_REFERENCE_RUN_MONTHDAY,
     CONF_REFERENCE_RUN_TIME,
+    CONF_REFERENCE_RUN_WEEKDAY,
     CONF_SHUTTERS,
     CONF_TILT_CLOSED,
     CONF_TILT_ENABLED,
@@ -220,3 +223,89 @@ async def test_the_service_ignores_an_unknown_cover(hass, calls):
     )
     await _settle()
     assert calls["pos"] == []
+
+
+# --- Wochentag, Tag im Monat, echte Endanschlaege (Claus #225) ------------------
+
+
+async def _tick_at(hass, data, monkeypatch, when: str, last: str) -> None:
+    # Kein freezer: er friert auch die Schleifenuhr ein, _settle() haengt dann.
+    from datetime import datetime
+
+    moment = dt_util.as_local(datetime.fromisoformat(when).replace(tzinfo=dt_util.UTC))
+    monkeypatch.setattr(dt_util, "now", lambda *a, **k: moment)
+    data["_refrun_last"][COVER] = last
+    for cb in list(data["_minute_callbacks"].values()):
+        cb(dt_util.now())
+    await _settle()
+
+
+async def test_a_weekday_waits_for_that_day(hass, calls, monkeypatch):
+    """Mittwoch, 4.11.2026: Abstand lange um, aber heute ist der falsche Tag."""
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_WEEKDAY: 4}))
+    await _tick_at(hass, data, monkeypatch, "2026-11-04 12:00:00", "2026-09-01")
+    assert calls["pos"] == []
+
+    await _tick_at(hass, data, monkeypatch, "2026-11-06 12:00:00", "2026-09-01")  # Freitag
+    assert _positions(calls) == [100, 20, 70]
+
+
+async def test_a_weekday_still_respects_the_interval(hass, calls, monkeypatch):
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_WEEKDAY: 4}))
+    await _tick_at(hass, data, monkeypatch, "2026-11-06 12:00:00", "2026-11-01")
+    assert calls["pos"] == []
+
+
+async def test_a_day_of_month_runs_once_that_day(hass, calls, monkeypatch):
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_MONTHDAY: 1}))
+    await _tick_at(hass, data, monkeypatch, "2026-11-02 12:00:00", "2026-10-01")
+    assert calls["pos"] == []
+
+    await _tick_at(hass, data, monkeypatch, "2026-11-01 12:00:00", "2026-10-01")
+    assert _positions(calls) == [100, 20, 70]
+
+    # Am selben Tag nicht noch einmal (Letzter Lauf = heute).
+    calls["pos"].clear()
+    await _tick_at(hass, data, monkeypatch, "2026-11-01 12:05:00", "2026-11-01")
+    assert calls["pos"] == []
+
+
+async def test_a_day_of_month_ignores_the_interval(hass, calls, monkeypatch):
+    """28 Tage Februar-Abstand: "der 1." darf nicht am Abstand von 30 scheitern."""
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_MONTHDAY: 1}))
+    await _tick_at(hass, data, monkeypatch, "2026-03-01 12:00:00", "2026-02-01")
+    assert _positions(calls) == [100, 20, 70]
+
+
+async def test_day_31_means_the_last_day_of_a_short_month(hass, calls, monkeypatch):
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_MONTHDAY: 31}))
+    await _tick_at(hass, data, monkeypatch, "2026-11-29 12:00:00", "2026-10-31")
+    assert calls["pos"] == []
+
+    await _tick_at(hass, data, monkeypatch, "2026-11-30 12:00:00", "2026-10-31")
+    assert _positions(calls) == [100, 20, 70]
+
+
+async def test_full_travel_drives_to_the_real_end_stops(hass, calls):
+    _, data = await _setup(hass, dict(SHUTTER, **{CONF_REFERENCE_RUN_FULL: True}))
+    await hass.services.async_call(
+        DOMAIN, "reference_run", {"entity_id": COVER}, blocking=True
+    )
+    await _settle()
+
+    assert _positions(calls) == [100, 0, 70]
+
+
+async def test_full_travel_follows_an_inverted_scale(hass, calls):
+    """Claus: auf 0, zu 15 - echte Anschlaege sind trotzdem 0 und 100."""
+    shutter = dict(
+        SHUTTER,
+        **{CONF_POSITION_OPEN: 0, CONF_POSITION_CLOSED: 15, CONF_REFERENCE_RUN_FULL: True},
+    )
+    _, data = await _setup(hass, shutter)
+    await hass.services.async_call(
+        DOMAIN, "reference_run", {"entity_id": COVER}, blocking=True
+    )
+    await _settle()
+
+    assert _positions(calls) == [0, 100, 70]

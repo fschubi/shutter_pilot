@@ -54,6 +54,41 @@ der Knopf-Test, ohne Tausch der Reorder-Test, ohne Befehl-Sortierung sechs,
 ohne die beiden Warnungen der Formular-Test. **Nicht im Browser und nicht im
 echten Home Assistant geprüft** – besonders die Pfeile und der Rahmen.
 
+### 2026-11-01 – 2.28.0: Rückfahrt nach der Sperre, Lamellen von Hand (Stufe 4)
+
+Claus (#222) bestätigte meinen Verdacht aus #215: `binary_sensor.raff_diele_gesperrt`
+war genau mit der Tür an (16:21:43–49, 16:53:01–07) – sein KNX-Aktor sperrt sich
+bei offener Tür selbst. Das Schließen der Tür fiel in `_on_window_state_change`
+an `automation_allowed()` (dort `continue`, nicht einmal eine Entprellung wurde
+geplant), und `_delayed_close` kehrte bei Sperre still zurück. Nichts holte die
+gemerkte Höhe nach.
+
+**Nachholen:** `_on_lock_released` hört auf jede Sperr-Entität (Wechsel von an
+nach aus); der Zyklusmerker `trigger_actions == "triggered"` (oder eine
+Vormerkung in `drive_after_close_pending`) *ist* das Gedächtnis „da ist noch
+eine Rückfahrt offen". Dann über denselben Pfad wie das Schließen
+(`_schedule_close`, aus dem alten Zweig herausgezogen, mit Entprellung). Haken
+`lock_replay_restore` (Vorgabe an, wirkt nur mit Sperr-Entität). Bewusst nicht
+für den Sturm: dort ist „kein Nachholen" entschieden (2.25.0).
+
+**Stufe 4:** `cover_tracker` las nur `current_position` und sprang bei gleicher
+Höhe früh zurück – eine reine Winkeländerung war unsichtbar. Neu `commanded_tilts`
+(geschrieben in `set_cover_position`) und `_note_hand_tilt`, Haken
+`tilt_hand_detect` (Vorgabe aus): Handverstellung, wenn Höhe unverändert, Winkel
+anders, Antrieb steht, 15 s seit der letzten Höhenänderung, keine Karenz, mehr
+als 8 % vom gesendeten Winkel. Folge wie bei einer Höhen-Handfahrt, aber ohne
+`note_manual_position` (Winkel sagt nichts über oben/unten) und ohne das
+Höhenziel zu verwerfen. **Nicht gebaut:** Fahrtkontrolle der Lamellen
+(`cover_verify` liest weiter nur die Höhe); Plan in `docs/PLAN_RAFFSTORE.md`.
+
+**Verifiziert:** `pytest` 966 grün (13 neue: `tests/test_lock_replay_restore.py`,
+`tests/test_tilt_hand_detect.py`). Gegenproben: ohne Sperr-Hörer fallen 2, ohne
+Wartezeit nach der Höhenfahrt 1. **Fehler beim Arbeiten:** ein `git checkout`
+zum Zurücknehmen einer Mutation verwarf auch die ungesicherten Änderungen im
+Tracker – neu eingespielt. Nicht im echten Home Assistant geprüft; Toleranz und
+15 s sind Schätzungen, solange kein Zustandsverlauf einer Fahrt von Claus'
+Aktor vorliegt.
+
 ### 2026-10-27 – 2.27.1: zwei Fehler aus der Issue-Durchsicht (#20, #21)
 
 Beim Durchgehen aller offenen GitHub-Issues blieben zwei echte Fehler übrig;

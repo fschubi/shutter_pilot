@@ -916,3 +916,5 @@ Give a shutter a **privacy entity** (bathroom occupied, light, switch or binary 
 ### Reference run
 
 Tick **Reference run** on a venetian blind and, at the set interval (default 30 days) and time (default 03:00), it drives once to its configured *open* position, then *closed*, then back to where it stood, slat angle included. That resets the count of a motor that is positioned by running time. The run waits for each position and is skipped (and retried the next day) if automation is off or the cover is locked, in a storm, in privacy mode or has an open window. The first run comes one interval after you switch it on. The service `shutter_pilot.reference_run` starts it for a named cover right away.
+
+The time of day is adjustable (a night run is audible in the bedroom, so noon works as well). Optionally pick a **weekday** (runs on the first such day once the interval has passed) or a **day of month** (once a month on that day, 31 = last day; the interval then does not apply). **Drive to the real end stops** drives fully up (100 %) and fully down (0 %) instead of the blind's own open and closed positions, reversed for an inverted scale.
