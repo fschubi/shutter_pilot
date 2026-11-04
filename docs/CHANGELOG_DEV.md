@@ -4,6 +4,17 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.32.0: Referenzfahrt mit Wochentag, Monatstag, Endanschlägen
+
+Claus (#225) wollte die Uhrzeit einstellbar – sie war es schon (`reference_run_time`,
+er hat das Feld übersehen). Neu: `reference_run_weekday` (0–6, leer = beliebig,
+mit Abstand kombiniert), `reference_run_monthday` (1–31, 31 = letzter Tag, **ersetzt
+den Abstand**, sonst driftet „der 1.“ an kurzen Monaten) und `reference_run_full`
+(echte Enden 100/0, Richtung aus der Skala, `_end_positions()`). Tests mit
+`monkeypatch` auf `dt_util.now`, nicht mit `freezer`: der friert die Schleifenuhr
+ein und `_settle()` hängt. Panel: Auswahl für den Wochentag (Namen aus `Intl`),
+Regler, Haken; i18n 6 Schlüssel ×11. Nicht im echten Home Assistant geprüft.
+
 ### 2026-11-03 – 2.31.1: Haltezeit nur für Messwerte (Claus #225)
 
 Claus (#225) hat die Stufen gebaut: eine Stufe „TV an“ soll beim Ausschalten

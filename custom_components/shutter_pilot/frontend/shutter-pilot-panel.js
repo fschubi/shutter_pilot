@@ -120,7 +120,7 @@ const AWNING_UNUSED_KEYS = ["area_up_id","position_closed","position_closed_alt"
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
-  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","position_sun_protect_l1","tilt_sun_protect_l1","keep_position_sun_protect_l1","keep_tilt_sun_protect_l1","position_sun_protect_l2","tilt_sun_protect_l2","keep_position_sun_protect_l2","keep_tilt_sun_protect_l2","position_sun_protect_l3","tilt_sun_protect_l3","keep_position_sun_protect_l3","keep_tilt_sun_protect_l3","open_stage2","open_stage2_time","open_stage2_entity","position_open_stage2","tilt_open_stage2","keep_position_open_stage2","keep_tilt_open_stage2","privacy_entity","privacy_invert","privacy_sun","position_privacy_sun","tilt_privacy_sun","keep_position_privacy_sun","keep_tilt_privacy_sun","position_privacy","tilt_privacy","keep_position_privacy","keep_tilt_privacy","reference_run","reference_run_days","reference_run_time","reference_run_weekday","reference_run_monthday","reference_run_full","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
+  "min_position_when_open","window_close_debounce","window_keep_open_minutes","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","position_sun_protect_l1","tilt_sun_protect_l1","keep_position_sun_protect_l1","keep_tilt_sun_protect_l1","position_sun_protect_l2","tilt_sun_protect_l2","keep_position_sun_protect_l2","keep_tilt_sun_protect_l2","position_sun_protect_l3","tilt_sun_protect_l3","keep_position_sun_protect_l3","keep_tilt_sun_protect_l3","open_stage2","open_stage2_time","open_stage2_entity","position_open_stage2","tilt_open_stage2","keep_position_open_stage2","keep_tilt_open_stage2","privacy_entity","privacy_invert","privacy_sun","position_privacy_sun","tilt_privacy_sun","keep_position_privacy_sun","keep_tilt_privacy_sun","position_privacy","tilt_privacy","keep_position_privacy","keep_tilt_privacy","reference_run","reference_run_days","reference_run_time","reference_run_weekday","reference_run_monthday","reference_run_full","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
   "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 /* Dasselbe fuer das Dachfenster. Es behaelt `position_closed` – zu ist dort
    die Ruhestellung –, verliert aber die Fensterkontakt-Schluessel: der Cover
@@ -129,7 +129,7 @@ const WINDOW_UNUSED_KEYS = ["area_up_id","position_closed_alt",
   "position_closed_frost","window_entity_id","window_entity_id_2","window_open_state",
   "window_tilted_state","window_tilted_entity_id","window_tilted_entity_state",
   "position_when_window_open","position_when_window_tilted","lock_protection",
-  "min_position_when_open","window_close_debounce","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","position_sun_protect_l1","tilt_sun_protect_l1","keep_position_sun_protect_l1","keep_tilt_sun_protect_l1","position_sun_protect_l2","tilt_sun_protect_l2","keep_position_sun_protect_l2","keep_tilt_sun_protect_l2","position_sun_protect_l3","tilt_sun_protect_l3","keep_position_sun_protect_l3","keep_tilt_sun_protect_l3","open_stage2","open_stage2_time","open_stage2_entity","position_open_stage2","tilt_open_stage2","keep_position_open_stage2","keep_tilt_open_stage2","privacy_entity","privacy_invert","privacy_sun","position_privacy_sun","tilt_privacy_sun","keep_position_privacy_sun","keep_tilt_privacy_sun","position_privacy","tilt_privacy","keep_position_privacy","keep_tilt_privacy","reference_run","reference_run_days","reference_run_time","reference_run_weekday","reference_run_monthday","reference_run_full","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
+  "min_position_when_open","window_close_debounce","window_keep_open_minutes","window_vent_while_open","drive_after_close","drive_after_close_up","window_react","lock_replay_restore","tilt_hand_detect","position_sun_protect_l1","tilt_sun_protect_l1","keep_position_sun_protect_l1","keep_tilt_sun_protect_l1","position_sun_protect_l2","tilt_sun_protect_l2","keep_position_sun_protect_l2","keep_tilt_sun_protect_l2","position_sun_protect_l3","tilt_sun_protect_l3","keep_position_sun_protect_l3","keep_tilt_sun_protect_l3","open_stage2","open_stage2_time","open_stage2_entity","position_open_stage2","tilt_open_stage2","keep_position_open_stage2","keep_tilt_open_stage2","privacy_entity","privacy_invert","privacy_sun","position_privacy_sun","tilt_privacy_sun","keep_position_privacy_sun","keep_tilt_privacy_sun","position_privacy","tilt_privacy","keep_position_privacy","keep_tilt_privacy","reference_run","reference_run_days","reference_run_time","reference_run_weekday","reference_run_monthday","reference_run_full","keep_position_open","keep_position_closed","keep_position_sun_protect","keep_tilt_open","keep_tilt_closed","keep_tilt_sun_protect","tilt_after_position","storm_guard","storm_position","storm_tilt","automation_lock_entity",
   "tilt_enabled","tilt_open","tilt_closed","tilt_sun_protect"];
 
 /* Vorfilterung je Feld. `classes` prüft device_class, `pattern` den
@@ -416,6 +416,7 @@ de:{
   f_drive_after:"Nachholen wenn Fenster offen oder gekippt",
   f_drive_after_hint:"Wenn die Schließzeit erreicht wird, das Fenster aber offen oder gekippt ist, wird die Fahrt nachgeholt, sobald es geschlossen wird. Ohne den Haken darunter fährt der Rollladen bis dahin gar nicht.",
   f_win_debounce:"Verzögerung beim Schließen (Sek.)",f_win_debounce_hint:"Beim Drehen des Griffs von „gekippt“ auf „offen“ meldet der Kontakt kurz „geschlossen“. So lange muss „geschlossen“ anhalten, bevor der Rollladen zurückfährt. 0 = sofort reagieren.",
+  f_win_keep_open:"Offen lassen vor der Hochfahrt (Min.)",f_win_keep_open_hint:"Kommt die planmäßige Hochfahrt innerhalb dieser Zeit, fährt der Rollladen beim Schließen des Fensters nicht zurück, sondern bleibt oben. Gilt nicht im Helligkeitsmodus und nicht, wenn die Hochfahrt gesperrt ist. 0 = aus.",
   pick_entity:"Entität auswählen…",
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
   /* Markisen */
@@ -787,6 +788,7 @@ en:{
   f_drive_after:"Catch up when window open or tilted",
   f_drive_after_hint:"When close time is reached but the window is open or tilted, the drive is executed as soon as it is closed. Without the checkbox below, the shutter does not move at all until then.",
   f_win_debounce:"Close delay (sec.)",f_win_debounce_hint:"Turning the handle from tilted to open makes the contact report \"closed\" for a moment. This is how long \"closed\" has to hold before the shutter drives back. 0 = react immediately.",
+  f_win_keep_open:"Keep open before opening (min.)",f_win_keep_open_hint:"If the scheduled opening is due within this time, the shutter stays up when the window closes instead of driving back down. Not used in brightness mode or when the opening is blocked. 0 = off.",
   pick_entity:"Select entity…",
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
   /* Markisen */
@@ -1101,6 +1103,7 @@ fr:{
   f_window_react:"Le contact fait bouger le volet",f_window_react_hint:"Désactivé : le contact ne déplace rien, pas même vers la position d'aération ou d'entrebâillement. Il sert seulement de verrou : les mouvements automatiques sont retenus tant que la fenêtre est ouverte (avec rattrapage) et exécutés à la fermeture. Utile pour les portes et les stores à lamelles.",f_drive_after_up:"Rattraper aussi l'ouverture",f_drive_after_up_hint:"Si l'ouverture (heure ou luminosité) est due alors que la fenêtre est ouverte ou entrebâillée, elle est exécutée à la fermeture, angle des lamelles compris. Utile quand ouvert et fermé ont la même position (store à lamelles). Indépendant de l'option de rattrapage ci-dessus.",
   f_drive_after:"Rattraper si fenêtre ouverte ou entrebâillée",f_drive_after_hint:"Si l'heure de fermeture arrive alors que la fenêtre est ouverte ou entrebâillée, la course est rattrapée dès sa fermeture. Sans l'option ci-dessous, le volet ne bouge pas du tout jusque-là.",
   f_win_debounce:"Délai à la fermeture (sec.)",f_win_debounce_hint:"Durée pendant laquelle « fermé » doit se maintenir avant le retour du volet. 0 = immédiat.",
+  f_win_keep_open:"Laisser ouvert avant l'ouverture (min)",f_win_keep_open_hint:"Si l'ouverture programmée est due dans ce délai, le volet reste ouvert à la fermeture de la fenêtre. Sans effet en mode luminosité ou si l'ouverture est bloquée. 0 = désactivé.",
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
   /* Markisen */
   tab_awnings:"Stores bannes",
@@ -1414,6 +1417,7 @@ es:{
   f_window_react:"El contacto mueve la persiana",f_window_react_hint:"Desactivado: el contacto no mueve nada, ni siquiera a la posición de ventilación o abatible. Solo actúa como bloqueo: los movimientos automáticos se retienen mientras la ventana está abierta (con recuperación) y se ejecutan al cerrarla. Útil para puertas y persianas venecianas.",f_drive_after_up:"Recuperar también la subida",f_drive_after_up_hint:"Si toca subir (hora o luminosidad) y la ventana está abierta o basculante, se ejecuta al cerrarla, con el ángulo de las lamas. Útil cuando abierto y cerrado tienen la misma posición (persiana veneciana). Independiente de la opción de recuperación anterior.",
   f_drive_after:"Recuperar si ventana abierta o basculante",f_drive_after_hint:"Si llega la hora de cierre con la ventana abierta o basculante, el recorrido se ejecuta en cuanto se cierre. Sin la opción de abajo, la persiana no se mueve nada hasta entonces.",
   f_win_debounce:"Retardo al cerrar (seg.)",f_win_debounce_hint:"Tiempo que debe mantenerse «cerrado» antes de que la persiana vuelva. 0 = inmediato.",
+  f_win_keep_open:"Dejar abierta antes de la apertura (min)",f_win_keep_open_hint:"Si la apertura programada llega dentro de este tiempo, la persiana se queda arriba al cerrar la ventana. No vale en modo brillo ni si la apertura está bloqueada. 0 = desactivado.",
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
   /* Markisen */
   tab_awnings:"Toldos",
@@ -1727,6 +1731,7 @@ it:{
   f_window_react:"Il contatto muove la tapparella",f_window_react_hint:"Disattivato: il contatto non muove nulla, nemmeno verso la posizione di aerazione o vasistas. Funziona solo da blocco: i movimenti automatici sono trattenuti finché la finestra è aperta (con recupero) ed eseguiti alla chiusura. Utile per porte e frangisole.",f_drive_after_up:"Recupera anche l'apertura",f_drive_after_up_hint:"Se l'apertura (orario o luminosità) è dovuta ma la finestra è aperta o a vasistas, viene eseguita alla chiusura, con l'angolo delle lamelle. Utile quando aperto e chiuso hanno la stessa posizione (frangisole). Indipendente dall'opzione di recupero sopra.",
   f_drive_after:"Recupera se finestra aperta o a vasistas",f_drive_after_hint:"Se arriva l'ora di chiusura con la finestra aperta o a vasistas, la corsa viene recuperata appena la finestra si chiude. Senza l'opzione qui sotto la tapparella non si muove affatto fino ad allora.",
   f_win_debounce:"Ritardo alla chiusura (sec.)",f_win_debounce_hint:"Per quanto tempo deve permanere «chiuso» prima che la tapparella torni indietro. 0 = subito.",
+  f_win_keep_open:"Lascia aperta prima dell'apertura (min)",f_win_keep_open_hint:"Se l'apertura programmata è prevista entro questo tempo, la tapparella resta alzata alla chiusura della finestra. Non vale in modalità luminosità o se l'apertura è bloccata. 0 = spento.",
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
   /* Markisen */
   tab_awnings:"Tende da sole",
@@ -2041,6 +2046,7 @@ nl:{
   f_window_react:"Raamcontact bestuurt het rolluik",f_window_react_hint:"Uit: het contact beweegt niets, ook niet naar de ventilatie- of kiepstand. Het werkt alleen als vergrendeling: automatische ritten worden vastgehouden zolang het raam open is (met inhalen) en uitgevoerd na het sluiten. Handig voor deuren en lamellenschermen.",f_drive_after_up:"Ook openen inhalen",f_drive_after_up_hint:"Is een open-rit (tijd of helderheid) aan de beurt terwijl het raam open of gekiept is, dan wordt die na het sluiten uitgevoerd, inclusief lamelhoek. Handig als open en dicht dezelfde positie hebben (lamellenscherm). Los van de inhaaloptie hierboven.",
   f_drive_after:"Inhalen als raam open of gekiept",f_drive_after_hint:"Als de sluitingstijd bereikt wordt maar het raam open of gekiept staat, wordt de rit ingehaald zodra het raam gesloten wordt. Zonder het vinkje hieronder beweegt het rolluik tot dan helemaal niet.",
   f_win_debounce:"Vertraging bij sluiten (sec.)",f_win_debounce_hint:"Hoe lang «gesloten» moet aanhouden voordat het rolluik terugkeert. 0 = direct.",
+  f_win_keep_open:"Open laten vóór het openen (min)",f_win_keep_open_hint:"Als het geplande openen binnen deze tijd valt, blijft het rolluik open wanneer het raam sluit. Geldt niet in helderheidsmodus of bij geblokkeerd openen. 0 = uit.",
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
   /* Markisen */
   tab_awnings:"Zonneschermen",
@@ -2355,6 +2361,7 @@ da:{
   f_window_react:"Vindueskontakt kører rullegardinet",f_window_react_hint:"Fra: kontakten flytter intet, heller ikke til udluftnings- eller klemposition. Den virker kun som lås: automatiske kørsler holdes tilbage, mens vinduet er åbent (med indhentning), og udføres efter lukning. Nyttigt til døre og lamelgardiner.",f_drive_after_up:"Indhent også åbning",f_drive_after_up_hint:"Hvis en åbnekørsel (tid eller lysstyrke) er forfalden, men vinduet er åbent eller på klem, udføres den efter lukning inklusive lamelvinkel. Nyttigt når åben og lukket har samme position (lamelgardin). Uafhængig af indhentningsvalget ovenfor.",
   f_drive_after:"Indhent hvis vindue åbent eller på klem",f_drive_after_hint:"Hvis lukketiden nås, mens vinduet står åbent eller på klem, indhentes kørslen, så snart vinduet lukkes. Uden fluebenet nedenfor bevæger rullegardinet sig slet ikke indtil da.",
   f_win_debounce:"Forsinkelse ved lukning (sek.)",f_win_debounce_hint:"Hvor længe «lukket» skal holde, før rullegardinet kører tilbage. 0 = med det samme.",
+  f_win_keep_open:"Hold åben før åbning (min)",f_win_keep_open_hint:"Hvis den planlagte åbning ligger inden for dette tidsrum, bliver rullegardinet oppe, når vinduet lukkes. Gælder ikke i lysstyrketilstand eller ved spærret åbning. 0 = fra.",
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
   /* Markisen */
   tab_awnings:"Markiser",
@@ -2669,6 +2676,7 @@ sv:{
   f_window_react:"Fönsterkontakten kör rullgardinen",f_window_react_hint:"Av: kontakten flyttar ingenting, inte heller till vädrings- eller glänt-läge. Den fungerar bara som spärr: automatiska körningar hålls tillbaka medan fönstret är öppet (med hämtning) och utförs efter stängning. Bra för dörrar och persienner.",f_drive_after_up:"Hämta även öppning",f_drive_after_up_hint:"Om en öppningskörning (tid eller ljusstyrka) är aktuell men fönstret är öppet eller på glänt, utförs den efter stängning inklusive lamellvinkel. Bra när öppet och stängt har samma position (persienn). Oberoende av hämtningsvalet ovan.",
   f_drive_after:"Hämta om fönster öppet eller på glänt",f_drive_after_hint:"Om stängningstiden nås medan fönstret står öppet eller på glänt körs körningen i kapp så snart fönstret stängs. Utan bocken nedanför rör sig persiennen inte alls fram till dess.",
   f_win_debounce:"Fördröjning vid stängning (sek.)",f_win_debounce_hint:"Hur länge «stängt» måste hålla innan jalusin åker tillbaka. 0 = direkt.",
+  f_win_keep_open:"Håll öppen före öppning (min)",f_win_keep_open_hint:"Om den schemalagda öppningen infaller inom denna tid stannar jalusin uppe när fönstret stängs. Gäller inte i ljusstyrkeläge eller vid spärrad öppning. 0 = av.",
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
   /* Markisen */
   tab_awnings:"Markiser",
@@ -2983,6 +2991,7 @@ pl:{
   f_window_react:"Kontaktron steruje roletą",f_window_react_hint:"Wyłączone: kontaktron niczego nie porusza, także do pozycji wietrzenia lub uchylenia. Działa tylko jako blokada: automatyczne przejazdy są wstrzymywane, gdy okno jest otwarte (z nadrabianiem), i wykonywane po zamknięciu. Przydatne dla drzwi i żaluzji.",f_drive_after_up:"Nadrabiaj także otwieranie",f_drive_after_up_hint:"Jeśli otwarcie (czas lub jasność) jest należne, a okno jest otwarte lub uchylone, zostanie wykonane po zamknięciu, wraz z kątem lamel. Przydatne, gdy otwarte i zamknięte mają tę samą pozycję (żaluzja). Niezależne od opcji nadrabiania powyżej.",
   f_drive_after:"Nadrobić gdy okno otwarte lub uchylone",f_drive_after_hint:"Jeśli pora zamknięcia nadejdzie przy oknie otwartym lub uchylonym, przejazd zostanie nadrobiony zaraz po zamknięciu okna. Bez opcji poniżej roleta do tego czasu w ogóle się nie porusza.",
   f_win_debounce:"Opóźnienie przy zamykaniu (sek.)",f_win_debounce_hint:"Jak długo musi utrzymać się stan „zamknięte”, zanim roleta wróci. 0 = natychmiast.",
+  f_win_keep_open:"Zostaw otwartą przed otwarciem (min)",f_win_keep_open_hint:"Jeśli planowe otwarcie nastąpi w tym czasie, roleta zostaje podniesiona po zamknięciu okna. Nie dotyczy trybu jasności ani zablokowanego otwarcia. 0 = wył.",
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
   /* Markisen */
   tab_awnings:"Markizy",
@@ -3297,6 +3306,7 @@ pt:{
   f_window_react:"O contacto move o estore",f_window_react_hint:"Desligado: o contacto não move nada, nem para a posição de ventilação ou basculante. Funciona apenas como bloqueio: os movimentos automáticos ficam retidos enquanto a janela está aberta (com recuperação) e são executados ao fechar. Útil para portas e estores venezianos.",f_drive_after_up:"Recuperar também a abertura",f_drive_after_up_hint:"Se uma abertura (hora ou luminosidade) estiver pendente e a janela estiver aberta ou basculante, é executada ao fechar, com o ângulo das lâminas. Útil quando aberto e fechado têm a mesma posição (estore veneziano). Independente da opção de recuperação acima.",
   f_drive_after:"Recuperar se janela aberta ou basculante",f_drive_after_hint:"Se a hora de fecho chegar com a janela aberta ou basculante, o percurso é recuperado assim que a janela for fechada. Sem a opção abaixo o estore não se move de todo até lá.",
   f_win_debounce:"Atraso ao fechar (seg.)",f_win_debounce_hint:"Quanto tempo «fechado» tem de se manter antes de o estore recuar. 0 = imediato.",
+  f_win_keep_open:"Deixar aberto antes da abertura (min)",f_win_keep_open_hint:"Se a abertura programada ocorrer dentro deste tempo, o estore fica aberto quando a janela fecha. Não vale no modo de luminosidade nem com a abertura bloqueada. 0 = desligado.",
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
   /* Markisen */
   tab_awnings:"Toldos",
@@ -3611,6 +3621,7 @@ nb:{
   f_window_react:"Vinduskontakten kjører rullegardinen",f_window_react_hint:"Av: kontakten flytter ingenting, heller ikke til luftings- eller gløttposisjon. Den virker bare som lås: automatiske kjøringer holdes tilbake mens vinduet er åpent (med igjentaking) og utføres etter lukking. Nyttig for dører og lamellgardiner.",f_drive_after_up:"Ta igjen åpning også",f_drive_after_up_hint:"Hvis en åpnekjøring (tid eller lysstyrke) er forfalt, men vinduet er åpent eller på gløtt, utføres den etter lukking, inkludert lamellvinkel. Nyttig når åpen og lukket har samme posisjon (lamellgardin). Uavhengig av valget om igjentaking ovenfor.",
   f_drive_after:"Ta igjen hvis vindu åpent eller på gløtt",f_drive_after_hint:"Hvis lukketiden nås mens vinduet står åpent eller på gløtt, tas kjøringen igjen så snart vinduet lukkes. Uten haken nedenfor beveger rullegardinen seg ikke i det hele tatt fram til da.",
   f_win_debounce:"Forsinkelse ved lukking (sek.)",f_win_debounce_hint:"Hvor lenge «lukket» må holde før rullegardinen kjører tilbake. 0 = umiddelbart.",
+  f_win_keep_open:"Hold åpen før åpning (min)",f_win_keep_open_hint:"Hvis den planlagte åpningen kommer innenfor dette tidsrommet, blir rullegardinen oppe når vinduet lukkes. Gjelder ikke i lysstyrkemodus eller ved sperret åpning. 0 = av.",
   pick_entity:"Velg entitet…",confirm_del_area:"Slette område \"{id}\"?",confirm_del_shutter:"Slette persienne?",
   /* Markisen */
   tab_awnings:"Markiser",
@@ -6058,6 +6069,8 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_vent_while_open_hint")}</div></div>`:""}
       ${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
       <div class="hint">${T("f_win_debounce_hint")}</div>
+      ${pctRange("window_keep_open_minutes",T("f_win_keep_open"),0,240,5," min")}
+      <div class="hint">${T("f_win_keep_open_hint")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
         <div class="hint">${T("f_blind_drive_hint")}</div></div>

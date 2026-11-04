@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1036 Tests)
+tests/               pytest-Suite (1043 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -99,6 +99,8 @@ aus = der Kontakt bewegt nichts, hält nur automatische Fahrten zurück) und
 `drive_after_close_up` (Vorgabe aus; hält auch die **Hochfahrt** zurück –
 bewusst nicht unter `drive_after_close`, das würde bestehenden Nutzern die
 Morgenfahrt nehmen).
+Dazu `window_keep_open_minutes` (2.37.0, Vorgabe 0): schließt das Fenster kurz vor
+der Hochfahrt des Up-Bereichs, entfällt die Rückfahrt (`opening_follows_soon()`).
 Windschutz für Raffstores (2.25.0, `storm_guard`, eigener Slot `rwind`) und
 Sperr-Entität (`automation_lock_entity`): beide Opt-in; die Abfrage steht in
 `shutter_held()` neben `is_shutter_automation_enabled()`.
@@ -292,7 +294,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1036 Tests, ~21 s
+.venv/bin/pytest            # 1043 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -321,12 +323,29 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.36.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.37.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-04 – 2.37.0: Fenster zu kurz vor der Hochfahrt (Horst, simon42 #233)
+
+Horst lüftet das Bad vor Sonnenaufgang: Fenster auf → Rollladen hoch, Fenster zu →
+Rollladen zurück auf zu, obwohl die Hochfahrt Minuten später kommt. Neu je Rollladen
+`window_keep_open_minutes` (0–240, Vorgabe 0 = aus). `window_trigger.
+opening_follows_soon()` fragt `get_next_action()` des **Up-Bereichs**: nächster
+Termin ist eine Hochfahrt innerhalb der Minuten **und** `automated_up_blocked()` ist
+None (sonst bliebe er den ganzen Tag offen). Helligkeitsmodus zählt nie (kein fester
+Zeitpunkt). Gespart wird nur eine Rückfahrt *nach unten*; der Zyklus (`trigger_actions`/
+`trigger_heights`) wird trotzdem beendet. Der `drive_after_close`-Zweig bleibt
+unberührt. Panel: Regler 0–240/5, i18n 2 Schlüssel ×11 (je 523). **Verifiziert:**
+`pytest` 1043 grün (7 neue, `tests/test_window_keep_open.py`); Gegenprobe: ohne die
+Prüfung fällt der Kernfall. Nicht im echten Home Assistant geprüft.
+Außerdem Forum-Antwort an eurofinder (#234): Frostschutz ändert nur die Schließposition
+und stoppt keine Fahrt – „nicht fahren bei Frost“ geht über eine Zusatzbedingung
+mit Hysterese oder die Sperr-Entität (Schwellwert-Helfer).
 
 ### 2026-11-03 – 2.36.0: Beschattungspause nach Handfahrt, Dashboard-Zeilen
 
@@ -393,16 +412,6 @@ direkt auf – Zeilenknopf wie die anderen: von Hand, ohne Rollladenschalter, oh
 Riegel. Kein Gruppenknopf. Node-Test `tests/panel/tilt_buttons.mjs`; i18n
 2 Schlüssel ×11. Nicht im Browser geprüft.
 
-### 2026-11-03 – 2.32.0: Referenzfahrt mit Wochentag, Monatstag, Endanschlägen
-
-Claus (#225) wollte die Uhrzeit einstellbar – sie war es schon (`reference_run_time`,
-er hat das Feld übersehen). Neu: `reference_run_weekday` (0–6, leer = beliebig,
-mit Abstand kombiniert), `reference_run_monthday` (1–31, 31 = letzter Tag, **ersetzt
-den Abstand**, sonst driftet „der 1.“ an kurzen Monaten) und `reference_run_full`
-(echte Enden 100/0, Richtung aus der Skala, `_end_positions()`). Tests mit
-`monkeypatch` auf `dt_util.now`, nicht mit `freezer`: der friert die Schleifenuhr
-ein und `_settle()` hängt. Panel: Auswahl für den Wochentag (Namen aus `Intl`),
-Regler, Haken; i18n 6 Schlüssel ×11. Nicht im echten Home Assistant geprüft.
 
 ## graphify
 

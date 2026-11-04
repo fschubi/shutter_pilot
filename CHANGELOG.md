@@ -4,6 +4,21 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.37.0]
+
+### Neu
+- **Fenster zu kurz vor der Hochfahrt: Rollladen bleibt oben** (Horst, simon42 #233).
+  Wer morgens vor dem Sonnenaufgang das Bad lüftet, hatte den Rollladen durchs
+  Fenster hochgefahren und beim Schließen wieder zu – obwohl er Minuten später
+  ohnehin aufgeht. Am Rollladen gibt es unter dem Fensterkontakt jetzt **„Offen
+  lassen vor der Hochfahrt (Min.)“** (0–240, Vorgabe 0 = aus). Steht die
+  planmäßige Hochfahrt des Bereichs innerhalb dieser Zeit an, fährt der
+  Rollladen beim Schließen des Fensters nicht zurück. Gilt für Zeit- und
+  Sonnenmodus; im Helligkeitsmodus (kein fester Zeitpunkt) und bei gesperrter
+  Hochfahrt (Wochenendhaken, „nicht hochfahren“) fährt er wie bisher zurück, damit
+  er nicht den ganzen Tag offen bleibt. Eine Rückfahrt nach oben (Fenster tagsüber
+  halb geöffnet) bleibt unberührt. Ohne Eintrag ändert sich nichts.
+
 ## [2.36.0]
 
 ### Neu

@@ -74,6 +74,14 @@ CONF_WINDOW_CLOSE_DEBOUNCE = "window_close_debounce"
 DEFAULT_WINDOW_CLOSE_DEBOUNCE = 5
 MAX_WINDOW_CLOSE_DEBOUNCE = 30
 
+# Minutes before the next scheduled opening within which a closing window does
+# not bring the shutter back down. Someone who airs the bathroom at half past
+# six has no use for a shutter that closes again for the fifteen minutes until
+# sunrise (Horst, #233). 0 = off, so nobody's behaviour changes by updating.
+CONF_WINDOW_KEEP_OPEN_MINUTES = "window_keep_open_minutes"
+DEFAULT_WINDOW_KEEP_OPEN_MINUTES = 0
+MAX_WINDOW_KEEP_OPEN_MINUTES = 240
+
 # Drive to the ventilation position at the scheduled closing time even though
 # the window is still open, and catch the full drive up afterwards. Without it
 # a shutter with drive_after_close does *nothing* at all in that situation –
@@ -663,6 +671,7 @@ AWNING_UNUSED_KEYS = (
     CONF_LOCK_PROTECTION,
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_KEEP_OPEN_MINUTES,
     CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,
@@ -733,6 +742,7 @@ WINDOW_UNUSED_KEYS = (
     CONF_LOCK_PROTECTION,
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_KEEP_OPEN_MINUTES,
     CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,

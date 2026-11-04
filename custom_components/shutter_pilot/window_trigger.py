@@ -9,12 +9,14 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_KEEP_OPEN_MINUTES,
     CONF_WINDOW_REACT,
     DEFAULT_WINDOW_REACT,
     CONF_LOCK_REPLAY,
@@ -27,6 +29,12 @@ from .const import (
     CONF_POSITION_OPEN,
     DEFAULT_WINDOW_CLOSE_DEBOUNCE,
     MAX_WINDOW_CLOSE_DEBOUNCE,
+    MAX_WINDOW_KEEP_OPEN_MINUTES,
+    CONF_AREAS,
+    CONF_AREA_ID,
+    CONF_AREA_UP_ID,
+    CONF_AREA_MODE,
+    AREA_MODE_BRIGHTNESS,
 )
 from .helpers import (
     commanded_position,
@@ -35,12 +43,14 @@ from .helpers import (
     positions_differ_significantly,
     resting_position,
     is_cover_sun_protected,
+    automated_up_blocked,
     automation_allowed,
     is_shutter_automation_enabled,
     is_system_enabled,
     only_shutters,
     set_cover_position,
 )
+from .schedule_times import DIRECTION_UP, get_next_action
 from .window_helper import (
     get_effective_close_position,
     get_position_for_window_state,
@@ -89,6 +99,47 @@ def _debounce_seconds(shutter: dict) -> int:
     except (TypeError, ValueError):
         return DEFAULT_WINDOW_CLOSE_DEBOUNCE
     return max(0, min(MAX_WINDOW_CLOSE_DEBOUNCE, value))
+
+
+def _keep_open_minutes(shutter: dict) -> int:
+    """Configured keep-open lead time in minutes, 0 when off or unreadable."""
+    try:
+        value = int(shutter.get(CONF_WINDOW_KEEP_OPEN_MINUTES, 0))
+    except (TypeError, ValueError):
+        return 0
+    return max(0, min(MAX_WINDOW_KEEP_OPEN_MINUTES, value))
+
+
+def opening_follows_soon(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict[str, Any], shutter: dict
+) -> bool:
+    """True if the scheduled opening is due within the shutter's lead time.
+
+    Asks the up area, not the down area: they may differ, and only the
+    morning drive can make a restore pointless. Brightness areas have no
+    fixed moment (get_next_action reports the start of the allowed window,
+    which is not when the shutter opens), so they never qualify. A blocked
+    opening (weekend hook, no_up) does not count either: nothing will open
+    the shutter, so keeping it open would leave it that way all day.
+    """
+    minutes = _keep_open_minutes(shutter)
+    if minutes <= 0:
+        return False
+    up_id = str(shutter.get(CONF_AREA_UP_ID) or "")
+    areas = entry.options.get(CONF_AREAS, [])
+    area = next(
+        (a for a in areas if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == up_id),
+        None,
+    )
+    if area is None or str(area.get(CONF_AREA_MODE) or "") == AREA_MODE_BRIGHTNESS:
+        return False
+    now = dt_util.as_local(dt_util.now())
+    when, direction = get_next_action(hass, area, now)
+    if when is None or direction != DIRECTION_UP:
+        return False
+    if not 0 <= (when - now).total_seconds() <= minutes * 60:
+        return False
+    return automated_up_blocked(hass, area, data, now) is None
 
 
 def cancel_window_close(data: dict[str, Any], entity_id: str) -> None:
@@ -216,6 +267,25 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 restore_pos = commanded_position(data, cover_entity)
             if restore_pos is None:
                 restore_pos = last_positions.get(cover_entity, pos_closed)
+            # Nur eine Rueckfahrt *nach unten* wird gespart: wer das Fenster
+            # tagsueber auf halber Hoehe geoeffnet hat, will dorthin zurueck.
+            # Der Zyklus endet trotzdem, sonst restauriert ein spaeteres
+            # Oeffnen auf eine veraltete Hoehe.
+            current = get_tracked_position(hass, shutter, cover_entity)
+            if (
+                current is not None
+                and restore_pos < current
+                and positions_differ_significantly(restore_pos, current)
+                and opening_follows_soon(hass, entry, data, shutter)
+            ):
+                _LOGGER.info(
+                    "%s: Fenster geschlossen, die Hochfahrt steht in den "
+                    "naechsten %d Minuten an – keine Rueckfahrt",
+                    cover_entity, _keep_open_minutes(shutter),
+                )
+                trigger_actions.pop(cover_entity, None)
+                trigger_heights.pop(cover_entity, None)
+                return
             hass.async_create_task(
                 set_cover_position(
                     hass,
