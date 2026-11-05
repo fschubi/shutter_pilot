@@ -50,6 +50,20 @@ def _shutter(**overrides) -> dict:
     return shutter
 
 
+@pytest.fixture(autouse=True)
+def _no_schedule():
+    """Der Zeitplan hängt am Minutentakt mit der echten Uhr.
+
+    Fällt ein Minutenwechsel in den Test, fährt er je nach Tageszeit "hoch"
+    und verfälscht die Fahrliste – er gehört nicht zu dem, was hier geprüft
+    wird. Für die ganze Testdauer abgeschaltet, nicht nur beim Setup.
+    """
+    with patch(
+        "custom_components.shutter_pilot.scheduler.is_auto_enabled", return_value=False
+    ):
+        yield
+
+
 @pytest.fixture
 def cover_calls(hass):
     return async_mock_service(hass, "cover", "set_cover_position")

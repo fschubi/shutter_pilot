@@ -79,8 +79,12 @@ async def _cycle(hass, shutter: dict, now: datetime, area: dict = AREA):
         options={CONF_AREAS: [area], CONF_SHUTTERS: [shutter]},
     )
     entry.add_to_hass(hass)
+    # Der Minutentakt läuft mit der echten Uhr: fällt ein Minutenwechsel in den
+    # Test, fährt der Zeitplan dazwischen "hoch" und verfälscht die Liste.
     with patch(
         "custom_components.shutter_pilot._async_register_panel", return_value=None
+    ), patch(
+        "custom_components.shutter_pilot.scheduler.is_auto_enabled", return_value=False
     ), patch.object(window_trigger.dt_util, "now", return_value=now):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
