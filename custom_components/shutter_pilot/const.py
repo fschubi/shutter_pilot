@@ -419,6 +419,25 @@ STORM_GUARD_SLOTS = (AWNING_GUARD_RWIND,)
 # storm_barred(), so the string lives here and not in awning_guard.py.
 AWNING_GUARD_STATE_KEY = "_awning_guard"
 
+# Frost lock for shutters (2.38.0, eurofinder #237). Not the frost *position*
+# (FROST_CONDITION_SLOT, which only shortens the evening drive): this one holds
+# every automatic drive while it is cold. A slot of its own, global like the
+# awning sensors, and a state key of its own - a blind may carry the wind
+# protection *and* the frost lock, and one shared "barred" flag would let
+# whichever was evaluated last decide for both.
+FROST_LOCK_SLOT = "cold"
+FROST_LOCK_SLOTS = (FROST_LOCK_SLOT,)
+FROST_LOCK_STATE_KEY = "_frost_lock"
+# Per shutter, all off by default (no migration): opt in, and where to stand
+# while it is cold. Empty position = stay where it is, only hold still.
+CONF_FROST_LOCK = "frost_lock"
+CONF_FROST_LOCK_POSITION = "frost_lock_position"
+CONF_FROST_LOCK_TILT = "frost_lock_tilt"
+# Global: drive to where the schedule wants the shutter once the cold is over,
+# for the drives the lock swallowed (the morning opening). On by default.
+CONF_FROST_LOCK_CATCH_UP = "frost_lock_catch_up"
+DEFAULT_FROST_LOCK_CATCH_UP = True
+
 # Per venetian blind, all off / unchanged by default (no migration): opt in to
 # the wind protection, and where to go when it blows. Not position_open - on a
 # blind that is usually the lowered position with open slats.
@@ -481,7 +500,12 @@ SUN_PROTECT_ALT_CONDITION_SLOT = "sp_alt"
 # ice on an awning is the same question asked at the other end of the house.
 # Dusk joins them for the same reason: a brightness sensor reads low at dusk,
 # not high, and "darker than" should not need a checkbox to say so.
-INVERTED_BY_DEFAULT_SLOTS = (FROST_CONDITION_SLOT, AWNING_GUARD_ICE, AWNING_DUSK_SLOT)
+INVERTED_BY_DEFAULT_SLOTS = (
+    FROST_CONDITION_SLOT,
+    AWNING_GUARD_ICE,
+    AWNING_DUSK_SLOT,
+    FROST_LOCK_SLOT,
+)
 
 # Standard weather conditions in Home Assistant, offered as checkboxes.
 WEATHER_CONDITIONS = (
@@ -672,6 +696,9 @@ AWNING_UNUSED_KEYS = (
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_KEEP_OPEN_MINUTES,
+    CONF_FROST_LOCK,
+    CONF_FROST_LOCK_POSITION,
+    CONF_FROST_LOCK_TILT,
     CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,
@@ -743,6 +770,9 @@ WINDOW_UNUSED_KEYS = (
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_KEEP_OPEN_MINUTES,
+    CONF_FROST_LOCK,
+    CONF_FROST_LOCK_POSITION,
+    CONF_FROST_LOCK_TILT,
     CONF_WINDOW_VENT_WHILE_OPEN,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_DRIVE_AFTER_CLOSE_UP,
@@ -804,6 +834,8 @@ DEFAULT_AWNING_LOCKOUT = {
     # Frost does not gust. The hysteresis on the temperature is the whole story.
     AWNING_GUARD_ICE: 0,
     AWNING_GUARD_RWIND: 20,
+    # Like ice: the temperature hysteresis is the whole story.
+    FROST_LOCK_SLOT: 0,
 }
 MAX_AWNING_LOCKOUT = 120
 

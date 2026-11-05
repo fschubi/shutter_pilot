@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1043 Tests)
+tests/               pytest-Suite (1055 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -101,9 +101,10 @@ bewusst nicht unter `drive_after_close`, das würde bestehenden Nutzern die
 Morgenfahrt nehmen).
 Dazu `window_keep_open_minutes` (2.37.0, Vorgabe 0): schließt das Fenster kurz vor
 der Hochfahrt des Up-Bereichs, entfällt die Rückfahrt (`opening_follows_soon()`).
-Windschutz für Raffstores (2.25.0, `storm_guard`, eigener Slot `rwind`) und
-Sperr-Entität (`automation_lock_entity`): beide Opt-in; die Abfrage steht in
-`shutter_held()` neben `is_shutter_automation_enabled()`.
+Windschutz für Raffstores (2.25.0, `storm_guard`, eigener Slot `rwind`), Sperr-Entität
+(`automation_lock_entity`) und Frostsperre (2.38.0, `frost_lock`, globaler Slot `cold`,
+fail open): alle Opt-in; die Abfrage steht in `shutter_held()` neben
+`is_shutter_automation_enabled()`.
 Höhe/Lamellen je Zustand "unverändert" (2.26.0, `keep_*`, `role_position()`)
 und `tilt_after_position`: ebenfalls Opt-in, `set_cover_position(position=None)`.
 
@@ -294,7 +295,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1043 Tests, ~21 s
+.venv/bin/pytest            # 1055 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -323,12 +324,38 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.37.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.38.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-05 – 2.38.0: Frostsperre für Rollläden (eurofinder, simon42 #237)
+
+eurofinder (Velux-Rollläden, kam von FHEM/ASC_Antifreeze): bei Frost soll nichts mehr
+fahren, zentral einstellbar, optional Frostposition, danach nachholen. Unser Frostschutz
+(`closed_frost`) kürzt nur die Abendfahrt – daher neu, **nicht** dort angehängt. Eigener
+globaler Slot `cold` (`FROST_LOCK_SLOT`, invertiert, Sperrzeit 0) und eigener Zustand
+`_frost_lock` (Windschutz und Frostsperre am selben Raffstore dürfen sich nicht ein
+gemeinsames `barred` überschreiben). Je Rollladen `frost_lock`, `frost_lock_position`,
+`frost_lock_tilt` (leer = stehen bleiben); global `frost_lock_catch_up` (Vorgabe an).
+`evaluate_guard(..., state_key, fail_open=True)`: **toter Sensor sperrt nie** (anders als
+Wind/Regen). Sperre über `frost_barred()` in `shutter_held()` – also überall dort, wo
+schon `storm_barred`/Sperr-Entität fragen. Hold/Release in `awning_guard.py`
+(`async_frost_hold`, `async_frost_release`, `FROST_HELD_KEY`): Hold fährt nur, wenn
+Hauptschalter, Automatik und Sperr-Entität es erlauben (anders als der Windschutz: kein
+Sicherheitsfall). Release holt über `scheduled_role_now()` nach, **nicht** wenn die
+Position von der Frostposition abweicht (Handfahrt), unbekannt ist, ein Fenster offen
+ist oder die Automatik aus; `covers_driven_up/down` werden nachgeführt. Panel:
+Einstellungs-Abschnitt (`_renderGuardSlot` mit `cold`) und Rollladen-Abschnitt, i18n 16
+Schlüssel ×11 (je 539), Export-Zeilen (`guard_status(..., state_key)`). **Nicht abgedeckt:**
+nach einem Neustart im Frost fährt er die Frostposition einmal erneut an und das Nachholen
+nach einem Neustart *im* Frost bezieht sich auf den neuen Stand; Gruppenknöpfe im
+Dashboard kennen die Sperre nicht (wie bei Windschutz und Sperr-Entität: Handfahrt).
+**Verifiziert:** `pytest` grün (12 neue, `tests/test_frost_lock.py`; Gegenproben: ohne
+Handfahrt-Prüfung und ohne `fail_open` fallen je Tests); Panel-Render mit neuen Abschnitten.
+Nicht im echten Home Assistant geprüft.
 
 ### 2026-11-04 – 2.37.0: Fenster zu kurz vor der Hochfahrt (Horst, simon42 #233)
 
@@ -402,15 +429,6 @@ Stellung rechnen. Eine Handfahrt nach der letzten Sichtschutzfahrt wird nicht
 überfahren. Panel: Haken mit Position/Lamellen, i18n 4 Schlüssel ×11.
 Nicht im echten Home Assistant geprüft; kein Halte-/Hysterese-Verhalten an der
 Sonnenkante (Minutentakt, die Grenze ist selten scharf).
-
-### 2026-11-03 – 2.33.0: Lamellen-Knöpfe im Dashboard
-
-Claus (#225): Höhe fahren geht auf der Übersicht, Lamellen nicht. `_rowButtons()`
-zeigt bei `tilt_enabled` zwei Knöpfe (−/+ `TILT_STEP` 10 %), `_tiltStep()` liest
-`current_tilt_position` (ohne Meldung ab 50) und ruft `cover.set_cover_tilt_position`
-direkt auf – Zeilenknopf wie die anderen: von Hand, ohne Rollladenschalter, ohne
-Riegel. Kein Gruppenknopf. Node-Test `tests/panel/tilt_buttons.mjs`; i18n
-2 Schlüssel ×11. Nicht im Browser geprüft.
 
 
 ## graphify

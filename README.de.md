@@ -36,6 +36,7 @@ Shutter Pilot ist eine Home Assistant Custom Integration, die Rollläden, Jalous
 - **Bis zu vier Beschattungsbedingungen** – Binärsensor, Zahlenwert mit Hysterese oder Textzustand (Wetterlage), je Bereich und je Rollladen überschreibbar
 - **Wettervorhersage** – eigene Sensoren für Tageshöchst-, Tiefsttemperatur und Wetterlage aus deiner `weather.*`-Entität, direkt als Bedingung nutzbar
 - **Teilweise schließen, Frostschutz und automatisches Lüften** – jeweils mit eigener Bedingung je Bereich
+- **Frostsperre** – bei Frost keine automatische Fahrt, optional Frostposition und Nachholen danach, mit einem zentralen Temperatursensor
 - **Handfahrten werden respektiert** – drei Modi, wie lange eine von Hand gesetzte Position die Automatik fernhält
 - **Fahrtkontrolle** – prüft nach jeder automatischen Fahrt, ob die Position erreicht wurde, und wiederholt sonst den Befehl
 - **Positionen überstehen den Neustart** – beim Start korrigiert, wenn die Cover-Integration falsch wiederhergestellt hat
@@ -887,6 +888,17 @@ Bei Frost kann ein ganz geschlossener Rollladen am Rahmen festfrieren. Damit das
 Anders als bei allen übrigen Bedingungen wird hier **nach unten** verglichen: Der Frostschutz greift *unter* dem ersten Wert und bleibt aktiv, bis der zweite überschritten ist. Die Hysterese verhindert, dass er um den Gefrierpunkt herum ständig ein- und ausschaltet.
 
 Frostschutz gewinnt gegen das abweichende Schließen – Schutz geht vor Komfort. Beides wirkt im Zeit-, Sonnen- und Helligkeitsmodus. Ein Rollladen ohne gesetzte Frostposition schließt unverändert ganz, selbst wenn die Bedingung des Bereichs erfüllt ist.
+
+## Frostsperre
+
+Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren** will – eingefrorene Lamellen, vereiste Führungsschienen, Schnee auf dem Dachfenster – nutzt die **Frostsperre**:
+
+1. Unter **Einstellungen → Frostsperre für Rollläden** den Außentemperatursensor eintragen und die zwei Schwellen setzen, z. B. *Sperren unter 2 °C, freigeben über 4 °C*. Ein ausgefallener Sensor sperrt nie, sonst legt ein leerer Akku das Haus für den ganzen Winter still.
+2. Am **Rollladen** den Haken **Frostsperre für diesen Rollladen** setzen. Optional eine **Position bei Frost** (und Lamellen), die er beim Einsetzen des Frosts anfährt; ohne Position bleibt er einfach stehen.
+
+Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz oder zweite Öffnungsstufe. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
+
+Mit **Nach dem Frost nachholen** (Vorgabe an) fährt der Rollladen nach der Freigabe dorthin, wo der Zeitplan ihn jetzt haben will, etwa morgens offen. Wurde er in der Zwischenzeit von Hand gefahren, bleibt er stehen; bei offenem Fenster wird ebenfalls nichts nachgeholt. Die Frostfahrt selbst respektiert den Hauptschalter und die Automatik-Schalter: ist die Automatik aus, hält die Sperre nur still und fährt nicht. Nach einem Neustart mitten im Frost fährt er die Frostposition einmal erneut an.
 
 ## Geplant
 

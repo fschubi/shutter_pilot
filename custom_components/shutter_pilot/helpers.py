@@ -106,6 +106,8 @@ from .const import (
     DEFAULT_AWNING_TRACK_STEP,
     DEFAULT_DEVICE_KIND,
     AWNING_GUARD_STATE_KEY,
+    CONF_FROST_LOCK,
+    FROST_LOCK_STATE_KEY,
     CONF_KEEP_POSITION_CLOSED,
     CONF_KEEP_POSITION_OPEN,
     CONF_KEEP_POSITION_SUN_PROTECT,
@@ -340,6 +342,34 @@ def only_storm_guarded(shutters: list[Any]) -> list[Any]:
     return [s for s in shutters if isinstance(s, dict) and has_storm_guard(s)]
 
 
+def has_frost_lock(shutter: dict) -> bool:
+    """True for a shutter that opted in to the frost lock.
+
+    Shutters only, like has_storm_guard(): awnings and roof windows have their
+    own ice protection, and sharing this flag would hand them a second one.
+    """
+    return is_shutter(shutter) and bool(shutter.get(CONF_FROST_LOCK, False))
+
+
+def only_frost_locked(shutters: list[Any]) -> list[Any]:
+    """The shutters the frost lock watches."""
+    return [s for s in shutters if isinstance(s, dict) and has_frost_lock(s)]
+
+
+def frost_barred(hass: HomeAssistant, entry: ConfigEntry, shutter: dict) -> bool:
+    """True while the frost lock holds this shutter's automatic drives."""
+    if not has_frost_lock(shutter):
+        return False
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not cover or not isinstance(data, dict):
+        return False
+    states = data.get(FROST_LOCK_STATE_KEY)
+    if not isinstance(states, dict):
+        return False
+    return bool((states.get(cover) or {}).get("barred"))
+
+
 def storm_barred(hass: HomeAssistant, entry: ConfigEntry, shutter: dict) -> bool:
     """True while the wind protection holds this blind (alarm, lockout, dead sensor)."""
     if not has_storm_guard(shutter):
@@ -355,13 +385,17 @@ def storm_barred(hass: HomeAssistant, entry: ConfigEntry, shutter: dict) -> bool
 
 
 def shutter_held(hass: HomeAssistant, entry: ConfigEntry, shutter: dict) -> bool:
-    """True if the lock entity or the wind protection holds this cover.
+    """True if the lock entity, wind protection or frost lock holds this cover.
 
     Separate from is_shutter_automation_enabled() on purpose: that one is
     patched by name in the existing tests, and the drive paths keep calling it
     exactly as before - the hold is one more question next to it.
     """
-    return is_shutter_locked(hass, shutter) or storm_barred(hass, entry, shutter)
+    return (
+        is_shutter_locked(hass, shutter)
+        or storm_barred(hass, entry, shutter)
+        or frost_barred(hass, entry, shutter)
+    )
 
 
 def automation_allowed(

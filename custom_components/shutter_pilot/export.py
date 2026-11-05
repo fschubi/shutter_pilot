@@ -46,6 +46,8 @@ from .const import (
     CONF_TILT_AFTER_POSITION,
     CONF_TILT_ENABLED,
     STORM_GUARD_SLOTS,
+    FROST_LOCK_SLOTS,
+    FROST_LOCK_STATE_KEY,
     AWNING_GUARD_ICE,
     AWNING_GUARD_RAIN,
     AWNING_GUARD_WIND,
@@ -99,6 +101,7 @@ from .helpers import (
     rest_role,
     awning_dusk_condition_met,
     has_guard,
+    has_frost_lock,
     has_storm_guard,
     is_shutter_locked,
     is_window,
@@ -420,6 +423,7 @@ def _guard_rows(
     shutter: dict[str, Any],
     slots: tuple[str, ...] = AWNING_GUARD_SLOTS,
     title: str = "Wind-, Regen- und Frostschutz:",
+    state_key: str | None = None,
 ) -> list[str]:
     """The protection verdict for one awning, with values and units.
 
@@ -432,7 +436,9 @@ def _guard_rows(
 
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
     config = resolve_guard_config(dict(entry.options or {}), shutter, slots)
-    status = guard_status(data, cover)
+    status = (
+        guard_status(data, cover, state_key) if state_key else guard_status(data, cover)
+    )
 
     rows: list[str] = []
     for slot in slots:
@@ -1446,6 +1452,11 @@ async def async_build_export(
                 out += _guard_rows(
                     hass, entry, data, shutter, STORM_GUARD_SLOTS,
                     "Windschutz (Raffstore):",
+                )
+            if has_frost_lock(shutter):
+                out += _guard_rows(
+                    hass, entry, data, shutter, FROST_LOCK_SLOTS,
+                    "Frostsperre:", FROST_LOCK_STATE_KEY,
                 )
             lock_id = str(shutter.get(CONF_AUTOMATION_LOCK_ENTITY) or "").strip()
             if lock_id:

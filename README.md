@@ -36,6 +36,7 @@ Shutter Pilot is a Home Assistant custom integration that automates your shutter
 - **Up to four shading conditions** – binary sensor, numeric value with hysteresis or text state (weather condition), per area and overridable per shutter
 - **Weather forecast** – its own daily high, low and condition sensors from your `weather.*` entity, usable directly as conditions
 - **Partial closing, frost protection and automatic ventilation** – each with its own condition per area
+- **Frost lock** – no automatic drive in frost, optional frost position and catch-up afterwards, with one central temperature sensor
 - **Manual positions are respected** – three modes for how long a position set by hand keeps the automation away
 - **Drive verification** – checks after each automated drive whether the position was reached, and repeats the command if not
 - **Positions survive a restart** – corrected on startup if the cover integration restored the wrong state
@@ -870,6 +871,17 @@ In frost a fully closed shutter can freeze to the frame. Leaving a gap prevents 
 Unlike every other condition this one compares **downwards**: frost protection kicks in *below* the first value and stays on until the second is exceeded. The hysteresis keeps it from toggling around freezing point.
 
 Frost protection wins over partial closing — protection beats comfort. Both apply in time, sun and brightness mode. A shutter without a frost position still closes fully, even when the area's condition is met.
+
+## Frost lock
+
+The frost protection above only shortens the evening drive. If you want **no driving at all** in frost – frozen slats, iced guide rails, snow on a roof window – use the **frost lock**:
+
+1. Under **Settings → Frost lock for shutters** enter the outdoor temperature sensor and set the two thresholds, e.g. *lock below 2 °C, release above 4 °C*. A failed sensor never locks, otherwise a flat battery would stop the whole house for the winter.
+2. On the **shutter** tick **Frost lock for this shutter**. Optionally a **position in frost** (and slats) it drives to when the frost sets in; without one it simply stays where it is.
+
+While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy or second opening stage. **By hand** (dashboard buttons, services, at the motor) everything always works.
+
+With **Catch up after the frost** (default on) the shutter drives to where the schedule wants it now once released, for instance open in the morning. If it was driven by hand meanwhile it stays put; with an open window nothing is caught up either. The frost drive itself respects the master switch and the automation switches: with automation off the lock only holds still and does not drive. After a restart in the middle of a frost it drives to the frost position once more.
 
 ## Planned
 

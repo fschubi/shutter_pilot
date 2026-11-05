@@ -4,6 +4,15 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.33.0: Lamellen-Knöpfe im Dashboard
+
+Claus (#225): Höhe fahren geht auf der Übersicht, Lamellen nicht. `_rowButtons()`
+zeigt bei `tilt_enabled` zwei Knöpfe (−/+ `TILT_STEP` 10 %), `_tiltStep()` liest
+`current_tilt_position` (ohne Meldung ab 50) und ruft `cover.set_cover_tilt_position`
+direkt auf – Zeilenknopf wie die anderen: von Hand, ohne Rollladenschalter, ohne
+Riegel. Kein Gruppenknopf. Node-Test `tests/panel/tilt_buttons.mjs`; i18n
+2 Schlüssel ×11. Nicht im Browser geprüft.
+
 ### 2026-11-03 – 2.32.0: Referenzfahrt mit Wochentag, Monatstag, Endanschlägen
 
 Claus (#225) wollte die Uhrzeit einstellbar – sie war es schon (`reference_run_time`,

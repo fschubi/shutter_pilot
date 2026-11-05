@@ -47,7 +47,7 @@ const shutters = [
     sun_geometry_override:true, elevation_enabled:true, blind_drive:true, my_position_entity:"button.my_pos",
     keep_position_sun_protect:true, keep_tilt_open:true, tilt_after_position:true,
     storm_guard:true, storm_position:100, storm_tilt:100, sun_cond_rwind_entity:"binary_sensor.windalarm",
-    automation_lock_entity:"input_boolean.fenster_putzen", window_react:false, drive_after_close_up:true },
+    automation_lock_entity:"input_boolean.fenster_putzen", frost_lock:true, frost_lock_position:0, frost_lock_tilt:100, window_react:false, drive_after_close_up:true },
   { cover_entity_id:"cover.rollladen_b", name:"Rollladen B", area_up_id:"living", area_down_id:"living",
     position_open:100, position_closed:0, position_sun_protect:50 },
   { cover_entity_id:"cover.markise_a", name:"Markise A", device_kind:"awning", area_down_id:"living",
@@ -64,6 +64,7 @@ const shutters = [
 const settings = { weather_entity:"weather.home", sun_cond_wind_entity:"sensor.wind",
   sun_cond_wind_on_above:40, sun_cond_wind_off_below:25, guard_wind_lockout:20,
   sun_cond_rain_entity:"binary_sensor.rain", guard_rain_lockout:10,
+  sun_cond_cold_entity:"sensor.aussen", sun_cond_cold_on_above:2, sun_cond_cold_off_below:4, frost_lock_catch_up:true,
   sun_cond_ice_entity:"sensor.temp", sun_cond_ice_on_above:-2, sun_cond_ice_off_below:2,
   min_drive_gap:1, verify_enabled:true };
 
@@ -94,6 +95,8 @@ R("Dachfenster-Tab",  () => p._renderWindows(p._data));
   const out = R("Einstellungen", () => p._renderSettings(p._data));
   /* Wind ist numerisch, Regen boolesch (binary_sensor.rain) - beide
      Zweige von _renderGuardSlot() muessen die Checkbox zeigen. */
+  ok("  … zeigt die Frostsperre mit Nachholen",
+     out.includes("sec_cold") && out.includes("f_cold_catch_up"), "Frostsperre fehlt in den Einstellungen");
   ok("  … zeigt die Invertier-Checkbox am Schutz",
      out.includes("f_cond_invert_label"), "Checkbox fehlt im Schutz-Formular");
 }
@@ -120,6 +123,12 @@ for (const s of shutters) {
   const out = R("Formular: " + s.name, () => p._renderShutterForm(p._data));
   ok("  … zeigt den Kopierknopf (zweiter Eintrag derselben Art)",
      out.includes("f_copy_from"), "Kopierblock fehlt – Test deckt ihn nicht ab");
+  /* Frostsperre: nur an echten Rollläden, mit Position und Lamellen. */
+  const frost = out.includes("sec_frostlock");
+  ok("  … Frostsperre-Abschnitt nur am Rollladen",
+     frost === !s.device_kind, "sec_frostlock " + (frost ? "an" : "fehlt") + " bei " + s.name);
+  if (s.frost_lock) ok("  … Frostposition und Lamellen sichtbar",
+     out.includes("f_frost_lock_position") && out.includes("f_frost_lock_tilt"), "Felder fehlen");
   if (s.device_kind === "awning") {
     ok("  … zeigt den Daemmerungs-Abschnitt (nur Markisen)",
        out.includes("sec_awning_dusk"), "Daemmerungs-Abschnitt fehlt an einer Markise");

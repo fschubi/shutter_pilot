@@ -4,6 +4,24 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.38.0]
+
+### Neu
+- **Frostsperre für Rollläden** (eurofinder, simon42 #237). Der Frostschutz kürzt nur
+  die Abendfahrt – wer bei Frost **gar nicht fahren** will (Velux-Rollladen,
+  eingefrorene Führungsschienen), hatte nur Umwege über Zusatzbedingung oder
+  Helfer. Jetzt unter **Einstellungen → Frostsperre für Rollläden** ein
+  Außentemperatursensor mit zwei Schwellen (z. B. sperren unter 2 °C, freigeben
+  über 4 °C) und am Rollladen der Haken **Frostsperre**. Solange gesperrt ist,
+  fährt der Rollladen keine automatische Fahrt (Zeitplan, Beschattung, Lüften,
+  Fensterkontakt, Sichtschutz, zweite Öffnungsstufe). Von Hand, über das Dashboard
+  und die Dienste geht immer alles. Optional eine **Position bei Frost** (und
+  Lamellen), die er beim Einsetzen des Frosts anfährt; ohne Position bleibt er
+  stehen. **Nach dem Frost nachholen** (Vorgabe an) fährt ihn auf das, was der
+  Zeitplan jetzt will, etwa morgens offen; eine Handfahrt während des Frosts oder
+  ein offenes Fenster verhindern das. Ein ausgefallener Sensor sperrt nie. Ohne
+  Haken ändert sich nichts. Der Export zeigt Schwellen und Urteil.
+
 ## [2.37.0]
 
 ### Neu

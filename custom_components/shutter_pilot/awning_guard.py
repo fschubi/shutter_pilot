@@ -40,6 +40,18 @@ from homeassistant.helpers.event import async_track_state_change_event
 from .const import (
     AWNING_GUARD_SLOTS,
     AWNING_GUARD_STATE_KEY,
+    CONF_AREAS,
+    CONF_AREA_DOWN_ID,
+    CONF_AREA_ID,
+    CONF_AREA_UP_ID,
+    CONF_FROST_LOCK_CATCH_UP,
+    CONF_FROST_LOCK_POSITION,
+    CONF_FROST_LOCK_TILT,
+    DEFAULT_FROST_LOCK_CATCH_UP,
+    FROST_LOCK_SLOTS,
+    FROST_LOCK_STATE_KEY,
+    ROLE_CLOSED,
+    ROLE_OPEN,
     CONF_AWNING_SENSOR_GRACE,
     CONF_STORM_POSITION,
     CONF_STORM_TILT,
@@ -61,7 +73,17 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    automation_allowed,
     get_position_for_role,
+    get_tilt_for_role,
+    get_tracked_position,
+    is_shutter_automation_enabled,
+    is_shutter_locked,
+    is_system_enabled,
+    only_frost_locked,
+    positions_differ_significantly,
+    resolve_close_role,
+    role_position,
     rest_role,
     guard_slot_danger,
     is_window,
@@ -72,10 +94,17 @@ from .helpers import (
     set_cover_sun_protected,
 )
 
+from .schedule_times import scheduled_role_now
+from .window_helper import get_effective_close_position, is_window_open_or_tilted
+
 _LOGGER = logging.getLogger(__name__)
 
 # Runtime state per cover: when the last danger was seen, and what it was.
 STATE_KEY = AWNING_GUARD_STATE_KEY
+# Shutters the frost lock is holding right now: cover -> {"ref": position the
+# lock left it at}. The reference is what tells a hand drive apart from "nobody
+# touched it" when the cold is over.
+FROST_HELD_KEY = "_frost_held"
 # When a guard sensor first became unreadable, per cover and slot.
 DEAD_SINCE_KEY = "_awning_guard_dead_since"
 
@@ -143,8 +172,15 @@ def evaluate_guard(
     *,
     now: float | None = None,
     slots: tuple[str, ...] = AWNING_GUARD_SLOTS,
+    state_key: str = STATE_KEY,
+    fail_open: bool = False,
 ) -> dict[str, Any]:
     """Decide whether this awning may be out, and say why not.
+
+    `fail_open` is for the frost lock: an unreadable temperature sensor must
+    not hold a shutter, or one dead battery keeps the house still all winter.
+    The wind and rain protection stay fail closed, there a dead sensor *is*
+    the risk.
 
     Writes the lockout bookkeeping, so the export must not call it – there is
     guard_status() for a read-only view, the same split _memory_copy() makes
@@ -155,7 +191,7 @@ def evaluate_guard(
     config = resolve_guard_config(options, shutter, slots)
     now = time.monotonic() if now is None else now
 
-    states: dict[str, dict[str, Any]] = data.setdefault(STATE_KEY, {})
+    states: dict[str, dict[str, Any]] = data.setdefault(state_key, {})
     entry_state = states.setdefault(cover, {})
     dead_since: dict[str, float] = data.setdefault(DEAD_SINCE_KEY, {})
 
@@ -167,6 +203,12 @@ def evaluate_guard(
     for slot in slots:
         danger, why = guard_slot_danger(hass, config, data, slot, cover)
         dead_key = f"{cover}|{slot}"
+
+        if why == GUARD_REASON_UNAVAILABLE and fail_open:
+            dead_since.pop(dead_key, None)
+            entry_state.pop(f"{slot}_calm_since", None)
+            entry_state.pop(f"{slot}_danger", None)
+            continue
 
         if why == GUARD_REASON_UNAVAILABLE:
             # Barred immediately, pulled in only once the grace has run out.
@@ -226,7 +268,9 @@ def evaluate_guard(
     return entry_state
 
 
-def guard_status(data: dict[str, Any], cover_entity_id: str) -> dict[str, Any]:
+def guard_status(
+    data: dict[str, Any], cover_entity_id: str, state_key: str = STATE_KEY
+) -> dict[str, Any]:
     """Read the last decision without touching it.
 
     Deliberately does not evaluate: evaluate_guard() writes hysteresis and
@@ -234,7 +278,7 @@ def guard_status(data: dict[str, Any], cover_entity_id: str) -> dict[str, Any]:
     measuring something the measurement itself produced. Same rule as
     _memory_copy() in the export.
     """
-    states = data.get(STATE_KEY)
+    states = data.get(state_key)
     if not isinstance(states, dict):
         return {}
     return dict(states.get(cover_entity_id) or {})
@@ -374,6 +418,139 @@ async def async_retract_storm(
     return True
 
 
+def frost_target(shutter: dict[str, Any]) -> tuple[float | None, float | None]:
+    """Where a shutter goes when the frost lock engages; None = stay as it is."""
+
+    def _num(key: str) -> float | None:
+        raw = shutter.get(key)
+        if raw is None or str(raw).strip() == "":
+            return None
+        try:
+            return max(0.0, min(100.0, float(raw)))
+        except (TypeError, ValueError):
+            return None
+
+    return _num(CONF_FROST_LOCK_POSITION), _num(CONF_FROST_LOCK_TILT)
+
+
+async def async_frost_hold(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    shutter: dict[str, Any],
+    reasons: list[str],
+) -> bool:
+    """Take the shutter into the frost position (if it has one) and note it.
+
+    Unlike the wind protection this one respects the master switch and the
+    automation switches: standing in a position is a comfort the owner may have
+    switched off, and a frozen shutter is not a safety case. The *hold* does not
+    care – while the switches are off nothing automatic drives anyway.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    if not cover:
+        return False
+    position, tilt = frost_target(shutter)
+    ref = get_tracked_position(hass, shutter, cover)
+    drive_allowed = (
+        is_system_enabled(hass, entry)
+        and is_shutter_automation_enabled(hass, entry, shutter)
+        and not is_shutter_locked(hass, shutter)
+    )
+    if drive_allowed and (position is not None or tilt is not None):
+        ok = await set_cover_position(
+            hass,
+            entry,
+            cover,
+            position,
+            f"Frost lock ({describe_reasons(reasons)})",
+            tilt_position=tilt,
+        )
+        if not ok:
+            # Marker only after the drive: a failed one has to be tried again.
+            _LOGGER.warning("[frost] %s: drive to the frost position failed – retrying next tick", cover)
+            return False
+        set_cover_sun_protected(data, cover, False)
+        if position is not None:
+            ref = position
+    data.setdefault(FROST_HELD_KEY, {})[cover] = {"ref": ref}
+    _LOGGER.info("[frost] %s: held – %s", cover, describe_reasons(reasons))
+    return True
+
+
+async def async_frost_release(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    data: dict[str, Any],
+    shutter: dict[str, Any],
+) -> None:
+    """The cold is over: catch up the drive the lock swallowed, if wanted.
+
+    Driven from the schedule (`scheduled_role_now`), not from a remembered
+    target: what the shutter should do now is what the schedule says now, and
+    that is also what resume_automation does. Skipped, but the hold still
+    ends, when somebody drove it by hand meanwhile or its position is unknown.
+    """
+    cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+    held: dict[str, Any] = data.setdefault(FROST_HELD_KEY, {})
+    info = held.get(cover)
+    if info is None:
+        return
+    options = dict(entry.options or {})
+    wanted = bool(options.get(CONF_FROST_LOCK_CATCH_UP, DEFAULT_FROST_LOCK_CATCH_UP))
+    current = get_tracked_position(hass, shutter, cover)
+    ref = info.get("ref")
+    skip = (
+        not wanted
+        or current is None
+        or ref is None
+        or positions_differ_significantly(current, ref)
+        or not is_system_enabled(hass, entry)
+        or not automation_allowed(hass, entry, shutter)
+        or is_window_open_or_tilted(hass, shutter)
+    )
+    if skip:
+        held.pop(cover, None)
+        _LOGGER.info("[frost] %s: released, nothing caught up", cover)
+        return
+
+    areas = {
+        str(a.get(CONF_AREA_ID) or ""): a
+        for a in (options.get(CONF_AREAS) or [])
+        if isinstance(a, dict)
+    }
+    up_area = areas.get(str(shutter.get(CONF_AREA_UP_ID) or "").strip())
+    down_area = areas.get(str(shutter.get(CONF_AREA_DOWN_ID) or "").strip())
+    role = scheduled_role_now(hass, up_area, down_area)
+    if role is None:
+        held.pop(cover, None)
+        return
+    if role == ROLE_CLOSED:
+        role = resolve_close_role(hass, down_area, shutter, data)
+    position = role_position(shutter, role)
+    if role.startswith("closed"):
+        position = get_effective_close_position(hass, shutter, position)
+    tilt = get_tilt_for_role(shutter, role)
+    if (position is None or not positions_differ_significantly(position, current)) and tilt is None:
+        held.pop(cover, None)
+        return
+    ok = await set_cover_position(
+        hass, entry, cover, position, "Frost lock released – catch up", tilt_position=tilt
+    )
+    if not ok:
+        return  # stays held, tried again next tick
+    held.pop(cover, None)
+    up = data.setdefault("covers_driven_up", set())
+    down = data.setdefault("covers_driven_down", set())
+    if role == ROLE_OPEN:
+        up.add(cover)
+        down.discard(cover)
+    else:
+        down.add(cover)
+        up.discard(cover)
+    _LOGGER.info("[frost] %s: released – caught up to %s", cover, role)
+
+
 async def async_enforce_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Evaluate every awning and pull in the ones that must not be out."""
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
@@ -422,6 +599,22 @@ async def async_enforce_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ):
             state["retracted"] = True
 
+    # The frost lock: its own state, its own slot, fail open on a dead sensor.
+    held_now: dict[str, Any] = data.setdefault(FROST_HELD_KEY, {})
+    for shutter in only_frost_locked(shutters):
+        cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+        if not cover:
+            continue
+        state = evaluate_guard(
+            hass, entry, data, shutter,
+            slots=FROST_LOCK_SLOTS, state_key=FROST_LOCK_STATE_KEY, fail_open=True,
+        )
+        if state.get("barred"):
+            if cover not in held_now:
+                await async_frost_hold(hass, entry, data, shutter, state.get("reasons", []))
+        elif cover in held_now:
+            await async_frost_release(hass, entry, data, shutter)
+
 
 async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Watch the guard sensors and hold the minute tick as a safety net."""
@@ -441,7 +634,8 @@ async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
         shutters = []
     awnings = only_guarded(shutters)
     blinds = only_storm_guarded(shutters)
-    if not awnings and not blinds:
+    frosted = only_frost_locked(shutters)
+    if not awnings and not blinds and not frosted:
         register_minute_callback(data, "awning_guard", None)
         return
 
@@ -450,6 +644,7 @@ async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for shutter, slots in (
         *((s, AWNING_GUARD_SLOTS) for s in awnings),
         *((s, STORM_GUARD_SLOTS) for s in blinds),
+        *((s, FROST_LOCK_SLOTS) for s in frosted),
     ):
         config = resolve_guard_config(options, shutter, slots)
         for slot in slots:
