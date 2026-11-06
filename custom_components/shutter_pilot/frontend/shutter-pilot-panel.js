@@ -456,6 +456,7 @@ de:{
   sec_awning_sun_sub:"Sonnenstand und Bedingungen",
   sec_guard:"Wind- und Regenschutz für Markisen",
   sec_guard_sub:"Gilt für alle Markisen ohne eigenen Sensor",
+  sec_guard_none:"Noch keine Markise oder kein Dachfenster angelegt – wirkt erst dann",
   f_cover_awning:"Markisen-Entität",
   f_cover_is_shutter:"„{name}“ ist bereits als Rollladen angelegt. Übernehmen macht daraus eine Markise – Fenster-, Lamellen- und Schließ-Einstellungen werden dabei entfernt.",
   f_convert_to_awning:"Als Markise übernehmen",
@@ -485,7 +486,7 @@ de:{
   f_guard_off_below:"Wieder freigeben unter",
   f_guard_on_below:"Sperren unter",
   f_guard_off_above:"Wieder freigeben über",
-  f_guard_hyst_hint:"Die beiden Werte sind ein Einschaltpunkt und ein Aufhebepunkt dahinter, kein Bereich. Ohne Abstand pendelt die Markise an der Schwelle.",
+  f_guard_hyst_hint:"Die beiden Werte sind ein Einschaltpunkt und ein Aufhebepunkt dahinter, kein Bereich. Ohne Abstand schaltet der Schutz an der Schwelle ständig hin und her.",
   f_guard_bin_hint:"„on“ gilt als Gefahr – die Markise fährt ein.",
   dash_all_title:"Alle Bereiche",
   dash_sunrise:"Sonnenaufgang",
@@ -829,6 +830,7 @@ en:{
   sec_awning_sun_sub:"Sun position and conditions",
   sec_guard:"Wind and rain protection for awnings",
   sec_guard_sub:"Applies to every awning without its own sensor",
+  sec_guard_none:"No awning or roof window yet – takes effect once you add one",
   f_cover_awning:"Awning entity",
   f_cover_is_shutter:"“{name}” is already configured as a shutter. Converting turns it into an awning – window, slat and closing settings are removed.",
   f_convert_to_awning:"Convert to awning",
@@ -858,7 +860,7 @@ en:{
   f_guard_off_below:"Release again below",
   f_guard_on_below:"Bar below",
   f_guard_off_above:"Release again above",
-  f_guard_hyst_hint:"These two are a switch-on point and a release point behind it, not a range. Without a gap the awning oscillates at the threshold.",
+  f_guard_hyst_hint:"These two are a switch-on point and a release point behind it, not a range. Without a gap the protection keeps flipping at the threshold.",
   f_guard_bin_hint:"“on” counts as danger – the awning retracts.",
   dash_all_title:"All areas",
   dash_sunrise:"Sunrise",
@@ -1144,6 +1146,7 @@ fr:{
   sec_awning_sun_sub:"Position du soleil et conditions",
   sec_guard:"Protection vent et pluie des stores",
   sec_guard_sub:"S'applique à tout store sans capteur propre",
+  sec_guard_none:"Aucun store ni fenêtre de toit pour l'instant – n'agit qu'après ajout",
   f_cover_awning:"Entité du store",
   f_cover_is_shutter:"« {name} » est déjà configuré comme volet. La conversion en fait un store – les réglages fenêtre, lames et fermeture sont supprimés.",
   f_convert_to_awning:"Convertir en store",
@@ -1173,7 +1176,7 @@ fr:{
   f_guard_off_below:"Libérer sous",
   f_guard_on_below:"Bloquer sous",
   f_guard_off_above:"Libérer au-dessus de",
-  f_guard_hyst_hint:"Ces deux valeurs sont un point de déclenchement et un point de libération derrière, pas une plage. Sans écart, le store oscille au seuil.",
+  f_guard_hyst_hint:"Ces deux valeurs sont un point de déclenchement et un point de libération derrière, pas une plage. Sans écart, la protection bascule sans cesse au seuil.",
   f_guard_bin_hint:"« on » vaut danger – le store rentre.",
   dash_all_title:"Toutes les zones",
   dash_sunrise:"Lever du soleil",
@@ -1459,6 +1462,7 @@ es:{
   sec_awning_sun_sub:"Posición del sol y condiciones",
   sec_guard:"Protección de viento y lluvia para toldos",
   sec_guard_sub:"Vale para todo toldo sin sensor propio",
+  sec_guard_none:"Aún no hay toldo ni ventana de tejado – actúa cuando añadas uno",
   f_cover_awning:"Entidad del toldo",
   f_cover_is_shutter:"«{name}» ya está configurado como persiana. Al convertirlo pasa a ser un toldo: se eliminan los ajustes de ventana, lamas y cierre.",
   f_convert_to_awning:"Convertir en toldo",
@@ -1488,7 +1492,7 @@ es:{
   f_guard_off_below:"Liberar por debajo de",
   f_guard_on_below:"Bloquear por debajo de",
   f_guard_off_above:"Liberar por encima de",
-  f_guard_hyst_hint:"Los dos valores son un punto de activación y otro de liberación detrás, no un rango. Sin separación el toldo oscila en el umbral.",
+  f_guard_hyst_hint:"Los dos valores son un punto de activación y otro de liberación detrás, no un rango. Sin separación la protección conmuta sin parar en el umbral.",
   f_guard_bin_hint:"«on» cuenta como peligro: el toldo se recoge.",
   dash_all_title:"Todas las zonas",
   dash_sunrise:"Amanecer",
@@ -1774,6 +1778,7 @@ it:{
   sec_awning_sun_sub:"Posizione del sole e condizioni",
   sec_guard:"Protezione vento e pioggia per le tende",
   sec_guard_sub:"Vale per ogni tenda senza sensore proprio",
+  sec_guard_none:"Ancora nessuna tenda né finestra da tetto – agisce quando ne aggiungi una",
   f_cover_awning:"Entità della tenda",
   f_cover_is_shutter:"«{name}» è già configurato come tapparella. Convertendolo diventa una tenda: le impostazioni di finestra, lamelle e chiusura vengono rimosse.",
   f_convert_to_awning:"Converti in tenda",
@@ -1803,7 +1808,7 @@ it:{
   f_guard_off_below:"Liberare sotto",
   f_guard_on_below:"Bloccare sotto",
   f_guard_off_above:"Liberare sopra",
-  f_guard_hyst_hint:"I due valori sono un punto di attivazione e uno di rilascio dietro, non un intervallo. Senza distacco la tenda oscilla alla soglia.",
+  f_guard_hyst_hint:"I due valori sono un punto di attivazione e uno di rilascio dietro, non un intervallo. Senza distacco la protezione commuta di continuo alla soglia.",
   f_guard_bin_hint:"«on» vale come pericolo: la tenda rientra.",
   dash_all_title:"Tutte le zone",
   dash_sunrise:"Alba",
@@ -2090,6 +2095,7 @@ nl:{
   sec_awning_sun_sub:"Zonnestand en voorwaarden",
   sec_guard:"Wind- en regenbeveiliging voor zonneschermen",
   sec_guard_sub:"Geldt voor elk scherm zonder eigen sensor",
+  sec_guard_none:"Nog geen zonnescherm of dakraam – werkt pas na het toevoegen",
   f_cover_awning:"Entiteit van het zonnescherm",
   f_cover_is_shutter:"„{name}” is al als rolluik ingesteld. Overnemen maakt er een zonnescherm van – raam-, lamellen- en sluitinstellingen worden verwijderd.",
   f_convert_to_awning:"Als zonnescherm overnemen",
@@ -2119,7 +2125,7 @@ nl:{
   f_guard_off_below:"Weer vrijgeven onder",
   f_guard_on_below:"Blokkeren onder",
   f_guard_off_above:"Weer vrijgeven boven",
-  f_guard_hyst_hint:"De twee waarden zijn een inschakelpunt en een vrijgavepunt erachter, geen bereik. Zonder afstand pendelt het scherm op de drempel.",
+  f_guard_hyst_hint:"De twee waarden zijn een inschakelpunt en een vrijgavepunt erachter, geen bereik. Zonder afstand schakelt de bescherming op de drempel voortdurend heen en weer.",
   f_guard_bin_hint:"„on” geldt als gevaar – het scherm schuift in.",
   dash_all_title:"Alle zones",
   dash_sunrise:"Zonsopgang",
@@ -2406,6 +2412,7 @@ da:{
   sec_awning_sun_sub:"Solens position og betingelser",
   sec_guard:"Vind- og regnbeskyttelse for markiser",
   sec_guard_sub:"Gælder alle markiser uden egen sensor",
+  sec_guard_none:"Endnu ingen markise eller ovenlysvindue – virker først, når du tilføjer en",
   f_cover_awning:"Markise-entitet",
   f_cover_is_shutter:"„{name}” er allerede oprettet som rullegardin. Konvertering gør den til en markise – vindues-, lamel- og lukkeindstillinger fjernes.",
   f_convert_to_awning:"Konverter til markise",
@@ -2435,7 +2442,7 @@ da:{
   f_guard_off_below:"Frigiv igen under",
   f_guard_on_below:"Spær under",
   f_guard_off_above:"Frigiv igen over",
-  f_guard_hyst_hint:"De to værdier er et tilkoblingspunkt og et frigivelsespunkt bagved, ikke et interval. Uden afstand pendler markisen ved tærsklen.",
+  f_guard_hyst_hint:"De to værdier er et tilkoblingspunkt og et frigivelsespunkt bagved, ikke et interval. Uden afstand skifter beskyttelsen hele tiden frem og tilbage ved tærsklen.",
   f_guard_bin_hint:"„on” tæller som fare – markisen kører ind.",
   dash_all_title:"Alle områder",
   dash_sunrise:"Solopgang",
@@ -2722,6 +2729,7 @@ sv:{
   sec_awning_sun_sub:"Solens läge och villkor",
   sec_guard:"Vind- och regnskydd för markiser",
   sec_guard_sub:"Gäller varje markis utan egen sensor",
+  sec_guard_none:"Ännu ingen markis eller takfönster – gäller först när du lägger till en",
   f_cover_awning:"Markisens entitet",
   f_cover_is_shutter:"”{name}” är redan upplagd som persienn. Konvertering gör den till en markis – fönster-, lamell- och stängningsinställningar tas bort.",
   f_convert_to_awning:"Konvertera till markis",
@@ -2751,7 +2759,7 @@ sv:{
   f_guard_off_below:"Frisläpp igen under",
   f_guard_on_below:"Spärra under",
   f_guard_off_above:"Frisläpp igen över",
-  f_guard_hyst_hint:"De två värdena är en tillslagspunkt och en frisläppningspunkt bakom, inte ett intervall. Utan avstånd pendlar markisen vid tröskeln.",
+  f_guard_hyst_hint:"De två värdena är en tillslagspunkt och en frisläppningspunkt bakom, inte ett intervall. Utan avstånd slår skyddet hela tiden av och på vid tröskeln.",
   f_guard_bin_hint:"”on” räknas som fara – markisen fälls in.",
   dash_all_title:"Alla områden",
   dash_sunrise:"Soluppgång",
@@ -3038,6 +3046,7 @@ pl:{
   sec_awning_sun_sub:"Położenie słońca i warunki",
   sec_guard:"Ochrona markiz przed wiatrem i deszczem",
   sec_guard_sub:"Dotyczy każdej markizy bez własnego czujnika",
+  sec_guard_none:"Brak jeszcze markizy ani okna dachowego – działa dopiero po dodaniu",
   f_cover_awning:"Encja markizy",
   f_cover_is_shutter:"„{name}” jest już dodany jako roleta. Konwersja zmieni go w markizę – ustawienia okna, lameli i zamykania zostaną usunięte.",
   f_convert_to_awning:"Zmień na markizę",
@@ -3067,7 +3076,7 @@ pl:{
   f_guard_off_below:"Zwolnij ponownie poniżej",
   f_guard_on_below:"Zablokuj poniżej",
   f_guard_off_above:"Zwolnij ponownie powyżej",
-  f_guard_hyst_hint:"Te dwie wartości to punkt załączenia i punkt zwolnienia za nim, a nie zakres. Bez odstępu markiza oscyluje przy progu.",
+  f_guard_hyst_hint:"Te dwie wartości to punkt załączenia i punkt zwolnienia za nim, a nie zakres. Bez odstępu ochrona ciągle przełącza się przy progu.",
   f_guard_bin_hint:"„on” liczy się jako zagrożenie – markiza się chowa.",
   dash_all_title:"Wszystkie strefy",
   dash_sunrise:"Wschód słońca",
@@ -3354,6 +3363,7 @@ pt:{
   sec_awning_sun_sub:"Posição do sol e condições",
   sec_guard:"Proteção de vento e chuva para toldos",
   sec_guard_sub:"Vale para todos os toldos sem sensor próprio",
+  sec_guard_none:"Ainda sem toldo nem janela de telhado – só atua depois de adicionar um",
   f_cover_awning:"Entidade do toldo",
   f_cover_is_shutter:"«{name}» já está configurado como estore. Converter transforma-o num toldo – as definições de janela, lâminas e fecho são removidas.",
   f_convert_to_awning:"Converter em toldo",
@@ -3383,7 +3393,7 @@ pt:{
   f_guard_off_below:"Libertar de novo abaixo de",
   f_guard_on_below:"Bloquear abaixo de",
   f_guard_off_above:"Libertar de novo acima de",
-  f_guard_hyst_hint:"Os dois valores são um ponto de ativação e um de libertação atrás, não um intervalo. Sem distância o toldo oscila no limite.",
+  f_guard_hyst_hint:"Os dois valores são um ponto de ativação e um de libertação atrás, não um intervalo. Sem distância a proteção comuta sem parar no limite.",
   f_guard_bin_hint:"«on» conta como perigo – o toldo recolhe.",
   dash_all_title:"Todas as zonas",
   dash_sunrise:"Nascer do sol",
@@ -3670,6 +3680,7 @@ nb:{
   sec_awning_sun_sub:"Solens posisjon og betingelser",
   sec_guard:"Vind- og regnbeskyttelse for markiser",
   sec_guard_sub:"Gjelder alle markiser uten egen sensor",
+  sec_guard_none:"Ingen markise eller takvindu ennå – virker først når du legger til en",
   f_cover_awning:"Markise-entitet",
   f_cover_is_shutter:"«{name}» er allerede opprettet som rullegardin. Konvertering gjør den til en markise – vindus-, lamell- og lukkeinnstillinger fjernes.",
   f_convert_to_awning:"Konverter til markise",
@@ -3699,7 +3710,7 @@ nb:{
   f_guard_off_below:"Frigi igjen under",
   f_guard_on_below:"Sperr under",
   f_guard_off_above:"Frigi igjen over",
-  f_guard_hyst_hint:"De to verdiene er et innkoblingspunkt og et frigivelsespunkt bak, ikke et intervall. Uten avstand pendler markisen ved terskelen.",
+  f_guard_hyst_hint:"De to verdiene er et innkoblingspunkt og et frigivelsespunkt bak, ikke et intervall. Uten avstand slår vernet hele tiden av og på ved terskelen.",
   f_guard_bin_hint:"«on» teller som fare – markisen kjører inn.",
   dash_all_title:"Alle områder",
   dash_sunrise:"Soloppgang",
@@ -3820,6 +3831,7 @@ class ShutterPilotPanel extends PanelBase {
     .sec{margin:22px 0 12px;padding-top:14px;border-top:2px solid var(--divider);
       display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
     .sec:first-of-type{margin-top:6px;padding-top:0;border-top:none}
+    .sec.dim{opacity:.55}
     .sec:hover h4{color:var(--sp)}
     .sec:focus-visible{outline:2px solid var(--sp);outline-offset:3px;border-radius:6px}
     .sec ha-icon{--mdc-icon-size:19px;color:var(--sp)}
@@ -4555,9 +4567,9 @@ class ShutterPilotPanel extends PanelBase {
     try{localStorage.setItem(this.constructor.SEC_STORE,JSON.stringify(st));}catch(e){}
     this.requestUpdate();
   }
-  _sec(icon,titleKey,subKey,body){
+  _sec(icon,titleKey,subKey,body,dim=false){
     const open=this._secIsOpen(titleKey);
-    return html`<div class="sec ${open?"open":""}" role="button" tabindex="0"
+    return html`<div class="sec ${open?"open":""} ${dim?"dim":""}" role="button" tabindex="0"
         aria-expanded=${open?"true":"false"}
         @click=${()=>this._secToggle(titleKey)}
         @keydown=${e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();this._secToggle(titleKey);}}}>
@@ -4702,6 +4714,9 @@ class ShutterPilotPanel extends PanelBase {
     const s=this._settings??(this._settings={...(d.settings||{})});
     const w=d.weather||{};
     const fmt=v=>v==null?"–":v;
+    /* Ohne Markise und Dachfenster hat der Schutz nichts zu tun – ausgegraut,
+       aber aufklappbar, damit man ihn vor dem Anlegen einstellen kann. */
+    const noGuarded=!(d.shutters||[]).some(hasGuard);
     return html`<div class="form">
       ${this._sec("mdi:weather-partly-cloudy","sec_weather","sec_weather_sub",html`
       <div class="hint">${T("f_weather_hint")}</div>
@@ -4715,7 +4730,7 @@ class ShutterPilotPanel extends PanelBase {
         </div>
         <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
 
-      `)}${this._sec("mdi:weather-windy","sec_guard","sec_guard_sub",html`
+      `)}${this._sec("mdi:weather-windy","sec_guard",noGuarded?"sec_guard_none":"sec_guard_sub",html`
       <div class="hint">${T("f_guard_intro")}</div>
       <div class="hint warn">${T("f_guard_ignores_switches")}</div>
       ${AWNING_GUARD_SLOTS.map(slot=>this._renderGuardSlot(
@@ -4731,7 +4746,7 @@ class ShutterPilotPanel extends PanelBase {
         <span class="slider-val">${s.awning_sensor_grace??10} min</span></div>
         <div class="hint">${T("f_guard_grace_hint")}</div></div>
 
-      `)}${this._sec("mdi:weather-windy","sec_rwind","sec_rwind_sub",html`
+      `,noGuarded)}${this._sec("mdi:weather-windy","sec_rwind","sec_rwind_sub",html`
       <div class="hint">${T("f_rwind_intro")}</div>
       ${this._renderGuardSlot(
         s,"rwind",

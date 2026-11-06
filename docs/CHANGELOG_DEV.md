@@ -4,6 +4,22 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.34.0: Sichtschutz mit zweiter Stellung bei Sonne
+
+Claus (#226) löste „TV an, Lamellen 50, bei Blendung zu“ mit einer Zusatz-Automation
+und musste die Lamellen-Handerkennung dafür abschalten (seine Automation bewegt
+am Tracker vorbei). Jetzt Haken `privacy_sun` mit eigener Rolle `ROLE_PRIVACY_SUN`
+(Position/Lamellen/Keep, alle in den vier Rollentabellen). `privacy_role()` fragt
+nur die **Geometrie** (`sun_protect_conditions_met` mit `resolve_shading_config`),
+nicht Bedingungen, Zeitraum oder Fenster: die beschreiben den Haushalt, nicht die
+Sonne. `privacy.py` wählt die Rolle beim Start und im Minutentakt; bei Wechsel
+fährt `_switch_role()` neu, behält aber den Rückkehr-Zustand (`pos`/`tilt`) und
+erneuert `at` und `sent`, damit Ende und Handfahrt-Vergleich auf der neuen
+Stellung rechnen. Eine Handfahrt nach der letzten Sichtschutzfahrt wird nicht
+überfahren. Panel: Haken mit Position/Lamellen, i18n 4 Schlüssel ×11.
+Nicht im echten Home Assistant geprüft; kein Halte-/Hysterese-Verhalten an der
+Sonnenkante (Minutentakt, die Grenze ist selten scharf).
+
 ### 2026-11-03 – 2.33.0: Lamellen-Knöpfe im Dashboard
 
 Claus (#225): Höhe fahren geht auf der Übersicht, Lamellen nicht. `_rowButtons()`

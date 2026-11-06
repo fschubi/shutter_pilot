@@ -324,12 +324,21 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.38.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.38.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-06 – 2.38.1: Textfehler Frostsperre, Schutz ausgegraut (eurofinder, simon42 #242)
+
+Der gemeinsame Hysterese-Satz (`f_guard_hyst_hint`) sprach von der „Markise" und stand auch
+unter Frostsperre und Windschutz für Raffstores – jetzt neutral („der Schutz"), ×11. Der
+Abschnitt „Wind- und Regenschutz für Markisen" wird ausgegraut (`_sec(..., dim)`, Klasse
+`.sec.dim`), solange weder Markise noch Dachfenster existiert (`hasGuard`); bleibt
+aufklappbar. Neuer Schlüssel `sec_guard_none` ×11 (je 540). **Verifiziert:** `pytest` 1055
+grün, i18n-Parität. Nicht im Browser geprüft.
 
 ### 2026-11-05 – 2.38.0: Frostsperre für Rollläden (eurofinder, simon42 #237)
 
@@ -413,22 +422,6 @@ am Tag (`_open2_done`), im Speicher, nicht über den Neustart – der leert aber
 auch `covers_driven_up`, sodass nach einem Neustart nichts nachfeuert.
 Panel: Haken, Uhrzeit, Entität, Position/Keep, Lamellen; i18n 6 Schlüssel ×11.
 Nicht im echten Home Assistant geprüft.
-
-### 2026-11-03 – 2.34.0: Sichtschutz mit zweiter Stellung bei Sonne
-
-Claus (#226) löste „TV an, Lamellen 50, bei Blendung zu“ mit einer Zusatz-Automation
-und musste die Lamellen-Handerkennung dafür abschalten (seine Automation bewegt
-am Tracker vorbei). Jetzt Haken `privacy_sun` mit eigener Rolle `ROLE_PRIVACY_SUN`
-(Position/Lamellen/Keep, alle in den vier Rollentabellen). `privacy_role()` fragt
-nur die **Geometrie** (`sun_protect_conditions_met` mit `resolve_shading_config`),
-nicht Bedingungen, Zeitraum oder Fenster: die beschreiben den Haushalt, nicht die
-Sonne. `privacy.py` wählt die Rolle beim Start und im Minutentakt; bei Wechsel
-fährt `_switch_role()` neu, behält aber den Rückkehr-Zustand (`pos`/`tilt`) und
-erneuert `at` und `sent`, damit Ende und Handfahrt-Vergleich auf der neuen
-Stellung rechnen. Eine Handfahrt nach der letzten Sichtschutzfahrt wird nicht
-überfahren. Panel: Haken mit Position/Lamellen, i18n 4 Schlüssel ×11.
-Nicht im echten Home Assistant geprüft; kein Halte-/Hysterese-Verhalten an der
-Sonnenkante (Minutentakt, die Grenze ist selten scharf).
 
 
 ## graphify

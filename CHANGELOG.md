@@ -4,6 +4,18 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.38.1]
+
+### Behoben
+- **Text bei der Frostsperre** (eurofinder, simon42 #242): Unter den Schwellen stand
+  „…pendelt die Markise an der Schwelle", obwohl es um Rollläden ging. Der Satz ist
+  jetzt neutral formuliert, in allen elf Sprachen.
+
+### Geändert
+- **Wind- und Regenschutz für Markisen** ist in den Einstellungen ausgegraut, solange
+  weder eine Markise noch ein Dachfenster angelegt ist. Aufklappen und einstellen
+  geht weiterhin.
+
 ## [2.38.0]
 
 ### Neu
