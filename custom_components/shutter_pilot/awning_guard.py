@@ -47,6 +47,7 @@ from .const import (
     CONF_FROST_LOCK_CATCH_UP,
     CONF_FROST_LOCK_POSITION,
     CONF_FROST_LOCK_TILT,
+    CONF_TILT_ENABLED,
     DEFAULT_FROST_LOCK_CATCH_UP,
     FROST_LOCK_SLOTS,
     FROST_LOCK_STATE_KEY,
@@ -80,7 +81,11 @@ from .helpers import (
     is_shutter_automation_enabled,
     is_shutter_locked,
     is_system_enabled,
+    forget_drive_after_close,
+    forget_window_cycle,
     only_frost_locked,
+    privacy_active,
+    storm_barred,
     positions_differ_significantly,
     resolve_close_role,
     role_position,
@@ -94,6 +99,7 @@ from .helpers import (
     set_cover_sun_protected,
 )
 
+from .position_store import get_position_store
 from .schedule_times import scheduled_role_now
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 
@@ -197,6 +203,7 @@ def evaluate_guard(
 
     barred = False
     retract = False
+    unreadable = False
     reasons: list[str] = []
     release_at: float | None = None
 
@@ -205,6 +212,10 @@ def evaluate_guard(
         dead_key = f"{cover}|{slot}"
 
         if why == GUARD_REASON_UNAVAILABLE and fail_open:
+            # Fail open gilt fürs Auslösen. Eine laufende Sperre beendet ein
+            # toter Sensor nicht – sonst holt eine Minute "unavailable" mitten
+            # in der Frostnacht den Rollladen auf (async_enforce_guard).
+            unreadable = True
             dead_since.pop(dead_key, None)
             entry_state.pop(f"{slot}_calm_since", None)
             entry_state.pop(f"{slot}_danger", None)
@@ -261,6 +272,7 @@ def evaluate_guard(
             entry_state.pop(calm_key, None)
 
     entry_state["barred"] = barred
+    entry_state["unreadable"] = unreadable
     entry_state["retract"] = retract
     entry_state["reasons"] = reasons
     entry_state["release_at"] = release_at
@@ -430,7 +442,10 @@ def frost_target(shutter: dict[str, Any]) -> tuple[float | None, float | None]:
         except (TypeError, ValueError):
             return None
 
-    return _num(CONF_FROST_LOCK_POSITION), _num(CONF_FROST_LOCK_TILT)
+    # Lamellen nur, wenn der Rollladen welche hat: das Panel blendet das Feld sonst
+    # aus, ein früher gespeicherter Wert bliebe aber stehen.
+    tilt = _num(CONF_FROST_LOCK_TILT) if shutter.get(CONF_TILT_ENABLED) else None
+    return _num(CONF_FROST_LOCK_POSITION), tilt
 
 
 async def async_frost_hold(
@@ -456,6 +471,12 @@ async def async_frost_hold(
         is_system_enabled(hass, entry)
         and is_shutter_automation_enabled(hass, entry, shutter)
         and not is_shutter_locked(hass, shutter)
+        # Wie der Zeitplan: nicht auf eine offene Balkontür fahren, nicht den
+        # Sichtschutz überfahren und nicht gegen den Windschutz am selben
+        # Raffstore. Die Sperre selbst gilt trotzdem (Marker unten).
+        and not is_window_open_or_tilted(hass, shutter)
+        and not privacy_active(hass, shutter)
+        and not storm_barred(hass, entry, shutter)
     )
     if drive_allowed and (position is not None or tilt is not None):
         ok = await set_cover_position(
@@ -474,8 +495,32 @@ async def async_frost_hold(
         if position is not None:
             ref = position
     data.setdefault(FROST_HELD_KEY, {})[cover] = {"ref": ref}
+    store = get_position_store(hass, entry.entry_id)
+    hass.async_create_task(store.async_set_frost_held(cover, ref))
     _LOGGER.info("[frost] %s: held – %s", cover, describe_reasons(reasons))
     return True
+
+
+def _drop_frost_marker(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict[str, Any], cover: str
+) -> None:
+    """End the hold in memory and on disk."""
+    data.setdefault(FROST_HELD_KEY, {}).pop(cover, None)
+    store = get_position_store(hass, entry.entry_id)
+    hass.async_create_task(store.async_clear_frost_held(cover))
+
+
+def _forget_stale_window_state(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict[str, Any], cover: str
+) -> None:
+    """A window cycle that began during the hold points at a pre-frost height.
+
+    Restoring to it later would drive the shutter back to where it stood before
+    the frost, past everything the catch-up just decided (same reasoning as
+    resume_automation).
+    """
+    forget_window_cycle(data, cover)
+    forget_drive_after_close(hass, entry, data, cover)
 
 
 async def async_frost_release(
@@ -510,7 +555,7 @@ async def async_frost_release(
         or is_window_open_or_tilted(hass, shutter)
     )
     if skip:
-        held.pop(cover, None)
+        _drop_frost_marker(hass, entry, data, cover)
         _LOGGER.info("[frost] %s: released, nothing caught up", cover)
         return
 
@@ -523,7 +568,7 @@ async def async_frost_release(
     down_area = areas.get(str(shutter.get(CONF_AREA_DOWN_ID) or "").strip())
     role = scheduled_role_now(hass, up_area, down_area)
     if role is None:
-        held.pop(cover, None)
+        _drop_frost_marker(hass, entry, data, cover)
         return
     if role == ROLE_CLOSED:
         role = resolve_close_role(hass, down_area, shutter, data)
@@ -532,14 +577,16 @@ async def async_frost_release(
         position = get_effective_close_position(hass, shutter, position)
     tilt = get_tilt_for_role(shutter, role)
     if (position is None or not positions_differ_significantly(position, current)) and tilt is None:
-        held.pop(cover, None)
+        _forget_stale_window_state(hass, entry, data, cover)
+        _drop_frost_marker(hass, entry, data, cover)
         return
     ok = await set_cover_position(
         hass, entry, cover, position, "Frost lock released – catch up", tilt_position=tilt
     )
     if not ok:
         return  # stays held, tried again next tick
-    held.pop(cover, None)
+    _forget_stale_window_state(hass, entry, data, cover)
+    _drop_frost_marker(hass, entry, data, cover)
     up = data.setdefault("covers_driven_up", set())
     down = data.setdefault("covers_driven_down", set())
     if role == ROLE_OPEN:
@@ -609,11 +656,41 @@ async def async_enforce_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
             hass, entry, data, shutter,
             slots=FROST_LOCK_SLOTS, state_key=FROST_LOCK_STATE_KEY, fail_open=True,
         )
+        if state.get("unreadable") and cover in held_now and not state.get("barred"):
+            # Sensor ausgefallen, Sperre läuft: sie bleibt, auch für alle, die
+            # nur frost_barred() fragen.
+            state["barred"] = True
+            state["reasons"] = [*state.get("reasons", []), "cold:unavailable"]
         if state.get("barred"):
             if cover not in held_now:
                 await async_frost_hold(hass, entry, data, shutter, state.get("reasons", []))
-        elif cover in held_now:
+        elif cover in held_now and not state.get("unreadable"):
             await async_frost_release(hass, entry, data, shutter)
+
+
+async def _restore_frost_markers(
+    hass: HomeAssistant, entry: ConfigEntry, data: dict[str, Any]
+) -> None:
+    """Bring the holds back after a restart or reload.
+
+    Only for covers that still have the frost lock: a marker for a shutter that
+    was removed or switched off would otherwise sit in the store forever.
+    """
+    store = get_position_store(hass, entry.entry_id)
+    saved = await store.async_get_frost_held()
+    if not saved:
+        return
+    shutters = entry.options.get(CONF_SHUTTERS, [])
+    still = {
+        str(s.get(CONF_COVER_ENTITY_ID) or "").strip()
+        for s in only_frost_locked(shutters if isinstance(shutters, list) else [])
+    }
+    held = data.setdefault(FROST_HELD_KEY, {})
+    for cover, rec in saved.items():
+        if cover in still:
+            held.setdefault(cover, {"ref": rec.get("ref")})
+        else:
+            await store.async_clear_frost_held(cover)
 
 
 async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -621,6 +698,8 @@ async def setup_awning_guard(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data = hass.data[DOMAIN].get(entry.entry_id)
     if not data:
         return
+
+    await _restore_frost_markers(hass, entry, data)
 
     for unsub in data.get("_awning_guard_unsubs", []):
         try:

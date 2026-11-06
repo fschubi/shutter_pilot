@@ -874,14 +874,14 @@ Frost protection wins over partial closing — protection beats comfort. Both ap
 
 ## Frost lock
 
-The frost protection above only shortens the evening drive. If you want **no driving at all** in frost – frozen slats, iced guide rails, snow on a roof window – use the **frost lock**:
+The frost protection above only shortens the evening drive. If you want **no driving at all** in frost – frozen slats, iced guide rails, snow on the louvres – use the **frost lock**:
 
 1. Under **Settings → Frost lock for shutters** enter the outdoor temperature sensor and set the two thresholds, e.g. *lock below 2 °C, release above 4 °C*. A failed sensor never locks, otherwise a flat battery would stop the whole house for the winter.
 2. On the **shutter** tick **Frost lock for this shutter**. Optionally a **position in frost** (and slats) it drives to when the frost sets in; without one it simply stays where it is.
 
-While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy or second opening stage. **By hand** (dashboard buttons, services, at the motor) everything always works.
+While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy, second opening stage or reference run. The one exception is the frost position, driven to once when the frost sets in. **By hand** (dashboard buttons, services, at the motor) everything always works.
 
-With **Catch up after the frost** (default on) the shutter drives to where the schedule wants it now once released, for instance open in the morning. If it was driven by hand meanwhile it stays put; with an open window nothing is caught up either. The frost drive itself respects the master switch and the automation switches: with automation off the lock only holds still and does not drive. After a restart in the middle of a frost it drives to the frost position once more.
+With **Catch up after the frost** (default on) the shutter drives to where the schedule wants it now once released, for instance open in the morning. If it was driven by hand meanwhile it stays put; with an open window or the automation off nothing is caught up either. The frost position is not driven onto an open window, over privacy or against the storm guard; the lock still holds. The frost drive itself respects the master switch and the automation switches: with automation off the lock only holds still and does not drive. The hold survives a restart and a reload of the integration, so nothing is driven twice. A sensor that drops out during the frost does not end a running lock.
 
 ## Planned
 

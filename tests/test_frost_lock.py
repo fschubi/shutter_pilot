@@ -232,3 +232,103 @@ async def test_export_names_the_frost_lock(hass, cover_calls):
     assert "Frostsperre:" in report
     assert "Gefahr unter 2" in report
     assert "⛔ cold" in report
+
+
+# --- 2.38.2: Nachprüfung nach eurofinders Hinweis (simon42 #244) -------------
+
+
+async def test_unticked_invert_flag_is_ignored_for_numbers(hass, cover_calls):
+    """Abgewählt wäre es eine Wärmesperre – die Frostsperre fragt immer "kälter"."""
+    from custom_components.shutter_pilot.const import sun_condition_invert_key  # noqa: PLC0415
+
+    shutter = _shutter()
+    entry, _ = await _setup(hass, shutter, **{sun_condition_invert_key("cold"): False})
+    await _temp(hass, entry, "1")
+    assert _held(hass, entry, shutter), "Frost sperrt trotz altem Haken"
+    await _temp(hass, entry, "6")
+    assert not _held(hass, entry, shutter)
+    await _temp(hass, entry, "25")
+    assert not _held(hass, entry, shutter), "Wärme sperrt nie"
+
+
+async def test_hold_does_not_drive_onto_an_open_window(hass, cover_calls):
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, _ = await _setup(hass, shutter)
+    with patch.object(awning_guard, "is_window_open_or_tilted", return_value=True):
+        await _temp(hass, entry, "1")
+    assert _positions(cover_calls) == []
+    assert _held(hass, entry, shutter), "die Sperre gilt trotzdem"
+
+
+async def test_hold_does_not_drive_against_the_storm_guard(hass, cover_calls):
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, _ = await _setup(hass, shutter)
+    with patch.object(awning_guard, "storm_barred", return_value=True):
+        await _temp(hass, entry, "1")
+    assert _positions(cover_calls) == []
+    assert _held(hass, entry, shutter)
+
+
+async def test_hold_does_not_override_privacy(hass, cover_calls):
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, _ = await _setup(hass, shutter)
+    with patch.object(awning_guard, "privacy_active", return_value=True):
+        await _temp(hass, entry, "1")
+    assert _positions(cover_calls) == []
+
+
+async def test_dead_sensor_does_not_end_a_running_hold(hass, cover_calls):
+    """Eine Minute "unavailable" mitten im Frost darf nicht nachholen."""
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, _ = await _setup(hass, shutter)
+    await _temp(hass, entry, "1")
+    _cover(hass, 0)
+    with patch.object(awning_guard, "scheduled_role_now", return_value=ROLE_OPEN):
+        await _temp(hass, entry, "unavailable")
+    assert _positions(cover_calls) == [0], "nicht aufgemacht"
+    assert _held(hass, entry, shutter)
+    with patch.object(awning_guard, "scheduled_role_now", return_value=ROLE_OPEN):
+        await _temp(hass, entry, "6")
+    assert _positions(cover_calls) == [0, 100], "erst echtes Frostende holt nach"
+
+
+async def test_hold_survives_a_reload(hass, cover_calls):
+    """Nach Neuladen: keine zweite Fahrt, und das Frostende wird noch erkannt."""
+    from custom_components.shutter_pilot.awning_guard import (  # noqa: PLC0415
+        FROST_HELD_KEY,
+        setup_awning_guard,
+    )
+
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, data = await _setup(hass, shutter)
+    await _temp(hass, entry, "1")
+    _cover(hass, 0)
+    data[FROST_HELD_KEY].clear()  # wie ein Neustart: der Speicher ist leer
+    await setup_awning_guard(hass, entry)
+    await hass.async_block_till_done()
+    assert COVER in data[FROST_HELD_KEY], "Marker von der Platte zurück"
+    await _temp(hass, entry, "1")
+    assert _positions(cover_calls) == [0], "keine zweite Fahrt auf die Frostposition"
+    with patch.object(awning_guard, "scheduled_role_now", return_value=ROLE_OPEN):
+        await _temp(hass, entry, "6")
+    assert _positions(cover_calls) == [0, 100]
+
+
+async def test_release_clears_a_stale_window_cycle(hass, cover_calls):
+    shutter = _shutter(**{CONF_FROST_LOCK_POSITION: 0})
+    entry, data = await _setup(hass, shutter)
+    await _temp(hass, entry, "1")
+    _cover(hass, 0)
+    data.setdefault("trigger_actions", {})[COVER] = "triggered"
+    data.setdefault("trigger_heights", {})[COVER] = 40
+    with patch.object(awning_guard, "scheduled_role_now", return_value=ROLE_OPEN):
+        await _temp(hass, entry, "6")
+    assert COVER not in data["trigger_actions"]
+    assert COVER not in data["trigger_heights"]
+
+
+async def test_frost_tilt_ignored_without_tilt(hass, cover_calls):
+    from custom_components.shutter_pilot.awning_guard import frost_target  # noqa: PLC0415
+
+    assert frost_target(_shutter(frost_lock_tilt=30)) == (None, None)
+    assert frost_target(_shutter(frost_lock_tilt=30, tilt_enabled=True)) == (None, 30.0)

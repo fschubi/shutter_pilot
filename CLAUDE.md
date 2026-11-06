@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1055 Tests)
+tests/               pytest-Suite (1063 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -295,7 +295,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1055 Tests, ~21 s
+.venv/bin/pytest            # 1063 Tests, ~21 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -324,12 +324,36 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.38.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.38.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-06 – 2.38.2: Frostsperre nachgeprüft (eurofinder, simon42 #244)
+
+eurofinder fragte, wozu „Bedeutung umkehren" bei der Frostsperre da ist, und sah beim Abwählen
+Markisen-Text. Beides stimmte; drei Prüfagenten (Panel, Backend, Texte) fanden mehr.
+**Invert:** `_slot_reading` erzwingt bei `FROST_LOCK_SLOT` im Zahlenzweig „kälter als" und liest
+den gespeicherten Haken nicht mehr (alte Abwahl wirkt nicht nach); Binärsensor/Zustandsliste
+behalten die Umkehr. Panel blendet den Haken bei Zahlen aus; eigene Texte mit Suffix `_cold`
+(`no_threshold`, `wrong_way`, `bin_hint`, `states_hint`, `lockout`), Warnung bei „Sperren unter"
+> 10 (`f_cold_high_warn`), Warnung am Rollladen ohne Sensor (`f_frost_lock_no_sensor`), Abwahl
+leert Position/Lamellen; vier Texte überarbeitet (`f_frost_lock_hint` nennt jetzt auch
+Sichtschutz, Stufe 2, Referenzfahrt und die Frostposition als einzige Ausnahme).
+**Backend:** Die Frostfahrt prüft jetzt Fenster, Sichtschutz und Windschutz (`async_frost_hold`,
+Marker gilt trotzdem); ein toter Sensor beendet eine *laufende* Sperre nicht
+(`unreadable` aus `evaluate_guard`, `barred` bleibt); der Marker steht im `position_store`
+(`frost_held`) und kommt in `setup_awning_guard` zurück – Neustart/Neuladen fährt nicht doppelt
+und erkennt ein Frostende danach; `async_frost_release` vergisst Fensterzyklus und
+Nachhol-Fahrt; Lamellen nur mit `tilt_enabled`. Export: „frei" statt „darf ausfahren", neutraler
+Gefahr-Satz. README: Dachfenster-Beispiel falsch (nur Rollläden), Referenzfahrt ergänzt.
+**Nicht gemacht:** Server-Validierung der Werte (`_ws_save_*`), Fahrtkontrolle gegen die Sperre,
+Referenzfahrt mitten im Lauf stoppen, Nachholen im Helligkeitsmodus nach Licht statt Uhr.
+**Verifiziert:** `pytest` 1063 grün (8 neue Backend-, 9 Panel-Fälle); Gegenproben: ohne
+Zwangs-Invert, Fenster-, Storm-Check, Restore und Vergessen fällt je ein Test. Nicht im Browser,
+nicht im echten Home Assistant geprüft.
 
 ### 2026-11-06 – 2.38.1: Textfehler Frostsperre, Schutz ausgegraut (eurofinder, simon42 #242)
 
@@ -405,23 +429,6 @@ Tag; steht die Beschattung gerade, wartet sie bis zur Freigabe.
 **Verifiziert:** `pytest` 1036 grün (7 neue, `tests/test_shade_pause.py`);
 Gegenproben: ohne Haken fallen 5, ohne Höchstdauer 1, ohne Phasenende 1. Nicht
 im Browser und nicht im echten Home Assistant geprüft.
-
-### 2026-11-03 – 2.35.0: zweite Öffnungsstufe
-
-Claus (#225): Diele morgens nur Lamellen, ab 10 Uhr bei Anwesenheit und schönem
-Wetter ganz hoch. Haken `open_stage2` mit `open_stage2_time` (10:00),
-`open_stage2_entity` (leer = keine Bedingung, tot = nein) und eigener Rolle
-`ROLE_OPEN_STAGE2` (Position/Lamellen/Keep in den vier Tabellen). Eigenes Modul
-`open_stage2.py` im Minutentakt. **Vollendet nur, was begonnen wurde:** der
-Rollladen muss in `covers_driven_up` stehen und nicht in `covers_driven_down` –
-so löst eine am Morgen gesperrte Hochfahrt (Wochenende, Sichtschutz, `no_up`)
-keine Stufe 2 aus, und die Abendfahrt beendet den Tag. Übersprungen bei: System
-/Automatik aus, Sichtschutz, offenem Fenster, Beschattung aktiv, Handfahrt heute
-(`_hand_moved_today` aus der monotonen Zeit und der Zeit seit Mitternacht). Einmal
-am Tag (`_open2_done`), im Speicher, nicht über den Neustart – der leert aber
-auch `covers_driven_up`, sodass nach einem Neustart nichts nachfeuert.
-Panel: Haken, Uhrzeit, Entität, Position/Keep, Lamellen; i18n 6 Schlüssel ×11.
-Nicht im echten Home Assistant geprüft.
 
 
 ## graphify

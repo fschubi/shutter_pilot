@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/awning_guard.py": {
-    "mtime": 1793913133.2628295,
-    "seen": 1793913237.471515,
-    "ast_hash": "fa369b8dc5cfda1b766954c7607a4b2b",
+    "mtime": 1793999896.1892803,
+    "seen": 1793999921.6201909,
+    "ast_hash": "3d1cda602cbf4bf0af26522483114dbc",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/binary_sensor.py": {
@@ -78,15 +78,15 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/export.py": {
-    "mtime": 1793913133.2640743,
-    "seen": 1793913237.471522,
-    "ast_hash": "1ae1124387fef780d73bedbad3c55137",
+    "mtime": 1793999830.7888298,
+    "seen": 1793999921.6202,
+    "ast_hash": "2711b09a8f8fb5571ae53f185c3ff3eb",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js": {
-    "mtime": 1793964155.1487596,
-    "seen": 1793964601.7899032,
-    "ast_hash": "f47d14e51723f56060a8a42dd90b5b8a",
+    "mtime": 1793999782.0092256,
+    "seen": 1793999921.6202009,
+    "ast_hash": "d22b816727ff759f8c1c3fdf4fe3fe23",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/group_actions.py": {
@@ -96,21 +96,21 @@
     "semantic_hash": "a4a3a5c36fd0a868c9b1921b69db9b24"
   },
   "custom_components/shutter_pilot/helpers.py": {
-    "mtime": 1793912885.5736642,
-    "seen": 1793913237.471524,
-    "ast_hash": "03e9eca7548157d4ec5bf779e1be03ef",
+    "mtime": 1793999896.1898339,
+    "seen": 1793999921.620202,
+    "ast_hash": "6858276aca9cda4c20ee806eb3e17d51",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1793964598.0659645,
-    "seen": 1793964601.789906,
-    "ast_hash": "0329685da025afc2ea4041e7ed8249a1",
+    "mtime": 1793999917.589574,
+    "seen": 1793999921.620203,
+    "ast_hash": "69198f0fdcd8f7ac826ae69ed8494d50",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
-    "mtime": 1792845890.43381,
-    "seen": 1792846381.393457,
-    "ast_hash": "be4fa18dac32eaa17266d772fb02abae",
+    "mtime": 1793999640.7364979,
+    "seen": 1793999921.620204,
+    "ast_hash": "a1c70f252955d2eda85d8c818b45651c",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/schedule_times.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1793964598.0651433,
-    "seen": 1793964601.789987,
-    "ast_hash": "a061c0235fad34bef764f6809c967b94",
+    "mtime": 1793999917.5885463,
+    "seen": 1793999921.6202838,
+    "ast_hash": "7af2921b3324afd8ebd0824e48d350af",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1793964598.0590222,
-    "seen": 1793964601.789988,
-    "ast_hash": "56d1aec23d2e4d182a7a31511f6f649a",
+    "mtime": 1793999917.584244,
+    "seen": 1793999921.6202838,
+    "ast_hash": "b3c6b81e3a22355c6e279856d5a7deaf",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -582,15 +582,15 @@
     "semantic_hash": ""
   },
   "README.de.md": {
-    "mtime": 1793913184.0620666,
-    "seen": 1793913237.471614,
-    "ast_hash": "bcf5ab6ca868e780e237c6a4c330e9d6",
+    "mtime": 1793999822.9676583,
+    "seen": 1793999921.620286,
+    "ast_hash": "2a46dd18004f7a75a63f659926f95c00",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793913184.0781608,
-    "seen": 1793913237.471614,
-    "ast_hash": "d64efac94cb24f52b455800e2a60e88b",
+    "mtime": 1793999822.955888,
+    "seen": 1793999921.620286,
+    "ast_hash": "37e5fdcc39e19814dd3c377e718cc7df",
     "semantic_hash": ""
   },
   "RELEASE.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1793964598.0619667,
-    "seen": 1793964601.789994,
-    "ast_hash": "d09564b1ca8ddfa50e510f521d82eff0",
+    "mtime": 1793999917.5865695,
+    "seen": 1793999921.62029,
+    "ast_hash": "d7deda7e947fbfc8b67d127d94fcb7a5",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "tests/panel/guard_slot.mjs": {
-    "mtime": 1793126151.92429,
-    "seen": 1793126287.174199,
-    "ast_hash": "91d9b85a07dc9604e1d0098cc23daf4a",
+    "mtime": 1793999803.2430825,
+    "seen": 1793999921.620218,
+    "ast_hash": "92b4ddbf2c075b5627f075b6ac7b8578",
     "semantic_hash": ""
   },
   "tests/panel/reorder.mjs": {
@@ -906,9 +906,9 @@
     "semantic_hash": ""
   },
   "tests/test_frost_lock.py": {
-    "mtime": 1793913547.4196432,
-    "seen": 1793913613.647309,
-    "ast_hash": "186528e3e08b40012d690dd5e88a705d",
+    "mtime": 1793999684.6734755,
+    "seen": 1793999921.6202428,
+    "ast_hash": "c8b02ebec28c2e12fe336d046eb3ec7b",
     "semantic_hash": ""
   }
 }

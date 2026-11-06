@@ -4,6 +4,32 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.38.2]
+
+### Behoben
+- **Frostsperre: „Bedeutung umkehren" entfällt bei Temperatursensoren** (eurofinder, simon42 #244).
+  Abgewählt wurde aus der Frostsperre eine Wärmesperre. Sie fragt jetzt immer „kälter als"
+  („Sperren unter / Wieder freigeben über"); ein früher abgewählter Haken wird ignoriert. Bei
+  Binärsensoren und Zustandslisten bleibt die Umkehr.
+- **Texte der Frostsperre** ohne Markisen-Wortlaut („Einfahren", „sichere Seite", „die Markise
+  bleibt eingefahren"), in allen elf Sprachen. Der Hinweis am Rollladen nennt jetzt alles, was
+  gesperrt wird (auch Sichtschutz, zweite Öffnungsstufe, Referenzfahrt), und die Frostposition
+  als einzige Ausnahme.
+- **Die Fahrt auf die Frostposition** fährt nicht mehr auf ein offenes Fenster, nicht über den
+  Sichtschutz und nicht gegen den Windschutz am selben Raffstore. Die Sperre gilt trotzdem.
+- **Ein ausgefallener Sensor beendet eine laufende Sperre nicht mehr.** Vorher holte eine Minute
+  „nicht verfügbar" mitten in der Frostnacht nach und öffnete den Rollladen.
+- **Neustart und Neuladen:** Die Sperre wird gespeichert. Es wird nicht noch einmal auf die
+  Frostposition gefahren, und ein Frostende während des Neustarts wird nachgeholt.
+- Nach der Freigabe werden ein hängender Fensterzyklus und eine vorgemerkte Nachholfahrt
+  verworfen; Lamellen bei Frost nur noch bei Rollläden mit Lamellen.
+- Export: „frei" statt „darf ausfahren" bei Frostsperre und Windschutz.
+
+### Neu
+- Warnung bei „Sperren unter" über 10 °C und am Rollladen, wenn in den Einstellungen noch kein
+  Temperatursensor eingetragen ist.
+- README: Dachfenster-Beispiel entfernt (die Frostsperre gibt es nur für Rollläden).
+
 ## [2.38.1]
 
 ### Behoben

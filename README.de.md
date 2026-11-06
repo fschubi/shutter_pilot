@@ -891,14 +891,14 @@ Frostschutz gewinnt gegen das abweichende Schließen – Schutz geht vor Komfort
 
 ## Frostsperre
 
-Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren** will – eingefrorene Lamellen, vereiste Führungsschienen, Schnee auf dem Dachfenster – nutzt die **Frostsperre**:
+Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren** will – eingefrorene Lamellen, vereiste Führungsschienen, Schnee auf den Lamellen – nutzt die **Frostsperre**:
 
 1. Unter **Einstellungen → Frostsperre für Rollläden** den Außentemperatursensor eintragen und die zwei Schwellen setzen, z. B. *Sperren unter 2 °C, freigeben über 4 °C*. Ein ausgefallener Sensor sperrt nie, sonst legt ein leerer Akku das Haus für den ganzen Winter still.
 2. Am **Rollladen** den Haken **Frostsperre für diesen Rollladen** setzen. Optional eine **Position bei Frost** (und Lamellen), die er beim Einsetzen des Frosts anfährt; ohne Position bleibt er einfach stehen.
 
-Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz oder zweite Öffnungsstufe. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
+Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungsstufe oder Referenzfahrt. Einzige Ausnahme ist die Position bei Frost, die beim Einsetzen des Frosts einmal angefahren wird. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
 
-Mit **Nach dem Frost nachholen** (Vorgabe an) fährt der Rollladen nach der Freigabe dorthin, wo der Zeitplan ihn jetzt haben will, etwa morgens offen. Wurde er in der Zwischenzeit von Hand gefahren, bleibt er stehen; bei offenem Fenster wird ebenfalls nichts nachgeholt. Die Frostfahrt selbst respektiert den Hauptschalter und die Automatik-Schalter: ist die Automatik aus, hält die Sperre nur still und fährt nicht. Nach einem Neustart mitten im Frost fährt er die Frostposition einmal erneut an.
+Mit **Nach dem Frost nachholen** (Vorgabe an) fährt der Rollladen nach der Freigabe dorthin, wo der Zeitplan ihn jetzt haben will, etwa morgens offen. Wurde er in der Zwischenzeit von Hand gefahren, bleibt er stehen; bei offenem Fenster oder ausgeschalteter Automatik wird ebenfalls nichts nachgeholt. Die Frostposition wird nicht auf ein offenes Fenster gefahren, nicht über den Sichtschutz und nicht gegen den Windschutz; die Sperre gilt trotzdem. Die Frostfahrt selbst respektiert den Hauptschalter und die Automatik-Schalter: ist die Automatik aus, hält die Sperre nur still und fährt nicht. Die Sperre übersteht einen Neustart und ein Neuladen der Integration, es wird also nichts doppelt gefahren. Fällt der Sensor mitten im Frost aus, beendet das eine laufende Sperre nicht.
 
 ## Geplant
 

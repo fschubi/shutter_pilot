@@ -36,6 +36,11 @@ class ShutterPositionStore:
         # laufenden Stand.
         self._loaded_snapshot: dict[str, dict[str, Any]] = {}
         self._pending: dict[str, dict[str, Any]] = {}
+        # Frostsperre: welche Rollläden sie gerade festhält. Ohne Platte ginge
+        # das bei jedem Neustart und jedem Neuladen (Speichern einer Einstellung)
+        # verloren: erneute Fahrt auf die Frostposition mitten im Frost, und
+        # nach einem Frostende während des Neustarts kein Nachholen.
+        self._frost_held: dict[str, dict[str, Any]] = {}
 
     async def async_load(self) -> dict[str, dict[str, Any]]:
         """Load all cover records from disk."""
@@ -45,6 +50,7 @@ class ShutterPositionStore:
         if not isinstance(raw, dict):
             self._covers = {}
             self._pending = {}
+            self._frost_held = {}
         else:
             covers = raw.get("covers")
             self._covers = covers if isinstance(covers, dict) else {}
@@ -55,6 +61,8 @@ class ShutterPositionStore:
             }
             pending = raw.get("pending")
             self._pending = pending if isinstance(pending, dict) else {}
+            frost = raw.get("frost_held")
+            self._frost_held = frost if isinstance(frost, dict) else {}
         return self._covers
 
     async def async_save(self) -> None:
@@ -62,7 +70,11 @@ class ShutterPositionStore:
         if self._covers is None:
             return
         await self._store.async_save(
-            {"covers": self._covers, "pending": self._pending}
+            {
+                "covers": self._covers,
+                "pending": self._pending,
+                "frost_held": self._frost_held,
+            }
         )
 
     async def async_set_pending(
@@ -92,6 +104,25 @@ class ShutterPositionStore:
         await self.async_load()
         if self._pending.pop(cover_entity_id, None) is not None:
             await self.async_save()
+
+    async def async_set_frost_held(self, cover_entity_id: str, ref: float | None) -> None:
+        """Remember that the frost lock holds this cover, and where it stood."""
+        await self.async_load()
+        self._frost_held[cover_entity_id] = {
+            "ref": None if ref is None else float(ref),
+        }
+        await self.async_save()
+
+    async def async_clear_frost_held(self, cover_entity_id: str) -> None:
+        await self.async_load()
+        if self._frost_held.pop(cover_entity_id, None) is not None:
+            await self.async_save()
+
+    async def async_get_frost_held(self) -> dict[str, dict[str, Any]]:
+        await self.async_load()
+        return {
+            cid: dict(rec) for cid, rec in self._frost_held.items() if isinstance(rec, dict)
+        }
 
     async def async_get_pending(self, max_age_hours: float) -> dict[str, dict[str, Any]]:
         """Return remembered drives that are still worth running.

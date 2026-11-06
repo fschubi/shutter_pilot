@@ -432,6 +432,9 @@ def _guard_rows(
     documents would be measuring its own measurement. Same split as
     `_memory_copy()` above.
     """
+    # "darf ausfahren" ist Markisen-Sprache; Frostsperre und Sturmposition
+    # sind keine Ausfahrt.
+    free_word = "darf ausfahren" if slots == AWNING_GUARD_SLOTS else "frei"
     from .awning_guard import guard_status, resolve_guard_config
 
     cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "")
@@ -510,7 +513,7 @@ def _guard_rows(
                 f"> ⚠️ `{entity_id}` meldet **{state.state}** – keine Zahl, und "
                 f"für **{slot}** ist keine Zustandsliste hinterlegt. Ein Wert, "
                 "der sich nicht mit der Schwelle vergleichen lässt, gilt hier "
-                "als **Gefahr**: die Markise fährt ein und bleibt drin. Im "
+                "als **Gefahr**: der Schutz greift. Im "
                 "Formular die Zustände ankreuzen, die Gefahr bedeuten.",
                 "",
             ]
@@ -528,7 +531,7 @@ def _guard_rows(
             out.append(f"Freigabe frühestens in {remaining} min.")
             out.append("")
         out.append(
-            f"**Ergebnis: {'gesperrt' if status.get('barred') else 'darf ausfahren'}**"
+            f"**Ergebnis: {'gesperrt' if status.get('barred') else free_word}**"
             + (
                 f" · Grund: {', '.join(status.get('reasons') or [])}"
                 if status.get("barred")

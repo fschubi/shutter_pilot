@@ -4,6 +4,23 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.35.0: zweite Öffnungsstufe
+
+Claus (#225): Diele morgens nur Lamellen, ab 10 Uhr bei Anwesenheit und schönem
+Wetter ganz hoch. Haken `open_stage2` mit `open_stage2_time` (10:00),
+`open_stage2_entity` (leer = keine Bedingung, tot = nein) und eigener Rolle
+`ROLE_OPEN_STAGE2` (Position/Lamellen/Keep in den vier Tabellen). Eigenes Modul
+`open_stage2.py` im Minutentakt. **Vollendet nur, was begonnen wurde:** der
+Rollladen muss in `covers_driven_up` stehen und nicht in `covers_driven_down` –
+so löst eine am Morgen gesperrte Hochfahrt (Wochenende, Sichtschutz, `no_up`)
+keine Stufe 2 aus, und die Abendfahrt beendet den Tag. Übersprungen bei: System
+/Automatik aus, Sichtschutz, offenem Fenster, Beschattung aktiv, Handfahrt heute
+(`_hand_moved_today` aus der monotonen Zeit und der Zeit seit Mitternacht). Einmal
+am Tag (`_open2_done`), im Speicher, nicht über den Neustart – der leert aber
+auch `covers_driven_up`, sodass nach einem Neustart nichts nachfeuert.
+Panel: Haken, Uhrzeit, Entität, Position/Keep, Lamellen; i18n 6 Schlüssel ×11.
+Nicht im echten Home Assistant geprüft.
+
 ### 2026-11-03 – 2.34.0: Sichtschutz mit zweiter Stellung bei Sonne
 
 Claus (#226) löste „TV an, Lamellen 50, bei Blendung zu“ mit einer Zusatz-Automation

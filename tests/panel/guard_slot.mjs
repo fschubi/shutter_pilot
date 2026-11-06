@@ -50,4 +50,27 @@ ok("Binaersensor: nichts auszuwaehlen, keine Schwellenwarnung",
 h = render({ sun_cond_rwind_entity:"sensor.wind" }, "rwind");
 ok("Raffstore-Wind hat seinen eigenen Titel", h.includes("f_guard_rwind"));
 
+// Frostsperre (eurofinder, simon42 #244): immer "kaelter als", kein Umkehr-Haken
+// bei Zahlen, eigene Texte statt Markisen-Wortlaut.
+h = render({ sun_cond_cold_entity:"sensor.temp", sun_cond_cold_on_above:2,
+             sun_cond_cold_off_below:4, sun_cond_cold_invert:false }, "cold");
+ok("Frostsperre, Zahlensensor: kein Umkehr-Haken", !h.includes("f_cond_invert_label"));
+ok("Frostsperre: immer 'Sperren unter' / 'Wieder freigeben ueber'",
+   h.includes("f_guard_on_below") && h.includes("f_guard_off_above") && !h.includes("f_guard_on_above"));
+ok("Frostsperre 2/4: keine Warnung trotz altem abgewaehlten Haken", !h.includes("f_guard_wrong_way"));
+h = render({ sun_cond_cold_entity:"sensor.temp", sun_cond_cold_on_above:4,
+             sun_cond_cold_off_below:2 }, "cold");
+ok("Frostsperre 4/2: eigene Warnung", h.includes("f_guard_wrong_way_cold"));
+h = render({ sun_cond_cold_entity:"sensor.temp" }, "cold");
+ok("Frostsperre ohne Schwelle: eigener Text", h.includes("f_guard_no_threshold_cold"));
+h = render({ sun_cond_cold_entity:"sensor.temp", sun_cond_cold_on_above:15,
+             sun_cond_cold_off_below:17 }, "cold");
+ok("Frostsperre 15: Warnung 'ungewoehnlich hoch'", h.includes("f_cold_high_warn"));
+h = render({ sun_cond_cold_entity:"binary_sensor.regen" }, "cold");
+ok("Frostsperre, Binaersensor: eigener Hinweis, Umkehr bleibt moeglich",
+   h.includes("f_guard_bin_hint_cold") && h.includes("f_cond_invert_label"));
+h = render({ sun_cond_wind_entity:"sensor.wind", sun_cond_wind_on_above:40,
+             sun_cond_wind_off_below:29 }, "wind");
+ok("Wind unveraendert: Umkehr-Haken da", h.includes("f_cond_invert_label"));
+
 process.exit(fails ? 1 : 0);

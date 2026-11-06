@@ -32,6 +32,7 @@ from .const import (
     CLOSE_CONDITION_SLOTS,
     FROST_CONDITION_SLOT,
     GUARD_REASON_UNAVAILABLE,
+    FROST_LOCK_SLOT,
     INVERTED_BY_DEFAULT_SLOTS,
     CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SEASON_FROM,
@@ -747,7 +748,11 @@ def _slot_reading(
         memory[slot] = met
         return met
 
-    inverted = bool(
+    # Die Frostsperre fragt immer "kälter als": umgekehrt wäre sie eine
+    # Wärmesperre, und das hat niemand gewollt (eurofinder, simon42 #244). Ein
+    # früher abgewählter Haken wird deshalb nicht mehr gelesen. Bei Binärsensor
+    # und Zustandsliste (oben) bleibt die Umkehr dagegen erlaubt.
+    inverted = True if slot == FROST_LOCK_SLOT else bool(
         invert_stored if invert_stored is not None else slot in INVERTED_BY_DEFAULT_SLOTS
     )
 
