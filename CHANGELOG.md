@@ -4,6 +4,22 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.40.0]
+
+### Neu
+- **Einfache Ansicht und Experten-Ansicht.** Ein Schalter im Dashboard (Block „Ganzes Haus") und
+  oben in den Einstellungen. Die einfache Ansicht zeigt am Bereich Name, Modus und Zeitplan, am
+  Rollladen Entität, Bereiche, die drei Positionen und den Fensterkontakt, in den Einstellungen
+  den Export. Die Reiter Markisen und Dachfenster gibt es dort nur, wenn schon etwas angelegt ist.
+  Der Schalter ändert nur die Anzeige: kein Wert wird gelöscht, keine Automatik verhält sich
+  anders, und die Integration lädt beim Umschalten nicht neu. Was vom Standard abweicht, bleibt
+  auch in der einfachen Ansicht sichtbar; am Formularende steht, wie viel ausgeblendet ist.
+  Neue Installationen starten einfach, bestehende mit Rollläden bleiben in der Experten-Ansicht.
+- **Geführter Einstieg.** Solange kein Rollladen angelegt ist, zeigt das Dashboard drei Schritte:
+  Bereich und Modus, Zeiten, Rollläden auswählen. Gespeichert wird in einem Zug. Überspringbar
+  und über „Geführte Einrichtung" wieder aufrufbar.
+- **Export:** nennt die Ansicht („Panel-Modus").
+
 ## [2.39.0]
 
 ### Behoben

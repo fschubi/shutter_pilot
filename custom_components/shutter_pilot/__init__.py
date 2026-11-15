@@ -43,6 +43,9 @@ from .const import (
     CONF_VERIFY_TOLERANCE,
     CONF_MIN_DRIVE_GAP,
     CONF_WEATHER_ENTITY,
+    CONF_UI_MODE,
+    UI_MODE_EXPERT,
+    UI_MODE_SIMPLE,
     DEFAULT_MIN_DRIVE_GAP,
     DEFAULT_VERIFY_AFTER,
     DEFAULT_VERIFY_RETRIES,
@@ -69,6 +72,7 @@ from .position_store import get_position_store
 from .schedule_times import get_sun_mode_trigger_details
 from .helpers import (
     apply_covers_driven_from_persisted,
+    effective_ui_mode,
     get_sun_protect_status_for_areas,
     restore_drive_after_close,
 )
@@ -394,6 +398,7 @@ def _async_register_websocket(hass: HomeAssistant) -> None:
         _ws_save_area, _ws_delete_area,
         _ws_save_shutter, _ws_delete_shutter, _ws_reorder_shutters,
         _ws_save_settings, _ws_export_config,
+        _ws_set_ui_mode, _ws_quick_setup,
     ):
         websocket_api.async_register_command(hass, cmd)
     _LOGGER.debug("Shutter Pilot WebSocket commands registered")
@@ -469,6 +474,10 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
         connection.send_result(
             msg["id"],
             {
+                # Mid-reload there is no entry data. The panel must be able to
+                # tell that from an install without shutters, or the guided
+                # setup flashes up on every save.
+                "loading": True,
                 "areas": [],
                 "shutters": [],
                 "auto_modes": {},
@@ -545,6 +554,9 @@ def _ws_get_status(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
                 # the master entity id is bookkeeping rather than a setting.
                 if k not in (CONF_AREAS, CONF_SHUTTERS)
             },
+            # Always the mode that applies, never the raw key: an install from
+            # before the setting has none, and the panel must not guess.
+            CONF_UI_MODE: effective_ui_mode(entry.options),
         },
         "weather": dict(data.get("weather") or {}),
         "auto_modes": dict(auto_modes) if isinstance(auto_modes, dict) else {},
@@ -955,6 +967,10 @@ async def _ws_save_shutter(hass: HomeAssistant, connection: websocket_api.Active
     else:
         shutter_data.pop(CONF_SHUTTER_AUTO_ENTITY_ID, None)
 
+    # Write the panel mode down before the first cover exists: without the key
+    # it is derived from "are there covers", and would flip to expert here.
+    opts.setdefault(CONF_UI_MODE, effective_ui_mode(entry.options))
+
     if idx is not None and 0 <= idx < len(shutters):
         shutters[idx] = shutter_data
     else:
@@ -983,10 +999,117 @@ async def _ws_save_settings(hass: HomeAssistant, connection: websocket_api.Activ
     for key, value in msg["settings"].items():
         if key in (CONF_AREAS, CONF_SHUTTERS):
             continue  # areas and shutters have their own commands
+        if key == CONF_UI_MODE:
+            # Has its own command. The settings form holds a copy from when it
+            # was opened and would turn the switch back.
+            continue
         opts[key] = value
     _update_entry_options(hass, entry, opts)
     hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
     connection.send_result(msg["id"], {"ok": True})
+
+
+# -- set_ui_mode (simple / expert panel) --------------------------------------
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/set_ui_mode",
+    vol.Required("mode"): vol.In([UI_MODE_SIMPLE, UI_MODE_EXPERT]),
+})
+@callback
+def _ws_set_ui_mode(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Switch the panel between simple and expert mode.
+
+    Deliberately not routed through save_settings: that reloads the entry, and
+    a reload drops running timers (a pending window return, a shading hold).
+    Nothing in the backend reads this key, so there is nothing to reload for.
+    """
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    opts = deepcopy(dict(entry.options or {}))
+    opts[CONF_UI_MODE] = msg["mode"]
+    _update_entry_options(hass, entry, opts)
+    connection.send_result(msg["id"], {"ok": True, "mode": msg["mode"]})
+
+
+# -- quick_setup (guided first steps) -----------------------------------------
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "shutter_pilot/quick_setup",
+    vol.Required("area"): dict,
+    vol.Required("shutters"): [dict],
+})
+@websocket_api.async_response
+async def _ws_quick_setup(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Store one area and its shutters in a single step.
+
+    The guided setup would otherwise call save_area and then save_shutter once
+    per cover. Each of those reloads the entry half a second later, and while
+    it reloads there is no entry data – the next call answers "not found" and
+    the user ends up with an area and half of the shutters. One write, one
+    reload.
+    """
+    entry, _ = _find_entry_data(hass)
+    if not entry:
+        connection.send_error(msg["id"], "not_found", "No entry found")
+        return
+    area_data = dict(msg["area"])
+    area_id = str(area_data.get(CONF_AREA_ID) or "").strip()
+    if not area_id:
+        connection.send_error(msg["id"], "invalid", "area.id is required")
+        return
+
+    opts = deepcopy(dict(entry.options or {}))
+    areas = opts.setdefault(CONF_AREAS, [])
+    idx = next(
+        (
+            i for i, a in enumerate(areas)
+            if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "") == area_id
+        ),
+        None,
+    )
+    if idx is not None:
+        areas[idx].update(area_data)
+    else:
+        areas.append(area_data)
+
+    opts.setdefault(CONF_UI_MODE, effective_ui_mode(entry.options))
+    shutters = opts.setdefault(CONF_SHUTTERS, [])
+    taken = {
+        str(s.get(CONF_COVER_ENTITY_ID) or "").strip()
+        for s in shutters
+        if isinstance(s, dict)
+    }
+    added: list[dict] = []
+    skipped: list[str] = []
+    for raw in msg["shutters"]:
+        shutter = dict(raw)
+        cover = str(shutter.get(CONF_COVER_ENTITY_ID) or "").strip()
+        if not cover:
+            continue
+        # Same bar as save_shutter: one cover twice drives back and forth.
+        if cover in taken:
+            skipped.append(cover)
+            continue
+        taken.add(cover)
+        own = _own_automation_switch(hass, entry, cover)
+        if own:
+            shutter[CONF_SHUTTER_AUTO_ENTITY_ID] = own
+        else:
+            shutter.pop(CONF_SHUTTER_AUTO_ENTITY_ID, None)
+        shutters.append(shutter)
+        added.append(shutter)
+
+    _update_entry_options(hass, entry, opts)
+    for shutter in added:
+        _apply_shutter_automation_state(hass, entry, shutter)
+    hass.async_create_task(_reload_entry_delayed(hass, entry.entry_id))
+    connection.send_result(
+        msg["id"], {"ok": True, "added": len(added), "skipped": skipped}
+    )
 
 
 # -- delete_shutter -----------------------------------------------------------

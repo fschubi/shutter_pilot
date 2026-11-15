@@ -418,6 +418,7 @@ de:{
   f_win_debounce:"Verzögerung beim Schließen (Sek.)",f_win_debounce_hint:"Beim Drehen des Griffs von „gekippt“ auf „offen“ meldet der Kontakt kurz „geschlossen“. So lange muss „geschlossen“ anhalten, bevor der Rollladen zurückfährt. 0 = sofort reagieren.",
   f_win_keep_open:"Offen lassen vor der Hochfahrt (Min.)",f_win_keep_open_hint:"Kommt die planmäßige Hochfahrt innerhalb dieser Zeit, fährt der Rollladen beim Schließen des Fensters nicht zurück, sondern bleibt oben. Gilt nicht im Helligkeitsmodus und nicht, wenn die Hochfahrt gesperrt ist. 0 = aus.",
   f_win_close_delay:"Rückfahrt nach dem Schließen verzögern (Min.)",f_win_close_delay_hint:"So lange wartet der Rollladen nach dem Schließen von Fenster oder Tür, bevor er zurückfährt – zusätzlich zur Verzögerung oben. Gedacht für die Terrassentür im Winter: kurz raus, Tür hinter sich zu, ohne ausgesperrt zu werden. Öffnest du die Tür wieder, beginnt die Zeit von vorn. 0 = aus.",
+  mode_label:"Ansicht",mode_simple:"Einfach",mode_expert:"Experte",mode_simple_hint:"Zeigt nur Zeitplan, Positionen und Fensterkontakt. Was du schon benutzt, bleibt sichtbar.",mode_expert_hint:"Zeigt alle Funktionen.",mode_badge:"Experte",mode_hidden:"Einfache Ansicht: {n} weitere Einstellungen gibt es in der Experten-Ansicht.",mode_show_all:"Alle anzeigen",wiz_title:"Willkommen bei Shutter Pilot",wiz_intro:"In drei Schritten zur ersten Automatik. Alles lässt sich später ändern.",wiz_area_title:"Welcher Bereich?",wiz_area_hint:"Ein Bereich fasst Rollläden zusammen, die gemeinsam fahren – zum Beispiel ein Stockwerk oder das ganze Haus.",wiz_area_new:"Neuer Bereich",wiz_area_default:"Wohnbereich",wiz_mode_title:"Wonach soll gefahren werden?",wiz_covers_title:"Welche Rollläden gehören dazu?",wiz_covers_none:"In Home Assistant wurde kein Rollladen gefunden.",wiz_need_name:"Bitte einen Namen eintragen.",wiz_need_cover:"Bitte mindestens einen Rollladen auswählen.",wiz_need_sensor:"Bitte einen Helligkeitssensor auswählen.",wiz_back:"Zurück",wiz_next:"Weiter",wiz_finish:"Einrichten",wiz_skip:"Überspringen",wiz_start:"Geführte Einrichtung",wiz_done_hint:"Weitere Bereiche und Rollläden legst du in den Reitern oben an. Mehr Funktionen zeigt die Experten-Ansicht.",
   sec_cold:"Frostsperre für Rollläden",sec_cold_sub:"hält die automatischen Fahrten an, solange es friert",f_cold_intro:"Ein Außentemperatursensor für alle Rollläden, bei denen die Frostsperre angehakt ist. Fällt die Temperatur unter den ersten Wert, wird gesperrt; steigt sie über den zweiten, wird freigegeben. Ein ausgefallener Sensor löst keine Sperre aus und beendet auch keine laufende.",guard_reason_cold:"Frostsperre",f_guard_cold:"Außentemperatur (Frostsperre)",f_guard_lockout_hint_cold:"Nach dem Frost bleibt die Sperre noch so lange bestehen. 0 = sofort freigeben, die Temperatur-Schwellen genügen meist.",f_cold_catch_up:"Nach dem Frost nachholen",f_cold_catch_up_hint:"Ist die Sperre vorbei, fährt der Rollladen dorthin, wo der Zeitplan ihn jetzt haben will (zum Beispiel morgens geöffnet). Nicht nachgeholt wird, wenn du ihn zwischendurch von Hand gefahren hast, ein Fenster offen ist oder die Automatik aus ist.",sec_frostlock:"Frostsperre",sec_frostlock_sub:"bei Frost keine automatische Fahrt",f_frost_lock:"Frostsperre für diesen Rollladen",f_frost_lock_hint:"Aus: wie bisher. An: Solange es friert (Einstellungen → Frostsperre für Rollläden), startet Shutter Pilot für diesen Rollladen keine Fahrt von sich aus – weder Zeitplan, Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungsstufe noch Referenzfahrt. Ausnahme: die Position bei Frost, die er beim Einsetzen des Frosts anfährt (nur bei eingeschalteter Automatik und geschlossenem Fenster). Von Hand und über die Dienste geht immer alles.",f_frost_lock_pos_on:"Bei Frost eine Position anfahren",f_frost_lock_position:"Position bei Frost",f_frost_lock_tilt_on:"Bei Frost die Lamellen stellen",f_frost_lock_tilt:"Lamellen bei Frost",f_guard_no_threshold_cold:"Es ist kein Schwellwert eingetragen. Ohne „Sperren unter“ sperrt die Frostsperre nie.",f_guard_wrong_way_cold:"Die beiden Werte passen nicht zusammen: „Wieder freigeben über“ muss gleich oder höher sein als „Sperren unter“, sonst wird er ignoriert.",f_guard_bin_hint_cold:"„on“ bedeutet Frost – die Frostsperre gilt, solange der Sensor „on“ meldet.",f_guard_states_hint_cold:"Meldet der Sensor einen dieser Zustände, gilt Frost und die Frostsperre ist aktiv.",f_guard_lockout_cold:"Sperrzeit nach Frostende",f_cold_high_warn:"„Sperren unter {x}“ ist ungewöhnlich hoch – die Rollläden stehen dann oft still.",f_frost_lock_no_sensor:"In den Einstellungen ist noch kein Temperatursensor für die Frostsperre eingetragen – sie bleibt wirkungslos.",
   pick_entity:"Entität auswählen…",
   confirm_del_area:"Bereich \"{id}\" wirklich löschen?",confirm_del_shutter:"Rollladen wirklich löschen?",
@@ -793,6 +794,7 @@ en:{
   f_win_debounce:"Close delay (sec.)",f_win_debounce_hint:"Turning the handle from tilted to open makes the contact report \"closed\" for a moment. This is how long \"closed\" has to hold before the shutter drives back. 0 = react immediately.",
   f_win_keep_open:"Keep open before opening (min.)",f_win_keep_open_hint:"If the scheduled opening is due within this time, the shutter stays up when the window closes instead of driving back down. Not used in brightness mode or when the opening is blocked. 0 = off.",
   f_win_close_delay:"Delay the return after closing (min.)",f_win_close_delay_hint:"How long the shutter waits after the window or door closed before it drives back – on top of the delay above. Meant for the patio door in winter: step out, pull the door shut, and do not get locked out. Opening the door again restarts the wait. 0 = off.",
+  mode_label:"View",mode_simple:"Simple",mode_expert:"Expert",mode_simple_hint:"Shows only schedule, positions and window contact. Whatever you already use stays visible.",mode_expert_hint:"Shows every feature.",mode_badge:"Expert",mode_hidden:"Simple view: {n} more settings are available in the expert view.",mode_show_all:"Show all",wiz_title:"Welcome to Shutter Pilot",wiz_intro:"Three steps to your first automation. Everything can be changed later.",wiz_area_title:"Which area?",wiz_area_hint:"An area groups shutters that move together – a floor, for example, or the whole house.",wiz_area_new:"New area",wiz_area_default:"Living area",wiz_mode_title:"What should drive the shutters?",wiz_covers_title:"Which shutters belong to it?",wiz_covers_none:"No cover was found in Home Assistant.",wiz_need_name:"Please enter a name.",wiz_need_cover:"Please select at least one shutter.",wiz_need_sensor:"Please select a brightness sensor.",wiz_back:"Back",wiz_next:"Next",wiz_finish:"Set up",wiz_skip:"Skip",wiz_start:"Guided setup",wiz_done_hint:"Add more areas and shutters in the tabs above. The expert view shows more features.",
   sec_cold:"Frost lock for shutters",sec_cold_sub:"holds automatic drives while it freezes",f_cold_intro:"One outdoor temperature sensor for every shutter with the frost lock ticked. When the temperature falls below the first value it locks; above the second it releases. A failed sensor starts no lock and does not end a running one.",guard_reason_cold:"Frost lock",f_guard_cold:"Outdoor temperature (frost lock)",f_guard_lockout_hint_cold:"After the frost the lock stays on for this long. 0 = release at once, the temperature thresholds are usually enough.",f_cold_catch_up:"Catch up after the frost",f_cold_catch_up_hint:"When the lock ends the shutter drives to where the schedule wants it now (for instance open in the morning). Nothing is caught up if you drove it by hand meanwhile, a window is open or the automation is off.",sec_frostlock:"Frost lock",sec_frostlock_sub:"no automatic drive in frost",f_frost_lock:"Frost lock for this shutter",f_frost_lock_hint:"Off: as before. On: while it freezes (Settings → Frost lock for shutters) Shutter Pilot starts no drive of its own for this shutter – no schedule, shading, ventilation, window contact, privacy, second opening stage or reference run. The one exception is the frost position it drives to when the frost sets in (only with the automation on and the window closed). By hand and through the services everything always works.",f_frost_lock_pos_on:"Drive to a position in frost",f_frost_lock_position:"Position in frost",f_frost_lock_tilt_on:"Set the slats in frost",f_frost_lock_tilt:"Slats in frost",f_guard_no_threshold_cold:"No threshold is set. Without “Lock below” the frost lock never locks.",f_guard_wrong_way_cold:"The two values do not fit: “Release above” must be equal to or higher than “Lock below”, otherwise it is ignored.",f_guard_bin_hint_cold:"“on” means frost – the frost lock applies while the sensor reports “on”.",f_guard_states_hint_cold:"If the sensor reports one of these states it counts as frost and the frost lock is active.",f_guard_lockout_cold:"Lock time after the frost ends",f_cold_high_warn:"“Lock below {x}” is unusually high – the shutters would often stand still.",f_frost_lock_no_sensor:"No temperature sensor is set for the frost lock in the settings yet – it stays without effect.",
   pick_entity:"Select entity…",
   confirm_del_area:"Really delete area \"{id}\"?",confirm_del_shutter:"Really delete shutter?",
@@ -1111,6 +1113,7 @@ fr:{
   f_win_debounce:"Délai à la fermeture (sec.)",f_win_debounce_hint:"Durée pendant laquelle « fermé » doit se maintenir avant le retour du volet. 0 = immédiat.",
   f_win_keep_open:"Laisser ouvert avant l'ouverture (min)",f_win_keep_open_hint:"Si l'ouverture programmée est due dans ce délai, le volet reste ouvert à la fermeture de la fenêtre. Sans effet en mode luminosité ou si l'ouverture est bloquée. 0 = désactivé.",
   f_win_close_delay:"Retarder le retour après la fermeture (min)",f_win_close_delay_hint:"Durée d'attente après la fermeture de la fenêtre ou de la porte avant le retour du volet, en plus du délai ci-dessus. Pour la porte-fenêtre en hiver : sortir, refermer la porte, sans rester dehors. Rouvrir la porte relance l'attente. 0 = désactivé.",
+  mode_label:"Affichage",mode_simple:"Simple",mode_expert:"Expert",mode_simple_hint:"Affiche uniquement l'horaire, les positions et le contact de fenêtre. Ce que vous utilisez déjà reste visible.",mode_expert_hint:"Affiche toutes les fonctions.",mode_badge:"Expert",mode_hidden:"Affichage simple : {n} autres réglages sont disponibles dans l'affichage expert.",mode_show_all:"Tout afficher",wiz_title:"Bienvenue dans Shutter Pilot",wiz_intro:"Trois étapes jusqu'à la première automatisation. Tout peut être modifié plus tard.",wiz_area_title:"Quelle zone ?",wiz_area_hint:"Une zone regroupe les volets qui bougent ensemble – un étage, par exemple, ou toute la maison.",wiz_area_new:"Nouvelle zone",wiz_area_default:"Séjour",wiz_mode_title:"Selon quoi faut-il piloter ?",wiz_covers_title:"Quels volets en font partie ?",wiz_covers_none:"Aucun volet trouvé dans Home Assistant.",wiz_need_name:"Veuillez saisir un nom.",wiz_need_cover:"Veuillez sélectionner au moins un volet.",wiz_need_sensor:"Veuillez sélectionner un capteur de luminosité.",wiz_back:"Retour",wiz_next:"Suivant",wiz_finish:"Configurer",wiz_skip:"Ignorer",wiz_start:"Configuration guidée",wiz_done_hint:"Ajoutez d'autres zones et volets dans les onglets ci-dessus. L'affichage expert montre plus de fonctions.",
   sec_cold:"Blocage gel pour volets",sec_cold_sub:"bloque les déplacements automatiques pendant le gel",f_cold_intro:"Un capteur de température extérieure pour tous les volets avec blocage gel coché. Sous la première valeur il bloque, au-dessus de la seconde il libère. Un capteur en panne ne déclenche aucun blocage et n'en termine aucun.",guard_reason_cold:"Blocage gel",f_guard_cold:"Température extérieure (blocage gel)",f_guard_lockout_hint_cold:"Après le gel, le blocage reste actif pendant ce délai. 0 = libérer aussitôt, les seuils suffisent en général.",f_cold_catch_up:"Rattraper après le gel",f_cold_catch_up_hint:"À la fin du blocage, le volet va là où le programme le veut maintenant (par exemple ouvert le matin). Rien n'est rattrapé si tu l'as déplacé à la main entre-temps, si une fenêtre est ouverte ou si l'automatisme est coupé.",sec_frostlock:"Blocage gel",sec_frostlock_sub:"aucun déplacement automatique par gel",f_frost_lock:"Blocage gel pour ce volet",f_frost_lock_hint:"Désactivé : comme avant. Activé : tant qu'il gèle (Réglages → Blocage gel pour volets), Shutter Pilot ne lance aucun déplacement de lui-même pour ce volet – ni programme, ombrage, aération, contact de fenêtre, intimité, seconde ouverture ni course de référence. Seule exception : la position par gel, rejointe au début du gel (seulement automatisme actif et fenêtre fermée). À la main et par les services, tout reste possible.",f_frost_lock_pos_on:"Aller à une position par gel",f_frost_lock_position:"Position par gel",f_frost_lock_tilt_on:"Régler les lamelles par gel",f_frost_lock_tilt:"Lamelles par gel",f_guard_no_threshold_cold:"Aucun seuil n'est renseigné. Sans « Bloquer en dessous de », le blocage gel ne bloque jamais.",f_guard_wrong_way_cold:"Les deux valeurs ne vont pas ensemble : « Libérer au-dessus de » doit être égal ou supérieur à « Bloquer en dessous de », sinon il est ignoré.",f_guard_bin_hint_cold:"« on » signifie gel – le blocage gel s'applique tant que le capteur indique « on ».",f_guard_states_hint_cold:"Si le capteur indique l'un de ces états, c'est le gel et le blocage gel est actif.",f_guard_lockout_cold:"Durée de blocage après la fin du gel",f_cold_high_warn:"« Bloquer en dessous de {x} » est inhabituellement haut – les volets resteraient souvent immobiles.",f_frost_lock_no_sensor:"Aucun capteur de température n'est encore défini pour le blocage gel dans les réglages – il reste sans effet.",
   pick_entity:"Sélectionner…",confirm_del_area:"Supprimer la zone \"{id}\" ?",confirm_del_shutter:"Supprimer le volet ?",
   /* Markisen */
@@ -1428,6 +1431,7 @@ es:{
   f_win_debounce:"Retardo al cerrar (seg.)",f_win_debounce_hint:"Tiempo que debe mantenerse «cerrado» antes de que la persiana vuelva. 0 = inmediato.",
   f_win_keep_open:"Dejar abierta antes de la apertura (min)",f_win_keep_open_hint:"Si la apertura programada llega dentro de este tiempo, la persiana se queda arriba al cerrar la ventana. No vale en modo brillo ni si la apertura está bloqueada. 0 = desactivado.",
   f_win_close_delay:"Retrasar el regreso tras cerrar (min)",f_win_close_delay_hint:"Tiempo que espera la persiana tras cerrarse la ventana o la puerta antes de volver, además del retardo de arriba. Pensado para la puerta de la terraza en invierno: salir, cerrar la puerta y no quedarse fuera. Abrir la puerta de nuevo reinicia la espera. 0 = desactivado.",
+  mode_label:"Vista",mode_simple:"Sencilla",mode_expert:"Experto",mode_simple_hint:"Muestra solo horario, posiciones y contacto de ventana. Lo que ya usas sigue visible.",mode_expert_hint:"Muestra todas las funciones.",mode_badge:"Experto",mode_hidden:"Vista sencilla: hay {n} ajustes más en la vista de experto.",mode_show_all:"Mostrar todo",wiz_title:"Bienvenido a Shutter Pilot",wiz_intro:"Tres pasos hasta la primera automatización. Todo se puede cambiar después.",wiz_area_title:"¿Qué zona?",wiz_area_hint:"Una zona agrupa las persianas que se mueven juntas: una planta, por ejemplo, o toda la casa.",wiz_area_new:"Nueva zona",wiz_area_default:"Salón",wiz_mode_title:"¿Según qué deben moverse?",wiz_covers_title:"¿Qué persianas pertenecen a ella?",wiz_covers_none:"No se encontró ninguna persiana en Home Assistant.",wiz_need_name:"Introduce un nombre.",wiz_need_cover:"Selecciona al menos una persiana.",wiz_need_sensor:"Selecciona un sensor de luminosidad.",wiz_back:"Atrás",wiz_next:"Siguiente",wiz_finish:"Configurar",wiz_skip:"Omitir",wiz_start:"Configuración guiada",wiz_done_hint:"Añade más zonas y persianas en las pestañas de arriba. La vista de experto muestra más funciones.",
   sec_cold:"Bloqueo por helada para persianas",sec_cold_sub:"detiene los movimientos automáticos mientras hiela",f_cold_intro:"Un sensor de temperatura exterior para todas las persianas con el bloqueo por helada marcado. Por debajo del primer valor bloquea, por encima del segundo libera. Un sensor averiado no inicia ningún bloqueo ni termina uno en curso.",guard_reason_cold:"Bloqueo por helada",f_guard_cold:"Temperatura exterior (bloqueo por helada)",f_guard_lockout_hint_cold:"Tras la helada el bloqueo sigue este tiempo. 0 = liberar enseguida, los umbrales suelen bastar.",f_cold_catch_up:"Recuperar tras la helada",f_cold_catch_up_hint:"Al terminar el bloqueo la persiana va a donde el horario la quiere ahora (por ejemplo abierta por la mañana). No se recupera nada si la moviste a mano entretanto, hay una ventana abierta o la automatización está apagada.",sec_frostlock:"Bloqueo por helada",sec_frostlock_sub:"sin movimiento automático con helada",f_frost_lock:"Bloqueo por helada para esta persiana",f_frost_lock_hint:"Desactivado: como antes. Activado: mientras hiela (Ajustes → Bloqueo por helada para persianas), Shutter Pilot no inicia ningún movimiento por su cuenta para esta persiana: ni horario, sombreado, ventilación, contacto de ventana, privacidad, segunda apertura ni recorrido de referencia. Única excepción: la posición con helada, a la que va al empezar el hielo (solo con la automatización activa y la ventana cerrada). A mano y con los servicios todo sigue posible.",f_frost_lock_pos_on:"Ir a una posición con helada",f_frost_lock_position:"Posición con helada",f_frost_lock_tilt_on:"Ajustar las lamas con helada",f_frost_lock_tilt:"Lamas con helada",f_guard_no_threshold_cold:"No hay umbral. Sin «Bloquear por debajo de», el bloqueo por helada nunca bloquea.",f_guard_wrong_way_cold:"Los dos valores no encajan: «Liberar por encima de» debe ser igual o mayor que «Bloquear por debajo de»; si no, se ignora.",f_guard_bin_hint_cold:"«on» significa helada: el bloqueo se aplica mientras el sensor indique «on».",f_guard_states_hint_cold:"Si el sensor indica uno de estos estados cuenta como helada y el bloqueo está activo.",f_guard_lockout_cold:"Tiempo de bloqueo tras terminar la helada",f_cold_high_warn:"«Bloquear por debajo de {x}» es inusualmente alto: las persianas estarían a menudo quietas.",f_frost_lock_no_sensor:"Aún no hay sensor de temperatura para el bloqueo por helada en los ajustes: no tiene efecto.",
   pick_entity:"Seleccionar…",confirm_del_area:"¿Eliminar zona \"{id}\"?",confirm_del_shutter:"¿Eliminar persiana?",
   /* Markisen */
@@ -1745,6 +1749,7 @@ it:{
   f_win_debounce:"Ritardo alla chiusura (sec.)",f_win_debounce_hint:"Per quanto tempo deve permanere «chiuso» prima che la tapparella torni indietro. 0 = subito.",
   f_win_keep_open:"Lascia aperta prima dell'apertura (min)",f_win_keep_open_hint:"Se l'apertura programmata è prevista entro questo tempo, la tapparella resta alzata alla chiusura della finestra. Non vale in modalità luminosità o se l'apertura è bloccata. 0 = spento.",
   f_win_close_delay:"Ritarda il ritorno dopo la chiusura (min)",f_win_close_delay_hint:"Per quanto tempo la tapparella attende dopo la chiusura di finestra o porta prima di tornare, oltre al ritardo qui sopra. Pensato per la portafinestra in inverno: uscire, chiudere la porta, senza restare fuori. Riaprire la porta fa ripartire l'attesa. 0 = spento.",
+  mode_label:"Vista",mode_simple:"Semplice",mode_expert:"Esperto",mode_simple_hint:"Mostra solo orari, posizioni e contatto finestra. Ciò che usi già resta visibile.",mode_expert_hint:"Mostra tutte le funzioni.",mode_badge:"Esperto",mode_hidden:"Vista semplice: altre {n} impostazioni sono disponibili nella vista esperto.",mode_show_all:"Mostra tutto",wiz_title:"Benvenuto in Shutter Pilot",wiz_intro:"Tre passaggi fino alla prima automazione. Tutto si può modificare in seguito.",wiz_area_title:"Quale zona?",wiz_area_hint:"Una zona raggruppa le tapparelle che si muovono insieme: un piano, ad esempio, o tutta la casa.",wiz_area_new:"Nuova zona",wiz_area_default:"Zona giorno",wiz_mode_title:"In base a cosa devono muoversi?",wiz_covers_title:"Quali tapparelle ne fanno parte?",wiz_covers_none:"Nessuna tapparella trovata in Home Assistant.",wiz_need_name:"Inserisci un nome.",wiz_need_cover:"Seleziona almeno una tapparella.",wiz_need_sensor:"Seleziona un sensore di luminosità.",wiz_back:"Indietro",wiz_next:"Avanti",wiz_finish:"Configura",wiz_skip:"Salta",wiz_start:"Configurazione guidata",wiz_done_hint:"Aggiungi altre zone e tapparelle nelle schede in alto. La vista esperto mostra più funzioni.",
   sec_cold:"Blocco gelo per tapparelle",sec_cold_sub:"ferma i movimenti automatici finché gela",f_cold_intro:"Un sensore di temperatura esterna per tutte le tapparelle con blocco gelo attivo. Sotto il primo valore blocca, sopra il secondo libera. Un sensore guasto non avvia alcun blocco e non ne termina uno in corso.",guard_reason_cold:"Blocco gelo",f_guard_cold:"Temperatura esterna (blocco gelo)",f_guard_lockout_hint_cold:"Dopo il gelo il blocco resta per questo tempo. 0 = libera subito, di solito bastano le soglie.",f_cold_catch_up:"Recupera dopo il gelo",f_cold_catch_up_hint:"Quando il blocco finisce la tapparella va dove il programma la vuole ora (per esempio aperta al mattino). Non si recupera nulla se l'hai mossa a mano nel frattempo, se una finestra è aperta o se l'automazione è spenta.",sec_frostlock:"Blocco gelo",sec_frostlock_sub:"nessun movimento automatico col gelo",f_frost_lock:"Blocco gelo per questa tapparella",f_frost_lock_hint:"Disattivato: come prima. Attivato: finché gela (Impostazioni → Blocco gelo per tapparelle), Shutter Pilot non avvia alcun movimento da sé per questa tapparella: né programma, ombreggiatura, aerazione, contatto finestra, privacy, seconda apertura né corsa di riferimento. Unica eccezione: la posizione col gelo, raggiunta all'inizio del gelo (solo con automazione attiva e finestra chiusa). A mano e con i servizi tutto resta possibile.",f_frost_lock_pos_on:"Vai a una posizione col gelo",f_frost_lock_position:"Posizione col gelo",f_frost_lock_tilt_on:"Imposta le lamelle col gelo",f_frost_lock_tilt:"Lamelle col gelo",f_guard_no_threshold_cold:"Nessuna soglia impostata. Senza «Blocca sotto» il blocco gelo non blocca mai.",f_guard_wrong_way_cold:"I due valori non sono coerenti: «Rilascia sopra» deve essere uguale o maggiore di «Blocca sotto», altrimenti viene ignorato.",f_guard_bin_hint_cold:"«on» significa gelo: il blocco vale finché il sensore indica «on».",f_guard_states_hint_cold:"Se il sensore indica uno di questi stati vale come gelo e il blocco è attivo.",f_guard_lockout_cold:"Tempo di blocco dopo la fine del gelo",f_cold_high_warn:"«Blocca sotto {x}» è insolitamente alto: le tapparelle starebbero spesso ferme.",f_frost_lock_no_sensor:"Nelle impostazioni non c'è ancora un sensore di temperatura per il blocco gelo: resta senza effetto.",
   pick_entity:"Seleziona…",confirm_del_area:"Eliminare zona \"{id}\"?",confirm_del_shutter:"Eliminare tapparella?",
   /* Markisen */
@@ -2063,6 +2068,7 @@ nl:{
   f_win_debounce:"Vertraging bij sluiten (sec.)",f_win_debounce_hint:"Hoe lang «gesloten» moet aanhouden voordat het rolluik terugkeert. 0 = direct.",
   f_win_keep_open:"Open laten vóór het openen (min)",f_win_keep_open_hint:"Als het geplande openen binnen deze tijd valt, blijft het rolluik open wanneer het raam sluit. Geldt niet in helderheidsmodus of bij geblokkeerd openen. 0 = uit.",
   f_win_close_delay:"Terugkeer na sluiten vertragen (min)",f_win_close_delay_hint:"Hoe lang het rolluik na het sluiten van raam of deur wacht voordat het terugkeert, bovenop de vertraging hierboven. Bedoeld voor de terrasdeur in de winter: even naar buiten, deur dicht, zonder buitengesloten te raken. De deur opnieuw openen start de wachttijd opnieuw. 0 = uit.",
+  mode_label:"Weergave",mode_simple:"Eenvoudig",mode_expert:"Expert",mode_simple_hint:"Toont alleen tijdschema, posities en raamcontact. Wat je al gebruikt, blijft zichtbaar.",mode_expert_hint:"Toont alle functies.",mode_badge:"Expert",mode_hidden:"Eenvoudige weergave: er zijn nog {n} instellingen in de expertweergave.",mode_show_all:"Alles tonen",wiz_title:"Welkom bij Shutter Pilot",wiz_intro:"In drie stappen naar de eerste automatisering. Alles kan later worden gewijzigd.",wiz_area_title:"Welke zone?",wiz_area_hint:"Een zone bundelt rolluiken die samen bewegen – een verdieping bijvoorbeeld, of het hele huis.",wiz_area_new:"Nieuwe zone",wiz_area_default:"Woonruimte",wiz_mode_title:"Waarop moet worden gestuurd?",wiz_covers_title:"Welke rolluiken horen erbij?",wiz_covers_none:"Geen rolluik gevonden in Home Assistant.",wiz_need_name:"Vul een naam in.",wiz_need_cover:"Kies minstens één rolluik.",wiz_need_sensor:"Kies een helderheidssensor.",wiz_back:"Terug",wiz_next:"Verder",wiz_finish:"Instellen",wiz_skip:"Overslaan",wiz_start:"Begeleide installatie",wiz_done_hint:"Meer zones en rolluiken voeg je toe in de tabbladen hierboven. De expertweergave toont meer functies.",
   sec_cold:"Vorstblokkade voor rolluiken",sec_cold_sub:"houdt automatische ritten tegen zolang het vriest",f_cold_intro:"Eén buitentemperatuursensor voor alle rolluiken waarbij de vorstblokkade is aangevinkt. Onder de eerste waarde blokkeert hij, boven de tweede geeft hij vrij. Een uitgevallen sensor start geen blokkade en beëindigt er ook geen lopende.",guard_reason_cold:"Vorstblokkade",f_guard_cold:"Buitentemperatuur (vorstblokkade)",f_guard_lockout_hint_cold:"Na de vorst blijft de blokkade zo lang bestaan. 0 = meteen vrijgeven, de drempels volstaan meestal.",f_cold_catch_up:"Inhalen na de vorst",f_cold_catch_up_hint:"Eindigt de blokkade, dan rijdt het rolluik naar waar het schema het nu wil (bijvoorbeeld 's ochtends open). Er wordt niets ingehaald als je het intussen met de hand hebt versteld, een raam openstaat of de automatisering uit is.",sec_frostlock:"Vorstblokkade",sec_frostlock_sub:"bij vorst geen automatische rit",f_frost_lock:"Vorstblokkade voor dit rolluik",f_frost_lock_hint:"Uit: zoals voorheen. Aan: zolang het vriest (Instellingen → Vorstblokkade voor rolluiken) start Shutter Pilot voor dit rolluik zelf geen rit – geen schema, beschaduwing, ventilatie, raamcontact, privacy, tweede opening of referentierit. Enige uitzondering: de positie bij vorst, die bij het begin van de vorst wordt aangereden (alleen met automatisering aan en gesloten raam). Met de hand en via de diensten blijft alles mogelijk.",f_frost_lock_pos_on:"Bij vorst naar een positie rijden",f_frost_lock_position:"Positie bij vorst",f_frost_lock_tilt_on:"Lamellen bij vorst instellen",f_frost_lock_tilt:"Lamellen bij vorst",f_guard_no_threshold_cold:"Er is geen drempel ingevuld. Zonder „Blokkeren onder” blokkeert de vorstblokkade nooit.",f_guard_wrong_way_cold:"De twee waarden passen niet bij elkaar: „Vrijgeven boven” moet gelijk aan of hoger dan „Blokkeren onder” zijn, anders wordt hij genegeerd.",f_guard_bin_hint_cold:"„on” betekent vorst – de vorstblokkade geldt zolang de sensor „on” meldt.",f_guard_states_hint_cold:"Meldt de sensor een van deze toestanden, dan geldt het als vorst en is de vorstblokkade actief.",f_guard_lockout_cold:"Blokkeertijd na het einde van de vorst",f_cold_high_warn:"„Blokkeren onder {x}” is ongewoon hoog – de rolluiken staan dan vaak stil.",f_frost_lock_no_sensor:"In de instellingen is nog geen temperatuursensor voor de vorstblokkade ingevuld – ze blijft zonder werking.",
   pick_entity:"Entiteit selecteren…",confirm_del_area:"Zone \"{id}\" echt verwijderen?",confirm_del_shutter:"Rolluik echt verwijderen?",
   /* Markisen */
@@ -2381,6 +2387,7 @@ da:{
   f_win_debounce:"Forsinkelse ved lukning (sek.)",f_win_debounce_hint:"Hvor længe «lukket» skal holde, før rullegardinet kører tilbage. 0 = med det samme.",
   f_win_keep_open:"Hold åben før åbning (min)",f_win_keep_open_hint:"Hvis den planlagte åbning ligger inden for dette tidsrum, bliver rullegardinet oppe, når vinduet lukkes. Gælder ikke i lysstyrketilstand eller ved spærret åbning. 0 = fra.",
   f_win_close_delay:"Forsink returkørslen efter lukning (min)",f_win_close_delay_hint:"Hvor længe rullegardinet venter, efter at vindue eller dør er lukket, før det kører tilbage – oven i forsinkelsen ovenfor. Tænkt til terrassedøren om vinteren: gå ud, luk døren, uden at blive lukket ude. Åbnes døren igen, starter ventetiden forfra. 0 = fra.",
+  mode_label:"Visning",mode_simple:"Enkel",mode_expert:"Ekspert",mode_simple_hint:"Viser kun tidsplan, positioner og vindueskontakt. Det, du allerede bruger, forbliver synligt.",mode_expert_hint:"Viser alle funktioner.",mode_badge:"Ekspert",mode_hidden:"Enkel visning: der er {n} flere indstillinger i ekspertvisningen.",mode_show_all:"Vis alle",wiz_title:"Velkommen til Shutter Pilot",wiz_intro:"Tre trin til den første automatik. Alt kan ændres senere.",wiz_area_title:"Hvilket område?",wiz_area_hint:"Et område samler rullegardiner, der kører sammen – for eksempel en etage eller hele huset.",wiz_area_new:"Nyt område",wiz_area_default:"Opholdsområde",wiz_mode_title:"Hvad skal der styres efter?",wiz_covers_title:"Hvilke rullegardiner hører til?",wiz_covers_none:"Der blev ikke fundet noget rullegardin i Home Assistant.",wiz_need_name:"Angiv et navn.",wiz_need_cover:"Vælg mindst ét rullegardin.",wiz_need_sensor:"Vælg en lysstyrkesensor.",wiz_back:"Tilbage",wiz_next:"Næste",wiz_finish:"Opsæt",wiz_skip:"Spring over",wiz_start:"Guidet opsætning",wiz_done_hint:"Flere områder og rullegardiner tilføjer du i fanerne ovenfor. Ekspertvisningen viser flere funktioner.",
   sec_cold:"Frostspærre til rullegardiner",sec_cold_sub:"stopper automatisk kørsel, mens det fryser",f_cold_intro:"Én udendørstemperatursensor til alle rullegardiner med frostspærre sat. Under den første værdi spærrer den, over den anden slipper den. En svigtende sensor starter ingen spærre og afslutter heller ingen igangværende.",guard_reason_cold:"Frostspærre",f_guard_cold:"Udendørstemperatur (frostspærre)",f_guard_lockout_hint_cold:"Efter frosten bliver spærren stående så længe. 0 = slip med det samme, grænserne rækker som regel.",f_cold_catch_up:"Indhent efter frosten",f_cold_catch_up_hint:"Når spærren slutter, kører rullegardinet derhen, hvor tidsplanen vil have det nu (fx åbent om morgenen). Der indhentes intet, hvis du har kørt det i hånden imens, et vindue er åbent, eller automatikken er slået fra.",sec_frostlock:"Frostspærre",sec_frostlock_sub:"ingen automatisk kørsel i frost",f_frost_lock:"Frostspærre til dette rullegardin",f_frost_lock_hint:"Fra: som før. Til: så længe det fryser (Indstillinger → Frostspærre til rullegardiner) starter Shutter Pilot ingen kørsel af sig selv for dette rullegardin – hverken tidsplan, skygning, udluftning, vinduskontakt, privatliv, anden åbning eller referencekørsel. Eneste undtagelse: positionen i frost, som køres til, når frosten sætter ind (kun med automatik til og lukket vindue). I hånden og via tjenesterne er alt muligt.",f_frost_lock_pos_on:"Kør til en position i frost",f_frost_lock_position:"Position i frost",f_frost_lock_tilt_on:"Indstil lamellerne i frost",f_frost_lock_tilt:"Lameller i frost",f_guard_no_threshold_cold:"Der er ikke angivet nogen grænse. Uden „Spær under” spærrer frostspærren aldrig.",f_guard_wrong_way_cold:"De to værdier passer ikke sammen: „Slip over” skal være lig med eller højere end „Spær under”, ellers ignoreres den.",f_guard_bin_hint_cold:"„on” betyder frost – frostspærren gælder, så længe sensoren melder „on”.",f_guard_states_hint_cold:"Melder sensoren en af disse tilstande, gælder det som frost, og frostspærren er aktiv.",f_guard_lockout_cold:"Spærretid efter frostens ophør",f_cold_high_warn:"„Spær under {x}” er usædvanligt højt – rullegardinerne ville ofte stå stille.",f_frost_lock_no_sensor:"Der er endnu ikke valgt nogen temperatursensor til frostspærren i indstillingerne – den er uden virkning.",
   pick_entity:"Vælg entitet…",confirm_del_area:"Slet område \"{id}\"?",confirm_del_shutter:"Slet persienne?",
   /* Markisen */
@@ -2699,6 +2706,7 @@ sv:{
   f_win_debounce:"Fördröjning vid stängning (sek.)",f_win_debounce_hint:"Hur länge «stängt» måste hålla innan jalusin åker tillbaka. 0 = direkt.",
   f_win_keep_open:"Håll öppen före öppning (min)",f_win_keep_open_hint:"Om den schemalagda öppningen infaller inom denna tid stannar jalusin uppe när fönstret stängs. Gäller inte i ljusstyrkeläge eller vid spärrad öppning. 0 = av.",
   f_win_close_delay:"Fördröj återgången efter stängning (min)",f_win_close_delay_hint:"Hur länge jalusin väntar efter att fönster eller dörr stängts innan den åker tillbaka, utöver fördröjningen ovan. Tänkt för altandörren på vintern: gå ut, stäng dörren, utan att bli utelåst. Öppnas dörren igen börjar väntan om. 0 = av.",
+  mode_label:"Vy",mode_simple:"Enkel",mode_expert:"Expert",mode_simple_hint:"Visar bara tidsschema, positioner och fönsterkontakt. Det du redan använder förblir synligt.",mode_expert_hint:"Visar alla funktioner.",mode_badge:"Expert",mode_hidden:"Enkel vy: det finns {n} fler inställningar i expertvyn.",mode_show_all:"Visa alla",wiz_title:"Välkommen till Shutter Pilot",wiz_intro:"Tre steg till den första automatiken. Allt kan ändras senare.",wiz_area_title:"Vilket område?",wiz_area_hint:"Ett område samlar jalusier som körs tillsammans – till exempel ett våningsplan eller hela huset.",wiz_area_new:"Nytt område",wiz_area_default:"Vardagsrum",wiz_mode_title:"Vad ska styrningen utgå från?",wiz_covers_title:"Vilka jalusier hör dit?",wiz_covers_none:"Ingen jalusi hittades i Home Assistant.",wiz_need_name:"Ange ett namn.",wiz_need_cover:"Välj minst en jalusi.",wiz_need_sensor:"Välj en ljussensor.",wiz_back:"Tillbaka",wiz_next:"Nästa",wiz_finish:"Ställ in",wiz_skip:"Hoppa över",wiz_start:"Guidad installation",wiz_done_hint:"Fler områden och jalusier lägger du till i flikarna ovan. Expertvyn visar fler funktioner.",
   sec_cold:"Frostspärr för persienner",sec_cold_sub:"stoppar automatisk körning medan det fryser",f_cold_intro:"En utomhustemperatursensor för alla persienner med frostspärr ikryssad. Under det första värdet spärrar den, över det andra släpper den. En sensor som slutat fungera startar ingen spärr och avslutar ingen pågående.",guard_reason_cold:"Frostspärr",f_guard_cold:"Utomhustemperatur (frostspärr)",f_guard_lockout_hint_cold:"Efter frosten ligger spärren kvar så länge. 0 = släpp direkt, gränserna räcker oftast.",f_cold_catch_up:"Ta igen efter frosten",f_cold_catch_up_hint:"När spärren upphör åker persiennen dit schemat vill ha den nu (till exempel öppen på morgonen). Inget tas igen om du har kört den för hand under tiden, ett fönster är öppet eller automatiken är av.",sec_frostlock:"Frostspärr",sec_frostlock_sub:"ingen automatisk körning vid frost",f_frost_lock:"Frostspärr för denna persienn",f_frost_lock_hint:"Av: som förut. På: så länge det fryser (Inställningar → Frostspärr för persienner) startar Shutter Pilot ingen körning av sig själv för denna persienn – varken schema, skuggning, vädring, fönsterkontakt, sekretess, andra öppning eller referenskörning. Enda undantaget: positionen vid frost, som körs till när frosten sätter in (bara med automatik på och stängt fönster). För hand och via tjänsterna går allt.",f_frost_lock_pos_on:"Kör till en position vid frost",f_frost_lock_position:"Position vid frost",f_frost_lock_tilt_on:"Ställ lamellerna vid frost",f_frost_lock_tilt:"Lameller vid frost",f_guard_no_threshold_cold:"Ingen gräns är angiven. Utan ”Spärra under” spärrar frostspärren aldrig.",f_guard_wrong_way_cold:"De två värdena passar inte ihop: ”Släpp över” måste vara lika med eller högre än ”Spärra under”, annars ignoreras det.",f_guard_bin_hint_cold:"”on” betyder frost – frostspärren gäller så länge sensorn visar ”on”.",f_guard_states_hint_cold:"Visar sensorn något av dessa tillstånd räknas det som frost och frostspärren är aktiv.",f_guard_lockout_cold:"Spärrtid efter frostens slut",f_cold_high_warn:"”Spärra under {x}” är ovanligt högt – persiennerna skulle ofta stå still.",f_frost_lock_no_sensor:"Ingen temperatursensor är ännu vald för frostspärren i inställningarna – den saknar verkan.",
   pick_entity:"Välj entitet…",confirm_del_area:"Ta bort område \"{id}\"?",confirm_del_shutter:"Ta bort persienn?",
   /* Markisen */
@@ -3017,6 +3025,7 @@ pl:{
   f_win_debounce:"Opóźnienie przy zamykaniu (sek.)",f_win_debounce_hint:"Jak długo musi utrzymać się stan „zamknięte”, zanim roleta wróci. 0 = natychmiast.",
   f_win_keep_open:"Zostaw otwartą przed otwarciem (min)",f_win_keep_open_hint:"Jeśli planowe otwarcie nastąpi w tym czasie, roleta zostaje podniesiona po zamknięciu okna. Nie dotyczy trybu jasności ani zablokowanego otwarcia. 0 = wył.",
   f_win_close_delay:"Opóźnij powrót po zamknięciu (min)",f_win_close_delay_hint:"Jak długo roleta czeka po zamknięciu okna lub drzwi, zanim wróci – dodatkowo do opóźnienia powyżej. Z myślą o drzwiach tarasowych zimą: wyjść, zamknąć drzwi i nie zostać na zewnątrz. Ponowne otwarcie drzwi zaczyna odliczanie od nowa. 0 = wył.",
+  mode_label:"Widok",mode_simple:"Prosty",mode_expert:"Ekspert",mode_simple_hint:"Pokazuje tylko harmonogram, pozycje i kontakt okienny. To, czego już używasz, pozostaje widoczne.",mode_expert_hint:"Pokazuje wszystkie funkcje.",mode_badge:"Ekspert",mode_hidden:"Widok prosty: w widoku eksperta jest jeszcze {n} ustawień.",mode_show_all:"Pokaż wszystko",wiz_title:"Witamy w Shutter Pilot",wiz_intro:"Trzy kroki do pierwszej automatyki. Wszystko można później zmienić.",wiz_area_title:"Która strefa?",wiz_area_hint:"Strefa grupuje rolety, które poruszają się razem – na przykład piętro albo cały dom.",wiz_area_new:"Nowa strefa",wiz_area_default:"Strefa dzienna",wiz_mode_title:"Według czego mają się poruszać?",wiz_covers_title:"Które rolety do niej należą?",wiz_covers_none:"W Home Assistant nie znaleziono żadnej rolety.",wiz_need_name:"Podaj nazwę.",wiz_need_cover:"Wybierz co najmniej jedną roletę.",wiz_need_sensor:"Wybierz czujnik jasności.",wiz_back:"Wstecz",wiz_next:"Dalej",wiz_finish:"Skonfiguruj",wiz_skip:"Pomiń",wiz_start:"Konfiguracja z przewodnikiem",wiz_done_hint:"Kolejne strefy i rolety dodasz w zakładkach powyżej. Widok eksperta pokazuje więcej funkcji.",
   sec_cold:"Blokada mrozowa rolet",sec_cold_sub:"wstrzymuje automatyczne przejazdy podczas mrozu",f_cold_intro:"Jeden czujnik temperatury zewnętrznej dla wszystkich rolet z zaznaczoną blokadą mrozową. Poniżej pierwszej wartości blokuje, powyżej drugiej zwalnia. Uszkodzony czujnik nie uruchamia blokady i nie kończy trwającej.",guard_reason_cold:"Blokada mrozowa",f_guard_cold:"Temperatura zewnętrzna (blokada mrozowa)",f_guard_lockout_hint_cold:"Po mrozie blokada trwa jeszcze tak długo. 0 = zwolnij od razu, zwykle wystarczają progi.",f_cold_catch_up:"Nadrób po mrozie",f_cold_catch_up_hint:"Gdy blokada się kończy, roleta jedzie tam, gdzie chce jej teraz harmonogram (np. rano otwarta). Nic nie jest nadrabiane, jeśli w międzyczasie przesunąłeś ją ręcznie, okno jest otwarte lub automatyka jest wyłączona.",sec_frostlock:"Blokada mrozowa",sec_frostlock_sub:"bez automatycznych przejazdów podczas mrozu",f_frost_lock:"Blokada mrozowa dla tej rolety",f_frost_lock_hint:"Wyłączone: jak dotąd. Włączone: dopóki mrozi (Ustawienia → Blokada mrozowa rolet), Shutter Pilot nie rozpoczyna sam żadnego przejazdu tej rolety – ani harmonogramu, cieniowania, wietrzenia, kontaktronu, prywatności, drugiego otwarcia ani przejazdu referencyjnego. Jedyny wyjątek: pozycja podczas mrozu, na którą jedzie na początku mrozu (tylko przy włączonej automatyce i zamkniętym oknie). Ręcznie i przez usługi wszystko jest możliwe.",f_frost_lock_pos_on:"Jedź na pozycję podczas mrozu",f_frost_lock_position:"Pozycja podczas mrozu",f_frost_lock_tilt_on:"Ustaw lamele podczas mrozu",f_frost_lock_tilt:"Lamele podczas mrozu",f_guard_no_threshold_cold:"Nie podano progu. Bez „Blokuj poniżej” blokada mrozowa nigdy nie blokuje.",f_guard_wrong_way_cold:"Obie wartości do siebie nie pasują: „Zwolnij powyżej” musi być równe lub wyższe niż „Blokuj poniżej”, inaczej jest ignorowane.",f_guard_bin_hint_cold:"„on” oznacza mróz – blokada działa, dopóki czujnik zgłasza „on”.",f_guard_states_hint_cold:"Jeśli czujnik zgłosi jeden z tych stanów, uznaje się to za mróz i blokada jest aktywna.",f_guard_lockout_cold:"Czas blokady po ustaniu mrozu",f_cold_high_warn:"„Blokuj poniżej {x}” jest nietypowo wysokie – rolety często stałyby w miejscu.",f_frost_lock_no_sensor:"W ustawieniach nie wybrano jeszcze czujnika temperatury dla blokady mrozowej – pozostaje bez efektu.",
   pick_entity:"Wybierz encję…",confirm_del_area:"Usunąć strefę \"{id}\"?",confirm_del_shutter:"Usunąć roletę?",
   /* Markisen */
@@ -3335,6 +3344,7 @@ pt:{
   f_win_debounce:"Atraso ao fechar (seg.)",f_win_debounce_hint:"Quanto tempo «fechado» tem de se manter antes de o estore recuar. 0 = imediato.",
   f_win_keep_open:"Deixar aberto antes da abertura (min)",f_win_keep_open_hint:"Se a abertura programada ocorrer dentro deste tempo, o estore fica aberto quando a janela fecha. Não vale no modo de luminosidade nem com a abertura bloqueada. 0 = desligado.",
   f_win_close_delay:"Atrasar o regresso após fechar (min)",f_win_close_delay_hint:"Quanto tempo o estore espera depois de a janela ou a porta fechar antes de recuar, além do atraso acima. Pensado para a porta do terraço no inverno: sair, fechar a porta e não ficar trancado lá fora. Abrir a porta de novo reinicia a espera. 0 = desligado.",
+  mode_label:"Vista",mode_simple:"Simples",mode_expert:"Especialista",mode_simple_hint:"Mostra apenas horário, posições e contacto de janela. O que já utiliza continua visível.",mode_expert_hint:"Mostra todas as funções.",mode_badge:"Especialista",mode_hidden:"Vista simples: há mais {n} definições na vista de especialista.",mode_show_all:"Mostrar tudo",wiz_title:"Bem-vindo ao Shutter Pilot",wiz_intro:"Três passos até à primeira automatização. Tudo pode ser alterado mais tarde.",wiz_area_title:"Que zona?",wiz_area_hint:"Uma zona agrupa os estores que se movem juntos – um piso, por exemplo, ou a casa toda.",wiz_area_new:"Nova zona",wiz_area_default:"Sala",wiz_mode_title:"Com base em quê devem mover-se?",wiz_covers_title:"Que estores lhe pertencem?",wiz_covers_none:"Não foi encontrado nenhum estore no Home Assistant.",wiz_need_name:"Introduza um nome.",wiz_need_cover:"Selecione pelo menos um estore.",wiz_need_sensor:"Selecione um sensor de luminosidade.",wiz_back:"Voltar",wiz_next:"Seguinte",wiz_finish:"Configurar",wiz_skip:"Ignorar",wiz_start:"Configuração guiada",wiz_done_hint:"Adicione mais zonas e estores nos separadores acima. A vista de especialista mostra mais funções.",
   sec_cold:"Bloqueio de geada para estores",sec_cold_sub:"trava as manobras automáticas enquanto gela",f_cold_intro:"Um sensor de temperatura exterior para todos os estores com o bloqueio de geada marcado. Abaixo do primeiro valor bloqueia, acima do segundo liberta. Um sensor avariado não inicia nenhum bloqueio nem termina um em curso.",guard_reason_cold:"Bloqueio de geada",f_guard_cold:"Temperatura exterior (bloqueio de geada)",f_guard_lockout_hint_cold:"Depois da geada o bloqueio mantém-se este tempo. 0 = libertar logo, os limites costumam bastar.",f_cold_catch_up:"Recuperar depois da geada",f_cold_catch_up_hint:"Quando o bloqueio termina, o estore vai para onde o horário o quer agora (por exemplo aberto de manhã). Nada é recuperado se o moveste à mão entretanto, se uma janela estiver aberta ou se a automação estiver desligada.",sec_frostlock:"Bloqueio de geada",sec_frostlock_sub:"sem manobra automática com geada",f_frost_lock:"Bloqueio de geada para este estore",f_frost_lock_hint:"Desligado: como antes. Ligado: enquanto gela (Definições → Bloqueio de geada para estores), o Shutter Pilot não inicia nenhuma manobra por si para este estore – nem horário, sombreamento, ventilação, contacto de janela, privacidade, segunda abertura nem manobra de referência. Única exceção: a posição com geada, a que vai quando a geada começa (só com a automação ligada e a janela fechada). À mão e pelos serviços tudo continua possível.",f_frost_lock_pos_on:"Ir para uma posição com geada",f_frost_lock_position:"Posição com geada",f_frost_lock_tilt_on:"Ajustar as lâminas com geada",f_frost_lock_tilt:"Lâminas com geada",f_guard_no_threshold_cold:"Não há limite definido. Sem «Bloquear abaixo de» o bloqueio de geada nunca bloqueia.",f_guard_wrong_way_cold:"Os dois valores não combinam: «Libertar acima de» tem de ser igual ou superior a «Bloquear abaixo de», senão é ignorado.",f_guard_bin_hint_cold:"«on» significa geada: o bloqueio vale enquanto o sensor indicar «on».",f_guard_states_hint_cold:"Se o sensor indicar um destes estados conta como geada e o bloqueio fica ativo.",f_guard_lockout_cold:"Tempo de bloqueio após o fim da geada",f_cold_high_warn:"«Bloquear abaixo de {x}» é invulgarmente alto – os estores ficariam muitas vezes parados.",f_frost_lock_no_sensor:"Ainda não há sensor de temperatura para o bloqueio de geada nas definições – fica sem efeito.",
   pick_entity:"Selecionar entidade…",confirm_del_area:"Eliminar zona \"{id}\"?",confirm_del_shutter:"Eliminar estore?",
   /* Markisen */
@@ -3653,6 +3663,7 @@ nb:{
   f_win_debounce:"Forsinkelse ved lukking (sek.)",f_win_debounce_hint:"Hvor lenge «lukket» må holde før rullegardinen kjører tilbake. 0 = umiddelbart.",
   f_win_keep_open:"Hold åpen før åpning (min)",f_win_keep_open_hint:"Hvis den planlagte åpningen kommer innenfor dette tidsrommet, blir rullegardinen oppe når vinduet lukkes. Gjelder ikke i lysstyrkemodus eller ved sperret åpning. 0 = av.",
   f_win_close_delay:"Forsink returen etter lukking (min)",f_win_close_delay_hint:"Hvor lenge rullegardinen venter etter at vindu eller dør er lukket før den kjører tilbake, i tillegg til forsinkelsen over. Tenkt for terrassedøren om vinteren: gå ut, lukk døren, uten å bli stengt ute. Åpnes døren igjen, starter ventetiden på nytt. 0 = av.",
+  mode_label:"Visning",mode_simple:"Enkel",mode_expert:"Ekspert",mode_simple_hint:"Viser bare tidsplan, posisjoner og vinduskontakt. Det du allerede bruker, forblir synlig.",mode_expert_hint:"Viser alle funksjoner.",mode_badge:"Ekspert",mode_hidden:"Enkel visning: det finnes {n} flere innstillinger i ekspertvisningen.",mode_show_all:"Vis alle",wiz_title:"Velkommen til Shutter Pilot",wiz_intro:"Tre steg til den første automatikken. Alt kan endres senere.",wiz_area_title:"Hvilket område?",wiz_area_hint:"Et område samler rullegardiner som kjører sammen – for eksempel en etasje eller hele huset.",wiz_area_new:"Nytt område",wiz_area_default:"Oppholdsområde",wiz_mode_title:"Hva skal det styres etter?",wiz_covers_title:"Hvilke rullegardiner hører til?",wiz_covers_none:"Fant ingen rullegardin i Home Assistant.",wiz_need_name:"Skriv inn et navn.",wiz_need_cover:"Velg minst én rullegardin.",wiz_need_sensor:"Velg en lyssensor.",wiz_back:"Tilbake",wiz_next:"Neste",wiz_finish:"Sett opp",wiz_skip:"Hopp over",wiz_start:"Veiledet oppsett",wiz_done_hint:"Flere områder og rullegardiner legger du til i fanene over. Ekspertvisningen viser flere funksjoner.",
   sec_cold:"Frostsperre for rullegardiner",sec_cold_sub:"stanser automatisk kjøring mens det fryser",f_cold_intro:"Én utetemperatursensor for alle rullegardiner med frostsperre avkrysset. Under den første verdien sperrer den, over den andre slipper den. En sensor som faller ut starter ingen sperre og avslutter heller ingen pågående.",guard_reason_cold:"Frostsperre",f_guard_cold:"Utetemperatur (frostsperre)",f_guard_lockout_hint_cold:"Etter frosten blir sperren stående så lenge. 0 = slipp med en gang, grensene holder som regel.",f_cold_catch_up:"Ta igjen etter frosten",f_cold_catch_up_hint:"Når sperren opphører, kjører rullegardinen dit tidsplanen vil ha den nå (for eksempel åpen om morgenen). Ingenting tas igjen hvis du har kjørt den for hånd i mellomtiden, et vindu er åpent eller automatikken er av.",sec_frostlock:"Frostsperre",sec_frostlock_sub:"ingen automatisk kjøring ved frost",f_frost_lock:"Frostsperre for denne rullegardinen",f_frost_lock_hint:"Av: som før. På: så lenge det fryser (Innstillinger → Frostsperre for rullegardiner) starter Shutter Pilot ingen kjøring av seg selv for denne rullegardinen – verken tidsplan, skyggelegging, lufting, vindukontakt, personvern, andre åpning eller referansekjøring. Eneste unntak: posisjonen ved frost, som den kjører til når frosten setter inn (bare med automatikk på og lukket vindu). For hånd og via tjenestene er alt mulig.",f_frost_lock_pos_on:"Kjør til en posisjon ved frost",f_frost_lock_position:"Posisjon ved frost",f_frost_lock_tilt_on:"Still lamellene ved frost",f_frost_lock_tilt:"Lameller ved frost",f_guard_no_threshold_cold:"Ingen terskel er satt. Uten «Sperr under» sperrer frostsperren aldri.",f_guard_wrong_way_cold:"De to verdiene passer ikke sammen: «Slipp over» må være lik eller høyere enn «Sperr under», ellers ignoreres den.",f_guard_bin_hint_cold:"«on» betyr frost – frostsperren gjelder så lenge sensoren melder «on».",f_guard_states_hint_cold:"Melder sensoren en av disse tilstandene, regnes det som frost og frostsperren er aktiv.",f_guard_lockout_cold:"Sperretid etter frostens slutt",f_cold_high_warn:"«Sperr under {x}» er uvanlig høyt – rullegardinene ville ofte stå stille.",f_frost_lock_no_sensor:"Det er ennå ikke valgt noen temperatursensor for frostsperren i innstillingene – den er uten virkning.",
   pick_entity:"Velg entitet…",confirm_del_area:"Slette område \"{id}\"?",confirm_del_shutter:"Slette persienne?",
   /* Markisen */
@@ -3843,6 +3854,28 @@ class ShutterPilotPanel extends PanelBase {
       display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
     .sec:first-of-type{margin-top:6px;padding-top:0;border-top:none}
     .sec.dim{opacity:.55}
+    /* Experten-Abschnitt, der in der einfachen Ansicht steht, weil er benutzt ist. */
+    .sec .sec-xp{font-size:10px;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;
+      border-radius:8px;border:1px solid var(--sp);color:var(--sp)}
+    .mode-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:12px;
+      padding-top:10px;border-top:1px solid var(--divider)}
+    .form>.mode-row{margin:0 0 14px;padding:0 0 12px;border-top:none;border-bottom:1px solid var(--divider)}
+    .mode-row .lbl{font-size:13px;color:var(--txt2)}
+    .mode-row .mode-sub{font-size:12px;color:var(--txt2);flex:1 1 220px}
+    .mode-hint{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0 4px;padding:10px 12px;
+      border-radius:8px;background:var(--card2, rgba(127,127,127,.10));font-size:13px;color:var(--txt2)}
+    .mode-hint ha-icon{--mdc-icon-size:18px;color:var(--sp)}
+    .mode-hint span{flex:1 1 200px}
+    .wiz h4{margin:18px 0 6px;font-size:15px;font-weight:600;color:var(--txt)}
+    .wiz .wiz-pick{margin:10px 0}
+    .wiz-steps{display:flex;gap:8px;margin:12px 0 4px}
+    .wiz-dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+      font-size:12px;border:1px solid var(--divider);color:var(--txt2)}
+    .wiz-dot.on{background:var(--sp);border-color:var(--sp);color:#fff}
+    .wiz-dot.done{border-color:var(--sp);color:var(--sp)}
+    .wiz-list{max-height:320px;margin-bottom:10px}
+    .wiz-cover{display:flex;align-items:center;gap:8px}
+    .wiz-skip{margin-left:auto}
     .sec:hover h4{color:var(--sp)}
     .sec:focus-visible{outline:2px solid var(--sp);outline-offset:3px;border-radius:6px}
     .sec ha-icon{--mdc-icon-size:19px;color:var(--sp)}
@@ -4578,7 +4611,61 @@ class ShutterPilotPanel extends PanelBase {
     try{localStorage.setItem(this.constructor.SEC_STORE,JSON.stringify(st));}catch(e){}
     this.requestUpdate();
   }
-  _sec(icon,titleKey,subKey,body,dim=false){
+  /* ─── Einfache Ansicht / Experten-Ansicht ───
+     Reine Anzeige: der Modus blendet aus, er aendert kein Verhalten und
+     loescht keinen Wert. Zwei Regeln halten das ehrlich:
+     1. Was vom Standard abweicht, bleibt sichtbar (`used`). Eine Einstellung,
+        die wirkt, aber nicht zu sehen ist, findet im Forum niemand mehr.
+     2. Jeder Abschnitt steht in genau einer der drei Listen – der Test
+        tests/panel/ui_mode.mjs faellt, wenn ein neuer keine Einstufung hat.
+     Markisen- und Dachfensterformulare werden nicht gefiltert: ihre Reiter
+     gibt es in der einfachen Ansicht nur, wenn schon etwas angelegt ist. */
+  static get BASIC_SECS(){return ["sec_basics","sec_schedule","sec_shutter","sec_areas","sec_positions","sec_window","sec_export"];}
+  static get EXPERT_SECS(){return ["sec_weather","sec_guard","sec_rwind","sec_cold","sec_drive","sec_verify",
+    "sec_calendar","sec_sunprotect","sec_altclose","sec_frost","sec_vent","sec_noup","sec_light",
+    "sec_shutter_sun","sec_slats","sec_storm","sec_frostlock"];}
+  static get UNFILTERED_SECS(){return ["sec_awning","sec_awning_pos","sec_window_pos","sec_awning_dusk",
+    "sec_awning_guard","sec_window_guard","sec_awning_sun","sec_window_sun"];}
+  _expert(){return (this._data?.settings?.ui_mode||"expert")!=="simple";}
+  /* Ein Feld oder Block, der nur in der Experten-Ansicht steht – ausser er
+     ist benutzt. Gezaehlt wird, was wegfaellt, fuer den Hinweis am Formularende. */
+  _adv(used,tpl){
+    if(this._expert()||used)return tpl;
+    this.__hidden=(this.__hidden||0)+1;
+    return "";
+  }
+  _xsec(used,icon,titleKey,subKey,body,dim=false){
+    if(this._expert())return this._sec(icon,titleKey,subKey,body,dim);
+    if(!used){this.__hidden=(this.__hidden||0)+1;return "";}
+    return this._sec(icon,titleKey,subKey,body,dim,true);
+  }
+  _modeHint(){
+    if(this._expert()||!this.__hidden)return "";
+    return html`<div class="mode-hint"><ha-icon icon="mdi:tune-variant"></ha-icon>
+      <span>${this.t("mode_hidden").replace("{n}",this.__hidden)}</span>
+      <button class="btn preset" @click=${()=>this._setUiMode("expert")}>${this.t("mode_show_all")}</button></div>`;
+  }
+  _renderModeSwitch(){
+    if(!this._isAdmin()||!this._data)return "";
+    const xp=this._expert();const T=k=>this.t(k);
+    return html`<div class="mode-row"><span class="lbl">${T("mode_label")}</span>
+      <div class="preset-row">
+        <button class="btn preset ${xp?"":"active"}" @click=${()=>this._setUiMode("simple")}><ha-icon icon="mdi:format-list-bulleted"></ha-icon>${T("mode_simple")}</button>
+        <button class="btn preset ${xp?"active":""}" @click=${()=>this._setUiMode("expert")}><ha-icon icon="mdi:tune-variant"></ha-icon>${T("mode_expert")}</button></div>
+      <span class="mode-sub">${T(xp?"mode_expert_hint":"mode_simple_hint")}</span></div>`;
+  }
+  /* Eigener Befehl statt save_settings: der laedt die Integration neu, und ein
+     Neuladen bricht laufende Wartezeiten ab – fuer eine Anzeigeoption zu teuer. */
+  async _setUiMode(mode){
+    if(!this._data||this._expert()===(mode==="expert"))return;
+    const prev=this._data.settings?.ui_mode;
+    const put=m=>{this._data={...this._data,settings:{...(this._data.settings||{}),ui_mode:m}};this.requestUpdate();};
+    put(mode);
+    try{await this.hass.callWS({type:"shutter_pilot/set_ui_mode",mode});}
+    catch(e){console.warn(e);put(prev);alert("Error: "+e.message);}
+  }
+
+  _sec(icon,titleKey,subKey,body,dim=false,xp=false){
     const open=this._secIsOpen(titleKey);
     return html`<div class="sec ${open?"open":""} ${dim?"dim":""}" role="button" tabindex="0"
         aria-expanded=${open?"true":"false"}
@@ -4586,6 +4673,7 @@ class ShutterPilotPanel extends PanelBase {
         @keydown=${e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();this._secToggle(titleKey);}}}>
         <ha-icon icon="${icon}"></ha-icon>
         <h4>${this.t(titleKey)}</h4>
+        ${xp?html`<span class="sec-xp">${this.t("mode_badge")}</span>`:""}
         ${subKey?html`<span class="sec-sub">${this.t(subKey)}</span>`:""}
         <ha-icon class="sec-chev" icon="mdi:chevron-down"></ha-icon></div>
       ${open?html`<div class="sec-body">${body}</div>`:""}`;
@@ -4691,7 +4779,12 @@ class ShutterPilotPanel extends PanelBase {
     // Ohne Administratorrechte bleibt nur das Dashboard. Der Tab-Zustand wird
     // hier abgefangen, damit auch ein alter Wert aus der Sitzung nicht in ein
     // Formular führt, das sich gar nicht speichern liesse.
-    const tabs=admin?["dashboard","areas","shutters","awnings","windows","settings"]:["dashboard"];
+    /* Einfache Ansicht: Markisen und Dachfenster nur, wenn es welche gibt. */
+    const xp=this._expert();
+    const hasKind=k=>(d?.shutters||[]).some(x=>kindOf(x)===k);
+    const tabs=admin?["dashboard","areas","shutters",
+      ...(xp||hasKind(KIND_AWNING)?["awnings"]:[]),
+      ...(xp||hasKind(KIND_WINDOW)?["windows"]:[]),"settings"]:["dashboard"];
     const tab=tabs.includes(this._tab)?this._tab:"dashboard";
     return html`
       <div class="topbar"><div style="flex:1">
@@ -4728,8 +4821,10 @@ class ShutterPilotPanel extends PanelBase {
     /* Ohne Markise und Dachfenster hat der Schutz nichts zu tun – ausgegraut,
        aber aufklappbar, damit man ihn vor dem Anlegen einstellen kann. */
     const noGuarded=!(d.shutters||[]).some(hasGuard);
+    this.__hidden=0;
     return html`<div class="form">
-      ${this._sec("mdi:weather-partly-cloudy","sec_weather","sec_weather_sub",html`
+      ${this._renderModeSwitch()}
+      ${this._xsec(!!s.weather_entity,"mdi:weather-partly-cloudy","sec_weather","sec_weather_sub",html`
       <div class="hint">${T("f_weather_hint")}</div>
       ${this._entityField(s,"weather_entity",T("f_weather_entity"),["weather"],null)}
       ${s.weather_entity?html`
@@ -4741,7 +4836,7 @@ class ShutterPilotPanel extends PanelBase {
         </div>
         <div class="hint">${T("f_weather_sensors_hint")}</div>`:""}
 
-      `)}${this._sec("mdi:weather-windy","sec_guard",noGuarded?"sec_guard_none":"sec_guard_sub",html`
+      `)}${this._xsec(!noGuarded||AWNING_GUARD_SLOTS.some(x=>!!s["sun_cond_"+x+"_entity"]),"mdi:weather-windy","sec_guard",noGuarded?"sec_guard_none":"sec_guard_sub",html`
       <div class="hint">${T("f_guard_intro")}</div>
       <div class="hint warn">${T("f_guard_ignores_switches")}</div>
       ${AWNING_GUARD_SLOTS.map(slot=>this._renderGuardSlot(
@@ -4757,7 +4852,7 @@ class ShutterPilotPanel extends PanelBase {
         <span class="slider-val">${s.awning_sensor_grace??10} min</span></div>
         <div class="hint">${T("f_guard_grace_hint")}</div></div>
 
-      `,noGuarded)}${this._sec("mdi:weather-windy","sec_rwind","sec_rwind_sub",html`
+      `,noGuarded)}${this._xsec(!!s.sun_cond_rwind_entity,"mdi:weather-windy","sec_rwind","sec_rwind_sub",html`
       <div class="hint">${T("f_rwind_intro")}</div>
       ${this._renderGuardSlot(
         s,"rwind",
@@ -4766,7 +4861,7 @@ class ShutterPilotPanel extends PanelBase {
           <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
           <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`,
         false)}
-      `)}${this._sec("mdi:snowflake-alert","sec_cold","sec_cold_sub",html`
+      `)}${this._xsec(!!s.sun_cond_cold_entity,"mdi:snowflake-alert","sec_cold","sec_cold_sub",html`
       <div class="hint">${T("f_cold_intro")}</div>
       ${this._renderGuardSlot(
         s,"cold",
@@ -4777,14 +4872,14 @@ class ShutterPilotPanel extends PanelBase {
         false)}
       <div class="field"><label><input type="checkbox" .checked=${s.frost_lock_catch_up!==false} @change=${e=>{s.frost_lock_catch_up=e.target.checked;this.requestUpdate();}}> ${T("f_cold_catch_up")}</label>
         <div class="hint">${T("f_cold_catch_up_hint")}</div></div>
-      `)}${this._sec("mdi:transit-connection-horizontal","sec_drive","sec_drive_sub",html`
+      `)}${this._xsec(Number(s.min_drive_gap)>0,"mdi:transit-connection-horizontal","sec_drive","sec_drive_sub",html`
       <div class="hint">${T("f_min_gap_hint")}</div>
       <div class="field"><label>${T("f_min_gap")}</label><div class="slider-row">
         <input type="range" min="0" max="10" step="0.5" .value=${s.min_drive_gap??0}
           @input=${e=>{s.min_drive_gap=Number(e.target.value);this.requestUpdate();}}>
         <span class="slider-val">${(s.min_drive_gap??0)==0?T("f_min_gap_off"):(s.min_drive_gap+" s")}</span></div></div>
 
-      `)}${this._sec("mdi:check-circle-outline","sec_verify","sec_verify_sub",html`
+      `)}${this._xsec(!!s.verify_enabled,"mdi:check-circle-outline","sec_verify","sec_verify_sub",html`
       <div class="hint">${T("f_verify_hint")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!s.verify_enabled}
         @change=${e=>{s.verify_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_verify_enabled")}</label></div>
@@ -4821,6 +4916,7 @@ class ShutterPilotPanel extends PanelBase {
         <textarea class="export-box" readonly .value=${this._export}
           @focus=${e=>e.target.select()}></textarea>`:""}`)}`:""}
 
+      ${this._modeHint()}
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveSettings()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
       </div></div>`;
@@ -4881,7 +4977,10 @@ class ShutterPilotPanel extends PanelBase {
   }
   async _saveSettings(){
     try{
-      await this.hass.callWS({type:"shutter_pilot/save_settings",settings:{...this._settings}});
+      /* Die Ansicht hat ihren eigenen Befehl; die Kopie hier kann aelter sein
+         als der Schalter und wuerde ihn zurueckdrehen. */
+      const settings={...this._settings};delete settings.ui_mode;
+      await this.hass.callWS({type:"shutter_pilot/save_settings",settings});
       this._settings=null;
       await this._load();
     }catch(e){console.warn(e);alert("Error: "+e.message);}
@@ -4889,6 +4988,7 @@ class ShutterPilotPanel extends PanelBase {
 
   /* ─── Dashboard ─── */
   _renderDashboard(d){
+    if(this._wizardActive(d))return this._renderWizard(d);
     if(!d.areas?.length)return html`<div class="empty"><ha-icon icon="mdi:window-shutter-settings"></ha-icon><p>${this.t("empty_areas")}</p></div>`;
     return html`${this._renderGlobalCard(d)}
       <div class="grid">${this._sortedAreas(d).map(a=>this._dashCard(a,d))}</div>`;
@@ -4945,7 +5045,155 @@ class ShutterPilotPanel extends PanelBase {
         ${info.map(([icon,label,value])=>html`<div class="sun-row">
           <ha-icon icon="${icon}"></ha-icon><span>${label}: <b>${value}</b></span></div>`)}
       </div>`:""}
+      ${this._renderModeSwitch()}
+      ${admin&&!all.length?html`<div class="actions">
+        <button class="btn preset" @click=${()=>this._wizSetSkipped(false)}><ha-icon icon="mdi:auto-fix"></ha-icon>${T("wiz_start")}</button></div>`:""}
     </div>`;
+  }
+
+  /* ─── Geführter Einstieg ───
+     Solange kein einziger Rollladen angelegt ist, steht hier statt des leeren
+     Dashboards ein Ablauf in drei Schritten: Bereich, Zeiten, Rollläden.
+     Gespeichert wird am Ende in einem Zug (quick_setup) – mit save_area und
+     save_shutter nacheinander laedt die Integration zwischen den Aufrufen neu,
+     und der naechste landet im Leeren. */
+  static get WIZ_STORE(){return "shutter_pilot_wizard_skipped";}
+  _wizSkipped(){
+    if(this.__wizSkip==null){
+      let v=false;
+      try{v=localStorage.getItem(this.constructor.WIZ_STORE)==="1";}catch(e){}
+      this.__wizSkip=v;
+    }
+    return this.__wizSkip;
+  }
+  _wizSetSkipped(v){
+    this.__wizSkip=!!v;this._wiz=null;
+    try{if(v)localStorage.setItem(this.constructor.WIZ_STORE,"1");else localStorage.removeItem(this.constructor.WIZ_STORE);}catch(e){}
+    this.requestUpdate();
+  }
+  /* `loading` kommt vom Server, solange die Integration neu laedt: dann ist
+     die Liste leer, ohne dass sie es ist. */
+  _wizardActive(d){
+    return this._isAdmin()&&!!d&&!d.loading&&!(d.shutters||[]).length&&!this._wizSkipped();
+  }
+  _wizArea(existing){
+    const a=existing?{...this._newArea(),...existing,_isNew:false}:{...this._newArea(),name:""};
+    if(!["time","brightness","sun"].includes(a.mode))a.mode="time";
+    return a;
+  }
+  _wizState(d){
+    if(!this._wiz){
+      const first=this._sortedAreas(d)[0];
+      const area=this._wizArea(first);
+      if(!first)area.name=this.t("wiz_area_default");
+      this._wiz={step:1,area,covers:[],err:"",busy:false};
+    }
+    return this._wiz;
+  }
+  /* Ein bestehender Bereich bekommt nur, was der Einstieg gezeigt hat – der
+     Rest seiner Einstellungen bleibt, wie er war. */
+  _wizAreaPayload(d){
+    const a={...this._wiz.area};const isNew=a._isNew;delete a._isNew;delete a._index;
+    if(isNew){
+      const ids=new Set((d.areas||[]).map(x=>x.id));
+      const stem=this._areaIdFromName(a.name);let id=stem;let n=2;
+      while(ids.has(id))id=stem+"_"+(n++);
+      a.id=id;
+      return a;
+    }
+    const keys={time:["time_up","time_down","time_we_up","time_we_down"],
+      sun:["sunrise_offset","sunset_offset"],
+      brightness:["brightness_sensor","lux_up","lux_down","w_up_from","w_up_to","w_down_from","w_down_to",
+        "we_up_from","we_up_to","we_down_from","we_down_to"]}[a.mode]||[];
+    const out={id:a.id,name:a.name,mode:a.mode};
+    for(const k of keys)if(a[k]!==undefined)out[k]=a[k];
+    return out;
+  }
+  _wizNext(d){
+    const w=this._wiz;if(!w||w.busy)return;
+    const a=w.area;
+    w.err="";
+    if(w.step===1&&!String(a.name||"").trim())w.err="wiz_need_name";
+    else if(w.step===2&&a.mode==="brightness"&&!a.brightness_sensor)w.err="wiz_need_sensor";
+    else if(w.step===3&&!w.covers.length)w.err="wiz_need_cover";
+    if(w.err){this.requestUpdate();return;}
+    if(w.step<3){w.step++;this.requestUpdate();return;}
+    this._wizFinish(d);
+  }
+  async _wizFinish(d){
+    const w=this._wiz;
+    const area=this._wizAreaPayload(d);
+    const shutters=w.covers.map(c=>{
+      const s={...this._newShutter(d),cover_entity_id:c,
+        name:this.hass?.states?.[c]?.attributes?.friendly_name||"",
+        area_up_id:area.id,area_down_id:area.id};
+      delete s._isNew;delete s._index;
+      return s;
+    });
+    w.busy=true;this.requestUpdate();
+    try{
+      await this.hass.callWS({type:"shutter_pilot/quick_setup",area,shutters});
+      this._wiz=null;
+      await this._load();
+    }catch(e){console.warn(e);w.busy=false;alert("Error: "+e.message);}
+    this.requestUpdate();
+  }
+  _renderWizard(d){
+    const T=k=>this.t(k);const w=this._wizState(d);const a=w.area;const m=a.mode;
+    const pick=x=>{w.area=this._wizArea(x);w.err="";this.requestUpdate();};
+    const tm=(k,lbl)=>this._timeField(a,k,lbl);
+    const rng=(k,lbl,min,max,step,suffix)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
+      <input type="range" min="${min}" max="${max}" step="${step}" .value=${a[k]??0} @input=${e=>{a[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${a[k]??0}${suffix}</span></div></div>`;
+    const num=(k,lbl)=>html`<div class="field"><label>${lbl}</label>
+      <input type="number" inputmode="numeric" min="0" .value=${a[k]??""}
+        @input=${e=>{const v=e.target.value.trim();a[k]=v===""?"":Number(v);}}></div>`;
+    const covers=this._entities(["cover"]);
+    const body=w.step===1?html`
+        <h4>${T("wiz_area_title")}</h4>
+        <div class="hint">${T("wiz_area_hint")}</div>
+        <div class="preset-row wiz-pick">
+          ${this._sortedAreas(d).map(x=>html`<button class="btn preset ${!a._isNew&&a.id===x.id?"active":""}"
+            @click=${()=>pick(x)}>${x.name||x.id}</button>`)}
+          <button class="btn preset ${a._isNew?"active":""}" @click=${()=>pick(null)}><ha-icon icon="mdi:plus"></ha-icon>${T("wiz_area_new")}</button></div>
+        <div class="field"><label>${T("f_name")}</label>
+          <input type="text" .value=${a.name??""} @input=${e=>{a.name=e.target.value;}}></div>
+        <h4>${T("wiz_mode_title")}</h4>
+        <div class="preset-row wiz-pick">${["time","brightness","sun"].map(x=>html`
+          <button class="btn preset ${m===x?"active":""}" @click=${()=>{a.mode=x;this.requestUpdate();}}><ha-icon icon="${MODE_ICONS[x]||"mdi:clock-outline"}"></ha-icon>${T("mode_"+x)}</button>`)}</div>`
+      :w.step===2?html`
+        <h4>${a.name} · ${T("mode_"+m)}</h4>
+        ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}
+            ${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`
+          :m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}
+            ${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}
+            <div class="hint">${T("f_sun_off_hint")}</div>`
+          :html`${this._entityField(a,"brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}
+            ${num("lux_up",T("f_lux_up"))}${num("lux_down",T("f_lux_down"))}
+            <div class="hint">${T("f_lux_hint")}</div>
+            ${Number(a.lux_up??500)<=Number(a.lux_down??400)?html`<div class="hint warn">⚠️ ${T("f_lux_wrong_way")}</div>`:""}
+            ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}
+            ${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}`}`
+      :html`
+        <h4>${T("wiz_covers_title")}</h4>
+        ${covers.length?html`<div class="ent-list wiz-list">${covers.map(c=>html`
+            <label class="ent-row wiz-cover"><input type="checkbox" .checked=${w.covers.includes(c)}
+              @change=${e=>{w.covers=e.target.checked?[...w.covers.filter(x=>x!==c),c]:w.covers.filter(x=>x!==c);w.err="";this.requestUpdate();}}>
+              ${this._entityLabel(c)}</label>`)}</div>`
+          :html`<div class="hint warn">⚠️ ${T("wiz_covers_none")}</div>`}
+        <div class="hint">${T("wiz_done_hint")}</div>`;
+    return html`<div class="form wiz">
+      <h3>${T("wiz_title")}</h3>
+      <div class="hint">${T("wiz_intro")}</div>
+      <div class="wiz-steps">${[1,2,3].map(n=>html`<span class="wiz-dot ${w.step===n?"on":w.step>n?"done":""}">${n}</span>`)}</div>
+      ${body}
+      ${w.err?html`<div class="hint warn">⚠️ ${T(w.err)}</div>`:""}
+      <div class="form-actions">
+        ${w.step>1?html`<button class="btn cancel" ?disabled=${w.busy} @click=${()=>{w.step--;w.err="";this.requestUpdate();}}>${T("wiz_back")}</button>`:""}
+        <button class="btn save" ?disabled=${w.busy} @click=${()=>this._wizNext(d)}>
+          <ha-icon icon="${w.step<3?"mdi:arrow-right":"mdi:check"}"></ha-icon>${w.step<3?T("wiz_next"):T("wiz_finish")}</button>
+        <button class="btn cancel wiz-skip" ?disabled=${w.busy} @click=${()=>this._wizSetSkipped(true)}>${T("wiz_skip")}</button>
+      </div></div>`;
   }
   /* Nacheinander, nicht parallel: jedes Kommando schreibt in die Optionen und
      loest damit ein async_reload aus. Ein Schwung gleichzeitiger Aufrufe
@@ -5141,11 +5389,21 @@ class ShutterPilotPanel extends PanelBase {
     </div>`;
   }
 
+  _newArea(){
+    return {id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",shade_from:"",shade_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,lux_hold:0,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};
+  }
+  _newShutter(d){
+    return {cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,blind_drive:false,_isNew:true,_index:null};
+  }
+  _areaIdFromName(name){
+    return String(name||"").toLowerCase().replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/[ß]/g,"ss").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||"area";
+  }
+
   /* ─── Areas Tab ─── */
   _renderAreas(d){
     if(this._editArea)return this._renderAreaForm(d);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea={id:"",name:"",mode:"time",drive_delay:10,workday_sensor:"",random_offset:0,manual_override:"never",sun_protect_enabled:false,elevation_min:0,elevation_max:90,shade_hold:0,azimuth_enabled:false,azimuth_min:90,azimuth_max:270,season_from:"",season_to:"",shade_from:"",shade_to:"",sun_cond_close_entity:"",sun_cond_frost_entity:"",vent_enabled:false,sun_cond_vent_a_entity:"",sun_cond_vent_b_entity:"",sun_cond_a_entity:"",sun_cond_a_on_above:"",sun_cond_a_off_below:"",sun_cond_b_entity:"",sun_cond_b_on_above:"",sun_cond_b_off_below:"",sun_cond_c_entity:"",sun_cond_d_entity:"",down_light_entity:"",down_light_brightness:40,time_up:"07:00",time_down:"19:00",time_we_up:"08:00",time_we_down:"20:00",sunrise_offset:0,sunset_offset:0,brightness_sensor:"",lux_down:400,lux_up:500,lux_hold:0,b_latest_up_enabled:false,b_latest_up:"09:00",b_we_latest_up:"",b_latest_down_enabled:false,b_latest_down:"18:00",b_we_latest_down:"",w_up_from:"05:00",w_up_to:"09:00",w_down_from:"16:00",w_down_to:"23:59",we_up_from:"07:00",we_up_to:"10:00",we_down_from:"16:00",we_down_to:"23:59",_isNew:true};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editArea=this._newArea();this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${this.t("add_area")}</button></div>
       ${!d.areas?.length?html`<div class="empty">${this.t("empty_areas_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -5184,6 +5442,7 @@ class ShutterPilotPanel extends PanelBase {
   }
   _renderAreaForm(){
     const a=this._editArea;const m=a.mode||"time";const T=k=>this.t(k);
+    this.__hidden=0;
     /* Kein requestUpdate() beim Tippen: Jedes Re-Render setzt .value neu und
        reißt damit die Cursorposition bzw. den nativen Zeit-Dialog weg. Der
        Wert steht im Objekt, gerendert werden muss dafür nichts. */
@@ -5237,11 +5496,11 @@ class ShutterPilotPanel extends PanelBase {
           <option value="time" ?selected=${m==="time"}>${T("mode_time")}</option>
           <option value="brightness" ?selected=${m==="brightness"}>${T("mode_brightness")}</option>
           <option value="sun" ?selected=${m==="sun"}>${T("mode_sun")}</option>
-          <option value="none" ?selected=${m==="none"}>${T("mode_none")}</option></select></div>
+          ${this._expert()||m==="none"?html`<option value="none" ?selected=${m==="none"}>${T("mode_none")}</option>`:""}</select></div>
       ${m==="none"?html`<div class="hint">${T("mode_none_hint")}</div>`:""}
-      ${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}
-      ${ep("temp_sensor",T("f_temp_sensor"),["sensor"],HINTS.temperature)}
-      <div class="hint">${T("f_temp_sensor_hint")}</div>
+      ${this._adv(a.drive_delay!=null&&Number(a.drive_delay)!==10,html`${rng("drive_delay",T("f_drive_delay"),0,120,1,"s")}`)}
+      ${this._adv(!!a.temp_sensor,html`${ep("temp_sensor",T("f_temp_sensor"),["sensor"],HINTS.temperature)}
+      <div class="hint">${T("f_temp_sensor_hint")}</div>`)}
 
       ${/* Ohne Zeitplan bleiben Zeitplan- und Kalenderabschnitt weg: beide
            beschreiben ausschliesslich Fahrten nach Uhr, Lux oder Sonnenstand,
@@ -5252,16 +5511,16 @@ class ShutterPilotPanel extends PanelBase {
       ${m==="time"?html`${tm("time_up",T("f_time_up"))}${tm("time_down",T("f_time_down"))}${tm("time_we_up",T("f_time_we_up"))}${tm("time_we_down",T("f_time_we_down"))}`:
         m==="sun"?html`${rng("sunrise_offset",T("f_sunrise_off"),-60,60,1," min")}${rng("sunset_offset",T("f_sunset_off"),-60,60,1," min")}
           <div class="hint">${T("f_sun_off_hint")}</div>
-          <div class="hint" style="margin-top:10px"><b>${T("f_bounds_title")}</b><br>${T("f_bounds_hint")}</div>
+          ${this._adv(["sun_earliest_up","sun_latest_up","sun_earliest_down","sun_latest_down","sun_we_earliest_up","sun_we_latest_up","sun_we_earliest_down","sun_we_latest_down"].some(k=>!!a[k]),html`<div class="hint" style="margin-top:10px"><b>${T("f_bounds_title")}</b><br>${T("f_bounds_hint")}</div>
           ${bd("sun_earliest_up",T("f_earliest_up"),"07:30")}${bd("sun_latest_up",T("f_latest_up"),"09:00")}
           ${bd("sun_earliest_down",T("f_earliest_down"),"17:00")}${bd("sun_latest_down",T("f_latest_down"),"22:30")}
           <div class="hint">${T("f_bounds_we_hint")}</div>
           ${bd("sun_we_earliest_up",T("f_we_earliest_up"),"08:00")}${bd("sun_we_latest_up",T("f_we_latest_up"),"09:00")}
-          ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`:
+          ${bd("sun_we_earliest_down",T("f_we_earliest_down"),"17:00")}${bd("sun_we_latest_down",T("f_we_latest_down"),"22:30")}`)}`:
         html`${ep("brightness_sensor",T("f_brightness_sensor"),["sensor"],HINTS.illuminance)}${rngOpen("lux_up",T("f_lux_up"),0,2000,10,"lx")}${rngOpen("lux_down",T("f_lux_down"),0,2000,10,"lx")}
           <div class="hint">${T("f_lux_hint")}</div>
-          ${rng("lux_hold",T("f_lux_hold"),0,60,1," min")}
-          <div class="hint">${T("f_lux_hold_hint")}</div>
+          ${this._adv(Number(a.lux_hold)>0,html`${rng("lux_hold",T("f_lux_hold"),0,60,1," min")}
+          <div class="hint">${T("f_lux_hold_hint")}</div>`)}
           ${/* Hoch gilt oberhalb, Runter unterhalb. Liegt die Hoch-Schwelle
                darunter, ist dazwischen beides zugleich wahr – solange sich die
                Zeitfenster nicht überschneiden fällt das niemandem auf, danach
@@ -5269,18 +5528,18 @@ class ShutterPilotPanel extends PanelBase {
           ${Number(a.lux_up??500)<=Number(a.lux_down??400)?html`<div class="hint warn">⚠️ ${T("f_lux_wrong_way")}</div>`:""}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}
-          <div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>
+          ${this._adv([a.b_down_after_sunset,a.b_up_before_sunrise].some(v=>v!==""&&v!=null),html`<div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>
           ${numOpt("b_down_after_sunset",T("f_b_down_sunset"))}
           ${numOpt("b_up_before_sunrise",T("f_b_up_sunrise"))}
           ${/* Eine 0 ist eine Grenze (erst ab Sonnenaufgang), nur das leere
                Feld ist keine – Linos öffnete deshalb heute erst um 07:30. */""}
           <div class="hint">${T("f_sunbound_empty")}</div>
-          ${[a.b_down_after_sunset,a.b_up_before_sunrise].some(v=>v!==""&&v!=null&&Number(v)===0)?html`<div class="hint warn">⚠️ ${T("f_sunbound_zero")}</div>`:""}
+          ${[a.b_down_after_sunset,a.b_up_before_sunrise].some(v=>v!==""&&v!=null&&Number(v)===0)?html`<div class="hint warn">⚠️ ${T("f_sunbound_zero")}</div>`:""}`)}
           ${/* Die Zeitfenster oben erlauben nur, sie lösen nie aus. In der
                dunklen Jahreszeit wird die Hoch-Schwelle nie erreicht – dafür
                diese Frist. Abschaltbar, weil sie sonst in jeder zufriedenen
                Anlage anfinge, Rollläden zu bewegen. */""}
-          <div class="hint" style="margin-top:10px"><b>${T("f_blatest_title")}</b><br>${T("f_blatest_hint")}</div>
+          ${this._adv(!!a.b_latest_up_enabled||!!a.b_latest_down_enabled,html`<div class="hint" style="margin-top:10px"><b>${T("f_blatest_title")}</b><br>${T("f_blatest_hint")}</div>
           <div class="field"><label><input type="checkbox" .checked=${!!a.b_latest_up_enabled}
             @change=${e=>{a.b_latest_up_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_blatest_up_enabled")}</label></div>
           ${a.b_latest_up_enabled?html`${tm("b_latest_up",T("f_latest_up"))}
@@ -5288,9 +5547,9 @@ class ShutterPilotPanel extends PanelBase {
           <div class="field"><label><input type="checkbox" .checked=${!!a.b_latest_down_enabled}
             @change=${e=>{a.b_latest_down_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_blatest_down_enabled")}</label></div>
           ${a.b_latest_down_enabled?html`${tm("b_latest_down",T("f_latest_down"))}
-            ${bd("b_we_latest_down",T("f_we_latest_down"),"18:00")}`:""}`}
+            ${bd("b_we_latest_down",T("f_we_latest_down"),"18:00")}`:""}`)}`}
 
-      `)}${m==="none"?"":this._sec("mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
+      `)}${m==="none"?"":this._xsec(!!a.workday_sensor||Number(a.random_offset)>0||(a.manual_override||"never")!=="never","mdi:calendar-check","sec_calendar","sec_calendar_sub",html`
       ${ep("workday_sensor",T("f_workday_sensor"),["binary_sensor"],HINTS.workday)}
       <div class="hint">${T("f_workday_hint")}</div>
       ${rng("random_offset",T("f_random_offset"),0,60,1," min")}
@@ -5300,7 +5559,7 @@ class ShutterPilotPanel extends PanelBase {
           ${OVERRIDE_OPTS.map(o=>html`<option value="${o}" ?selected=${(a.manual_override||"never")===o}>${T("f_override_"+o)}</option>`)}
         </select><div class="hint">${T("f_manual_override_hint")}</div></div>
 
-      `)}${this._sec("mdi:sun-wireless-outline","sec_sunprotect","sec_sunprotect_sub",html`
+      `)}${this._xsec(!!a.sun_protect_enabled,"mdi:sun-wireless-outline","sec_sunprotect","sec_sunprotect_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.sun_protect_enabled} @change=${e=>{a.sun_protect_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_sun_protect")}</label></div>
       ${a.sun_protect_enabled?html`
         <div class="field"><label><input type="checkbox" .checked=${a.elevation_enabled!==false}
@@ -5368,7 +5627,7 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_shade_pause_hint")}</div></div>
         ${a.shade_pause_on_hand?rng("shade_pause_max",T("f_shade_pause_max"),0,480,15," min"):""}`:""}
 
-      `)}${this._sec("mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
+      `)}${this._xsec(!!a.sun_cond_close_entity,"mdi:arrow-collapse-down","sec_altclose","sec_altclose_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_close_cond_hint")}</div>
       ${ep("sun_cond_close_entity",T("f_close_cond")+" 1",COND_DOMAINS,HINTS.condition)}
@@ -5380,14 +5639,14 @@ class ShutterPilotPanel extends PanelBase {
         ${a.sun_cond_close_b_entity?this._renderCondDetail(a,"close_b",a.sun_cond_close_b_entity):""}
         <div class="hint">${T("f_close_cond_both_hint")}</div>`:""}
 
-      `)}${this._sec("mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
+      `)}${this._xsec(!!a.sun_cond_frost_entity,"mdi:snowflake-alert","sec_frost","sec_frost_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_frost_cond_hint")}</div>
       <div class="hint">${T("f_frost_cond_sensor")}</div>
       ${ep("sun_cond_frost_entity",T("f_frost_cond"),COND_DOMAINS,HINTS.condition)}
       ${a.sun_cond_frost_entity?this._renderCondDetail(a,"frost",a.sun_cond_frost_entity):""}
 
-      `)}${this._sec("mdi:air-filter","sec_vent","sec_vent_sub",html`
+      `)}${this._xsec(!!a.vent_enabled,"mdi:air-filter","sec_vent","sec_vent_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!a.vent_enabled}
         @change=${e=>{a.vent_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_vent_enabled")}</label>
         <div class="hint">${T("f_vent_hint")}</div></div>
@@ -5398,7 +5657,7 @@ class ShutterPilotPanel extends PanelBase {
           ${ep("sun_cond_vent_b_entity",T("f_vent_cond")+" 2",COND_DOMAINS,HINTS.condition)}
           ${a.sun_cond_vent_b_entity?this._renderCondDetail(a,"vent_b",a.sun_cond_vent_b_entity):""}`:""}`:""}
 
-      `)}${this._sec("mdi:calendar-weekend","sec_noup","sec_noup_sub",html`
+      `)}${this._xsec(!!a.we_no_up||!!a.sun_cond_no_up_entity,"mdi:calendar-weekend","sec_noup","sec_noup_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       <div class="hint">${T("f_noup_intro")}</div>
       <div class="field"><label><input type="checkbox" .checked=${!!a.we_no_up}
@@ -5408,11 +5667,12 @@ class ShutterPilotPanel extends PanelBase {
       ${a.sun_cond_no_up_entity?this._renderCondDetail(a,"no_up",a.sun_cond_no_up_entity):""}
       <div class="hint">${T("f_no_up_hint")}</div>
 
-      `)}${this._sec("mdi:lightbulb-outline","sec_light","sec_light_sub",html`
+      `)}${this._xsec(!!a.down_light_entity,"mdi:lightbulb-outline","sec_light","sec_light_sub",html`
       ${m==="none"?html`<div class="hint warn">⚠️ ${T("f_needs_schedule")}</div>`:""}
       ${ep("down_light_entity",T("f_light_entity"),["light","switch"])}
       ${rng("down_light_brightness",T("f_light_brightness"),0,100,1,"%")}`)}
 
+      ${this._modeHint()}
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveArea()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
         <button class="btn cancel" @click=${()=>{this._editArea=null;this.requestUpdate();}}>${T("btn_cancel")}</button></div></div>`;
@@ -5437,7 +5697,7 @@ class ShutterPilotPanel extends PanelBase {
     const areaName=id=>{const a=d.areas.find(x=>x.id===id);return a?a.name:id;};const T=k=>this.t(k);
     const rows=this._byKind(d,KIND_SHUTTER);
     return html`
-      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter={cover_entity_id:"",name:"",window_entity_id:"",window_open_state:"on",window_tilted_state:"none",position_when_window_open:100,position_when_window_tilted:50,lock_protection:false,window_tilted_entity_id:"",min_position_when_open:20,area_up_id:d.areas[0]?.id||"",area_down_id:d.areas[0]?.id||"",position_open:100,position_closed:0,position_sun_protect:50,position_closed_alt:"",position_closed_frost:"",sun_geometry_override:false,tilt_enabled:false,tilt_open:100,tilt_closed:0,tilt_sun_protect:30,drive_after_close:false,window_close_debounce:5,blind_drive:false,_isNew:true,_index:null};this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
+      <div style="margin-bottom:16px"><button class="btn add" @click=${()=>{this._editShutter=this._newShutter(d);this.requestUpdate();}}><ha-icon icon="mdi:plus"></ha-icon>${T("add_shutter")}</button></div>
       ${!rows.length?html`<div class="empty">${T("empty_shutters_list")}</div>`:
         this._isMobile?html`
           <div class="grid">
@@ -5923,6 +6183,7 @@ class ShutterPilotPanel extends PanelBase {
   _renderShutterForm(d){
     const s=this._editShutter;
     if(hasGuard(s))return this._renderAwningForm(d);
+    this.__hidden=0;
     const areas=this._sortedAreas(d);const T=k=>this.t(k);
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
@@ -5972,19 +6233,19 @@ class ShutterPilotPanel extends PanelBase {
            des Bereichs – dasselbe Paar wie abweichendes Schliessen: Bedingung
            am Bereich, Position am Rollladen. Ohne Bedingung im Bereich bleibt
            sie wirkungslos, deshalb der Hinweis. */""}
-      <div class="field"><label><input type="checkbox" .checked=${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null}
+      ${this._adv(s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null,html`<div class="field"><label><input type="checkbox" .checked=${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null}
         @change=${e=>{s.position_sun_protect_alt=e.target.checked?30:"";this.requestUpdate();}}> ${T("f_pos_sun_alt")}</label>
         <div class="hint">${T("f_pos_sun_alt_hint")}</div></div>
-      ${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null?pct("position_sun_protect_alt",T("f_pos_sun_alt_val")):""}
-      ${[1,2,3].map(n=>{const pk=`position_sun_protect_l${n}`,fk=`keep_position_sun_protect_l${n}`,tk=`tilt_sun_protect_l${n}`;
+      ${s.position_sun_protect_alt!==""&&s.position_sun_protect_alt!=null?pct("position_sun_protect_alt",T("f_pos_sun_alt_val")):""}`)}
+      ${this._adv([1,2,3].some(n=>(s["position_sun_protect_l"+n]!==""&&s["position_sun_protect_l"+n]!=null)||!!s["keep_position_sun_protect_l"+n]),html`${[1,2,3].map(n=>{const pk=`position_sun_protect_l${n}`,fk=`keep_position_sun_protect_l${n}`,tk=`tilt_sun_protect_l${n}`;
         const on=(s[pk]!==""&&s[pk]!=null)||(s.tilt_enabled&&!!s[fk]);
         return html`<div class="field"><label><input type="checkbox" .checked=${on}
           @change=${e=>{if(e.target.checked){s[pk]=50;if(s.tilt_enabled&&s[tk]==null)s[tk]=s.tilt_sun_protect!=null?s.tilt_sun_protect:50;}else{s[pk]="";s[fk]=false;s[tk]="";}this.requestUpdate();}}> ${T("f_pos_lvl")} ${n}</label>
           ${n===1?html`<div class="hint">${T("f_pos_lvl_hint")}</div>`:""}</div>
-          ${on?html`${keepRow(pk,fk,T("f_pos_lvl_val"),"f_keep_position","f_keep_position_on",pct)}${s.tilt_enabled?pct(tk,T("f_tilt_lvl")):""}`:""}`;})}
+          ${on?html`${keepRow(pk,fk,T("f_pos_lvl_val"),"f_keep_position","f_keep_position_on",pct)}${s.tilt_enabled?pct(tk,T("f_tilt_lvl")):""}`:""}`;})}`)}
       ${/* Sichtschutz: eine Entitaet stellt den Rollladen auf eigene Position und
            Lamellen, solange sie an ist. Opt-in; ohne Entitaet keine Wirkung. */""}
-      ${ep("privacy_entity",T("f_privacy_entity"),["binary_sensor","light","switch","input_boolean"])}
+      ${this._adv(!!s.privacy_entity,html`${ep("privacy_entity",T("f_privacy_entity"),["binary_sensor","light","switch","input_boolean"])}
       <div class="hint">${T("f_privacy_hint")}</div>
       ${s.privacy_entity?html`
         <div class="field"><label><input type="checkbox" .checked=${!!s.privacy_invert}
@@ -5996,17 +6257,17 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_privacy_sun_hint")}</div></div>
         ${s.privacy_sun?html`
           ${keepRow("position_privacy_sun","keep_position_privacy_sun",T("f_privacy_sun_pos"),"f_keep_position","f_keep_position_on",pct)}
-          ${s.tilt_enabled?pct("tilt_privacy_sun",T("f_privacy_sun_tilt")):""}`:""}`:""}
+          ${s.tilt_enabled?pct("tilt_privacy_sun",T("f_privacy_sun_tilt")):""}`:""}`:""}`)}
       ${/* Zweite Oeffnungsstufe: morgens nur die Lamellen, spaeter ganz hoch. */""}
-      <div class="field"><label><input type="checkbox" .checked=${!!s.open_stage2}
+      ${this._adv(!!s.open_stage2,html`<div class="field"><label><input type="checkbox" .checked=${!!s.open_stage2}
         @change=${e=>{s.open_stage2=e.target.checked;if(e.target.checked&&!s.open_stage2_time)s.open_stage2_time="10:00";this.requestUpdate();}}> ${T("f_open2")}</label>
         <div class="hint">${T("f_open2_hint")}</div></div>
       ${s.open_stage2?html`${this._timeField(s,"open_stage2_time",T("f_open2_time"),"10:00")}
         ${ep("open_stage2_entity",T("f_open2_entity"),["binary_sensor","input_boolean","switch","light","person"])}
         ${keepRow("position_open_stage2","keep_position_open_stage2",T("f_open2_pos"),"f_keep_position","f_keep_position_on",pct)}
-        ${s.tilt_enabled?pct("tilt_open_stage2",T("f_open2_tilt")):""}`:""}
+        ${s.tilt_enabled?pct("tilt_open_stage2",T("f_open2_tilt")):""}`:""}`)}
       ${/* Referenzfahrt: in festem Abstand nachts auf "auf" und "zu" und zurueck. */""}
-      <div class="field"><label><input type="checkbox" .checked=${!!s.reference_run}
+      ${this._adv(!!s.reference_run,html`<div class="field"><label><input type="checkbox" .checked=${!!s.reference_run}
         @change=${e=>{s.reference_run=e.target.checked;if(e.target.checked){if(s.reference_run_days==null)s.reference_run_days=30;if(!s.reference_run_time)s.reference_run_time="03:00";}this.requestUpdate();}}> ${T("f_refrun")}</label>
         <div class="hint">${T("f_refrun_hint")}</div></div>
       ${s.reference_run?html`${pctRange("reference_run_days",T("f_refrun_days"),1,365,1," d")}
@@ -6021,19 +6282,19 @@ class ShutterPilotPanel extends PanelBase {
         <div class="hint">${T("f_refrun_day_hint")}</div>
         <div class="field"><label><input type="checkbox" .checked=${!!s.reference_run_full}
           @change=${e=>{s.reference_run_full=e.target.checked;this.requestUpdate();}}> ${T("f_refrun_full")}</label>
-          <div class="hint">${T("f_refrun_full_hint")}</div></div>`:""}
-      ${ep("position_sun_protect_entity",T("f_pos_sun_entity"),["input_number","number","sensor"])}
-      <div class="hint">${T("f_pos_sun_entity_hint")}</div>
-      <div class="field"><label><input type="checkbox" .checked=${s.position_closed_alt!==""&&s.position_closed_alt!=null}
+          <div class="hint">${T("f_refrun_full_hint")}</div></div>`:""}`)}
+      ${this._adv(!!s.position_sun_protect_entity,html`${ep("position_sun_protect_entity",T("f_pos_sun_entity"),["input_number","number","sensor"])}
+      <div class="hint">${T("f_pos_sun_entity_hint")}</div>`)}
+      ${this._adv(s.position_closed_alt!==""&&s.position_closed_alt!=null,html`<div class="field"><label><input type="checkbox" .checked=${s.position_closed_alt!==""&&s.position_closed_alt!=null}
         @change=${e=>{s.position_closed_alt=e.target.checked?50:"";this.requestUpdate();}}> ${T("f_pos_closed_alt")}</label>
         <div class="hint">${T("f_pos_closed_alt_hint")}</div></div>
-      ${s.position_closed_alt!==""&&s.position_closed_alt!=null?pct("position_closed_alt",T("f_pos_closed_alt_val")):""}
-      <div class="field"><label><input type="checkbox" .checked=${s.position_closed_frost!==""&&s.position_closed_frost!=null}
+      ${s.position_closed_alt!==""&&s.position_closed_alt!=null?pct("position_closed_alt",T("f_pos_closed_alt_val")):""}`)}
+      ${this._adv(s.position_closed_frost!==""&&s.position_closed_frost!=null,html`<div class="field"><label><input type="checkbox" .checked=${s.position_closed_frost!==""&&s.position_closed_frost!=null}
         @change=${e=>{s.position_closed_frost=e.target.checked?10:"";this.requestUpdate();}}> ${T("f_pos_closed_frost")}</label>
         <div class="hint">${T("f_pos_closed_frost_hint")}</div></div>
-      ${s.position_closed_frost!==""&&s.position_closed_frost!=null?pct("position_closed_frost",T("f_pos_closed_frost_val")):""}
+      ${s.position_closed_frost!==""&&s.position_closed_frost!=null?pct("position_closed_frost",T("f_pos_closed_frost_val")):""}`)}
 
-      `)}${this._sec("mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub",html`
+      `)}${this._xsec(s.shading_enabled===false||!!s.sun_geometry_override||!!s.shade_from||!!s.shade_to||Object.keys(s).some(k=>/^sun_cond_[a-d]_entity$/.test(k)&&!!s[k]),"mdi:sun-compass","sec_shutter_sun","sec_shutter_sun_sub",html`
       ${/* Ganz oben, vor allem anderen in diesem Block: steht der Haken aus,
            beschreiben die Felder darunter nichts mehr. Bewusst getrennt vom
            Automatik-Schalter am Rollladen – der haelt auch das morgendliche
@@ -6105,14 +6366,14 @@ class ShutterPilotPanel extends PanelBase {
            aussehen, und der eingestellte Wert kam nie zum Zug. */
         : html`${pct("position_when_window_tilted",T("f_pos_win_2state"))}
                <div class="hint">${T("f_pos_win_tilt_2state_hint")}</div>`}
-      <div class="field"><label><input type="checkbox" .checked=${s.window_react!==false} @change=${e=>{s.window_react=e.target.checked;this.requestUpdate();}}> ${T("f_window_react")}</label>
-        <div class="hint">${T("f_window_react_hint")}</div></div>
+      ${this._adv(s.window_react===false,html`<div class="field"><label><input type="checkbox" .checked=${s.window_react!==false} @change=${e=>{s.window_react=e.target.checked;this.requestUpdate();}}> ${T("f_window_react")}</label>
+        <div class="hint">${T("f_window_react_hint")}</div></div>`)}
       <div class="field"><label><input type="checkbox" .checked=${!!s.lock_protection} @change=${e=>{s.lock_protection=e.target.checked;this.requestUpdate();}}> ${T("f_lock")}</label></div>
       ${s.lock_protection?pct("min_position_when_open",T("f_min_pos")):""}
       <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close} @change=${e=>{s.drive_after_close=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after")}</label>
         <div class="hint">${T("f_drive_after_hint")}</div></div>
-      <div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close_up} @change=${e=>{s.drive_after_close_up=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after_up")}</label>
-        <div class="hint">${T("f_drive_after_up_hint")}</div></div>
+      ${this._adv(!!s.drive_after_close_up,html`<div class="field"><label><input type="checkbox" .checked=${!!s.drive_after_close_up} @change=${e=>{s.drive_after_close_up=e.target.checked;this.requestUpdate();}}> ${T("f_drive_after_up")}</label>
+        <div class="hint">${T("f_drive_after_up_hint")}</div></div>`)}
       ${/* Ohne diesen Haken passiert bei offenem Fenster gar nichts – auch
            nicht die Teilfahrt, die der Fensterkontakt gefahren haette. Genau
            so gemeldet: "im Schlafzimmer hat sich gar nichts bewegt". Er steht
@@ -6121,22 +6382,22 @@ class ShutterPilotPanel extends PanelBase {
         <div class="field"><label><input type="checkbox" .checked=${!!s.window_vent_while_open}
           @change=${e=>{s.window_vent_while_open=e.target.checked;this.requestUpdate();}}> ${T("f_vent_while_open")}</label>
           <div class="hint">${T("f_vent_while_open_hint")}</div></div>`:""}
-      ${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
-      <div class="hint">${T("f_win_debounce_hint")}</div>
-      ${pctRange("window_close_delay_minutes",T("f_win_close_delay"),0,120,1," min")}
-      <div class="hint">${T("f_win_close_delay_hint")}</div>
-      ${pctRange("window_keep_open_minutes",T("f_win_keep_open"),0,240,5," min")}
-      <div class="hint">${T("f_win_keep_open_hint")}</div>
-      <div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
+      ${this._adv(s.window_close_debounce!=null&&Number(s.window_close_debounce)!==5,html`${pctRange("window_close_debounce",T("f_win_debounce"),0,30,1," s")}
+      <div class="hint">${T("f_win_debounce_hint")}</div>`)}
+      ${this._adv(Number(s.window_close_delay_minutes)>0,html`${pctRange("window_close_delay_minutes",T("f_win_close_delay"),0,120,1," min")}
+      <div class="hint">${T("f_win_close_delay_hint")}</div>`)}
+      ${this._adv(Number(s.window_keep_open_minutes)>0,html`${pctRange("window_keep_open_minutes",T("f_win_keep_open"),0,240,5," min")}
+      <div class="hint">${T("f_win_keep_open_hint")}</div>`)}
+      ${this._adv(!!s.blind_drive,html`<div class="field"><label><input type="checkbox" .checked=${!!s.blind_drive}
         @change=${e=>{s.blind_drive=e.target.checked;this.requestUpdate();}}> ${T("f_blind_drive")}</label>
-        <div class="hint">${T("f_blind_drive_hint")}</div></div>
-      ${ep("automation_lock_entity",T("f_lock_entity"),["binary_sensor","switch","input_boolean"])}
+        <div class="hint">${T("f_blind_drive_hint")}</div></div>`)}
+      ${this._adv(!!s.automation_lock_entity,html`${ep("automation_lock_entity",T("f_lock_entity"),["binary_sensor","switch","input_boolean"])}
       <div class="hint">${T("f_lock_entity_hint")}</div>
       ${s.automation_lock_entity?html`<div class="field"><label><input type="checkbox" .checked=${s.lock_replay_restore!==false} @change=${e=>{s.lock_replay_restore=e.target.checked;this.requestUpdate();}}> ${T("f_lock_replay")}</label>
-        <div class="hint">${T("f_lock_replay_hint")}</div></div>`:""}
+        <div class="hint">${T("f_lock_replay_hint")}</div></div>`:""}`)}
       ${this._renderMyPosition(s,ep,pct)}
 
-      `)}${this._sec("mdi:blinds-horizontal","sec_slats","sec_slats_sub",html`
+      `)}${this._xsec(!!s.tilt_enabled||this._hasTilt(s.cover_entity_id),"mdi:blinds-horizontal","sec_slats","sec_slats_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_enabled} @change=${e=>{s.tilt_enabled=e.target.checked;this.requestUpdate();}}> ${T("f_tilt")}</label>
         <div class="hint">${this._supportsTilt(s.cover_entity_id)?T("f_tilt_hint"):T("f_tilt_unsupported")}</div></div>
       ${s.tilt_enabled?html`
@@ -6148,13 +6409,13 @@ class ShutterPilotPanel extends PanelBase {
           <div class="hint">${T("f_tilt_after_position_hint")}</div></div>
         <div class="field"><label><input type="checkbox" .checked=${!!s.tilt_hand_detect}
           @change=${e=>{s.tilt_hand_detect=e.target.checked;this.requestUpdate();}}> ${T("f_tilt_hand")}</label>
-          <div class="hint">${T("f_tilt_hand_hint")}</div></div>`:""}`)}${(s.tilt_enabled||s.storm_guard)?this._sec("mdi:weather-windy","sec_storm","sec_storm_sub",html`
+          <div class="hint">${T("f_tilt_hand_hint")}</div></div>`:""}`)}${(s.tilt_enabled||s.storm_guard)?this._xsec(!!s.storm_guard,"mdi:weather-windy","sec_storm","sec_storm_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.storm_guard}
         @change=${e=>{s.storm_guard=e.target.checked;if(e.target.checked){if(s.storm_position==null)s.storm_position=100;if(s.storm_tilt==null)s.storm_tilt=100;}this.requestUpdate();}}> ${T("f_storm_guard")}</label>
         <div class="hint">${T("f_storm_guard_hint")}</div></div>
       ${s.storm_guard?html`${pct("storm_position",T("f_storm_position"))}${pct("storm_tilt",T("f_storm_tilt"))}
         ${this._renderGuardSlot(s,"rwind",ep,pctRange,true)}`:""}`):""}
-      ${this._sec("mdi:snowflake-alert","sec_frostlock","sec_frostlock_sub",html`
+      ${this._xsec(!!s.frost_lock,"mdi:snowflake-alert","sec_frostlock","sec_frostlock_sub",html`
       <div class="field"><label><input type="checkbox" .checked=${!!s.frost_lock} @change=${e=>{s.frost_lock=e.target.checked;if(!e.target.checked){s.frost_lock_position="";s.frost_lock_tilt="";}this.requestUpdate();}}> ${T("f_frost_lock")}</label>
         <div class="hint">${T("f_frost_lock_hint")}</div>
         ${s.frost_lock&&!(d.settings||{}).sun_cond_cold_entity?html`<div class="hint warn">⚠️ ${T("f_frost_lock_no_sensor")}</div>`:""}</div>
@@ -6167,12 +6428,19 @@ class ShutterPilotPanel extends PanelBase {
             @change=${e=>{s.frost_lock_tilt=e.target.checked?100:"";this.requestUpdate();}}> ${T("f_frost_lock_tilt_on")}</label></div>
           ${s.frost_lock_tilt!==""&&s.frost_lock_tilt!=null?pct("frost_lock_tilt",T("f_frost_lock_tilt")):""}`:""}`:""}`)}
 
+      ${this._modeHint()}
       <div class="form-actions">
         <button class="btn save" @click=${()=>this._saveShutter()}><ha-icon icon="mdi:content-save"></ha-icon>${T("btn_save")}</button>
         <button class="btn cancel" @click=${()=>{this._editShutter=null;this.requestUpdate();}}>${T("btn_cancel")}</button></div></div>`;
   }
 
   /* ─── Actions ─── */
+  /* Streng, anders als _supportsTilt(): nur wenn der Antrieb Lamellen wirklich
+     meldet. Daran haengt, ob die einfache Ansicht den Abschnitt zeigt. */
+  _hasTilt(entityId){
+    const st=entityId&&this.hass?.states?.[entityId];
+    return !!st&&!!(Number(st.attributes?.supported_features||0)&128);
+  }
   _supportsTilt(entityId){
     // CoverEntityFeature.SET_TILT_POSITION === 128
     const st=entityId&&this.hass?.states?.[entityId];
@@ -6375,7 +6643,7 @@ class ShutterPilotPanel extends PanelBase {
   }
   async _saveArea(){
     const a={...this._editArea};delete a._isNew;delete a._index;
-    if(!a.id){a.id=a.name.toLowerCase().replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/[ß]/g,"ss").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")||"area";}
+    if(!a.id){a.id=this._areaIdFromName(a.name);}
     try{await this.hass.callWS({type:"shutter_pilot/save_area",area:a});this._editArea=null;await this._load();}catch(e){console.warn(e);alert("Error: "+e.message);}
   }
   async _deleteArea(id){

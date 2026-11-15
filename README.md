@@ -95,6 +95,35 @@ store** – adding a custom repository is no longer needed.
 
 > **Note:** The panel is available to every user in the sidebar, but **only an administrator can configure it**. Without administrator rights the panel shows the dashboard with the control buttons (up, down, stop, sun protection, ventilate); the tabs for areas, shutters and settings as well as the master and auto switches are hidden. Every write command is checked server-side on top of that.
 
+### Guided setup
+
+As long as no shutter has been set up, the dashboard shows three steps instead of an empty page:
+
+1. Pick or create an **area** and choose what drives it (time, brightness or sun position)
+2. Enter the **times**, or the sensor and its thresholds
+3. Tick the **shutters** from Home Assistant
+
+"Set up" stores everything in one go. "Skip" leads to the normal dashboard, which then carries a **Guided setup** button for as long as there is no shutter.
+
+### Simple view and expert view
+
+The dashboard (the "whole house" block) and the top of the settings carry the switch **View: Simple / Expert**.
+
+| | Simple | Expert |
+| --- | --- | --- |
+| Area | name, mode, schedule (time / brightness / sun position, weekdays and weekend) | everything |
+| Shutter | entity, areas, positions open / closed / sun protection, window contact with lock-out protection and catch-up | everything |
+| Settings | export | everything |
+| Awnings and roof windows tabs | only if something is already set up there | always |
+
+- The switch changes **the display only**. No value is cleared, no automation behaves differently, and the integration does not reload when you switch.
+- **Whatever you already use stays visible** – a section or field that differs from its default is shown in the simple view as well (sections are tagged "Expert"). Slats appear on their own when the cover reports them.
+- The end of every form says how many settings are hidden, with a "Show all" button.
+- New installs start in the simple view. An install that already has shutters when it is updated stays in the expert view.
+- The view applies to the whole install (phone and desktop show the same) and is named in the export.
+
+The remaining chapters of this guide describe the expert view.
+
 ## Configuration
 
 All configuration is done through the **Shutter Pilot sidebar panel**:

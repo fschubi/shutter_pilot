@@ -35,6 +35,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    UI_MODE_SIMPLE,
     CONF_DRIVE_AFTER_CLOSE,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_TILTED_STATE,
@@ -98,6 +99,7 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    effective_ui_mode,
     rest_role,
     awning_dusk_condition_met,
     has_guard,
@@ -1281,6 +1283,16 @@ async def async_build_export(
         f"Azimut {'–' if azim is None else f'{azim:.1f}°'}",
         "",
         f"System aktiv: {'ja' if is_system_enabled(hass, entry) else '**nein**'}",
+        "",
+        # Im einfachen Modus sieht der Nutzer nur einen Teil der Felder – wer
+        # im Forum antwortet, muss wissen, ob "das Feld gibt es bei mir nicht"
+        # daran liegt.
+        "Panel-Modus: "
+        + (
+            "einfach (Experten-Felder ausgeblendet, soweit nicht benutzt)"
+            if effective_ui_mode(entry.options) == UI_MODE_SIMPLE
+            else "Experte"
+        ),
         "",
     ]
 

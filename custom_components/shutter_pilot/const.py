@@ -599,6 +599,16 @@ CONF_AREA_SEASON_TO = "season_to"
 CONF_AREA_SHADE_FROM = "shade_from"
 CONF_AREA_SHADE_TO = "shade_to"
 
+# How much of the panel is shown. Purely a display setting: nothing in the
+# backend reads it, no automation behaves differently, and switching never
+# clears a value. It lives in the options rather than in the browser so phone
+# and desktop show the same thing – and so the export can say which fields the
+# user was looking at. A missing key is an install from before the setting
+# existed; see helpers.effective_ui_mode().
+CONF_UI_MODE = "ui_mode"
+UI_MODE_SIMPLE = "simple"
+UI_MODE_EXPERT = "expert"
+
 # Global weather entity used to fetch today's forecast.
 CONF_WEATHER_ENTITY = "weather_entity"
 

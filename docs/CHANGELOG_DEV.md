@@ -4,6 +4,23 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-04 – 2.37.0: Fenster zu kurz vor der Hochfahrt (Horst, simon42 #233)
+
+Horst lüftet das Bad vor Sonnenaufgang: Fenster auf → Rollladen hoch, Fenster zu →
+Rollladen zurück auf zu, obwohl die Hochfahrt Minuten später kommt. Neu je Rollladen
+`window_keep_open_minutes` (0–240, Vorgabe 0 = aus). `window_trigger.
+opening_follows_soon()` fragt `get_next_action()` des **Up-Bereichs**: nächster
+Termin ist eine Hochfahrt innerhalb der Minuten **und** `automated_up_blocked()` ist
+None (sonst bliebe er den ganzen Tag offen). Helligkeitsmodus zählt nie (kein fester
+Zeitpunkt). Gespart wird nur eine Rückfahrt *nach unten*; der Zyklus (`trigger_actions`/
+`trigger_heights`) wird trotzdem beendet. Der `drive_after_close`-Zweig bleibt
+unberührt. Panel: Regler 0–240/5, i18n 2 Schlüssel ×11 (je 523). **Verifiziert:**
+`pytest` 1043 grün (7 neue, `tests/test_window_keep_open.py`); Gegenprobe: ohne die
+Prüfung fällt der Kernfall. Nicht im echten Home Assistant geprüft.
+Außerdem Forum-Antwort an eurofinder (#234): Frostschutz ändert nur die Schließposition
+und stoppt keine Fahrt – „nicht fahren bei Frost“ geht über eine Zusatzbedingung
+mit Hysterese oder die Sperr-Entität (Schwellwert-Helfer).
+
 ### 2026-11-03 – 2.36.0: Beschattungspause nach Handfahrt, Dashboard-Zeilen
 
 Claus (#229): Beschattung soll nach einer Handfahrt (Höhe oder Lamellen) pausieren,

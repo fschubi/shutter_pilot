@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1080 Tests)
+tests/               pytest-Suite (1102 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -263,10 +263,15 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
   **Gruppenknopf = Bereich handelt** (Rollladenschalter gilt), **Zeilenknopf und
   Dienste = von Hand** (gilt nicht – sonst ist ein reparierter Antrieb nicht
   prüfbar).
+- **Einfache / Experten-Ansicht** (2.40.0): reine Anzeige. Jeder Abschnitt steht in
+  `BASIC_SECS`, `EXPERT_SECS` oder `UNFILTERED_SECS`; Experten-Abschnitte über `_xsec(used,…)`,
+  Experten-Felder über `_adv(used, tpl)`. `used` hält sichtbar, was vom Standard abweicht.
+  Ein neues Feld ohne Einstufung steht in beiden Ansichten.
+- **Geführter Einstieg**: ersetzt das Dashboard, solange kein Rollladen angelegt ist.
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.23.0: je 446 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.40.0: je 575 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -276,6 +281,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 | `shutter_pilot/get_status` | alle (lesend) |
 | `save_area`, `delete_area`, `save_shutter`, `delete_shutter` | **Admin** |
 | `save_settings`, `set_master_enabled`, `set_auto_mode`, `set_shutter_automation`, `set_sun_protect` | **Admin** |
+| `set_ui_mode` (Ansicht, ohne Neuladen), `quick_setup` (Bereich + Rollläden in einem Zug) | **Admin** |
 
 Alle ändernden Befehle tragen `@websocket_api.require_admin` (außen, darunter
 `websocket_command` – Reihenfolge wie in HA Core). Kommt ein neuer schreibender
@@ -295,7 +301,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1080 Tests, ~40 s
+.venv/bin/pytest            # 1102 Tests, ~40 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -324,12 +330,40 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.39.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.40.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-15 – 2.40.0: Einfache Ansicht, Experten-Ansicht, geführter Einstieg
+
+Wunsch von Schubi nach dem Urlaub: neue Nutzer sehen zu viel. **Der Modus blendet nur aus** –
+kein Backend-Verhalten, kein gelöschter Wert. `CONF_UI_MODE` (`simple`/`expert`) in den Optionen,
+nicht im Browser (Handy = PC, steht im Export). Ohne Schlüssel entscheidet
+`helpers.effective_ui_mode()`: Rollläden vorhanden → Experte, sonst einfach; `DEFAULT_OPTIONS`
+setzt `simple`. `save_shutter` und `quick_setup` schreiben den Wert fest, sonst kippt er mit dem
+ersten Rollladen. Eigener Befehl `set_ui_mode` **ohne Neuladen** (save_settings lädt neu und
+bricht Wartezeiten ab; es überspringt den Schlüssel deshalb). Panel: `_expert()`, `_xsec(used,…)`
+für Abschnitte, `_adv(used, tpl)` für Felder, `_modeHint()` am Formularende (zählt über
+`__hidden`), Listen `BASIC_SECS`/`EXPERT_SECS`/`UNFILTERED_SECS`. **`used` = weicht vom Standard
+ab → bleibt sichtbar** (Abschnitt mit Marke „Experte"). Lamellen-Abschnitt zusätzlich, wenn der
+Antrieb Bit 128 meldet (`_hasTilt`, streng). Markisen-/Dachfensterformulare ungefiltert, ihre
+Reiter in „einfach" nur bei vorhandenen Einträgen. Beschattung liegt komplett in „Experte"
+(Schubis Vorgabe: einfach = Zeit, Licht, Sonnenstand). **Geführter Einstieg** (`_renderWizard`):
+aktiv, solange kein Rollladen existiert (Admin, nicht übersprungen, nicht `loading`); drei
+Schritte, speichert über `quick_setup` in einem Schreibvorgang – `save_area` + n×`save_shutter`
+scheitern am Neuladen dazwischen (`_find_entry_data` liefert dann nichts). Bestehender Bereich
+bekommt nur Name, Modus und die Zeiten des Modus. `get_status` meldet im Neulade-Loch
+`loading: true`, sonst blitzt der Einstieg bei jedem Speichern auf. `_newArea()`/`_newShutter(d)`
+aus den Knöpfen herausgezogen. i18n 26 Schlüssel ×11 (je 575). Tests: `tests/test_ui_mode.py`
+(21), `tests/panel/ui_mode.mjs` (69 Prüfungen), Vorlage nach `tests/panel/fixture.mjs`.
+**Verifiziert:** `pytest` 1102 grün; Gegenproben: sechs gezielte Brüche im Panel und ohne das
+Festschreiben in `save_shutter` fällt je mindestens ein Test. Im Browser mit echtem Lit durchgeklickt (Wegwerf-Seite mit
+Stub-`hass`, ohne HA-Theme): Einstieg bis `quick_setup`, einfache Formulare, Marke, Hinweis,
+Umschalten. **Nicht geprüft:** im echten Home Assistant, mobil, HA-Theme (hell/dunkel).
+**Neues Feld künftig:** in `_adv`/`_xsec` einstufen, sonst steht es in beiden Ansichten.
 
 ### 2026-11-15 – 2.39.0: Forum nach dem Urlaub (#249–#253)
 
@@ -414,24 +448,6 @@ Dashboard kennen die Sperre nicht (wie bei Windschutz und Sperr-Entität: Handfa
 **Verifiziert:** `pytest` grün (12 neue, `tests/test_frost_lock.py`; Gegenproben: ohne
 Handfahrt-Prüfung und ohne `fail_open` fallen je Tests); Panel-Render mit neuen Abschnitten.
 Nicht im echten Home Assistant geprüft.
-
-### 2026-11-04 – 2.37.0: Fenster zu kurz vor der Hochfahrt (Horst, simon42 #233)
-
-Horst lüftet das Bad vor Sonnenaufgang: Fenster auf → Rollladen hoch, Fenster zu →
-Rollladen zurück auf zu, obwohl die Hochfahrt Minuten später kommt. Neu je Rollladen
-`window_keep_open_minutes` (0–240, Vorgabe 0 = aus). `window_trigger.
-opening_follows_soon()` fragt `get_next_action()` des **Up-Bereichs**: nächster
-Termin ist eine Hochfahrt innerhalb der Minuten **und** `automated_up_blocked()` ist
-None (sonst bliebe er den ganzen Tag offen). Helligkeitsmodus zählt nie (kein fester
-Zeitpunkt). Gespart wird nur eine Rückfahrt *nach unten*; der Zyklus (`trigger_actions`/
-`trigger_heights`) wird trotzdem beendet. Der `drive_after_close`-Zweig bleibt
-unberührt. Panel: Regler 0–240/5, i18n 2 Schlüssel ×11 (je 523). **Verifiziert:**
-`pytest` 1043 grün (7 neue, `tests/test_window_keep_open.py`); Gegenprobe: ohne die
-Prüfung fällt der Kernfall. Nicht im echten Home Assistant geprüft.
-Außerdem Forum-Antwort an eurofinder (#234): Frostschutz ändert nur die Schließposition
-und stoppt keine Fahrt – „nicht fahren bei Frost“ geht über eine Zusatzbedingung
-mit Hysterese oder die Sperr-Entität (Schwellwert-Helfer).
-
 
 ## graphify
 

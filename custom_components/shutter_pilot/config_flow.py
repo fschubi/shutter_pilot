@@ -59,6 +59,8 @@ from .const import (
     CONF_AREA_WORKDAY_SENSOR,
     CONF_AREAS,
     CONF_SHUTTERS,
+    CONF_UI_MODE,
+    UI_MODE_SIMPLE,
     DEFAULT_AREA_AZIMUTH_MAX,
     DEFAULT_AREA_AZIMUTH_MIN,
     DEFAULT_AREA_BRIGHTNESS_DOWN_THRESHOLD,
@@ -152,6 +154,8 @@ DEFAULT_OPTIONS = {
         default_area("children", "Kinderbereich", AREA_MODE_TIME),
     ],
     CONF_SHUTTERS: [],
+    # A fresh install starts with the short panel; see effective_ui_mode().
+    CONF_UI_MODE: UI_MODE_SIMPLE,
 }
 
 # Backwards compatible alias – older code imported the private name.

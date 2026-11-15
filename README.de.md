@@ -96,6 +96,35 @@ werden.
 
 > **Hinweis:** Das Panel steht allen Benutzern in der Seitenleiste zur Verfügung, **konfigurieren kann es aber nur ein Administrator**. Ohne Administratorrechte zeigt das Panel das Dashboard mit den Bedienknöpfen (hoch, runter, stopp, Sonnenschutz, lüften); die Tabs für Bereiche, Rollläden und Einstellungen sowie der Hauptschalter und die Automatik-Schalter sind ausgeblendet. Alle ändernden Befehle werden zusätzlich serverseitig geprüft.
 
+### Geführter Einstieg
+
+Solange noch kein Rollladen angelegt ist, zeigt das Dashboard statt einer leeren Seite einen Ablauf in drei Schritten:
+
+1. **Bereich** wählen oder neu anlegen und festlegen, wonach gefahren wird (Zeit, Helligkeit oder Sonnenstand)
+2. **Zeiten** bzw. Sensor und Schwellen eintragen
+3. **Rollläden** aus Home Assistant anhaken
+
+„Einrichten" speichert alles in einem Zug. „Überspringen" führt zum normalen Dashboard; dort steht dann der Knopf **Geführte Einrichtung**, solange es keinen Rollladen gibt.
+
+### Einfache Ansicht und Experten-Ansicht
+
+Im Dashboard (Block „Ganzes Haus") und oben in den Einstellungen steht der Schalter **Ansicht: Einfach / Experte**.
+
+| | Einfach | Experte |
+| --- | --- | --- |
+| Bereich | Name, Modus, Zeitplan (Zeit / Helligkeit / Sonnenstand, Woche und Wochenende) | alles |
+| Rollladen | Entität, Bereiche, Positionen offen / zu / Sonnenschutz, Fensterkontakt mit Aussperrschutz und Nachholen | alles |
+| Einstellungen | Export | alles |
+| Reiter Markisen, Dachfenster | nur, wenn dort schon etwas angelegt ist | immer |
+
+- Der Schalter ändert **nur die Anzeige**. Kein Wert wird gelöscht, keine Automatik verhält sich anders, und die Integration lädt beim Umschalten nicht neu.
+- **Was du schon benutzt, bleibt sichtbar** – ein Abschnitt oder Feld, das vom Standard abweicht, steht auch in der einfachen Ansicht (Abschnitte mit der Markierung „Experte"). Lamellen erscheinen automatisch, wenn der Antrieb sie meldet.
+- Am Ende jedes Formulars steht, wie viele Einstellungen ausgeblendet sind, mit einem Knopf „Alle anzeigen".
+- Neue Installationen starten in der einfachen Ansicht. Wer beim Update schon Rollläden eingerichtet hat, bleibt in der Experten-Ansicht.
+- Die Ansicht gilt für die ganze Installation (Handy und PC zeigen dasselbe) und steht im Export.
+
+Die übrigen Kapitel dieser Anleitung beschreiben die Experten-Ansicht.
+
 ## Konfiguration
 
 Die gesamte Konfiguration erfolgt über das **Shutter Pilot Sidebar-Panel**:

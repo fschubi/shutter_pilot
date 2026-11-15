@@ -13,6 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_UI_MODE,
+    UI_MODE_EXPERT,
+    UI_MODE_SIMPLE,
     DOMAIN,
     AREA_MODE_NONE,
     AWNING_DUSK_SLOT,
@@ -2774,3 +2777,21 @@ async def _set_cover_tilt(
         _LOGGER.info("%s: %s slats -> %d%%", reason, entity_id, int(tilt_position))
     except Exception as e:  # pragma: no cover - defensive
         _LOGGER.debug("Tilt for %s failed: %s", entity_id, e)
+
+
+def effective_ui_mode(options: dict[str, Any] | None) -> str:
+    """The panel mode that applies, also for installs without the key.
+
+    An install that already drives covers has been set up in the full panel,
+    and hiding half of it after an update would look like lost settings – so
+    it stays in expert mode. Only an install without a single cover starts
+    simple. Whoever adds the first cover gets the answer written down (see
+    save_shutter), otherwise the panel would flip to expert the moment the
+    first shutter is saved.
+    """
+    opts = options or {}
+    mode = opts.get(CONF_UI_MODE)
+    if mode in (UI_MODE_SIMPLE, UI_MODE_EXPERT):
+        return mode
+    shutters = opts.get(CONF_SHUTTERS)
+    return UI_MODE_EXPERT if isinstance(shutters, list) and shutters else UI_MODE_SIMPLE

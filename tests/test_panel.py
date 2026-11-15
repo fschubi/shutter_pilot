@@ -259,3 +259,13 @@ def test_slat_buttons_on_the_dashboard_row() -> None:
     result = _run("tilt_buttons.mjs")
     assert result.returncode == 0, "tilt_buttons:\n" + result.stdout + result.stderr
     assert "FAIL" not in result.stdout, result.stdout
+
+
+def test_simple_and_expert_view_and_the_guided_setup() -> None:
+    """Der Modus blendet nur aus: jeder Abschnitt ist eingestuft, ein leeres
+    Formular zeigt in der einfachen Ansicht nur das Noetige, Benutztes bleibt
+    sichtbar, und kein Wert wird beim Rendern angefasst. Dazu der gefuehrte
+    Einstieg, der in einem einzigen Aufruf speichert."""
+    result = _run("ui_mode.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout
