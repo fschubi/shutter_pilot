@@ -1510,6 +1510,7 @@ async def async_build_export(
         f"| gilt als unten | {_fmt(sorted(data.get('covers_driven_down', set())))} |",
         f"| wartende Nachhol-Fahrten | {_fmt(sorted(data.get('drive_after_close_pending', {})))} |",
         f"| Helligkeits-Phase seit | {_ages(data.get('_b_cond_since'))} |",
+        f"| vorgemerkte Hochfahrt (Helligkeit) | {_fmt(sorted(data.get('_pending_up', {})))} |",
         f"| zuletzt von Hand bewegt | {_ages(data.get('_hand_moved_at'))} |",
         f"| Minuten-Ticker läuft | {_fmt(bool(data.get('_minute_ticker_unsub')))} |",
         "| zuletzt geladen | "

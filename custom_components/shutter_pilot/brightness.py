@@ -269,6 +269,29 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
     # Episoden). Geschrieben von note_manual_position().
     hand_moved: dict[str, float] = data.setdefault("_hand_moved_at", {})
 
+    def _forget_pending_up(shutter: dict) -> None:
+        """Die Abendfahrt beendet die Vormerkung "heute noch hochfahren".
+
+        Die Vormerkung traegt eine Hochfahrt ueber das Ende des Hoch-Fensters
+        hinaus: morgens im Fenster noch dunkel, hell wird es erst danach. Ohne
+        Ende galt sie bis Mitternacht - und nach der Abendfahrt oeffnete die
+        erste helle Sensormeldung den Rollladen wieder, Stunden nach dem
+        Hoch-Fenster (Claus, #249: Sensor 0 lx bei Licht an, 1000 lx bei Licht
+        aus). Sie haengt am Hoch-Bereich des Rollladens, der nicht der
+        Runter-Bereich sein muss.
+        """
+        pending_up.pop(str(shutter.get(CONF_AREA_UP_ID) or ""), None)
+
+    def _up_outstanding(area_id: str) -> bool:
+        """True, solange ein Rollladen dieses Hoch-Bereichs noch nicht oben ist."""
+        return any(
+            (s.get(CONF_COVER_ENTITY_ID) or "") not in covers_driven_up
+            for s in only_shutters(
+                [s for s in shutters if str(s.get(CONF_AREA_UP_ID) or "") == area_id]
+            )
+            if s.get(CONF_COVER_ENTITY_ID)
+        )
+
     def _run_down(
         area: dict, area_id: str, reason: str, episode: float | None = None
     ) -> bool:
@@ -329,6 +352,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 # Merker wuerde hier jede Minute neu geschrieben.
                 covers_driven_down.add(cover_entity)
                 covers_driven_up.discard(cover_entity)
+                _forget_pending_up(shutter)
                 # Optional: schon so weit fahren, wie das offene Fenster es
                 # zulaesst. Die volle Fahrt bleibt vorgemerkt.
                 vent_pos = get_deferred_close_position(hass, shutter)
@@ -355,6 +379,7 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
             idx += 1
             covers_driven_down.add(cover_entity)
             covers_driven_up.discard(cover_entity)
+            _forget_pending_up(shutter)
             moved = True
 
         if moved:
@@ -548,11 +573,18 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                 area, area_id, "Brightness down",
                 episode=cond_since.get(f"down_{area_id}"),
             )
+            # Auch wenn nichts zu fahren war (alles gilt schon als unten): der
+            # Abend hat begonnen, eine Vormerkung von heute frueh ist erledigt.
+            pending_up.pop(area_id, None)
 
         is_pending = pending_up.get(area_id) == today
         within_up = _area_window(area, now, "up", hass)
 
-        if within_up and lux <= up_threshold:
+        # Vorgemerkt wird nur, solange noch etwas hochzufahren ist. Ein Sensor,
+        # der nach der Morgenfahrt noch einmal unter die Schwelle faellt (Licht
+        # an, Gewitter), hinterliess sonst eine Vormerkung, die niemand mehr
+        # einloest - bis sie abends ausserhalb des Fensters hochfaehrt.
+        if within_up and lux <= up_threshold and _up_outstanding(area_id):
             pending_up[area_id] = today
             _LOGGER.info(
                 "Brightness: area %s marked pending (lux %.1f <= %d)",

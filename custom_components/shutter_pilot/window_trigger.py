@@ -16,6 +16,7 @@ from .const import (
     CONF_SHUTTERS,
     CONF_COVER_ENTITY_ID,
     CONF_WINDOW_CLOSE_DEBOUNCE,
+    CONF_WINDOW_CLOSE_DELAY_MINUTES,
     CONF_WINDOW_KEEP_OPEN_MINUTES,
     CONF_WINDOW_REACT,
     DEFAULT_WINDOW_REACT,
@@ -29,6 +30,7 @@ from .const import (
     CONF_POSITION_OPEN,
     DEFAULT_WINDOW_CLOSE_DEBOUNCE,
     MAX_WINDOW_CLOSE_DEBOUNCE,
+    MAX_WINDOW_CLOSE_DELAY_MINUTES,
     MAX_WINDOW_KEEP_OPEN_MINUTES,
     CONF_AREAS,
     CONF_AREA_ID,
@@ -99,6 +101,16 @@ def _debounce_seconds(shutter: dict) -> int:
     except (TypeError, ValueError):
         return DEFAULT_WINDOW_CLOSE_DEBOUNCE
     return max(0, min(MAX_WINDOW_CLOSE_DEBOUNCE, value))
+
+
+def _close_delay_seconds(shutter: dict) -> int:
+    """Debounce plus the configured "I'll be right back" wait, in seconds."""
+    try:
+        minutes = int(shutter.get(CONF_WINDOW_CLOSE_DELAY_MINUTES, 0) or 0)
+    except (TypeError, ValueError):
+        minutes = 0
+    minutes = max(0, min(MAX_WINDOW_CLOSE_DELAY_MINUTES, minutes))
+    return _debounce_seconds(shutter) + minutes * 60
 
 
 def _keep_open_minutes(shutter: dict) -> int:
@@ -480,7 +492,7 @@ async def setup_window_triggers(hass: HomeAssistant, entry: ConfigEntry) -> None
                 _schedule_close(shutter, cover_entity, pos_closed)
 
     def _schedule_close(shutter: dict, cover_entity: str, pos_closed: Any) -> None:
-        delay = _debounce_seconds(shutter)
+        delay = _close_delay_seconds(shutter)
         if delay <= 0:
             # No task, no await: exactly the order of events we had
             # before the debounce existed.

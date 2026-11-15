@@ -4,6 +4,29 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-03 – 2.36.0: Beschattungspause nach Handfahrt, Dashboard-Zeilen
+
+Claus (#229): Beschattung soll nach einer Handfahrt (Höhe oder Lamellen) pausieren,
+bis die Sonne das Fenster verlässt, optional mit Höchstdauer. Bereichshaken
+`shade_pause_on_hand` + `shade_pause_max` (Minuten, 0 = ohne). In
+`elevation._evaluate` über `_hand_pause_holds()`: Phase = `protect_on` und
+Geometrie und Jahreszeit und Zeitfenster (**ohne** Bedingungen – eine Wolke
+beendet die Pause nicht). Start der Phase merkt `_shade_phase[cover]`; eine
+Handfahrt (`_hand_moved_at`) *danach* setzt `_shade_paused`, `_shade_pause_seen`
+verhindert, dass ein abgelaufener Stempel erneut pausiert; eine weitere Handfahrt
+startet die Uhr neu. Pausiert wird ein Rollladen komplett (`continue`: weder
+beschatten noch nachfahren noch freigeben); endet die Phase, läuft der normale
+Freigabepfad. Handfahrten *vor* der Phase zählen nicht. **Nicht abgedeckt:** nach
+einem Neustart beginnt die Phase neu, ältere Handfahrten werden ignoriert.
+Dashboard: Zeile `flex-wrap`, Name mind. 130 px, Lamellen-Knöpfe mit −/+,
+`_tiltReading()` hängt „· L 60 %“ an die Höhe. i18n 3 Schlüssel ×11.
+Claus' Frage, ob die zweite Öffnungsstufe auch noch nach der Uhrzeit feuert, wenn
+die Bedingung erst später zutrifft: ja, jede Minute ab der Uhrzeit, einmal am
+Tag; steht die Beschattung gerade, wartet sie bis zur Freigabe.
+**Verifiziert:** `pytest` 1036 grün (7 neue, `tests/test_shade_pause.py`);
+Gegenproben: ohne Haken fallen 5, ohne Höchstdauer 1, ohne Phasenende 1. Nicht
+im Browser und nicht im echten Home Assistant geprüft.
+
 ### 2026-11-03 – 2.35.0: zweite Öffnungsstufe
 
 Claus (#225): Diele morgens nur Lamellen, ab 10 Uhr bei Anwesenheit und schönem

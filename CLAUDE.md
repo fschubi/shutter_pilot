@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1063 Tests)
+tests/               pytest-Suite (1080 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -295,7 +295,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1063 Tests, ~21 s
+.venv/bin/pytest            # 1080 Tests, ~40 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -324,12 +324,37 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.38.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.39.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-15 – 2.39.0: Forum nach dem Urlaub (#249–#253)
+
+Fünf neue Beiträge seit dem 06.11., zwei davon mit Arbeit. **Claus (#249):** Diele im
+Helligkeitsmodus, Hoch-Fenster 05–12 Uhr, Sensor ist ein Template (0 lx bei Licht an). Um 15:35
+Abendfahrt, um 15:40 (Licht aus, 1000 lx) wieder hoch. Ursache `_pending_up` in `brightness.py`:
+die Vormerkung „im Fenster dunkel, heute noch hochfahren" entstand auch *nach* der Morgenfahrt,
+eingelöst wird sie nur von einer Fahrt, die es dann nicht mehr gibt (`_run_up` liefert False,
+alles ist oben) – sie blieb bis Mitternacht und galt abends als „im Fenster". Fix: vorgemerkt
+wird nur, solange `_up_outstanding(area_id)` (ein Rollladen des Hoch-Bereichs nicht in
+`covers_driven_up`); die Abendfahrt beendet sie (`_forget_pending_up` je gefahrenem Rollladen
+über dessen **Hoch**-Bereich, dazu der Bereich selbst, sobald die Runter-Bedingung hält – auch
+wenn nichts zu fahren war). Der Export war nach einem Neuladen gezogen, die Vormerkung selbst
+ist darin nicht belegt; der Ablauf ist aus den Einstellungen nachgestellt. Export zeigt sie
+jetzt unter „Laufender Zustand". **heinzel (#252):** will im Winter kurz aus der Tür, zieht sie
+zu und ist nach 30 s (Obergrenze der Entprellung) ausgesperrt. Neu `window_close_delay_minutes`
+(0–120, Vorgabe 0), in `_close_delay_seconds()` auf die Entprellung addiert – derselbe Task,
+dasselbe Abbrechen beim Wiederöffnen. Bewusst ein eigenes Feld statt einer höheren Obergrenze:
+die Entprellung fragt „war das wirklich zu?", das hier „ich komme gleich wieder". bjoerg (#253)
+empfahl den Griffsensor, das bleibt die sauberere Lösung. **Nicht abgedeckt:** Neustart/Neuladen
+bricht die Wartezeit ab, der Zyklus bleibt dann „triggered" bei geschlossenem Fenster.
+Frankchief (#250): nur Frage (zwei Himmelsrichtungen → Geometrie am Rollladen überschreiben).
+Panel: Regler, i18n 2 Schlüssel ×11 (je 549). **Verifiziert:** `pytest` 1080 grün (6 + 11 neue);
+Gegenprobe: ohne den Fix fallen 4 der 6 Vormerkungs-Tests. Nicht im Browser, nicht im echten
+Home Assistant geprüft. **Geplant, nicht gebaut:** Einfach-/Expertenmodus im Panel.
 
 ### 2026-11-06 – 2.38.2: Frostsperre nachgeprüft (eurofinder, simon42 #244)
 
@@ -406,29 +431,6 @@ Prüfung fällt der Kernfall. Nicht im echten Home Assistant geprüft.
 Außerdem Forum-Antwort an eurofinder (#234): Frostschutz ändert nur die Schließposition
 und stoppt keine Fahrt – „nicht fahren bei Frost“ geht über eine Zusatzbedingung
 mit Hysterese oder die Sperr-Entität (Schwellwert-Helfer).
-
-### 2026-11-03 – 2.36.0: Beschattungspause nach Handfahrt, Dashboard-Zeilen
-
-Claus (#229): Beschattung soll nach einer Handfahrt (Höhe oder Lamellen) pausieren,
-bis die Sonne das Fenster verlässt, optional mit Höchstdauer. Bereichshaken
-`shade_pause_on_hand` + `shade_pause_max` (Minuten, 0 = ohne). In
-`elevation._evaluate` über `_hand_pause_holds()`: Phase = `protect_on` und
-Geometrie und Jahreszeit und Zeitfenster (**ohne** Bedingungen – eine Wolke
-beendet die Pause nicht). Start der Phase merkt `_shade_phase[cover]`; eine
-Handfahrt (`_hand_moved_at`) *danach* setzt `_shade_paused`, `_shade_pause_seen`
-verhindert, dass ein abgelaufener Stempel erneut pausiert; eine weitere Handfahrt
-startet die Uhr neu. Pausiert wird ein Rollladen komplett (`continue`: weder
-beschatten noch nachfahren noch freigeben); endet die Phase, läuft der normale
-Freigabepfad. Handfahrten *vor* der Phase zählen nicht. **Nicht abgedeckt:** nach
-einem Neustart beginnt die Phase neu, ältere Handfahrten werden ignoriert.
-Dashboard: Zeile `flex-wrap`, Name mind. 130 px, Lamellen-Knöpfe mit −/+,
-`_tiltReading()` hängt „· L 60 %“ an die Höhe. i18n 3 Schlüssel ×11.
-Claus' Frage, ob die zweite Öffnungsstufe auch noch nach der Uhrzeit feuert, wenn
-die Bedingung erst später zutrifft: ja, jede Minute ab der Uhrzeit, einmal am
-Tag; steht die Beschattung gerade, wartet sie bis zur Freigabe.
-**Verifiziert:** `pytest` 1036 grün (7 neue, `tests/test_shade_pause.py`);
-Gegenproben: ohne Haken fallen 5, ohne Höchstdauer 1, ohne Phasenende 1. Nicht
-im Browser und nicht im echten Home Assistant geprüft.
 
 
 ## graphify

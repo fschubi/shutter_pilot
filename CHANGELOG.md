@@ -4,6 +4,25 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.39.0]
+
+### Behoben
+- **Helligkeitsmodus: Hochfahrt nach der Abendfahrt, Stunden nach dem Hoch-Fenster** (Claus,
+  simon42 #249). Fällt der Sensor im Hoch-Fenster unter die Schwelle, merkt sich der Bereich
+  „heute noch hochfahren", damit die Fahrt auch kommt, wenn es erst nach dem Fenster hell wird.
+  Diese Vormerkung entstand auch *nach* der Morgenfahrt (Licht an, Gewitter), wurde dann von
+  niemandem mehr eingelöst und galt bis Mitternacht – nach der Abendfahrt öffnete die erste
+  helle Sensormeldung den Rollladen wieder. Jetzt wird nur vorgemerkt, solange im Bereich noch
+  etwas hochzufahren ist, und die Abendfahrt beendet die Vormerkung.
+
+### Neu
+- **Rückfahrt nach dem Schließen verzögern** (heinzel, simon42 #252). Neu am Rollladen beim
+  Fensterkontakt: 0–120 Minuten Wartezeit nach dem Schließen von Fenster oder Tür, zusätzlich
+  zur bisherigen Verzögerung (max. 30 s). Wer im Winter kurz aus der Terrassentür geht und sie
+  hinter sich zuzieht, wird nicht mehr ausgesperrt. Erneutes Öffnen startet die Zeit neu.
+  Vorgabe 0 = wie bisher.
+- **Export:** „Laufender Zustand" zeigt die vorgemerkte Hochfahrt im Helligkeitsmodus.
+
 ## [2.38.2]
 
 ### Behoben

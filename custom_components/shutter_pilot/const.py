@@ -82,6 +82,16 @@ CONF_WINDOW_KEEP_OPEN_MINUTES = "window_keep_open_minutes"
 DEFAULT_WINDOW_KEEP_OPEN_MINUTES = 0
 MAX_WINDOW_KEEP_OPEN_MINUTES = 240
 
+# Minutes the shutter waits after the window closed before it drives back.
+# The debounce above answers "was that really closed?" and tops out at half a
+# minute; this answers "I'll be right back": whoever steps out on a winter
+# evening pulls the door shut behind them and stood in front of a closed
+# shutter thirty seconds later (heinzel, #252). Added on top of the debounce,
+# re-opening the door starts the wait afresh. 0 = off.
+CONF_WINDOW_CLOSE_DELAY_MINUTES = "window_close_delay_minutes"
+DEFAULT_WINDOW_CLOSE_DELAY_MINUTES = 0
+MAX_WINDOW_CLOSE_DELAY_MINUTES = 120
+
 # Drive to the ventilation position at the scheduled closing time even though
 # the window is still open, and catch the full drive up afterwards. Without it
 # a shutter with drive_after_close does *nothing* at all in that situation –
@@ -696,6 +706,7 @@ AWNING_UNUSED_KEYS = (
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_KEEP_OPEN_MINUTES,
+    CONF_WINDOW_CLOSE_DELAY_MINUTES,
     CONF_FROST_LOCK,
     CONF_FROST_LOCK_POSITION,
     CONF_FROST_LOCK_TILT,
@@ -770,6 +781,7 @@ WINDOW_UNUSED_KEYS = (
     CONF_MIN_POSITION_WHEN_OPEN,
     CONF_WINDOW_CLOSE_DEBOUNCE,
     CONF_WINDOW_KEEP_OPEN_MINUTES,
+    CONF_WINDOW_CLOSE_DELAY_MINUTES,
     CONF_FROST_LOCK,
     CONF_FROST_LOCK_POSITION,
     CONF_FROST_LOCK_TILT,
