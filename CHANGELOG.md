@@ -4,6 +4,25 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.40.1]
+
+### Behoben
+- **Frostschutz im Bereich und Eisschutz der Markise: „Bedeutung umkehren" entfällt bei
+  Temperatursensoren** (eurofinder, simon42 #262). Abgewählt wurde aus dem Frostschutz ein
+  Wärmeschalter (der Rollladen schloss an warmen Abenden nur bis zur Frostschutz-Position) und
+  aus dem Eisschutz eine Sperre bei Wärme (Markise den ganzen Sommer eingefahren). Beide fragen
+  jetzt wie die Frostsperre immer „kälter als"; ein früher abgewählter Haken wird ignoriert.
+  Bei Binärsensoren und Zustandslisten bleibt die Umkehr.
+- **Export** zeigt bei der Frostsperre die tatsächlich geltende Richtung (vorher konnte ein
+  alter, abgewählter Haken dort noch „ab … / frei unter …" anzeigen).
+
+### Geändert
+- **Frostschutz und Frostsperre klarer getrennt.** Der Abschnitt im Bereich heißt jetzt
+  „Frostschutz beim Schließen", der Hinweis erklärt, dass sonst alles wie geplant fährt und
+  „gar nicht fahren" die Frostsperre ist. Die Position am Rollladen heißt
+  „Frostschutz-Position (abends)" statt „Position bei Frost" (das bleibt der Name bei der
+  Frostsperre). README: Gegenüberstellung beider Funktionen. In allen elf Sprachen.
+
 ## [2.40.0]
 
 ### Neu

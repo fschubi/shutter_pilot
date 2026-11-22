@@ -891,11 +891,23 @@ Ranking when several things apply at once:
 
 With no condition configured nothing happens. Master, area and per-shutter switches apply as everywhere; switching the area off mid-ventilation still drives the shutter back rather than leaving it part way open.
 
+## Frost protection or frost lock?
+
+Two separate features that do not depend on each other:
+
+| | Frost protection when closing | Frost lock |
+| --- | --- | --- |
+| Where | condition in the **area**, frost-protection position on the shutter under *Positions* | sensor under **Settings**, tick on the shutter under *Frost lock* |
+| What happens | in the evening the shutter closes only to the frost-protection position, everything else runs as scheduled | the shutter makes no automatic drive at all, optionally drives to one position once |
+| What for | slats should not freeze to the frame | ice or snow: the motor should not run at all |
+
+If you want only one of them, leave the other empty. With a temperature sensor both always ask "colder than"; there is no "Invert meaning" box for them, only for binary sensors and state lists.
+
 ## Frost protection
 
 In frost a fully closed shutter can freeze to the frame. Leaving a gap prevents that:
 
-1. In the **area**, under *Frost protection*, set a condition — the obvious choice is the **Forecast low** sensor Shutter Pilot provides itself once a weather entity is configured
+1. In the **area**, under *Frost protection when closing*, set a condition — the obvious choice is the **Forecast low** sensor Shutter Pilot provides itself once a weather entity is configured
 2. On the relevant **shutters**, set a frost position, e.g. 10 %
 
 Unlike every other condition this one compares **downwards**: frost protection kicks in *below* the first value and stays on until the second is exceeded. The hysteresis keeps it from toggling around freezing point.

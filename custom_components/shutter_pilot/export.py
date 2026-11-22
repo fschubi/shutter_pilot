@@ -99,6 +99,7 @@ from .const import (
     sun_condition_keys,
 )
 from .helpers import (
+    numeric_inverted,
     effective_ui_mode,
     rest_role,
     awning_dusk_condition_met,
@@ -301,9 +302,7 @@ def _condition_note(
         off_below = float(cfg.get(off_key))
     except (TypeError, ValueError):
         return ""
-    inverted = bool(
-        cfg.get(sun_condition_invert_key(slot), slot in INVERTED_BY_DEFAULT_SLOTS)
-    )
+    inverted = numeric_inverted(cfg, slot)
     if (off_below > on_above) if not inverted else (off_below < on_above):
         # Same clamp helpers.py applies, spelled out where it is visible.
         return (
@@ -364,12 +363,7 @@ def _condition_rows(
             # mehr nur Frost/Eis mit fester Vorgabe), waere das eine
             # Beschriftung, die fuer jeden invertierten Slot das Gegenteil
             # dessen sagt, was tatsaechlich gilt.
-            invert_stored = cfg.get(sun_condition_invert_key(slot))
-            inverted = bool(
-                invert_stored
-                if invert_stored is not None
-                else slot in INVERTED_BY_DEFAULT_SLOTS
-            )
+            inverted = numeric_inverted(cfg, slot)
             limits = (
                 f"unter {_fmt(cfg.get(on_key))} / auf ab {_fmt(cfg.get(off_key))}"
                 if inverted
@@ -464,12 +458,7 @@ def _guard_rows(
             invert_stored = config.get(sun_condition_invert_key(slot))
             limits = "aus = Gefahr" if invert_stored else "an = Gefahr"
         else:
-            invert_stored = config.get(sun_condition_invert_key(slot))
-            inverted = bool(
-                invert_stored
-                if invert_stored is not None
-                else slot in INVERTED_BY_DEFAULT_SLOTS
-            )
+            inverted = numeric_inverted(config, slot)
             limits = (
                 f"Gefahr unter {_fmt(config.get(on_key))} / "
                 f"frei ab {_fmt(config.get(off_key))}"

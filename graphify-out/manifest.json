@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/const.py": {
-    "mtime": 1794738100.3333805,
-    "seen": 1794738892.142882,
-    "ast_hash": "2d68c5bce2144269da2745e798b9c827",
+    "mtime": 1795364578.8290975,
+    "seen": 1795364782.668053,
+    "ast_hash": "a98d1a4183bb86660883cb39ee468d48",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/cover_tracker.py": {
@@ -78,15 +78,15 @@
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/export.py": {
-    "mtime": 1794738136.7638106,
-    "seen": 1794738892.142886,
-    "ast_hash": "7b6d53edd97f8b508ea730c280e6b521",
+    "mtime": 1795364585.2506435,
+    "seen": 1795364782.6680572,
+    "ast_hash": "898c4bb09b7c608ada9bf03dd6f97402",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js": {
-    "mtime": 1794738887.9165459,
-    "seen": 1794738892.142886,
-    "ast_hash": "41f49d7216486735cee45e0599ef1535",
+    "mtime": 1795364699.8913755,
+    "seen": 1795364782.6680572,
+    "ast_hash": "6ea0b307c7782e61b7625287937645ba",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/group_actions.py": {
@@ -96,15 +96,15 @@
     "semantic_hash": "a4a3a5c36fd0a868c9b1921b69db9b24"
   },
   "custom_components/shutter_pilot/helpers.py": {
-    "mtime": 1794738100.334771,
-    "seen": 1794738892.1428878,
-    "ast_hash": "83df6a2ff41d328e24f51b7ad7648b38",
+    "mtime": 1795364645.757836,
+    "seen": 1795364782.6680589,
+    "ast_hash": "131395303e4128675dafd8e2ca190998",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/manifest.json": {
-    "mtime": 1794738710.5064738,
-    "seen": 1794738892.142889,
-    "ast_hash": "69c8ef8aff9f38389e77470b092d50cc",
+    "mtime": 1795364717.8166926,
+    "seen": 1795364782.6680589,
+    "ast_hash": "cea86e4cfe5c6c1d24f0906910dd8510",
     "semantic_hash": ""
   },
   "custom_components/shutter_pilot/position_store.py": {
@@ -564,15 +564,15 @@
     "semantic_hash": "b16cc81da386a69584857cc5676819f3"
   },
   "CHANGELOG.md": {
-    "mtime": 1794738710.5061142,
-    "seen": 1794738892.142982,
-    "ast_hash": "7f9e3c50e2205155bc3041e7eacab3d2",
+    "mtime": 1795364717.8153498,
+    "seen": 1795364782.668149,
+    "ast_hash": "1022a4955851442b8c2fa4031f3a9da2",
     "semantic_hash": ""
   },
   "CLAUDE.md": {
-    "mtime": 1794738887.9189067,
-    "seen": 1794738892.142983,
-    "ast_hash": "4e26fdbe5a74d126173a791004218ca2",
+    "mtime": 1795364778.7072165,
+    "seen": 1795364782.668149,
+    "ast_hash": "c6ed560bce688539bda3e4d81e1ff42c",
     "semantic_hash": ""
   },
   "FORUM_POST.md": {
@@ -582,15 +582,15 @@
     "semantic_hash": ""
   },
   "README.de.md": {
-    "mtime": 1794738710.4908292,
-    "seen": 1794738892.1429849,
-    "ast_hash": "9451714873132c4a112a9ddffdde30a9",
+    "mtime": 1795364717.810479,
+    "seen": 1795364782.6681511,
+    "ast_hash": "a8f657b53dcab09c75eee748a294822f",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794738710.5041914,
-    "seen": 1794738892.1429849,
-    "ast_hash": "4670faa306e9c08121ffaa7a0dd708ee",
+    "mtime": 1795364717.811609,
+    "seen": 1795364782.6681511,
+    "ast_hash": "8cdaf92c0e1077f87e8af234ea9b4299",
     "semantic_hash": ""
   },
   "RELEASE.md": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG_DEV.md": {
-    "mtime": 1794738710.5074823,
-    "seen": 1794738892.1429892,
-    "ast_hash": "4c405558f1f06070e72bd54dabf5c3e3",
+    "mtime": 1795364778.7094383,
+    "seen": 1795364782.668155,
+    "ast_hash": "5b4301c54246b5e512645dc65861088f",
     "semantic_hash": ""
   },
   "tests/test_manual_move_clears_pending_drive.py": {
@@ -786,9 +786,9 @@
     "semantic_hash": ""
   },
   "tests/panel/guard_slot.mjs": {
-    "mtime": 1793999803.2430825,
-    "seen": 1793999921.620218,
-    "ast_hash": "92b4ddbf2c075b5627f075b6ac7b8578",
+    "mtime": 1795364612.95329,
+    "seen": 1795364782.6680791,
+    "ast_hash": "e1049b55e52c4902eef374896b3649ec",
     "semantic_hash": ""
   },
   "tests/panel/reorder.mjs": {
@@ -939,6 +939,12 @@
     "mtime": 1794738520.795867,
     "seen": 1794738892.1429691,
     "ast_hash": "5cfe89100fb775ac40e7c3c59457e512",
+    "semantic_hash": ""
+  },
+  "tests/test_frost_invert_forced.py": {
+    "mtime": 1795364634.51687,
+    "seen": 1795364782.668105,
+    "ast_hash": "326ab9ae8767467258cefa47b7d2418e",
     "semantic_hash": ""
   }
 }

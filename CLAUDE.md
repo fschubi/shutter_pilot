@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1102 Tests)
+tests/               pytest-Suite (1109 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -301,7 +301,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1102 Tests, ~40 s
+.venv/bin/pytest            # 1109 Tests, ~40 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -330,12 +330,32 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.40.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.40.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-22 – 2.40.1: Frostschutz-Umkehr, Frostschutz vs. Frostsperre (eurofinder, simon42 #262)
+
+Seit 2.40.0 vier Beiträge (#259–#262); nur #262 mit Arbeit. eurofinder fragte, wozu es im
+Bereich noch „Frostschutz" gibt, wenn die Frostsperre schon unter Einstellungen steht, und wozu
+dort „Bedeutung umkehren" dient. **Zwei getrennte Funktionen:** Frostschutz (Bereichs-Slot
+`frost`, Rolle `closed_frost`) kürzt nur die Abendfahrt, Frostsperre (`cold`, `frost_lock`) hält
+alles an. **Fehler:** Der Umkehr-Haken war bei Zahlensensoren an `frost` (Bereich) und `ice`
+(Markise) noch abwählbar – abgewählt = Wärmeschalter, dieselbe Falle wie 2.38.2 bei `cold`.
+Neu `FORCED_BELOW_SLOTS` (frost, ice, cold) und `helpers.numeric_inverted(cfg, slot)`, das
+`_slot_reading` **und** der Export (3 Stellen) benutzen – der Export las bei `cold` vorher noch
+den gespeicherten Haken. Panel: `FORCED_BELOW_SLOTS`-Spiegel, `_condInverted` gibt dort im
+Zahlenzweig immer true, Haken ausgeblendet (Bereich und Schutz-Slot). Bei eurofinder war der
+Haken gesetzt, es wirkte also richtig – nur verwirrend. **Texte** ×11: `sec_frost` „Frostschutz
+beim Schließen", `sec_frost_sub`, `f_frost_cond_hint` (verweist auf die Frostsperre),
+`f_pos_closed_frost_val` „Frostschutz-Position (abends)" – vorher hießen beide Positionen
+„Position bei Frost". README: Gegenüberstellungstabelle. Panel-Test `guard_slot.mjs` stellte das
+alte Eis-Verhalten fest und ist umgestellt. **Verifiziert:** `pytest` 1109 grün
+(`tests/test_frost_invert_forced.py`, 7); Gegenprobe: mit nur der alten `cold`-Regel fallen 4.
+Nicht im Browser und nicht im echten Home Assistant geprüft. Keine neuen Schlüssel (je 575).
 
 ### 2026-11-15 – 2.40.0: Einfache Ansicht, Experten-Ansicht, geführter Einstieg
 
@@ -422,32 +442,6 @@ Abschnitt „Wind- und Regenschutz für Markisen" wird ausgegraut (`_sec(..., di
 `.sec.dim`), solange weder Markise noch Dachfenster existiert (`hasGuard`); bleibt
 aufklappbar. Neuer Schlüssel `sec_guard_none` ×11 (je 540). **Verifiziert:** `pytest` 1055
 grün, i18n-Parität. Nicht im Browser geprüft.
-
-### 2026-11-05 – 2.38.0: Frostsperre für Rollläden (eurofinder, simon42 #237)
-
-eurofinder (Velux-Rollläden, kam von FHEM/ASC_Antifreeze): bei Frost soll nichts mehr
-fahren, zentral einstellbar, optional Frostposition, danach nachholen. Unser Frostschutz
-(`closed_frost`) kürzt nur die Abendfahrt – daher neu, **nicht** dort angehängt. Eigener
-globaler Slot `cold` (`FROST_LOCK_SLOT`, invertiert, Sperrzeit 0) und eigener Zustand
-`_frost_lock` (Windschutz und Frostsperre am selben Raffstore dürfen sich nicht ein
-gemeinsames `barred` überschreiben). Je Rollladen `frost_lock`, `frost_lock_position`,
-`frost_lock_tilt` (leer = stehen bleiben); global `frost_lock_catch_up` (Vorgabe an).
-`evaluate_guard(..., state_key, fail_open=True)`: **toter Sensor sperrt nie** (anders als
-Wind/Regen). Sperre über `frost_barred()` in `shutter_held()` – also überall dort, wo
-schon `storm_barred`/Sperr-Entität fragen. Hold/Release in `awning_guard.py`
-(`async_frost_hold`, `async_frost_release`, `FROST_HELD_KEY`): Hold fährt nur, wenn
-Hauptschalter, Automatik und Sperr-Entität es erlauben (anders als der Windschutz: kein
-Sicherheitsfall). Release holt über `scheduled_role_now()` nach, **nicht** wenn die
-Position von der Frostposition abweicht (Handfahrt), unbekannt ist, ein Fenster offen
-ist oder die Automatik aus; `covers_driven_up/down` werden nachgeführt. Panel:
-Einstellungs-Abschnitt (`_renderGuardSlot` mit `cold`) und Rollladen-Abschnitt, i18n 16
-Schlüssel ×11 (je 539), Export-Zeilen (`guard_status(..., state_key)`). **Nicht abgedeckt:**
-nach einem Neustart im Frost fährt er die Frostposition einmal erneut an und das Nachholen
-nach einem Neustart *im* Frost bezieht sich auf den neuen Stand; Gruppenknöpfe im
-Dashboard kennen die Sperre nicht (wie bei Windschutz und Sperr-Entität: Handfahrt).
-**Verifiziert:** `pytest` grün (12 neue, `tests/test_frost_lock.py`; Gegenproben: ohne
-Handfahrt-Prüfung und ohne `fail_open` fallen je Tests); Panel-Render mit neuen Abschnitten.
-Nicht im echten Home Assistant geprüft.
 
 ## graphify
 

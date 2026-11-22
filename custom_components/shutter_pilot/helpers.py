@@ -35,7 +35,7 @@ from .const import (
     CLOSE_CONDITION_SLOTS,
     FROST_CONDITION_SLOT,
     GUARD_REASON_UNAVAILABLE,
-    FROST_LOCK_SLOT,
+    FORCED_BELOW_SLOTS,
     INVERTED_BY_DEFAULT_SLOTS,
     CONF_AREA_MANUAL_OVERRIDE,
     CONF_AREA_SEASON_FROM,
@@ -679,6 +679,21 @@ def _warn_useless_hysteresis(
     )
 
 
+def numeric_inverted(cfg: dict[str, Any], slot: str) -> bool:
+    """Whether a slot's numeric branch compares "colder / darker than".
+
+    Frost, ice and the frost lock always do – see FORCED_BELOW_SLOTS; a flag
+    unticked in an older version is no longer read there. Everything else
+    follows the stored flag, falling back to the per-slot default. Shared by
+    the evaluation and the export, so the export cannot describe a direction
+    the evaluation does not use.
+    """
+    if slot in FORCED_BELOW_SLOTS:
+        return True
+    stored = cfg.get(sun_condition_invert_key(slot))
+    return bool(stored if stored is not None else slot in INVERTED_BY_DEFAULT_SLOTS)
+
+
 def _slot_reading(
     hass: HomeAssistant,
     area: dict[str, Any],
@@ -751,13 +766,7 @@ def _slot_reading(
         memory[slot] = met
         return met
 
-    # Die Frostsperre fragt immer "kälter als": umgekehrt wäre sie eine
-    # Wärmesperre, und das hat niemand gewollt (eurofinder, simon42 #244). Ein
-    # früher abgewählter Haken wird deshalb nicht mehr gelesen. Bei Binärsensor
-    # und Zustandsliste (oben) bleibt die Umkehr dagegen erlaubt.
-    inverted = True if slot == FROST_LOCK_SLOT else bool(
-        invert_stored if invert_stored is not None else slot in INVERTED_BY_DEFAULT_SLOTS
-    )
+    inverted = numeric_inverted(area, slot)
 
     try:
         value = float(state.state)

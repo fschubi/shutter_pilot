@@ -908,11 +908,23 @@ Die Rangfolge, falls mehreres zugleich zutrifft:
 
 Ohne eingetragene Bedingung passiert nichts. Hauptschalter, Bereichs- und Rollladenautomatik gelten wie überall; wird der Bereich abgeschaltet, während gelüftet wird, fährt der Rollladen noch zurück, statt halb offen stehen zu bleiben.
 
+## Frostschutz oder Frostsperre?
+
+Zwei getrennte Funktionen, die sich nicht gegenseitig brauchen:
+
+| | Frostschutz beim Schließen | Frostsperre |
+| --- | --- | --- |
+| Wo eingestellt | Bedingung im **Bereich**, Frostschutz-Position am Rollladen unter *Positionen* | Sensor unter **Einstellungen**, Haken am Rollladen unter *Frostsperre* |
+| Was passiert | Abends schließt der Rollladen nur bis zur Frostschutz-Position, sonst fährt alles wie geplant | Der Rollladen fährt gar nicht mehr automatisch, optional einmal auf eine Position |
+| Wofür | Lamellen sollen nicht am Rahmen festfrieren | Eis oder Schnee: der Antrieb soll gar nicht laufen |
+
+Wer nur eine davon will, lässt die andere leer. Bei einem Temperatursensor fragen beide immer „kälter als"; den Haken „Bedeutung umkehren" gibt es dort deshalb nicht, nur bei Binärsensoren und Zustandslisten.
+
 ## Frostschutz
 
 Bei Frost kann ein ganz geschlossener Rollladen am Rahmen festfrieren. Damit das nicht passiert, bleibt ein Spalt offen:
 
-1. Im **Bereich** unter *Frostschutz* eine Bedingung hinterlegen – naheliegend ist der Sensor **Vorhersage Tiefsttemperatur**, den Shutter Pilot selbst bereitstellt, sobald eine Wetter-Entität eingetragen ist
+1. Im **Bereich** unter *Frostschutz beim Schließen* eine Bedingung hinterlegen – naheliegend ist der Sensor **Vorhersage Tiefsttemperatur**, den Shutter Pilot selbst bereitstellt, sobald eine Wetter-Entität eingetragen ist
 2. Bei den betreffenden **Rollläden** eine Frostposition setzen, z. B. 10 %
 
 Anders als bei allen übrigen Bedingungen wird hier **nach unten** verglichen: Der Frostschutz greift *unter* dem ersten Wert und bleibt aktiv, bis der zweite überschritten ist. Die Hysterese verhindert, dass er um den Gefrierpunkt herum ständig ein- und ausschaltet.

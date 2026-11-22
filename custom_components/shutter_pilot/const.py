@@ -516,6 +516,18 @@ INVERTED_BY_DEFAULT_SLOTS = (
     AWNING_DUSK_SLOT,
     FROST_LOCK_SLOT,
 )
+# Slots whose numeric branch always asks "colder than", whatever the stored
+# invert flag says. Ticking "invert" off turned each of them into a heat
+# switch: frost protection closing short on every warm evening, the ice guard
+# retracting the awning all summer, the frost lock holding at noon in July.
+# Nobody wants that, and eurofinder (simon42 #244, #262) asked twice what the
+# checkbox is for. A binary sensor or a state list keeps the flag – there it
+# describes the device, not the direction.
+FORCED_BELOW_SLOTS = (
+    FROST_CONDITION_SLOT,
+    AWNING_GUARD_ICE,
+    FROST_LOCK_SLOT,
+)
 
 # Standard weather conditions in Home Assistant, offered as checkboxes.
 WEATHER_CONDITIONS = (

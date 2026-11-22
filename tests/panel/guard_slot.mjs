@@ -31,10 +31,19 @@ h = render({ sun_cond_wind_entity:"sensor.wind" }, "wind", true);
 ok("je Markise erbt ein leeres Feld den globalen Wert: keine Warnung",
    !h.includes("f_guard_no_threshold"));
 
-// Frankchiefs Frostsensor: 15/20 bei ausdruecklich NICHT umgekehrt.
+// Frankchiefs Frostsensor: 15/20 mit einem alten, abgewaehlten Haken. Seit
+// eurofinder (#262) fragt Eis im Zahlenzweig immer "kaelter als" - der Haken
+// wird nicht gelesen, also auch keine Warnung und kein Haken zum Abwaehlen.
 h = render({ sun_cond_ice_entity:"sensor.temp", sun_cond_ice_on_above:15,
              sun_cond_ice_off_below:20, sun_cond_ice_invert:false }, "ice");
-ok("Frost 15/20 ohne Umkehrung: Warnung 'passt nicht zusammen'", h.includes("f_guard_wrong_way"));
+ok("Eis 15/20 mit altem abgewaehltem Haken: trotzdem 'kaelter als', keine Warnung",
+   !h.includes("f_guard_wrong_way") && h.includes("f_guard_on_below"));
+ok("Eis, Zahlensensor: kein Umkehr-Haken", !h.includes("f_cond_invert_label"));
+h = render({ sun_cond_ice_entity:"sensor.temp", sun_cond_ice_on_above:4,
+             sun_cond_ice_off_below:2 }, "ice");
+ok("Eis 4/2: verkehrt herum, Warnung", h.includes("f_guard_wrong_way"));
+h = render({ sun_cond_ice_entity:"binary_sensor.regen" }, "ice");
+ok("Eis, Binaersensor: Umkehr bleibt moeglich", h.includes("f_cond_invert_label"));
 h = render({ sun_cond_ice_entity:"sensor.temp", sun_cond_ice_on_above:15,
              sun_cond_ice_off_below:20 }, "ice");
 ok("dieselben Werte, Frost wie voreingestellt (umgekehrt): in Ordnung",
