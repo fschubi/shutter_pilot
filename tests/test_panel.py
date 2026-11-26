@@ -318,8 +318,10 @@ def test_panel_slider_fallbacks_match_the_backend() -> None:
         "querySelector:()=>null,addEventListener(){}};"
         "Object.defineProperty(globalThis,'navigator',{value:{userAgent:'node',platform:'x',maxTouchPoints:0}});"
     )
+    # Über stdin, nicht über -e: Linux begrenzt ein einzelnes Argument auf
+    # 128 KB (MAX_ARG_STRLEN), das Panel ist größer. macOS merkt davon nichts.
     result = subprocess.run(
-        [NODE, "-e", stub + script], capture_output=True, text=True, timeout=60
+        [NODE, "-"], input=stub + script, capture_output=True, text=True, timeout=60
     )
     assert result.returncode == 0, result.stderr
     js = json.loads(result.stdout)
