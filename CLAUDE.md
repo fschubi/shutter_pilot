@@ -50,7 +50,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1109 Tests)
+tests/               pytest-Suite (1111 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -301,7 +301,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1109 Tests, ~40 s
+.venv/bin/pytest            # 1111 Tests, ~40 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -330,12 +330,28 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.40.1**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.40.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-26 – 2.40.2: Leere Schieber, Lux-Warnung (Claus, simon42 #267)
+
+Claus (#267, 2.40.1): drei Wünsche und ein Fehler. **Fehler Sichtschutz:** Position 0, Lamellen
+38, KNX fuhr 30 %. Im Export fehlt `position_privacy` ganz – der Schieber war nie bewegt, also nie
+gespeichert; das Panel zeigte `s[k]??0`, das Backend nahm `DEFAULT_POSITION_PRIVACY` = 30. Gilt
+für jeden Schieber ohne Vorbelegung (zweite Stufe 100, My 50, Lamellen Sichtschutz 50 …). Fix:
+`PCT_FALLBACK`/`PCT_FALLBACK_KIND` + `pctValue()` im Panel (Markise/Dachfenster eigene Werte),
+beide `pct`-Helfer. Python-Test hält den Spiegel gegen `_ROLE_POSITION_KEYS`/`_ROLE_TILT_KEYS`/
+Konstanten. **Wunsch 1 (getrennte Lux-Schwellen):** gibt es seit jeher (`lux_up`/`lux_down`, Claus
+nutzt sie); hoch unter runter löste nur die Warnung `f_lux_wrong_way` aus. Backend klemmt nichts.
+Warnung jetzt nur bei sich überschneidenden Fenstern (`luxWindowsOverlap`, Woche oder Wochenende,
+über Mitternacht oder fehlendes Feld = überschneidend wie `_area_window`). **Wunsch 2 (zweite
+Schließstufe abends) und 3 (Wespenschutz-Fahrt):** nicht gebaut, offen. **Verifiziert:** `pytest`
+1111 grün (`tests/panel/slider_fallback.mjs` + Drift-Test); Gegenprobe altes Panel: 6 FAIL. Nicht
+im Browser, nicht im echten HA geprüft. Keine neuen i18n-Schlüssel.
 
 ### 2026-11-22 – 2.40.1: Frostschutz-Umkehr, Frostschutz vs. Frostsperre (eurofinder, simon42 #262)
 
@@ -433,15 +449,6 @@ Referenzfahrt mitten im Lauf stoppen, Nachholen im Helligkeitsmodus nach Licht s
 **Verifiziert:** `pytest` 1063 grün (8 neue Backend-, 9 Panel-Fälle); Gegenproben: ohne
 Zwangs-Invert, Fenster-, Storm-Check, Restore und Vergessen fällt je ein Test. Nicht im Browser,
 nicht im echten Home Assistant geprüft.
-
-### 2026-11-06 – 2.38.1: Textfehler Frostsperre, Schutz ausgegraut (eurofinder, simon42 #242)
-
-Der gemeinsame Hysterese-Satz (`f_guard_hyst_hint`) sprach von der „Markise" und stand auch
-unter Frostsperre und Windschutz für Raffstores – jetzt neutral („der Schutz"), ×11. Der
-Abschnitt „Wind- und Regenschutz für Markisen" wird ausgegraut (`_sec(..., dim)`, Klasse
-`.sec.dim`), solange weder Markise noch Dachfenster existiert (`hasGuard`); bleibt
-aufklappbar. Neuer Schlüssel `sec_guard_none` ×11 (je 540). **Verifiziert:** `pytest` 1055
-grün, i18n-Parität. Nicht im Browser geprüft.
 
 ## graphify
 

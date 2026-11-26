@@ -269,3 +269,81 @@ def test_simple_and_expert_view_and_the_guided_setup() -> None:
     result = _run("ui_mode.mjs")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "FAIL" not in result.stdout
+
+
+def test_empty_sliders_show_what_the_backend_drives() -> None:
+    """Claus (simon42 #267): Sichtschutz-Position nie bewegt, das Panel zeigte
+    0 %, gefahren wurde 30 %. Leere Schieber zeigen jetzt den Rueckfallwert, und
+    die Lux-Warnung kommt nur bei sich ueberschneidenden Zeitfenstern."""
+    result = _run("slider_fallback.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout
+
+
+def test_panel_slider_fallbacks_match_the_backend() -> None:
+    """Der Spiegel im Panel darf nicht von helpers.py wegdriften."""
+    import json
+
+    from custom_components.shutter_pilot import helpers
+    from custom_components.shutter_pilot.const import (
+        CONF_MIN_POSITION_WHEN_OPEN,
+        CONF_MY_POSITION_PCT,
+        CONF_STORM_POSITION,
+        CONF_STORM_TILT,
+        DEFAULT_MIN_POSITION_WHEN_OPEN,
+        DEFAULT_MY_POSITION_PCT,
+        DEFAULT_STORM_POSITION,
+        DEFAULT_STORM_TILT,
+        DEFAULT_WINDOW_POSITION_OPEN,
+        DEFAULT_WINDOW_POSITION_VENT,
+        DEFAULT_AWNING_POSITION_OPEN,
+        DEFAULT_AWNING_POSITION_SUN_PROTECT,
+        DEFAULT_WINDOW_POSITION_CLOSED,
+    )
+
+    panel = (
+        Path(__file__).parent.parent
+        / "custom_components/shutter_pilot/frontend/shutter-pilot-panel.js"
+    ).read_text(encoding="utf-8")
+    script = (
+        panel
+        + "\n;process.stdout.write(JSON.stringify({b:PCT_FALLBACK,k:PCT_FALLBACK_KIND}));"
+    )
+    stub = (
+        "class S{static get properties(){return{}}requestUpdate(){}addEventListener(){}}"
+        "S.prototype.html=()=>({});S.prototype.css=()=>({});class H extends S{}"
+        "globalThis.customElements={get:n=>n==='shutter-pilot-panel'?undefined:H,define(){}};"
+        "globalThis.window=globalThis;globalThis.HTMLElement=S;"
+        "globalThis.document={createElement:()=>({style:{},setAttribute(){},appendChild(){}}),"
+        "querySelector:()=>null,addEventListener(){}};"
+        "Object.defineProperty(globalThis,'navigator',{value:{userAgent:'node',platform:'x',maxTouchPoints:0}});"
+    )
+    result = subprocess.run(
+        [NODE, "-e", stub + script], capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr
+    js = json.loads(result.stdout)
+
+    expected: dict[str, float] = {}
+    for key, fallback in helpers._ROLE_POSITION_KEYS.values():
+        if not key.startswith("position_sun_protect_l"):
+            expected[key] = fallback
+    for key, fallback in helpers._ROLE_TILT_KEYS.values():
+        if not key.startswith("tilt_sun_protect_l"):
+            expected.setdefault(key, fallback)
+    expected[CONF_MIN_POSITION_WHEN_OPEN] = DEFAULT_MIN_POSITION_WHEN_OPEN
+    expected[CONF_MY_POSITION_PCT] = DEFAULT_MY_POSITION_PCT
+    expected[CONF_STORM_POSITION] = DEFAULT_STORM_POSITION
+    expected[CONF_STORM_TILT] = DEFAULT_STORM_TILT
+    for key, value in expected.items():
+        assert js["b"].get(key) == value, (key, js["b"].get(key), value)
+
+    assert js["k"]["awning"] == {
+        "position_open": DEFAULT_AWNING_POSITION_OPEN,
+        "position_sun_protect": DEFAULT_AWNING_POSITION_SUN_PROTECT,
+    }
+    assert js["k"]["window"] == {
+        "position_open": DEFAULT_WINDOW_POSITION_OPEN,
+        "position_closed": DEFAULT_WINDOW_POSITION_CLOSED,
+        "position_sun_protect": DEFAULT_WINDOW_POSITION_VENT,
+    }

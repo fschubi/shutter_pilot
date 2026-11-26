@@ -94,6 +94,58 @@ const INVERTED_BY_DEFAULT_SLOTS = ["frost","ice","cold"];
    machte er aus Frostschutz, Eisschutz und Frostsperre einen Waermeschalter
    (eurofinder, simon42 #244 und #262). */
 const FORCED_BELOW_SLOTS = ["frost","ice","cold"];
+/* Was das Backend faehrt, wenn ein Schieber nie bewegt und deshalb nie
+   gespeichert wurde - Spiegel von _ROLE_POSITION_KEYS, _ROLE_TILT_KEYS,
+   _AWNING_ROLE_FALLBACK und _WINDOW_ROLE_FALLBACK in helpers.py. Vorher zeigte
+   jeder leere Schieber 0 %, das Backend fuhr aber z. B. 30 % fuer den
+   Sichtschutz: Claus sah 0, liess es stehen, und sein Raffstore fuhr auf 30
+   (simon42 #267). Ein gespeicherter Wert gewinnt immer, auch eine 0. */
+const PCT_FALLBACK = {
+  position_open:100, position_closed:0, position_sun_protect:50,
+  position_open_stage2:100, position_privacy:30, position_privacy_sun:30,
+  position_closed_alt:50, position_closed_frost:10, position_sun_protect_alt:30,
+  position_when_window_open:100, position_when_window_tilted:50,
+  min_position_when_open:20, my_position_pct:50,
+  tilt_open:100, tilt_closed:0, tilt_sun_protect:30, tilt_open_stage2:100,
+  tilt_privacy:50, tilt_privacy_sun:0, storm_position:100, storm_tilt:100,
+  awning_track_high_pos:60, awning_track_low_pos:100,
+};
+const PCT_FALLBACK_KIND = {
+  awning:{position_open:0, position_sun_protect:100},
+  window:{position_open:100, position_closed:0, position_sun_protect:30},
+};
+/* Stufen ohne eigenen Lamellenwinkel fahren den der normalen Beschattung. */
+const pctFallback = (obj,k) => {
+  const kind = PCT_FALLBACK_KIND[kindOf(obj)] || {};
+  if (k in kind) return kind[k];
+  if (k in PCT_FALLBACK) return PCT_FALLBACK[k];
+  if (/^position_sun_protect_l\d$/.test(k)) return 50;
+  if (/^tilt_sun_protect_l\d$/.test(k)) return pctFallback(obj,"tilt_sun_protect");
+  return 0;
+};
+/* Hoch unter Runter ("hoch ab 50, runter schon bei 100") ist nur dann ein
+   Problem, wenn beide Fenster zur selben Uhrzeit offen sind: dazwischen gilt
+   dann beides, und der Rollladen pendelt. Getrennte Fenster - morgens hoch,
+   abends runter - sind genau das, was Claus wollte (simon42 #267). Ein
+   Fenster ueber Mitternacht gilt vorsichtshalber als Ueberschneidung. */
+const luxWindowsOverlap = a => {
+  const hm = v => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v||"")); return m ? (+m[1])*60 + (+m[2]) : null; };
+  const pair = (uf,ut,df,dt) => {
+    const [a1,a2,b1,b2] = [uf,ut,df,dt].map(hm);
+    if ([a1,a2,b1,b2].some(x => x === null)) return true;
+    if (a1 > a2 || b1 > b2) return true;
+    return a1 < b2 && b1 < a2;
+  };
+  /* Wie _area_window() in brightness.py: ein fehlendes Feld heisst dort
+     00:00 bzw. 23:59, also den ganzen Tag. */
+  const g = k => a[k] || (k.endsWith("_from") ? "00:00" : "23:59");
+  return pair(g("w_up_from"),g("w_up_to"),g("w_down_from"),g("w_down_to"))
+      || pair(g("we_up_from"),g("we_up_to"),g("we_down_from"),g("we_down_to"));
+};
+const pctValue = (obj,k) => {
+  const v = obj[k];
+  return v === undefined || v === null || v === "" ? pctFallback(obj,k) : v;
+};
 const WEATHER_CONDITIONS = ["sunny","partlycloudy","cloudy","rainy","pouring",
   "snowy","snowy-rainy","fog","hail","lightning","lightning-rainy","windy",
   "windy-variant","clear-night","exceptional"];
@@ -5531,7 +5583,7 @@ class ShutterPilotPanel extends PanelBase {
                darunter, ist dazwischen beides zugleich wahr – solange sich die
                Zeitfenster nicht überschneiden fällt das niemandem auf, danach
                pendelt der Rollladen. */""}
-          ${Number(a.lux_up??500)<=Number(a.lux_down??400)?html`<div class="hint warn">⚠️ ${T("f_lux_wrong_way")}</div>`:""}
+          ${Number(a.lux_up??500)<=Number(a.lux_down??400)&&luxWindowsOverlap(a)?html`<div class="hint warn">⚠️ ${T("f_lux_wrong_way")}</div>`:""}
           ${tm("w_up_from",T("f_w_up_from"))}${tm("w_up_to",T("f_w_up_to"))}${tm("w_down_from",T("f_w_down_from"))}${tm("w_down_to",T("f_w_down_to"))}
           ${tm("we_up_from",T("f_we_up_from"))}${tm("we_up_to",T("f_we_up_to"))}${tm("we_down_from",T("f_we_down_from"))}${tm("we_down_to",T("f_we_down_to"))}
           ${this._adv([a.b_down_after_sunset,a.b_up_before_sunrise].some(v=>v!==""&&v!=null),html`<div class="hint" style="margin-top:10px"><b>${T("f_sunbound_title")}</b><br>${T("f_sunbound_hint")}</div>
@@ -5955,8 +6007,8 @@ class ShutterPilotPanel extends PanelBase {
   _renderAwningForm(d){
     const s=this._editShutter;const areas=this._sortedAreas(d);const T=k=>this.t(k);
     const pct=(k,lbl,hint=null)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
-      <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
-      <span class="slider-val">${s[k]??0}%</span></div>${hint?html`<div class="hint">${hint}</div>`:""}</div>`;
+      <input type="range" min="0" max="100" .value=${pctValue(s,k)} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${pctValue(s,k)}%</span></div>${hint?html`<div class="hint">${hint}</div>`:""}</div>`;
     const rng=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
       <span class="slider-val">${s[k]??min}${suffix}</span></div></div>`;
@@ -6193,8 +6245,8 @@ class ShutterPilotPanel extends PanelBase {
     const areas=this._sortedAreas(d);const T=k=>this.t(k);
     const f=(k,lbl,type="text")=>html`<div class="field"><label>${lbl}</label><input type="${type}" .value=${s[k]??""} @input=${e=>{s[k]=type==="number"?Number(e.target.value):e.target.value;}}></div>`;
     const pct=(k,lbl)=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
-      <input type="range" min="0" max="100" .value=${s[k]??0} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
-      <span class="slider-val">${s[k]??0}%</span></div></div>`;
+      <input type="range" min="0" max="100" .value=${pctValue(s,k)} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>
+      <span class="slider-val">${pctValue(s,k)}%</span></div></div>`;
     const ep=(k,lbl,domains,hint=null)=>this._entityField(s,k,lbl,domains,hint);
     const pctRange=(k,lbl,min,max,step=1,suffix="")=>html`<div class="field"><label>${lbl}</label><div class="slider-row">
       <input type="range" min="${min}" max="${max}" step="${step}" .value=${s[k]??min} @input=${e=>{s[k]=Number(e.target.value);this.requestUpdate();}}>

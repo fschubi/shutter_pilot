@@ -135,7 +135,7 @@ Click **"Add area"** to create a new area. Choose a control mode:
 | Mode | Description |
 |------|-------------|
 | **Time** | Shutters go up/down at fixed times with separate weekday/weekend schedules |
-| **Brightness** | Driven by a lux sensor with configurable thresholds and allowed time windows |
+| **Brightness** | Driven by a lux sensor with **separate thresholds for up and down** and allowed time windows. The up threshold may sit below the down threshold (up from 50 lx in the morning, down already at 100 lx in the evening) as long as the time windows do not overlap |
 | **Sun position** | Uses Home Assistant's sunrise/sunset tracking with configurable offsets |
 | **No schedule** | The area drives neither by clock, lux nor sun position – only sun protection and ventilation apply. For anyone using Shutter Pilot purely for shading, and for awning areas |
 

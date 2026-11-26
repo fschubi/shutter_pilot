@@ -136,7 +136,7 @@ Klicke auf **"Bereich hinzufügen"** um einen neuen Bereich zu erstellen. Wähle
 | Modus | Beschreibung |
 |-------|-------------|
 | **Zeit** | Rollläden fahren zu festen Zeiten hoch/runter mit separaten Wochentag-/Wochenend-Zeiten |
-| **Helligkeit** | Gesteuert durch einen Lux-Sensor mit konfigurierbaren Schwellwerten und erlaubten Zeitfenstern |
+| **Helligkeit** | Gesteuert durch einen Lux-Sensor mit **getrennten Schwellen für Hoch und Runter** und erlaubten Zeitfenstern. Die Hoch-Schwelle darf unter der Runter-Schwelle liegen (morgens hoch ab 50 lx, abends runter schon bei 100 lx), solange sich die Zeitfenster nicht überschneiden |
 | **Sonnenstand** | Nutzt Home Assistants Sonnenauf-/untergang-Tracking mit konfigurierbarem Offset |
 | **Kein Zeitplan** | Der Bereich fährt weder nach Uhr noch nach Lux oder Sonnenstand – es gelten nur Sonnenschutz und Lüften. Für alle, die Shutter Pilot ausschließlich zum Beschatten einsetzen, und für Markisen-Bereiche |
 

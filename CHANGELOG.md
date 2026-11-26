@@ -4,6 +4,24 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.40.2]
+
+### Behoben
+- **Leere Schieber zeigten 0 %, gefahren wurde etwas anderes** (Claus, simon42 #267). Ein nie
+  bewegter Schieber wird nicht gespeichert, und das Backend nimmt dann seinen Vorgabewert – beim
+  Sichtschutz 30 %. Das Panel zeigte trotzdem 0 %, und ein KNX-Raffstore fuhr bei aktivem
+  Sichtschutz auf 30 % statt ganz zu. Jetzt zeigt jeder leere Schieber den Wert, mit dem
+  tatsächlich gefahren wird (Sichtschutz 30, zweite Öffnungsstufe 100, My-Position 50, bei
+  Markisen und Dachfenstern deren eigene Vorgaben). Eine gespeicherte 0 bleibt 0.
+  **Wer den Sichtschutz auf 0 % haben will und den Schieber nie bewegt hat: einmal anfassen
+  und speichern.**
+
+### Geändert
+- **Helligkeitsmodus: Hoch-Schwelle unter der Runter-Schwelle ist erlaubt**, wenn sich die
+  Zeitfenster nicht überschneiden (z. B. morgens hoch ab 50 lx, abends runter schon bei 100 lx).
+  Die Warnung erscheint nur noch, wenn beide Fenster zur selben Uhrzeit offen sind – nur dann
+  pendelt der Rollladen.
+
 ## [2.40.1]
 
 ### Behoben

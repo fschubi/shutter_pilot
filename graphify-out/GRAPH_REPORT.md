@@ -1,39 +1,38 @@
-# Graph Report - shutter_pilot  (2026-11-22)
+# Graph Report - shutter_pilot  (2026-11-26)
 
 ## Corpus Check
-- 145 files · ~291,092 words
+- 146 files · ~292,479 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3770 nodes · 8934 edges · 156 communities (143 shown, 10 thin omitted)
+- 3787 nodes · 8961 edges · 155 communities (139 shown, 12 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 78 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `af9fb0b8`
+- Built from commit: `75c1d283`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - test_brightness_lux_hold.py
 - evaluate_guard
-- elevation.py
+- helpers.py
 - TestRolePositions
 - window_trigger.py
 - _area_window
 - switch.py
-- sensor.py
+- _ForecastSensorBase
 - test_raffstore_storm_and_lock.py
 - cover_verify.py
 - test_forum_2_18.py
 - manifest.json
 - test_ventilation.py
 - awning_guard.py
-- is_cover_sun_protected
+- _setup
 - get_weather_data
 - test_hand_lift_new_episode.py
 - _positions
-- test_awning_excluded.py
 - ShutterPilotPanel
 - harness.mjs
 - test_awning_dusk.py
@@ -44,23 +43,23 @@
 - test_sun_protect_areas.py
 - ShutterPilotAwningGuardSensor
 - test_resume_automation.py
-- helpers.py
+- __init__.py
 - test_forum_2_21_3.py
-- TestWithoutFeedback
+- test_area_mode_none.py
 - _status
 - shutter-pilot-panel.js
 - resolve_shading_config
 - sun_extra_conditions_met
 - ._note
 - test_forum_findings.py
-- ._renderShutterForm
+- ._renderWinStateHint
 - is_weekend_schedule
 - .make_guard_entry
 - test_init.py
 - test_tilt_hand_detect.py
 - sun_protect_conditions_met
-- test_export_notes.py
-- test_area_mode_none.py
+- get_random_offset
+- _setup
 - test_min_drive_gap.py
 - test_reorder_shutters.py
 - remember_drive_after_close
@@ -77,13 +76,13 @@
 - CLAUDE.md – Fortschritts-Log (Archiv)
 - test_duplicate_cover.py
 - test_panel.py
-- _silent_setting_notes
+- test_export_notes.py
 - _shutter
 - test_window_trigger_stale_restore.py
 - README.md
 - _setup
 - Catch-up Drive Bookkeeping (heinzie)
-- _area
+- test_forum_2_19.py
 - test_services.py
 - TestHelperEntities
 - test_forum_2_15.py
@@ -93,25 +92,25 @@
 - test_frost_lock.py
 - async_build_export
 - set_cover_sun_protected
-- _raffstore
+- test_door_lock_raffstore.py
 - ._setup
-- __init__.py
+- _update_entry_options
 - Shutter Pilot Sidebar Panel
 - Sonnenschutz / Beschattung
-- ._renderCondDetail
+- .t
 - test_lock_replay_restore.py
-- test_shared_automation_switch.py
+- _ws_save_shutter
 - test_elevation_log_disabled.py
 - test_services_forget_window_cycle.py
-- _setup
-- ShutterPilotNextActionSensor
+- _condition_slot_met
+- .test_a_new_bright_episode_opens_again
 - CHANGELOG.md
-- test_geometry_and_season.py
-- schedule_times.py
-- sun_condition_keys
+- TestSeason
+- get_sun_mode_trigger_details
+- sun_condition_invert_key
 - test_brightness_pending_evening.py
 - Antworten auf die offenen GitHub-Issues (Entwurf, Stand 2026-10-27)
-- TestDriveVerdictInExport
+- TestBrightnessUpWaitsForTheDoor
 - test_open_stage2.py
 - conftest.py
 - Gesamtplan Raffstores
@@ -119,7 +118,7 @@
 - TestPerShutterOverride
 - data
 - Sondertage-Sensor (Workday-Sensor)
-- .test_a_real_move_still_counts
+- test_manual_move_clears_window_cycle.py
 - is_cover_ventilating
 - test_reference_run.py
 - _three_state
@@ -134,46 +133,45 @@
 - test_window_trigger_shaded_manual_reopen.py
 - HomeAssistant
 - Shutter Pilot Integration (Brand/Concept)
-- TestShadingOptOut
-- clamp_to_bounds
+- sun_condition_keys
+- test_sun_bounds.py
 - test_manual_move_clears_pending_drive.py
 - TestElevationCanBeSwitchedOff
 - TestExportReadsTheWayTheReportWasMeant
 - Tests GitHub Workflow
 - _shutter
-- _canonical_state
+- TestHeinziesSetup
 - TestTheExportExplainsAQuietWindow
-- TestDriveCommandNote
+- fixture
 - _shutter
 - get_window_state
-- _awning
+- get_position_for_role
 - const.py
-- _frost_area
+- frost_condition_met
 - TestWebSocketToggle
-- .test_neighbour_in_the_same_area_is_not
+- set_sun_protect_active
 - TestNextActionWithoutASchedule
 - note_manual_position
-- TestSecondCloseCondition
-- fixture.mjs
+- test_geometry_and_season.py
+- slider_fallback.mjs
 - drive_delay.mjs
 - copy_from.mjs
 - sorting.mjs
 - guard_slot.mjs
-- Stub
+- TestParseTime
 - reorder.mjs
 - .test_scheduler_skips_disabled_shutter
 - resolve_shade_position
-- ._coverAction
-- _local_timezone
+- TestShadingOptOut
 - tilt_buttons.mjs
-- TestNoUpCondition
+- no_up_condition_blocks
 - _ws_delete_shutter
 
 ## God Nodes (most connected - your core abstractions)
 1. `ShutterPilotPanel` - 141 edges
 2. `async_build_export()` - 124 edges
 3. `sun_condition_keys()` - 101 edges
-4. `CLAUDE.md – Fortschritts-Log (Archiv)` - 74 edges
+4. `CLAUDE.md – Fortschritts-Log (Archiv)` - 75 edges
 5. `set_cover_position()` - 65 edges
 6. `is_cover_sun_protected()` - 58 edges
 7. `get_position_store()` - 56 edges
@@ -201,27 +199,27 @@
 - **Geräteart-Polymorphie: Rollladen / Markise / Dachfenster teilen sich einen Fahrweg** — concept_sun_protection, concept_awning, concept_roof_window, concept_awning_guard [INFERRED 0.85]
 - **Drei Antworten eines toten/unlesbaren Sensors je Kontext (fail open / fail closed / fail danger)** — concept_sun_protection, concept_drive_after_close, concept_frost_protection, concept_awning_guard, concept_automatic_ventilation [INFERRED 0.85]
 
-## Communities (156 total, 10 thin omitted)
+## Communities (155 total, 12 thin omitted)
 
 ### Community 0 - "test_brightness_lux_hold.py"
 Cohesion: 0.21
 Nodes (15): _area(), clock(), drive(), _lux(), _positions(), fixture, Mindestdauer an der Lux-Schwelle im Helligkeitsmodus. bjoerg (community-…, Monotone Uhr von Hand: die Frist rechnet in Sekunden seit der ersten… (+7 more)
 
 ### Community 1 - "evaluate_guard"
-Cohesion: 0.06
-Nodes (48): async_enforce_guard(), evaluate_guard(), Merge the global protection settings with this awning's overrides. Most…, Decide whether this awning may be out, and say why not. `fail_open` is for the…, Evaluate every awning and pull in the ones that must not be out., resolve_guard_config(), _awning(), _data() (+40 more)
-
-### Community 2 - "elevation.py"
 Cohesion: 0.05
-Nodes (66): ConfigEntry, HomeAssistant, Dusk retract for awnings: drive in once, never back out on its own. Asked for…, Watch every awning's own dusk condition, if it has one configured., setup_awning_dusk(), guard_status(), is_barred(), Read the last decision without touching it. Deliberately does not evaluate:… (+58 more)
+Nodes (51): async_enforce_guard(), evaluate_guard(), _lockout_seconds(), Merge the global protection settings with this awning's overrides. Most…, Decide whether this awning may be out, and say why not. `fail_open` is for the…, Evaluate every awning and pull in the ones that must not be out., resolve_guard_config(), awning_lockout_key() (+43 more)
+
+### Community 2 - "helpers.py"
+Cohesion: 0.03
+Nodes (137): Dusk retract for awnings: drive in once, never back out on its own. Asked for…, ConfigEntry, HomeAssistant, Sun protection per area - elevation range plus optional compass direction., Set up periodic sun evaluation for sun protection., setup_elevation_listener(), _drive_command_note(), _drive_verdict() (+129 more)
 
 ### Community 3 - "TestRolePositions"
 Cohesion: 0.33
 Nodes (3): parametrize, The group services used to hard-code 100/0 and ignore these values., TestRolePositions
 
 ### Community 4 - "window_trigger.py"
-Cohesion: 0.09
-Nodes (25): _cover_is_travelling(), True while the cover reports that it is on its way somewhere. Bewusst nur der…, Where this cover *stands* – not the number it happens to pass through. Ein…, resting_position(), _first_entity_id(), get_tilt_entity_id(), Accept both a plain entity id and a single-element list., Entity id of the optional separate tilt contact, or empty string. (+17 more)
+Cohesion: 0.05
+Nodes (52): _has_window_contact(), True if any of the three possible contacts is configured., automation_allowed(), commanded_position(), get_tracked_position(), only_shutters(), positions_differ_significantly(), privacy_role() (+44 more)
 
 ### Community 5 - "_area_window"
 Cohesion: 0.08
@@ -231,9 +229,9 @@ Nodes (36): _area_window(), datetime, HomeAssistant, True if `now` lies inside t
 Cohesion: 0.07
 Nodes (28): async_setup_entry(), _kind_label(), AddEntitiesCallback, Any, ConfigEntry, HomeAssistant, Auto-Mode and master switches for Shutter Pilot., The German word this switch is named after. (+20 more)
 
-### Community 7 - "sensor.py"
-Cohesion: 0.09
-Nodes (20): async_setup_entry(), _ForecastSensorBase, AddEntitiesCallback, Any, ConfigEntry, HomeAssistant, Sensor entities exposing the next scheduled movement per area., Today's forecast high, ready to use as a shading condition. (+12 more)
+### Community 7 - "_ForecastSensorBase"
+Cohesion: 0.07
+Nodes (23): async_setup_entry(), _ForecastSensorBase, AddEntitiesCallback, Any, callback, ConfigEntry, datetime, HomeAssistant (+15 more)
 
 ### Community 8 - "test_raffstore_storm_and_lock.py"
 Cohesion: 0.14
@@ -252,52 +250,52 @@ Cohesion: 0.10
 Nodes (20): after_dependencies, codeowners, config_flow, dependencies, documentation, domain, integration_type, iot_class (+12 more)
 
 ### Community 12 - "test_ventilation.py"
-Cohesion: 0.12
-Nodes (25): _area(), _blocked_setup(), _conditions(), cover_calls(), _evaluate(), _fast_startup_restore(), _positions(), fixture (+17 more)
+Cohesion: 0.11
+Nodes (27): True when every configured ventilation condition holds. All conditions are…, vent_conditions_met(), _area(), _blocked_setup(), _conditions(), cover_calls(), _evaluate(), _fast_startup_restore() (+19 more)
 
 ### Community 13 - "awning_guard.py"
-Cohesion: 0.04
-Nodes (73): async_frost_hold(), async_frost_release(), async_retract_awning(), async_retract_storm(), clamp_to_rest(), describe_reasons(), _drop_frost_marker(), extends_upward() (+65 more)
+Cohesion: 0.05
+Nodes (76): async_frost_hold(), async_frost_release(), async_retract_awning(), async_retract_storm(), clamp_to_rest(), describe_reasons(), _drop_frost_marker(), extends_upward() (+68 more)
 
-### Community 14 - "is_cover_sun_protected"
+### Community 14 - "_setup"
 Cohesion: 0.10
-Nodes (21): is_cover_sun_protected(), True if shading currently holds this specific cover., Die Tagesmerker des Schedulers loeschen. Beim Aufbau gilt jede heute schon…, charly166 und Linos: nicht beschatten, was noch gar nicht offen ist., Das bisherige Verhalten – und genau das, was gemeldet wurde., bjoerg: die Beschattung wurde bei sinkender Sonne nie aufgeloest., Das alte Verhalten: Merker faellt, gefahren wird nicht., MartyBr: die Beschattung je Bereich abschalten, ohne die Automatik. (+13 more)
+Nodes (19): Die Tagesmerker des Schedulers loeschen. Beim Aufbau gilt jede heute schon…, charly166 und Linos: nicht beschatten, was noch gar nicht offen ist., Das bisherige Verhalten – und genau das, was gemeldet wurde., bjoerg: die Beschattung wurde bei sinkender Sonne nie aufgeloest., Das alte Verhalten: Merker faellt, gefahren wird nicht., MartyBr: die Beschattung je Bereich abschalten, ohne die Automatik., Der Punkt der ganzen Uebung: die Rollladen kommen wieder hoch. Stehenlassen…, Die zwei Schalter sind getrennt – das war der ganze Wunsch. (+11 more)
 
 ### Community 15 - "get_weather_data"
 Cohesion: 0.10
 Nodes (26): async_fetch_forecast(), _configured_entity(), get_weather_data(), _peak_today(), Any, ConfigEntry, HomeAssistant, Fetch today's weather forecast for use as a shading condition. Since Home… (+18 more)
 
 ### Community 16 - "test_hand_lift_new_episode.py"
-Cohesion: 0.13
-Nodes (29): _area(), clock(), drive(), _drives(), _hand_open(), _lux(), fixture, Ein von Hand geoeffneter Rollladen bleibt im Helligkeitsmodus abends offen.… (+21 more)
+Cohesion: 0.15
+Nodes (27): _area(), clock(), drive(), _drives(), _hand_open(), _lux(), fixture, Ein von Hand geoeffneter Rollladen bleibt im Helligkeitsmodus abends offen.… (+19 more)
 
 ### Community 17 - "_positions"
 Cohesion: 0.07
 Nodes (60): _close_delay_seconds(), _debounce_seconds(), Debounce plus the configured "I'll be right back" wait, in seconds., How long "closed" has to hold before we act on it., _door(), parametrize, Rueckfahrt nach dem Schliessen verzoegern (heinzel, #252). Im Winter abends…, Tuer auf (hier: gekippt), der Rollladen steht danach auf 50 %. (+52 more)
 
-### Community 18 - "test_awning_excluded.py"
-Cohesion: 0.22
-Nodes (7): filter_shutters_by_area(), Filter shutters by area_up_id or area_down_id. Every kind is in by default…, cover_calls(), _fast_startup_restore(), fixture, Was eine Markise nicht mitmacht. Sie steht in derselben Liste wie die…, „Zu" an einem Dachfenster heisst schliessen – ein Knopfdruck.
+### Community 20 - "harness.mjs"
+Cohesion: 0.13
+Nodes (4): code, DEFAULT_PANEL, Host, Stub
 
 ### Community 21 - "test_awning_dusk.py"
 Cohesion: 0.08
-Nodes (35): is_dusk_retracted(), Any, True while dusk retract alone is holding this awning in. Read by elevation.py…, awning_dusk_condition_met(), True when this awning's own "get dark, retract" condition holds. Lives on the…, _area(), _awning(), cover_calls() (+27 more)
+Nodes (33): is_dusk_retracted(), Any, True while dusk retract alone is holding this awning in. Read by elevation.py…, _area(), _awning(), cover_calls(), _fast_startup_restore(), _positions() (+25 more)
 
 ### Community 22 - "_latest_deadline"
 Cohesion: 0.13
 Nodes (22): _latest_deadline(), time, The clock time this direction runs at regardless of the lux value. None means…, _area(), _as_local(), _berlin(), _monday(), datetime (+14 more)
 
 ### Community 23 - "test_shade_hours.py"
-Cohesion: 0.16
-Nodes (14): True if the clock allows shading right now. Elevation, azimuth, conditions and…, shading_time_window_ok(), _at(), cover_calls(), _fast_startup_restore(), datetime, fixture, Beschattung nur innerhalb bestimmter Uhrzeiten. Aus GitHub-Diskussion #5… (+6 more)
+Cohesion: 0.10
+Nodes (22): True if the clock allows shading right now. Elevation, azimuth, conditions and…, shading_time_window_ok(), _at(), cover_calls(), _fast_startup_restore(), datetime, fixture, Beschattung nur innerhalb bestimmter Uhrzeiten. Aus GitHub-Diskussion #5… (+14 more)
 
 ### Community 24 - "get_sun_mode_triggers"
-Cohesion: 0.13
-Nodes (22): get_sun_mode_triggers(), Return (up, down) datetimes for a sun-mode area, jitter and bounds included.…, _area(), _hm(), parametrize, Tests for the earliest/latest clock bounds in sun mode. MartyBr's case from the…, Midsummer: the sun is up at 05:10, the shutters wait until 07:30., Midwinter: sunrise at 08:40 would be too late, so 09:00 caps it. (+14 more)
+Cohesion: 0.17
+Nodes (17): get_sun_mode_triggers(), Return (up, down) datetimes for a sun-mode area, jitter and bounds included.…, _area(), _hm(), parametrize, Midsummer: the sun is up at 05:10, the shutters wait until 07:30., Midwinter: sunrise at 08:40 would be too late, so 09:00 caps it., Existing setups must not shift at all. (+9 more)
 
 ### Community 25 - "test_awning_shading.py"
-Cohesion: 0.14
-Nodes (23): awning_lockout_key(), Return the lockout option key for a guard slot., awning_shade_position(), Extension for the current sun height. A high sun is shaded by a short…, _area(), _awning(), cover_calls(), _fast_startup_restore() (+15 more)
+Cohesion: 0.15
+Nodes (21): awning_shade_position(), Extension for the current sun height. A high sun is shaded by a short…, _area(), _awning(), cover_calls(), _fast_startup_restore(), _positions(), fixture (+13 more)
 
 ### Community 26 - "test_sun_protect_areas.py"
 Cohesion: 0.13
@@ -308,28 +306,28 @@ Cohesion: 0.11
 Nodes (13): BinarySensorEntity, async_setup_entry(), AddEntitiesCallback, Any, callback, ConfigEntry, datetime, HomeAssistant (+5 more)
 
 ### Community 28 - "test_resume_automation.py"
-Cohesion: 0.08
-Nodes (29): cover_calls(), _drive_from_outside(), _fast_startup(), _in(), fixture, Die Automatik nach einem Eingriff von aussen wieder uebernehmen lassen. pcsv17…, Was pcsv17s eigener Schalter tut: den Cover von aussen verstellen., Genau sein Ablauf, gegen die echte Beschattung gefahren. (+21 more)
+Cohesion: 0.07
+Nodes (31): cover_calls(), _drive_from_outside(), _fast_startup(), _in(), fixture, Die Automatik nach einem Eingriff von aussen wieder uebernehmen lassen. pcsv17…, Was pcsv17s eigener Schalter tut: den Cover von aussen verstellen., Genau sein Ablauf, gegen die echte Beschattung gefahren. (+23 more)
 
-### Community 29 - "helpers.py"
-Cohesion: 0.04
-Nodes (82): Binary sensor entities exposing the sun protection state per area., async_restore_positions_on_startup(), _collect_cover_entity_ids(), ConfigEntry, HomeAssistant, Track cover positions and restore after Home Assistant restart., After HA start, restore persisted positions if cover integration restored wrong…, Listen to cover state changes and persist positions. (+74 more)
+### Community 29 - "__init__.py"
+Cohesion: 0.05
+Nodes (60): ConfigEntry, HomeAssistant, Watch every awning's own dusk condition, if it has one configured., setup_awning_dusk(), async_restore_positions_on_startup(), _collect_cover_entity_ids(), ConfigEntry, HomeAssistant (+52 more)
 
 ### Community 30 - "test_forum_2_21_3.py"
 Cohesion: 0.14
 Nodes (23): cover_calls(), _gated_sleep(), _moving(), _positions(), fixture, c.radis Fall: der Rollladen parkt auf 74 %, einer Zahl, die nirgends steht.…, Der Rollladen ist unterwegs – die gemeldete Position ist eine Momentaufnahme., Fenster wird angefasst, waehrend der Abendlauf noch faehrt. (+15 more)
 
-### Community 31 - "TestWithoutFeedback"
-Cohesion: 0.18
-Nodes (8): _blind(), _normal(), Der Antrieb meldet keine Position – nur `state`, kein current_position., Bisheriges Verhalten für alle anderen Rollläden., Vor der ersten Fahrt weiss auch die Buchführung nichts., Meldet der Antrieb eine Position, gilt sie – auch im Blind-Modus., TestWithFeedback, TestWithoutFeedback
+### Community 31 - "test_area_mode_none.py"
+Cohesion: 0.21
+Nodes (8): True if the end of the shading day should drive the cover open. Without a…, shade_release_opens(), cover_calls(), _fast_startup_restore(), fixture, malleYay: Shutter Pilot nur fuer den Sonnenschutz. „Gibt es eine Moeglichkeit,…, Ohne Zeitplan gibt es keinen Abendplan, der die Beschattung abloest., TestShadeReleaseIsImplied
 
 ### Community 32 - "_status"
 Cohesion: 0.14
 Nodes (16): _berlin_offset(), _options(), date, Tests for the area_triggers block in the get_status WebSocket payload. Xerenas…, The reported case: 07:30 must be sent, not the 06:07 sunrise., The panel falls back to its own display – but must get everything else., bjoerg und charly166: die Markisen-Einstellungen standen wieder leer da.…, GitHub #9: Entität im Formular gewählt, Speichern gedrückt, Feld wieder leer.… (+8 more)
 
 ### Community 33 - "shutter-pilot-panel.js"
-Cohesion: 0.08
-Nodes (24): AWNING_GUARD_SLOTS, AWNING_UNUSED_KEYS, BOOL_COND_DOMAINS, COMPASS_PRESETS, COND_DOMAINS, COND_SLOTS, FORCED_BELOW_SLOTS, HINTS (+16 more)
+Cohesion: 0.07
+Nodes (30): AWNING_GUARD_SLOTS, AWNING_UNUSED_KEYS, BOOL_COND_DOMAINS, COMPASS_PRESETS, COND_DOMAINS, COND_SLOTS, FORCED_BELOW_SLOTS, hasGuard() (+22 more)
 
 ### Community 34 - "resolve_shading_config"
 Cohesion: 0.16
@@ -340,20 +338,20 @@ Cohesion: 0.11
 Nodes (17): True when every configured extra condition for shading is satisfied. Pass the…, sun_extra_conditions_met(), _area(), Tests for the extra shading conditions. Forum feedback (Nicknol): shading…, A passing cloud must not make the shutters bounce., A nonsensical configuration must not create a trap., Nicknol's case: real sunshine AND a warm day., Extra conditions gate shading; they never widen the sun window. (+9 more)
 
 ### Community 36 - "._note"
-Cohesion: 0.12
+Cohesion: 0.11
 Nodes (12): bjoerg: „nur die Abfrage des Fenstergriffs scheint zu haengen." Sein Kontakt…, Ohne Kipp-Zustand ist alles in Ordnung – dafuer gibt es 2.8.2., Ein `sensor` darf melden, was er will – kein Hinweis., „auf" faltet auf on – erreichbar, also kein Hinweis., c.radis Fall: „wenn das Fenster auf gekippt steht, wird der Rolladen gar nicht…, Steht das Fenster gerade gekippt, ist das die halbe Antwort., Mit dem Haken faehrt er – dann gibt es nichts zu erklaeren., Ohne Kontakt tritt „Fenster offen" nie ein – der Haken tut nichts. (+4 more)
 
 ### Community 37 - "test_forum_findings.py"
-Cohesion: 0.11
-Nodes (16): drives(), fixture, Die fünf Funde aus der Forum-Runde vom 08.08.2026 – und der Export. Zwei…, Aufgezeichnete Fahrbefehle – ohne echte Cover-Integration., Ein Bereich mit Sonnenschutz, Haltezeit 30 min und einer Lux-Bedingung., Eine Runde der Sonnenschutz-Auswertung., F1: der Merker wurde gesetzt, bevor gefahren wurde., F5: die Haltezeit hielt auch das berechtigte Ende auf. (+8 more)
+Cohesion: 0.13
+Nodes (14): drives(), fixture, Die fünf Funde aus der Forum-Runde vom 08.08.2026 – und der Export. Zwei…, Aufgezeichnete Fahrbefehle – ohne echte Cover-Integration., Ein Bereich mit Sonnenschutz, Haltezeit 30 min und einer Lux-Bedingung., Eine Runde der Sonnenschutz-Auswertung., F1: der Merker wurde gesetzt, bevor gefahren wurde., F5: die Haltezeit hielt auch das berechtigte Ende auf. (+6 more)
 
 ### Community 39 - "is_weekend_schedule"
-Cohesion: 0.13
-Nodes (15): get_random_offset(), get_time_mode_triggers(), is_weekend_schedule(), date, Return (up, down) times for a time-mode area, jitter included., True if the weekend schedule applies. When a workday sensor is configured it…, Return the presence-simulation jitter in minutes for one day. Deterministic per…, _area() (+7 more)
+Cohesion: 0.20
+Nodes (10): get_time_mode_triggers(), is_weekend_schedule(), Return (up, down) times for a time-mode area, jitter included., True if the weekend schedule applies. When a workday sensor is configured it…, _area(), Tests for the schedule maths: weekday detection, jitter, trigger times., A public holiday on a Monday must use the weekend schedule., Shift work: a Saturday that is a working day uses the weekday plan. (+2 more)
 
 ### Community 40 - ".make_guard_entry"
-Cohesion: 0.18
-Nodes (5): fixture, `_guard_rows()` beschriftete die Schwellen bisher immer als "nicht invertiert"…, Derselbe Fehler wie beim Wind (Faktor 3,6 daneben), nur an zwei weiteren…, TestGuardTableRespectsInversion, TestRainAndIceUnitPlausibility
+Cohesion: 0.22
+Nodes (4): `_guard_rows()` beschriftete die Schwellen bisher immer als "nicht invertiert"…, Derselbe Fehler wie beim Wind (Faktor 3,6 daneben), nur an zwei weiteren…, TestGuardTableRespectsInversion, TestRainAndIceUnitPlausibility
 
 ### Community 41 - "test_init.py"
 Cohesion: 0.10
@@ -367,13 +365,13 @@ Nodes (22): _blind(), fixture, Handverstellung nur der Lamellen (Raffstore, Stuf
 Cohesion: 0.17
 Nodes (12): azimuth_in_sun_protect_range(), True when the sun stands in front of this area's windows. Ranges may wrap…, True when both elevation and compass direction call for shading., sun_protect_conditions_met(), _area(), parametrize, Tests for elevation + azimuth based sun protection., The bug azimuth support fixes: 0–15° elevation is hit twice a day. (+4 more)
 
-### Community 44 - "test_export_notes.py"
-Cohesion: 0.11
-Nodes (12): Ein Kipp-Zustand, den der Kontakt gar nicht melden kann. Ein `binary_sensor`…, _window_contact_note(), entry(), _entry_with_area(), Hinweise im Export, die ohne laufende Automatik pruefbar sind. Bewusst nicht in…, bjoerg: „Mein Regensensor liefert nur nass und trocken". In…, Ein Entry mit hingestelltem Laufzeit-Dict – kein echtes Setup., bjoergs Export: „Fensterrichtung: ❌ (295,4° in [225° – 315°])". Die Zeile las… (+4 more)
+### Community 44 - "get_random_offset"
+Cohesion: 0.24
+Nodes (5): get_random_offset(), date, Return the presence-simulation jitter in minutes for one day. Deterministic per…, Scheduler and sensor must agree, so repeated calls must match., TestRandomOffset
 
-### Community 46 - "test_area_mode_none.py"
-Cohesion: 0.11
-Nodes (17): cover_calls(), _fast_startup_restore(), fixture, malleYay: Shutter Pilot nur fuer den Sonnenschutz. „Gibt es eine Moeglichkeit,…, Ohne Zeitplan gibt es keinen Abendplan, der die Beschattung abloest., Vergangene Uhrzeiten gelten beim Aufbau als erledigt – sonst holte ein Reload…, Gegenprobe: dieselben Zeiten, nur mit Modus., Der Punkt der ganzen Uebung. (+9 more)
+### Community 46 - "_setup"
+Cohesion: 0.19
+Nodes (11): Vergangene Uhrzeiten gelten beim Aufbau als erledigt – sonst holte ein Reload…, Gegenprobe: dieselben Zeiten, nur mit Modus., Der Punkt der ganzen Uebung., Ohne Zeitplan holt niemand den Rollladen von der halben Hoehe. Im Zeitmodus…, c.radi im Forum: "Mein Rolladen Schlafzimmer links faehrt abends nicht…, Gegenprobe zur vorigen: im Zeitmodus bleibt er stehen wie bisher., _rearm_scheduler(), _setup() (+3 more)
 
 ### Community 47 - "test_min_drive_gap.py"
 Cohesion: 0.15
@@ -405,7 +403,7 @@ Nodes (7): code, codes, de, DEFAULT_PANEL, Host, I18N, Stub
 
 ### Community 56 - "set_cover_position"
 Cohesion: 0.09
-Nodes (22): my_position_target(), _press_my_position(), Set cover position (and optionally slat angle) and persist the result. Returns…, Supported-features bitmask of a cover, 0 when it cannot be read., The taught "My" stop, when this target is close enough to it. Returns…, Trigger the My entity, whichever domain it lives in., Drive a cover to a position, falling back to open/close where needed. Many…, Set the slat angle. Covers without tilt support are skipped quietly. (+14 more)
+Nodes (25): Set cover position (and optionally slat angle) and persist the result. Returns…, set_cover_position(), _current_tilt(), _end_positions(), _interval_days(), _monthday(), Any, ConfigEntry (+17 more)
 
 ### Community 57 - "test_sensor_names.py"
 Cohesion: 0.15
@@ -429,19 +427,19 @@ Nodes (19): cover_calls(), entry(), _fast_startup_restore(), _positions(), fixtu
 
 ### Community 62 - "CLAUDE.md – Fortschritts-Log (Archiv)"
 Cohesion: 0.03
-Nodes (74): 2026-08-02 – 2.4.1: Hauptschalter und Menü-Knopf, 2026-08-02 – 2.4.2: Rechteprüfung (Review von frenck), 2026-08-02 – 2.5.0: Automatik pro Rollladen (Feedback von Linos), 2026-08-06 – 2.6.0, Teil 1: Zeitzone im Sonnenmodus (Meldung von Xerenas), 2026-08-06 – 2.6.0, Teil 2: drei Features aus dem Forum, 2026-08-07 – 2.7.0, Teil 1: zwei GitHub-Issues, 2026-08-07 – 2.7.0, Teil 2: die Restliste abgearbeitet, 2026-08-07 – 2.7.1: die drei Restpunkte (+66 more)
+Nodes (75): 2026-08-02 – 2.4.1: Hauptschalter und Menü-Knopf, 2026-08-02 – 2.4.2: Rechteprüfung (Review von frenck), 2026-08-02 – 2.5.0: Automatik pro Rollladen (Feedback von Linos), 2026-08-06 – 2.6.0, Teil 1: Zeitzone im Sonnenmodus (Meldung von Xerenas), 2026-08-06 – 2.6.0, Teil 2: drei Features aus dem Forum, 2026-08-07 – 2.7.0, Teil 1: zwei GitHub-Issues, 2026-08-07 – 2.7.0, Teil 2: die Restliste abgearbeitet, 2026-08-07 – 2.7.1: die drei Restpunkte (+67 more)
 
 ### Community 63 - "test_duplicate_cover.py"
 Cohesion: 0.25
 Nodes (9): MockConfigEntry, Denselben Rollladen zweimal anlegen – der Riegel und der Hinweis. Forum,…, Beim Bearbeiten ist der eigene Eintrag natuerlich derselbe Rollladen., Zwei leere Felder sind kein Doppeleintrag, sondern ein halbes Formular., _save(), _setup(), _shutter(), TestExportNamesExistingDuplicates (+1 more)
 
 ### Community 64 - "test_panel.py"
-Cohesion: 0.07
-Nodes (33): CompletedProcess, Das Panel rendern, ohne Home Assistant zu starten. Warum das hier steht und…, Bereiche kommen mit, Identitaet und Fenstersensoren nicht., Sortiert angezeigt, aber der Index zeigt auf die volle Liste – sonst loescht…, Eine 0 bei den Sonnengrenzen ist eine Grenze, nur leer ist keine (Linos). Ohne…, Windschutz fuer Raffstores und Sperr-Entitaet (2.25.0)., `window_react` und `drive_after_close_up` (Raffstore, Florian/Claus). Das…, Hoehe/Lamellen "unveraendert" und der Winkel nach der Hoehe (2.26.0). (+25 more)
+Cohesion: 0.06
+Nodes (37): CompletedProcess, Das Panel rendern, ohne Home Assistant zu starten. Warum das hier steht und…, Bereiche kommen mit, Identitaet und Fenstersensoren nicht., Sortiert angezeigt, aber der Index zeigt auf die volle Liste – sonst loescht…, Eine 0 bei den Sonnengrenzen ist eine Grenze, nur leer ist keine (Linos). Ohne…, Windschutz fuer Raffstores und Sperr-Entitaet (2.25.0)., `window_react` und `drive_after_close_up` (Raffstore, Florian/Claus). Das…, Hoehe/Lamellen "unveraendert" und der Winkel nach der Hoehe (2.26.0). (+29 more)
 
-### Community 65 - "_silent_setting_notes"
-Cohesion: 0.21
-Nodes (6): Settings that are stored, look like they work, and do nothing. Both come from…, _silent_setting_notes(), Eingeschaltet ist die Vorgabe – als Warnung waere das Rauschen., Beides aus Wolfs Export: gespeichert, sichtbar, wirkungslos., Ohne „Eigene Ausrichtung" liest die Beschattung den Haken nie., TestSilentSettings
+### Community 65 - "test_export_notes.py"
+Cohesion: 0.13
+Nodes (10): Settings that are stored, look like they work, and do nothing. Both come from…, _silent_setting_notes(), _entry_with_area(), Hinweise im Export, die ohne laufende Automatik pruefbar sind. Bewusst nicht in…, Eingeschaltet ist die Vorgabe – als Warnung waere das Rauschen., Beides aus Wolfs Export: gespeichert, sichtbar, wirkungslos., malleYays Modus im Bericht. Ein Bereich, der nichts faehrt, sieht Einstellung…, Ohne „Eigene Ausrichtung" liest die Beschattung den Haken nie. (+2 more)
 
 ### Community 66 - "_shutter"
 Cohesion: 0.18
@@ -463,9 +461,9 @@ Nodes (18): _area(), calls(), _fast(), _morning(), _positions(), fixture, Sichts
 Cohesion: 0.23
 Nodes (11): cover_calls(), _driven(), entry(), datetime, fixture, heinzies dritte Meldung: der nachgeholte Rollladen blieb morgens unten. Sein…, Genau heinzies Ablauf, vier Schritte., Der Merker darf nicht bei jedem Durchlauf neu geschrieben werden. (+3 more)
 
-### Community 71 - "_area"
+### Community 71 - "test_forum_2_19.py"
 Cohesion: 0.15
-Nodes (9): _area(), Frost fragt "kaelter als" – dort ist 0 als Aufhebepunkt normal., Ein leeres Feld faellt auf den Einschaltpunkt zurueck., bjoergs Fall: 0 ist eine echte Schranke, kein "leer"., Nach einem Neustart ist der Merker leer – dann gilt on_above., Der Export benennt den Fall, denn Bestandsdaten tragen die 0 weiter., TestEmptyReleasePoint, TestExportNote (+1 more)
+Nodes (11): _area(), data(), fixture, Forum 2.19.0 – der Aufhebepunkt, der aus einem leeren Feld entstand. bjoerg im…, Ein leeres Feld faellt auf den Einschaltpunkt zurueck., bjoergs Fall: 0 ist eine echte Schranke, kein "leer"., Nach einem Neustart ist der Merker leer – dann gilt on_above., Der Export benennt den Fall, denn Bestandsdaten tragen die 0 weiter. (+3 more)
 
 ### Community 72 - "test_services.py"
 Cohesion: 0.19
@@ -476,8 +474,8 @@ Cohesion: 0.14
 Nodes (7): parametrize, Helpers as a condition (DocSpider). A house mode, a cinema flag or a cleaning-…, No on_above/off_below configured, and none needed., The panel stores the option verbatim, HA reports it verbatim., Nothing to compare against – it must not block, but it warns., Mirrors the order the panel renders – list first, domain second., TestHelperEntities
 
 ### Community 74 - "test_forum_2_15.py"
-Cohesion: 0.17
-Nodes (12): automated_up_blocked(), datetime, True if this area must not open automatically today because it is a weekend.…, Reason the automated opening of this whole area is off today, or None. One call…, weekend_blocks_up(), cover_calls(), _fast_startup_restore(), fixture (+4 more)
+Cohesion: 0.19
+Nodes (9): True if this area must not open automatically today because it is a weekend.…, weekend_blocks_up(), cover_calls(), _fast_startup_restore(), fixture, Die Meldungen aus dem Forum vom August, gegen den echten Code gehalten. Vier…, c.radi, Linos, hollsten: am Wochenende gar nicht hochfahren., hollstens Fall: samstags arbeiten, sonntags ausschlafen. Der Sondertage-Sensor… (+1 more)
 
 ### Community 75 - "resolve_sun_geometry"
 Cohesion: 0.19
@@ -488,7 +486,7 @@ Cohesion: 0.12
 Nodes (14): manual_position_is_a_close(), True if a hand-driven position is simply "closed", not an override. The manual…, Von Hand ganz hochgefahren gilt nicht als "zu" (Claus, simon42 #217). Seine…, Florian: auf und zu sind dieselbe Position, nur die Lamellen., Bestandsschutz: wo auf und zu weit auseinander liegen, bleibt es., 0 = oben, 70 = zu: weiter nach unten (100) ist weiter zu., Dreissig Prozent Abstand: die Regel greift weiter., _shutter() (+6 more)
 
 ### Community 77 - "Any"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (35): _ages(), _condition_note(), _condition_rows(), _deferred_close_note(), _dusk_row(), _fmt(), _fmt_labelled(), _guard_rows() (+27 more)
 
 ### Community 78 - "test_frost_lock.py"
@@ -496,24 +494,24 @@ Cohesion: 0.20
 Nodes (36): _cover(), cover_calls(), _held(), _no_schedule(), _positions(), fixture, Frostsperre für Rollläden (eurofinder, simon42 #237). Der bestehende…, Ein leerer Akku darf das Haus nicht den ganzen Winter stilllegen. (+28 more)
 
 ### Community 79 - "async_build_export"
-Cohesion: 0.07
-Nodes (20): async_build_export(), _awning_silent_notes(), ConfigEntry, Build the export as markdown plus the raw options behind it., Shutter settings left on an awning, where they mean nothing. Same class as…, Jedes Speichern im Panel laedt neu und leert die Merker. Wer danach exportiert…, Bestandsinstallation, die den Schluessel noch nicht kennt., Die haeufigste Frage an einer Markise ist „warum ist sie nicht draussen". Die… (+12 more)
+Cohesion: 0.05
+Nodes (28): async_build_export(), _awning_silent_notes(), _keep_note(), ConfigEntry, Build the export as markdown plus the raw options behind it., Which states leave the height or the slats alone, in plain words. "It only…, Shutter settings left on an awning, where they mean nothing. Same class as…, Jedes Speichern im Panel laedt neu und leert die Merker. Wer danach exportiert… (+20 more)
 
 ### Community 80 - "set_cover_sun_protected"
 Cohesion: 0.16
 Nodes (13): Track shading per cover, so windows facing different ways act apart., set_cover_sun_protected(), cover_calls(), fixture, Die zweite Forum-Runde vom 08.08.2026 – heinzies Fensterkontakt. Zwei getrennte…, Der Rollladen steht auf Beschattung, das Fenster geht auf., Der Grund für die Prüfung bleibt bestehen: tagsüber nicht anfassen., Aussperrschutz an, Kipp-Position darunter – wer gewinnt? Der Fenstertrigger ist… (+5 more)
 
-### Community 81 - "_raffstore"
-Cohesion: 0.19
-Nodes (12): _morning_tick(), _positions(), _raffstore(), Der Scheduler um 07:00 des naechsten Tages (vermeidet das Vormarkieren beim…, Bestandsschutz: ohne den neuen Haken faehrt die Hochfahrt wie bisher., Bestandsschutz: wer nur `drive_after_close` gesetzt hat, faehrt morgens bei…, Bestandsschutz: ohne den Schluessel bewegt der Kontakt wie bisher., Auf und zu sind dieselbe Position, nur die Lamellen unterscheiden sich. (+4 more)
+### Community 81 - "test_door_lock_raffstore.py"
+Cohesion: 0.20
+Nodes (14): calls(), _morning_tick(), _positions(), fixture, _raffstore(), Tuer als reiner Aussperrschutz (Raffstore, simon42 #191 Florian, #196 Claus).…, Der Scheduler um 07:00 des naechsten Tages (vermeidet das Vormarkieren beim…, Bestandsschutz: ohne den neuen Haken faehrt die Hochfahrt wie bisher. (+6 more)
 
 ### Community 82 - "._setup"
 Cohesion: 0.30
 Nodes (5): hollizone: „nachdem ich ein Rollo zu Dachfenster importiert hatte gab es leider…, Derselbe Fall wie `TestGuardBeatsShading` in test_awning_shading.py, nur an der…, Erst auf (trocken), dann Regen – der Schutz faehrt genau einmal zu. Die…, TestGuardBeatsShadingForAWindow, TestOpeningAndClosingByConditions
 
-### Community 83 - "__init__.py"
-Cohesion: 0.10
-Nodes (22): cancel_all(), Drop every pending check, used when unloading the entry., _apply_shutter_automation_state(), async_migrate_entry(), async_setup(), async_unload_entry(), _drop_registry_entries(), ConfigEntry (+14 more)
+### Community 83 - "_update_entry_options"
+Cohesion: 0.17
+Nodes (11): _apply_shutter_automation_state(), async_migrate_entry(), _drop_registry_entries(), ConfigEntry, Migrate an old config entry. Only version 1 exists so far., Persist new options (deep-copied) to the config entry., Remove our own entities from the registry after a delete. Home Assistant keeps…, Keep the per-shutter automation switch in step with the saved value. The… (+3 more)
 
 ### Community 84 - "Shutter Pilot Sidebar Panel"
 Cohesion: 0.20
@@ -527,9 +525,9 @@ Nodes (11): Fahrtkontrolle (cover_verify), Mindestabstand zwischen Fahrbefehlen,
 Cohesion: 0.28
 Nodes (16): _blind(), calls(), _door_cycle_under_lock(), fixture, Rueckfahrt nach der Tuer, wenn die Sperre sie zurueckgehalten hat. Claus…, Tuer auf (faehrt hoch), Aktor sperrt sich, Tuer zu - die Sperre steht noch., Wer die Sperre als Handsperre nutzt, schaltet das Nachholen ab., Bestandsschutz: eine Sperre allein fuehrt zu keiner Fahrt. (+8 more)
 
-### Community 88 - "test_shared_automation_switch.py"
-Cohesion: 0.20
-Nodes (10): _own_automation_switch(), The automation switch that belongs to this cover, or "". Looked up in the…, _Connection, _keys(), Rollladen und Dachfenster teilten sich einen Automatik-Schalter (Fatmax,…, _run(), _setup(), TestTheStoredKeyHeals (+2 more)
+### Community 88 - "_ws_save_shutter"
+Cohesion: 0.19
+Nodes (12): _own_automation_switch(), The automation switch that belongs to this cover, or "". Looked up in the…, Create or update a shutter. Pass index to update, omit to create., _ws_save_shutter(), _Connection, _keys(), Rollladen und Dachfenster teilten sich einen Automatik-Schalter (Fatmax,…, _run() (+4 more)
 
 ### Community 89 - "test_elevation_log_disabled.py"
 Cohesion: 0.31
@@ -539,29 +537,25 @@ Nodes (7): cover_calls(), _fast_startup(), fixture, Die Beschattungs-Logzeile be
 Cohesion: 0.23
 Nodes (13): cover_calls(), _night_cycle(), fixture, parametrize, Die Dienste verwerfen die Rueckfahrhoehe des Fenstertriggers (StephanD77,…, Kontrolle: stop_group faehrt keine Position, es ist keine neue Entscheidung…, Rollladen zu, Fenster geht auf: der Trigger merkt sich die Hoehe., _service() (+5 more)
 
-### Community 91 - "_setup"
-Cohesion: 0.22
-Nodes (8): Alles andere spricht fuer Beschattung – nur die Uhr nicht., Eine Uhrzeitgrenze kommt nicht zurueck – anders als eine Wolke. Wuerde die…, Was entscheidet, muss im Bericht stehen – sonst sucht wieder jemand., Sonst stuende an jedem Rollladen eine Zeile, die nichts beschreibt., _setup(), TestAgainstTheRealShading, TestExport, _ticks()
-
-### Community 92 - "ShutterPilotNextActionSensor"
-Cohesion: 0.21
-Nodes (4): callback, datetime, Timestamp of the next scheduled up/down movement for one area., ShutterPilotNextActionSensor
+### Community 91 - "_condition_slot_met"
+Cohesion: 0.40
+Nodes (4): _condition_slot_met(), Evaluate one extra shading condition. Unreadable never blocks shading., MartyBr trug beim Azimut 40 / 130 ein und meinte den Bereich 40°–130°., TestHysteresisTheWrongWayRound
 
 ### Community 93 - "CHANGELOG.md"
 Cohesion: 0.31
 Nodes (8): Manuelle Übersteuerung (manual_override), Dienst shutter_pilot.resume_automation, Zweite Beschattungsposition (sp_alt), Forum Answers 2.17.0, Forum Answers 2.18.0, c.radi (Forumsnutzer), pcsv17 (Forumsnutzer), Smons (Forumsnutzer)
 
-### Community 94 - "test_geometry_and_season.py"
-Cohesion: 0.18
-Nodes (8): True if today lies inside the configured shading season. Months are inclusive…, season_allows_shading(), parametrize, Tests for per-shutter shading geometry, season window and partial close. Forum…, October to March must wrap, like the azimuth range does., The case Linos described: one room, south and west windows., TestSeason, TestWindowsFacingDifferentWays
+### Community 94 - "TestSeason"
+Cohesion: 0.32
+Nodes (3): parametrize, October to March must wrap, like the azimuth range does., TestSeason
 
-### Community 95 - "schedule_times.py"
-Cohesion: 0.11
-Nodes (29): _bound(), _clamp_with_reason(), get_next_action(), get_sun_mode_trigger_details(), infer_today_sun_time(), _local_sun_time(), _next_from_times(), parse_time() (+21 more)
+### Community 95 - "get_sun_mode_trigger_details"
+Cohesion: 0.23
+Nodes (13): _bound(), _clamp_with_reason(), get_sun_mode_trigger_details(), infer_today_sun_time(), _local_sun_time(), Any, datetime, HomeAssistant (+5 more)
 
-### Community 96 - "sun_condition_keys"
-Cohesion: 0.04
-Nodes (80): Return (entity, on_above, off_below, states) option keys for a slot., Return the "compare downwards" option key for a slot., sun_condition_invert_key(), sun_condition_keys(), close_condition_met(), condition_memory(), _condition_slot_met(), frost_condition_met() (+72 more)
+### Community 96 - "sun_condition_invert_key"
+Cohesion: 0.15
+Nodes (12): Return the "compare downwards" option key for a slot., sun_condition_invert_key(), numeric_inverted(), Whether a slot's numeric branch compares "colder / darker than". Frost, ice and…, Frost fragt "kaelter als" – dort ist 0 als Aufhebepunkt normal., _cfg(), Frostschutz und Eisschutz fragen bei Zahlen immer „kälter als". eurofinder…, eurofinders Werte: einschalten unter 2, ausschalten über 3. (+4 more)
 
 ### Community 97 - "test_brightness_pending_evening.py"
 Cohesion: 0.23
@@ -570,10 +564,6 @@ Nodes (19): drive(), _drives(), _lux(), fixture, Die Vormerkung "heute noch hoch
 ### Community 98 - "Antworten auf die offenen GitHub-Issues (Entwurf, Stand 2026-10-27)"
 Cohesion: 0.17
 Nodes (11): #11 (offen lassen, Zwischenstand), #13 (schließen), #14 (offen lassen), #15 (offen lassen, Rückfragen), #16 (offen lassen), #17 (schließen), #18 (schließen), #19 (schließen, Englisch) (+3 more)
-
-### Community 99 - "TestDriveVerdictInExport"
-Cohesion: 0.18
-Nodes (4): „Warum faehrt er morgens nicht hoch" stand bisher nirgends im Bericht. Jede…, Gespeichert, sichtbar, wirkungslos – die bekannte Klasse., _remember(), TestDriveVerdictInExport
 
 ### Community 100 - "test_open_stage2.py"
 Cohesion: 0.22
@@ -599,9 +589,9 @@ Nodes (3): Gefragt war „single shutter" – ein Kinderzimmer, nicht der ganze 
 Cohesion: 0.40
 Nodes (6): Bedingung 'Hochfahren unterbinden' (no_up), Am Wochenende gar nicht hochfahren, Sondertage-Sensor (Workday-Sensor), Forum Answers 2.15.0, hollsten / Roland (Forumsnutzer), MartyBr (Forumsnutzer)
 
-### Community 107 - ".test_a_real_move_still_counts"
-Cohesion: 0.24
-Nodes (9): _hours_pass(), _positions(), Die Karenz der eigenen Fahrt (90 s) ist am Morgen laengst vorbei., Tag 1 aus c.radis Bericht - war schon richtig, bleibt es., Gegenprobe: dieselbe Meldung mit neuer Position ist eine Handfahrt., _report(), _setup(), TestAStateUpdateWithoutAMoveIsNotAManualMove (+1 more)
+### Community 107 - "test_manual_move_clears_window_cycle.py"
+Cohesion: 0.20
+Nodes (13): cover_calls(), _fast_startup(), _hours_pass(), _positions(), fixture, Der Rueckfahr-Merker des Fenstertriggers darf keine manuelle Fahrt ueberleben -…, Die Karenz der eigenen Fahrt (90 s) ist am Morgen laengst vorbei., Tag 1 aus c.radis Bericht - war schon richtig, bleibt es. (+5 more)
 
 ### Community 108 - "is_cover_ventilating"
 Cohesion: 0.67
@@ -652,20 +642,20 @@ Cohesion: 0.23
 Nodes (10): cover_calls(), _fast_startup(), _positions(), fixture, Ein Beschattungs-Merker (shaded=True) ueberlebt eine manuelle Fahrt.…, Rollladen ist von Hand voll offen (100%), der Beschattungs-Merker aus der…, Gegenprobe zum Fix: steht der Rollladen tatsaechlich noch an seiner…, _setup() (+2 more)
 
 ### Community 120 - "HomeAssistant"
-Cohesion: 0.14
-Nodes (42): ActiveConnection, async_response, _async_register_panel(), _async_register_websocket(), _find_entry_data(), callback, HomeAssistant, Switch the panel between simple and expert mode. Deliberately not routed… (+34 more)
+Cohesion: 0.13
+Nodes (40): ActiveConnection, async_response, _async_register_websocket(), async_setup(), _find_entry_data(), callback, HomeAssistant, Switch the panel between simple and expert mode. Deliberately not routed… (+32 more)
 
 ### Community 121 - "Shutter Pilot Integration (Brand/Concept)"
 Cohesion: 0.67
 Nodes (3): Shutter Pilot Brand Icon (2x), Shutter Pilot Brand Icon (256x256 PNG), Shutter Pilot Integration (Brand/Concept)
 
-### Community 122 - "TestShadingOptOut"
-Cohesion: 0.27
-Nodes (3): Der Vertrag aus 2.8.0, jetzt eine Ebene hoeher. `_memory_copy()` schuetzt die…, TestShadingOptOut, TestTheReportDoesNotMoveWhatItMeasures
+### Community 122 - "sun_condition_keys"
+Cohesion: 0.14
+Nodes (16): Return (entity, on_above, off_below, states) option keys for a slot., sun_condition_keys(), Read one condition slot's raw comparison, or None if it cannot be judged. None…, _slot_reading(), _area(), Die drei Polaritäten der Bedingungs-Slots, an einer Stelle geprüft.…, Jeder "nicht auswertbar"-Fall gibt None zurück, nicht True oder False., Sobald etwas auszuwerten ist, kommt ein echtes True/False - kein None mehr, das… (+8 more)
 
-### Community 123 - "clamp_to_bounds"
-Cohesion: 0.42
-Nodes (4): clamp_to_bounds(), Pull a computed moment into the configured clock window. Lets an area drive by…, datetime, TestClampHelper
+### Community 123 - "test_sun_bounds.py"
+Cohesion: 0.17
+Nodes (12): clamp_to_bounds(), Pull a computed moment into the configured clock window. Lets an area drive by…, _local_timezone(), datetime, fixture, Tests for the earliest/latest clock bounds in sun mode. MartyBr's case from the…, The exact setup described in the forum., A sunset that is already tomorrow in UTC still belongs to today. The scheduler… (+4 more)
 
 ### Community 124 - "test_manual_move_clears_pending_drive.py"
 Cohesion: 0.29
@@ -680,16 +670,12 @@ Cohesion: 0.12
 Nodes (9): deepcopy_options(), Eine Frage zu stellen darf die Antwort nicht verändern., Der stille Fall: eigene Bedingungen, Sonnenschutz im Bereich aus., Was MartyBrs Export offenliess, obwohl alles darin stand., Fünfstellige Lux-Schwellen an einem Sensor in W/m². Nebeneinander sehen 559,7…, Ein ✅ hinter „unknown" liest sich wie eine bestandene Prüfung., „Ergebnis: beschatten" bei ausgeschalteter Automatik ist ein Versprechen., TestExport (+1 more)
 
 ### Community 128 - "_shutter"
-Cohesion: 0.17
-Nodes (8): parametrize, Ein „geschlossen"-Kontakt meldet `off`, wenn das Fenster offen ist., „tilted" ist kein Synonym von on/off und darf keins werden., `cover.buro`: beschattet auf 80 %, Kontakt „open" an einem binary_sensor. Beide…, heinzies Einstellung: Zustand „offen" = `open`, Kontakt meldet `on`., _shutter(), TestBinarySensorOpenSynonyms, TestHeinziesSetup
+Cohesion: 0.24
+Nodes (6): parametrize, Ein „geschlossen"-Kontakt meldet `off`, wenn das Fenster offen ist., „tilted" ist kein Synonym von on/off und darf keins werden., heinzies Einstellung: Zustand „offen" = `open`, Kontakt meldet `on`., _shutter(), TestBinarySensorOpenSynonyms
 
-### Community 129 - "_canonical_state"
-Cohesion: 0.36
-Nodes (8): _canonical_state(), _normalize_state(), Any, State of one window contact, using this shutter's configured vocabulary. Both…, Fold on/off vocabulary onto one token; leave anything else untouched. Words…, True if the dedicated tilt contact currently reports 'tilted'., _separate_tilt_active(), _single_window_state()
-
-### Community 131 - "TestDriveCommandNote"
-Cohesion: 0.39
-Nodes (3): Wolfs Fall: Nachführung 50–100 % an einem Antrieb ohne Zwischenstopp., bjoerg: „an der Fahrtrichtung ändert es nichts". Aus den Positionen allein…, TestDriveCommandNote
+### Community 131 - "fixture"
+Cohesion: 0.14
+Nodes (8): entry(), fixture, Wolfs Fall: Nachführung 50–100 % an einem Antrieb ohne Zwischenstopp., bjoerg: „Mein Regensensor liefert nur nass und trocken". In…, Ein Entry mit hingestelltem Laufzeit-Dict – kein echtes Setup., bjoerg: „an der Fahrtrichtung ändert es nichts". Aus den Positionen allein…, TestDriveCommandNote, TestGuardSensorWithoutNumbers
 
 ### Community 132 - "_shutter"
 Cohesion: 0.21
@@ -699,25 +685,25 @@ Nodes (4): _shutter(), TestLockProtection, TestTilt, TestWindowState
 Cohesion: 0.18
 Nodes (8): get_window_state(), Return: "closed" | "tilted" | "open" Supports both binary_sensor and sensor…, The existing single-contact behaviour must not shift at all., While tilted, many contacts also read 'open' – tilt must win., A configured but absent tilt entity must not break detection., _shutter(), TestSeparateTiltEntity, TestSingleContactUnchanged
 
-### Community 134 - "_awning"
+### Community 134 - "get_position_for_role"
 Cohesion: 0.10
-Nodes (15): _awning(), `close_group` an einer Markise heisst „einfahren" – ein Knopfdruck., Gegenprobe zum Filter durch den echten Scheduler. Beide Uhrzeiten liegen in der…, Der Deckel klemmt nach unten – an einer Markise die falsche Richtung., Sonst bliebe eine umgestellte Markise bei 20 % im Sturm stehen., Ein Rollladen faellt auf 100 zurueck, eine Markise auf 0., Den gemeinsamen Minutentakt ausloesen, wie Home Assistant es tut., Kein Bestand muss migriert werden. (+7 more)
+Nodes (21): get_position_for_role(), Return the configured cover position for open/closed/sun_protect., _awning(), cover_calls(), _fast_startup_restore(), fixture, Was eine Markise nicht mitmacht. Sie steht in derselben Liste wie die…, `close_group` an einer Markise heisst „einfahren" – ein Knopfdruck. (+13 more)
 
 ### Community 135 - "const.py"
 Cohesion: 0.04
-Nodes (96): ConfigEntry, Brightness sensor logic - per area (brightness mode)., Set up brightness sensor listener., setup_brightness_listener(), Constants for Shutter Pilot integration., ConfigEntry, HomeAssistant, Helper functions for area-based follow-up actions (e.g. lights). (+88 more)
+Nodes (83): ConfigEntry, Brightness sensor logic - per area (brightness mode)., Set up brightness sensor listener., setup_brightness_listener(), Constants for Shutter Pilot integration., ConfigEntry, HomeAssistant, Helper functions for area-based follow-up actions (e.g. lights). (+75 more)
 
-### Community 136 - "_frost_area"
-Cohesion: 0.10
-Nodes (17): _frost_area(), parametrize, Umgekehrt zur Beschattung: ein toter Sensor darf nicht jede Nacht einen Spalt…, Schutz schlägt Komfort, wenn beide Bedingungen zugleich gelten., Die Bereichsbedingung allein reicht nicht – der Rollladen entscheidet., 0 = zu. "Nicht ganz zu" heisst deshalb ein grösserer Wert., Beide Slots liegen im selben Bereichs-Speicher, getrennt nach Namen., Ohne Invert-Flag: der Frost-Slot vergleicht von sich aus nach unten. (+9 more)
+### Community 136 - "frost_condition_met"
+Cohesion: 0.08
+Nodes (27): frost_condition_met(), True when the area's frost condition applies. Same evaluation as the shading…, _area(), _frost_area(), parametrize, Frostschutz – Anregung von Linos aus dem Forum. Bei erfüllter Bedingung soll…, Fail closed: wer nichts einstellt, merkt nichts., Umgekehrt zur Beschattung: ein toter Sensor darf nicht jede Nacht einen Spalt… (+19 more)
 
 ### Community 137 - "TestWebSocketToggle"
 Cohesion: 0.40
 Nodes (3): Der Schalter im Panel geht über einen eigenen Befehl, wie bei Bereichen., Ohne Administratorrechte wird der Befehl abgewiesen., TestWebSocketToggle
 
-### Community 138 - ".test_neighbour_in_the_same_area_is_not"
-Cohesion: 0.48
-Nodes (3): Ein beschattetes Fenster sperrte den ganzen Bereich., cover.b steht auf seiner Beschattungsposition, ist aber frei., TestOpenBlockerIsPerCover
+### Community 138 - "set_sun_protect_active"
+Cohesion: 0.36
+Nodes (5): Update runtime sun protection state for dashboard and skip logic., set_sun_protect_active(), Ein beschattetes Fenster sperrte den ganzen Bereich., cover.b steht auf seiner Beschattungsposition, ist aber frei., TestOpenBlockerIsPerCover
 
 ### Community 139 - "TestNextActionWithoutASchedule"
 Cohesion: 0.47
@@ -727,13 +713,13 @@ Nodes (3): Der Sensor „naechste Fahrt" darf nichts versprechen. Das ist die ei
 Cohesion: 0.25
 Nodes (6): note_manual_position(), Book a hand-driven end position into the up/down bookkeeping. covers_driven_up…, Eine blockierte Richtung fror bisher die andere ein. `covers_driven_down` haelt…, Dazwischen ist weder "oben" noch "unten": der Oben-Merker bleibt wie er war,…, Neu zuweisen haenge den Scheduler an ein totes Set (2.10.0)., TestManualDriveIsBooked
 
-### Community 141 - "TestSecondCloseCondition"
-Cohesion: 0.33
-Nodes (3): Zwei Bedingungen fürs abweichende Schliessen (Forum, Linos). „Der Tag war warm"…, Fail closed: ein toter Sensor darf nicht alles halb offen lassen., TestSecondCloseCondition
+### Community 141 - "test_geometry_and_season.py"
+Cohesion: 0.11
+Nodes (11): close_condition_met(), True when the area's conditions for a partial evening close apply. Same…, Tests for per-shutter shading geometry, season window and partial close. Forum…, Unlike shading conditions, an unset close condition means "no"., Zwei Bedingungen fürs abweichende Schliessen (Forum, Linos). „Der Tag war warm"…, Bestandsanlagen haben nur die erste – die muss unverändert wirken., Fail closed: ein toter Sensor darf nicht alles halb offen lassen., The case Linos described: one room, south and west windows. (+3 more)
 
-### Community 142 - "fixture.mjs"
-Cohesion: 0.29
-Nodes (5): makePanel(), render(), ok(), { p, areas, shutters }, R()
+### Community 142 - "slider_fallback.mjs"
+Cohesion: 0.17
+Nodes (8): makePanel(), render(), ok(), { p, areas, shutters }, R(), out, { p }, warn()
 
 ### Community 143 - "drive_delay.mjs"
 Cohesion: 0.25
@@ -759,17 +745,13 @@ Nodes (4): _positions(), Der wichtigste Fall: Von Hand muss er weiter fahren., G
 Cohesion: 0.09
 Nodes (30): The shading position for this shutter right now, plus how it was picked. Three…, resolve_shade_position(), parametrize, Eine Beschattung, die wegen eines Templates aussetzt, waere schlimmer., TestSecondShadingPosition, _area(), calls(), _fast() (+22 more)
 
-### Community 152 - "_local_timezone"
-Cohesion: 0.67
-Nodes (3): _local_timezone(), fixture, Run these tests in Berlin. The default test timezone is US/Pacific, but…
-
 ### Community 153 - "tilt_buttons.mjs"
 Cohesion: 0.29
 Nodes (4): calls, p, without, withTilt
 
-### Community 154 - "TestNoUpCondition"
-Cohesion: 0.39
-Nodes (3): Linos: eine Bedingung, die das morgendliche Oeffnen blockiert., Die eine Richtung, in der ein Fehler nicht wehtun darf. Andersherum bliebe…, TestNoUpCondition
+### Community 154 - "no_up_condition_blocks"
+Cohesion: 0.36
+Nodes (5): no_up_condition_blocks(), True while a configured condition forbids the automated opening. "Whatever my…, Linos: eine Bedingung, die das morgendliche Oeffnen blockiert., Die eine Richtung, in der ein Fehler nicht wehtun darf. Andersherum bliebe…, TestNoUpCondition
 
 ### Community 159 - "_ws_delete_shutter"
 Cohesion: 0.11
@@ -780,9 +762,9 @@ Nodes (22): _area_registry_uids(), Delete a shutter by index., Every entity one 
   docs/screenshots/shutters.png · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **203 isolated node(s):** `LIT_HOSTS`, `LitElement`, `MODE_ICONS`, `WIN_OPEN_OPTS`, `WIN_TILT_OPTS` (+198 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1287 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **10 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **208 isolated node(s):** `LIT_HOSTS`, `LitElement`, `MODE_ICONS`, `WIN_OPEN_OPTS`, `WIN_TILT_OPTS` (+203 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1297 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -790,14 +772,14 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Bereich / Area` and `Panel: Rollläden (Shutters) Tab`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `Bereiche Tab Screenshot` connect `Bereichs-Karte (Area Card)` to `shutter-pilot-panel.js`?**
-  _High betweenness centrality (0.123) - this node is a cross-community bridge._
-- **Why does `ShutterPilotPanel` connect `ShutterPilotPanel` to `shutter-pilot-panel.js`, `._renderShutterForm`, `._entityField`, `._renderSettings`, `.t`, `._renderCondDetail`, `._coverAction`?**
-  _High betweenness centrality (0.103) - this node is a cross-community bridge._
+  _High betweenness centrality (0.125) - this node is a cross-community bridge._
+- **Why does `ShutterPilotPanel` connect `ShutterPilotPanel` to `shutter-pilot-panel.js`, `._renderWinStateHint`, `._entityField`, `._renderSettings`, `._renderPanel`, `._load`, `.t`?**
+  _High betweenness centrality (0.097) - this node is a cross-community bridge._
 - **Why does `Area-to-Shutter Association (Rollläden count per area)` connect `Bereichs-Karte (Area Card)` to `helpers.py`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
 - **What connects `LIT_HOSTS`, `LitElement`, `MODE_ICONS` to the rest of the system?**
-  _203 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _208 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `evaluate_guard` be split into smaller, more focused modules?**
-  _Cohesion score 0.056334735857877516 - nodes in this community are weakly interconnected._
-- **Should `elevation.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.050721954831543875 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05416666666666667 - nodes in this community are weakly interconnected._
+- **Should `helpers.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.03409090909090909 - nodes in this community are weakly interconnected._

@@ -4,6 +4,15 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-06 – 2.38.1: Textfehler Frostsperre, Schutz ausgegraut (eurofinder, simon42 #242)
+
+Der gemeinsame Hysterese-Satz (`f_guard_hyst_hint`) sprach von der „Markise" und stand auch
+unter Frostsperre und Windschutz für Raffstores – jetzt neutral („der Schutz"), ×11. Der
+Abschnitt „Wind- und Regenschutz für Markisen" wird ausgegraut (`_sec(..., dim)`, Klasse
+`.sec.dim`), solange weder Markise noch Dachfenster existiert (`hasGuard`); bleibt
+aufklappbar. Neuer Schlüssel `sec_guard_none` ×11 (je 540). **Verifiziert:** `pytest` 1055
+grün, i18n-Parität. Nicht im Browser geprüft.
+
 ### 2026-11-05 – 2.38.0: Frostsperre für Rollläden (eurofinder, simon42 #237)
 
 eurofinder (Velux-Rollläden, kam von FHEM/ASC_Antifreeze): bei Frost soll nichts mehr
