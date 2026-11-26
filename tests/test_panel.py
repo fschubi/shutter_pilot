@@ -280,6 +280,14 @@ def test_empty_sliders_show_what_the_backend_drives() -> None:
     assert "FAIL" not in result.stdout
 
 
+def test_close_stage2_form() -> None:
+    """Zweite Schliessstufe (Claus, simon42 #267): Felder, Warnung ohne
+    Ausloeser, leere Werte zeigen die Backend-Vorgaben, Einstufung Experte."""
+    result = _run("close_stage2.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout
+
+
 def test_panel_slider_fallbacks_match_the_backend() -> None:
     """Der Spiegel im Panel darf nicht von helpers.py wegdriften."""
     import json

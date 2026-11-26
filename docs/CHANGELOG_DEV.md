@@ -4,6 +4,30 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-06 – 2.38.2: Frostsperre nachgeprüft (eurofinder, simon42 #244)
+
+eurofinder fragte, wozu „Bedeutung umkehren" bei der Frostsperre da ist, und sah beim Abwählen
+Markisen-Text. Beides stimmte; drei Prüfagenten (Panel, Backend, Texte) fanden mehr.
+**Invert:** `_slot_reading` erzwingt bei `FROST_LOCK_SLOT` im Zahlenzweig „kälter als" und liest
+den gespeicherten Haken nicht mehr (alte Abwahl wirkt nicht nach); Binärsensor/Zustandsliste
+behalten die Umkehr. Panel blendet den Haken bei Zahlen aus; eigene Texte mit Suffix `_cold`
+(`no_threshold`, `wrong_way`, `bin_hint`, `states_hint`, `lockout`), Warnung bei „Sperren unter"
+> 10 (`f_cold_high_warn`), Warnung am Rollladen ohne Sensor (`f_frost_lock_no_sensor`), Abwahl
+leert Position/Lamellen; vier Texte überarbeitet (`f_frost_lock_hint` nennt jetzt auch
+Sichtschutz, Stufe 2, Referenzfahrt und die Frostposition als einzige Ausnahme).
+**Backend:** Die Frostfahrt prüft jetzt Fenster, Sichtschutz und Windschutz (`async_frost_hold`,
+Marker gilt trotzdem); ein toter Sensor beendet eine *laufende* Sperre nicht
+(`unreadable` aus `evaluate_guard`, `barred` bleibt); der Marker steht im `position_store`
+(`frost_held`) und kommt in `setup_awning_guard` zurück – Neustart/Neuladen fährt nicht doppelt
+und erkennt ein Frostende danach; `async_frost_release` vergisst Fensterzyklus und
+Nachhol-Fahrt; Lamellen nur mit `tilt_enabled`. Export: „frei" statt „darf ausfahren", neutraler
+Gefahr-Satz. README: Dachfenster-Beispiel falsch (nur Rollläden), Referenzfahrt ergänzt.
+**Nicht gemacht:** Server-Validierung der Werte (`_ws_save_*`), Fahrtkontrolle gegen die Sperre,
+Referenzfahrt mitten im Lauf stoppen, Nachholen im Helligkeitsmodus nach Licht statt Uhr.
+**Verifiziert:** `pytest` 1063 grün (8 neue Backend-, 9 Panel-Fälle); Gegenproben: ohne
+Zwangs-Invert, Fenster-, Storm-Check, Restore und Vergessen fällt je ein Test. Nicht im Browser,
+nicht im echten Home Assistant geprüft.
+
 ### 2026-11-06 – 2.38.1: Textfehler Frostsperre, Schutz ausgegraut (eurofinder, simon42 #242)
 
 Der gemeinsame Hysterese-Satz (`f_guard_hyst_hint`) sprach von der „Markise" und stand auch

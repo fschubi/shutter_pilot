@@ -54,6 +54,7 @@ from .const import (
 from .window_trigger import cancel_all_window_close, setup_window_triggers
 from .awning_dusk import setup_awning_dusk
 from .open_stage2 import setup_open_stage2
+from .close_stage2 import setup_close_stage2
 from .privacy import setup_privacy
 from .reference_run import setup_reference_run
 from .awning_guard import setup_awning_guard
@@ -237,6 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await setup_privacy(hass, entry)
         await setup_reference_run(hass, entry)
         await setup_open_stage2(hass, entry)
+        await setup_close_stage2(hass, entry)
         await setup_ventilation(hass, entry)
         await setup_weather(hass, entry)
         _setup_minute_ticker(hass, entry)
@@ -298,6 +300,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await setup_privacy(hass, entry)
     await setup_reference_run(hass, entry)
     await setup_open_stage2(hass, entry)
+    await setup_close_stage2(hass, entry)
     await setup_ventilation(hass, entry)
 
 

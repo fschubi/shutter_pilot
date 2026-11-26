@@ -4,6 +4,20 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [2.41.0]
+
+### Neu
+- **Zweite Schließstufe** (Claus, simon42 #267), das Gegenstück zur zweiten Öffnungsstufe. Die
+  Abendfahrt bleibt wie eingestellt (z. B. Höhe 0, Lamellen 80); wird es draußen ganz dunkel,
+  fährt der Rollladen einmal je Nacht in eine zweite Stellung (z. B. Lamellen 60). Auslöser:
+  Helligkeitssensor mit Schwelle und Dauer (z. B. 5 Minuten bei höchstens 1 lx), frühestens ab
+  einer Uhrzeit, eine Bedingungs-Entität – was gesetzt ist, muss alles zutreffen. Nur nach einer
+  Abendfahrt, die wirklich auf die normale Schließposition gefahren ist (nicht am lauen Abend
+  oder bei Frost), nicht nach einer Handfahrt seit der Abendfahrt, bei offenem Fenster,
+  Sichtschutz, Sperre oder ausgeschalteter Automatik. Ersetzt eine Zusatz-Automation, deren
+  Lamellenfahrt Shutter Pilot bisher als Handverstellung gewertet hat. Experten-Ansicht,
+  Rollladen → nach der zweiten Öffnungsstufe.
+
 ## [2.40.2]
 
 ### Behoben

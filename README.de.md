@@ -938,7 +938,7 @@ Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren
 1. Unter **Einstellungen → Frostsperre für Rollläden** den Außentemperatursensor eintragen und die zwei Schwellen setzen, z. B. *Sperren unter 2 °C, freigeben über 4 °C*. Ein ausgefallener Sensor sperrt nie, sonst legt ein leerer Akku das Haus für den ganzen Winter still.
 2. Am **Rollladen** den Haken **Frostsperre für diesen Rollladen** setzen. Optional eine **Position bei Frost** (und Lamellen), die er beim Einsetzen des Frosts anfährt; ohne Position bleibt er einfach stehen.
 
-Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungsstufe oder Referenzfahrt. Einzige Ausnahme ist die Position bei Frost, die beim Einsetzen des Frosts einmal angefahren wird. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
+Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungs- oder Schließstufe oder Referenzfahrt. Einzige Ausnahme ist die Position bei Frost, die beim Einsetzen des Frosts einmal angefahren wird. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
 
 Mit **Nach dem Frost nachholen** (Vorgabe an) fährt der Rollladen nach der Freigabe dorthin, wo der Zeitplan ihn jetzt haben will, etwa morgens offen. Wurde er in der Zwischenzeit von Hand gefahren, bleibt er stehen; bei offenem Fenster oder ausgeschalteter Automatik wird ebenfalls nichts nachgeholt. Die Frostposition wird nicht auf ein offenes Fenster gefahren, nicht über den Sichtschutz und nicht gegen den Windschutz; die Sperre gilt trotzdem. Die Frostfahrt selbst respektiert den Hauptschalter und die Automatik-Schalter: ist die Automatik aus, hält die Sperre nur still und fährt nicht. Die Sperre übersteht einen Neustart und ein Neuladen der Integration, es wird also nichts doppelt gefahren. Fällt der Sensor mitten im Frost aus, beendet das eine laufende Sperre nicht.
 
@@ -995,6 +995,18 @@ Mit dem Haken **Nach einer Handfahrt pausieren** im Bereich (Sonnenschutz) läss
 ### Zweite Öffnungsstufe
 
 Mit dem Haken **Zweite Öffnungsstufe** am Rollladen teilst du den Morgen in zwei Schritte: Die normale Hochfahrt bleibt wie eingestellt (zum Beispiel nur die Lamellen, Höhe unverändert), und ab der eingetragenen Uhrzeit – und solange eine optionale Bedingungs-Entität „an“ meldet, etwa jemand zu Hause und schönes Wetter – fährt der Rollladen einmal am Tag in die zweite Stellung. Sie vollendet nur eine Morgenfahrt, die wirklich stattfand, und lässt den Rollladen nach einer Handfahrt am selben Tag, bei offenem Fenster, aktivem Sichtschutz oder während der Beschattung in Ruhe.
+
+### Zweite Schließstufe
+
+Das Gegenstück für den Abend: Mit dem Haken **Zweite Schließstufe** bleibt die normale Abendfahrt wie eingestellt (zum Beispiel Höhe 0, Lamellen 80, damit noch etwas Licht hereinkommt), und später fährt der Rollladen einmal je Nacht in eine zweite Stellung (zum Beispiel Lamellen 60). Wann, bestimmen bis zu drei Auslöser, und was gesetzt ist, muss alles zutreffen:
+
+| Auslöser | Beispiel |
+| --- | --- |
+| Helligkeitssensor, höchstens N lx, so lange dunkel | 5 Minuten bei höchstens 1 lx |
+| Frühestens ab einer Uhrzeit | 23:00 (auch nach Mitternacht, z. B. 00:30) |
+| Bedingungs-Entität „an“ | Nachtmodus, niemand mehr wach |
+
+Ist keiner gesetzt, fährt die Stufe nie. Ist es bei der Abendfahrt schon lange genug dunkel, folgt sie direkt danach. Sie vollendet nur eine Abendfahrt, die wirklich auf die normale Schließposition gefahren ist – am lauen Abend oder bei Frost bleibt der Rollladen auf seiner Teilposition – und lässt ihn nach einer Handfahrt seit der Abendfahrt, bei offenem Fenster oder offener Tür, aktivem Sichtschutz, Sperre oder ausgeschalteter Automatik in Ruhe. Die Morgenfahrt setzt sie für die nächste Nacht zurück.
 
 ### Referenzfahrt
 

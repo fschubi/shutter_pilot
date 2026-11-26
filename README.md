@@ -921,7 +921,7 @@ The frost protection above only shortens the evening drive. If you want **no dri
 1. Under **Settings → Frost lock for shutters** enter the outdoor temperature sensor and set the two thresholds, e.g. *lock below 2 °C, release above 4 °C*. A failed sensor never locks, otherwise a flat battery would stop the whole house for the winter.
 2. On the **shutter** tick **Frost lock for this shutter**. Optionally a **position in frost** (and slats) it drives to when the frost sets in; without one it simply stays where it is.
 
-While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy, second opening stage or reference run. The one exception is the frost position, driven to once when the frost sets in. **By hand** (dashboard buttons, services, at the motor) everything always works.
+While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy, second opening or closing stage or reference run. The one exception is the frost position, driven to once when the frost sets in. **By hand** (dashboard buttons, services, at the motor) everything always works.
 
 With **Catch up after the frost** (default on) the shutter drives to where the schedule wants it now once released, for instance open in the morning. If it was driven by hand meanwhile it stays put; with an open window or the automation off nothing is caught up either. The frost position is not driven onto an open window, over privacy or against the storm guard; the lock still holds. The frost drive itself respects the master switch and the automation switches: with automation off the lock only holds still and does not drive. The hold survives a restart and a reload of the integration, so nothing is driven twice. A sensor that drops out during the frost does not end a running lock.
 
@@ -979,6 +979,18 @@ Tick **Pause after a hand move** on an area (sun protection) and the shading lea
 ### Second opening stage
 
 Tick **Second opening stage** on a shutter to split the morning in two: the ordinary opening stays as set (for example only the slats, height unchanged), and from the time you enter - and while an optional condition entity says "on", e.g. somebody home and fine weather - the shutter goes once a day to its second position. It only completes a morning drive that really happened and leaves the shutter alone after a hand move that day, with an open window, an active privacy position or while it is shaded.
+
+### Second closing stage
+
+The evening counterpart: with **Second closing stage** ticked the ordinary evening drive stays as set (for example height 0, slats 80 so some light still comes in), and later the shutter goes once a night to a second position (for example slats 60). Up to three triggers decide when, and whatever is set must all apply:
+
+| Trigger | Example |
+| --- | --- |
+| Brightness sensor, at most N lx, dark for a while | 5 minutes at no more than 1 lx |
+| Not before a time | 23:00 (also past midnight, e.g. 00:30) |
+| Condition entity "on" | night mode, nobody up any more |
+
+With none of them set the stage never runs. If it has already been dark long enough at the evening drive, it follows straight after. It only completes an evening drive that really reached the ordinary closed position - on a mild evening or in frost the shutter stays at its part-way position - and leaves the shutter alone after a hand move since the evening drive, with an open window or door, active privacy, a lock or the automation switched off. The morning opening resets it for the next night.
 
 ### Reference run
 

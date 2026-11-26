@@ -37,6 +37,8 @@ custom_components/shutter_pilot/
   ventilation.py     Automatisches Lüften nach Bedingungen
   awning_guard.py    Markisen: Wind-, Regen- und Frostschutz (Sperre + Zwangsfahrt)
   awning_dusk.py     Markisen: bei Dämmerung einfahren, nie automatisch wieder aus
+  open_stage2.py     Zweite Öffnungsstufe: später ganz hoch
+  close_stage2.py    Zweite Schließstufe: bei Dunkelheit in die Nachtstellung
   schedule_times.py  Zeitmathematik: Wochenende, Jitter, Zeitklammern
   window_trigger.py  Reaktion auf Fensterkontakte
   window_helper.py   Fensterzustand und Aussperrschutz
@@ -50,7 +52,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1111 Tests)
+tests/               pytest-Suite (1134 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -271,7 +273,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.40.0: je 575 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.41.0: je 584 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -301,7 +303,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1111 Tests, ~40 s
+.venv/bin/pytest            # 1134 Tests, ~45 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -330,12 +332,35 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.40.2**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.41.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-26 – 2.41.0: Zweite Schließstufe (Claus, simon42 #267)
+
+Claus' Wunsch 2 aus #267: Abendfahrt Höhe 0 / Lamellen 80, bei völliger Dunkelheit (5 min unter
+1 lx) Lamellen 60 – bisher per Zusatz-Automation, die als Handverstellung galt. Neu
+`close_stage2.py` (Minuten-Callback `close_stage2`), Rolle `ROLE_CLOSED_STAGE2` mit
+`position_closed_stage2` (Rückfall 0), `tilt_closed_stage2` (0), `keep_*`. Auslöser, alle
+gesetzten müssen gelten: `close_stage2_lux_entity` + `close_stage2_lux` (≤, Vorgabe 2) +
+`close_stage2_minutes` (Vorgabe 5), `close_stage2_time` („frühestens ab", Achse ab Mittag –
+00:30 liegt nach 23:00), `close_stage2_entity`. Keiner gesetzt → kein Callback. Bedingungen:
+in `covers_driven_down` **und** auf `position_closed` (±8; lauer Abend/Frost/Aussperrschutz
+bleiben), keine Handfahrt seit dem ersten Sehen als geschlossen (`_close2_closed_since`,
+monotonic gegen `_hand_moved_at`), `automation_allowed`, kein Sichtschutz, Fenster zu. Dunkelzeit
+wird unabhängig von der Abendfahrt gemessen (schon dunkel → direkt danach). Einmal je Nacht
+(`_close2_done`), gelöscht, sobald der Rollladen nicht mehr in `covers_driven_down` steht.
+Fail closed bei totem Lux-Sensor oder Bedingung. Panel: nach der Öffnungsstufe, `_adv`, Warnung
+`f_close2_no_trigger`, Dauer-Schieber zeigt leer 5; 9 Schlüssel ×11 (je 584); Schlüssel in
+`AWNING_/WINDOW_UNUSED_KEYS` (Python und Panel). **Verifiziert:** `pytest` 1134 grün
+(`tests/test_close_stage2.py` 22, `tests/panel/close_stage2.mjs`); Gegenproben: Handfahrt-,
+Positions-, Dunkeldauer-, Sichtschutz-Prüfung je einzeln entfernt → je ≥1 Test fällt; altes Panel
+→ 9 FAIL. **Nicht abgedeckt:** Fensterkontakt/Sichtschutz, die *nach* Stufe 2 auf die normale
+Schließposition zurückstellen, holen Stufe 2 in derselben Nacht nicht nach. Nicht im Browser,
+nicht im echten HA geprüft. Wespenschutz (Wunsch 3) offen.
 
 ### 2026-11-26 – 2.40.2: Leere Schieber, Lux-Warnung (Claus, simon42 #267)
 
@@ -425,30 +450,6 @@ Frankchief (#250): nur Frage (zwei Himmelsrichtungen → Geometrie am Rollladen 
 Panel: Regler, i18n 2 Schlüssel ×11 (je 549). **Verifiziert:** `pytest` 1080 grün (6 + 11 neue);
 Gegenprobe: ohne den Fix fallen 4 der 6 Vormerkungs-Tests. Nicht im Browser, nicht im echten
 Home Assistant geprüft. **Geplant, nicht gebaut:** Einfach-/Expertenmodus im Panel.
-
-### 2026-11-06 – 2.38.2: Frostsperre nachgeprüft (eurofinder, simon42 #244)
-
-eurofinder fragte, wozu „Bedeutung umkehren" bei der Frostsperre da ist, und sah beim Abwählen
-Markisen-Text. Beides stimmte; drei Prüfagenten (Panel, Backend, Texte) fanden mehr.
-**Invert:** `_slot_reading` erzwingt bei `FROST_LOCK_SLOT` im Zahlenzweig „kälter als" und liest
-den gespeicherten Haken nicht mehr (alte Abwahl wirkt nicht nach); Binärsensor/Zustandsliste
-behalten die Umkehr. Panel blendet den Haken bei Zahlen aus; eigene Texte mit Suffix `_cold`
-(`no_threshold`, `wrong_way`, `bin_hint`, `states_hint`, `lockout`), Warnung bei „Sperren unter"
-> 10 (`f_cold_high_warn`), Warnung am Rollladen ohne Sensor (`f_frost_lock_no_sensor`), Abwahl
-leert Position/Lamellen; vier Texte überarbeitet (`f_frost_lock_hint` nennt jetzt auch
-Sichtschutz, Stufe 2, Referenzfahrt und die Frostposition als einzige Ausnahme).
-**Backend:** Die Frostfahrt prüft jetzt Fenster, Sichtschutz und Windschutz (`async_frost_hold`,
-Marker gilt trotzdem); ein toter Sensor beendet eine *laufende* Sperre nicht
-(`unreadable` aus `evaluate_guard`, `barred` bleibt); der Marker steht im `position_store`
-(`frost_held`) und kommt in `setup_awning_guard` zurück – Neustart/Neuladen fährt nicht doppelt
-und erkennt ein Frostende danach; `async_frost_release` vergisst Fensterzyklus und
-Nachhol-Fahrt; Lamellen nur mit `tilt_enabled`. Export: „frei" statt „darf ausfahren", neutraler
-Gefahr-Satz. README: Dachfenster-Beispiel falsch (nur Rollläden), Referenzfahrt ergänzt.
-**Nicht gemacht:** Server-Validierung der Werte (`_ws_save_*`), Fahrtkontrolle gegen die Sperre,
-Referenzfahrt mitten im Lauf stoppen, Nachholen im Helligkeitsmodus nach Licht statt Uhr.
-**Verifiziert:** `pytest` 1063 grün (8 neue Backend-, 9 Panel-Fälle); Gegenproben: ohne
-Zwangs-Invert, Fenster-, Storm-Check, Restore und Vergessen fällt je ein Test. Nicht im Browser,
-nicht im echten Home Assistant geprüft.
 
 ## graphify
 
