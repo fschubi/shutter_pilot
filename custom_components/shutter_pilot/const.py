@@ -175,6 +175,9 @@ ROLE_VENTILATION = "ventilation"
 ROLE_CLOSED_ALT = "closed_alt"
 # Partial close against frost. Wins over closed_alt: protection beats comfort.
 ROLE_CLOSED_FROST = "closed_frost"
+# Frostschutz beim Oeffnen (MartyBr, simon42 #268): morgens bei Frost nicht
+# bis in den Kasten, wo der Panzer bei Schnee festfrieren kann.
+ROLE_OPEN_FROST = "open_frost"
 # Second shading position, used while the area's own sp_alt condition holds.
 ROLE_SUN_PROTECT_ALT = "sun_protect_alt"
 
@@ -225,6 +228,19 @@ CONF_KEEP_POSITION_CLOSED_STAGE2 = "keep_position_closed_stage2"
 CONF_KEEP_TILT_CLOSED_STAGE2 = "keep_tilt_closed_stage2"
 DEFAULT_CLOSE_STAGE2_LUX = 2
 DEFAULT_CLOSE_STAGE2_MINUTES = 5
+# Insektenschutz (Claus, simon42 #267): Wespen nisten in Raffstore-Kaesten,
+# die lange nicht ganz hochfahren. Einmal am Tag kurz bis zum echten oberen
+# Anschlag und zurueck - in einem Zeitfenster, optional nur ab einer
+# Mindesttemperatur (Wespensaison) und unter einer Bedingung (niemand da).
+CONF_INSECT_GUARD = "insect_guard"
+CONF_INSECT_GUARD_FROM = "insect_guard_from"
+CONF_INSECT_GUARD_TO = "insect_guard_to"
+CONF_INSECT_GUARD_ENTITY = "insect_guard_entity"
+CONF_INSECT_GUARD_TEMP_ENTITY = "insect_guard_temp_entity"
+CONF_INSECT_GUARD_TEMP_MIN = "insect_guard_temp_min"
+DEFAULT_INSECT_GUARD_FROM = "11:00"
+DEFAULT_INSECT_GUARD_TO = "16:00"
+DEFAULT_INSECT_GUARD_TEMP_MIN = 15
 CONF_PRIVACY_SUN = "privacy_sun"
 CONF_POSITION_PRIVACY_SUN = "position_privacy_sun"
 CONF_TILT_PRIVACY_SUN = "tilt_privacy_sun"
@@ -653,6 +669,9 @@ CONF_POSITION_CLOSED_ALT = "position_closed_alt"
 # a gap keeps the slats from freezing to the sill. Empty means no frost
 # protection for this shutter, even when the area's condition is met.
 CONF_POSITION_CLOSED_FROST = "position_closed_frost"
+# Gegenstueck fuer die Hochfahrt: dieselbe Frost-Bedingung des Bereichs, eine
+# eigene Position am Rollladen. Leer = faehrt wie immer ganz auf.
+CONF_POSITION_OPEN_FROST = "position_open_frost"
 
 # Per-area workday sensor. When set, "on" = weekday schedule, "off" = weekend
 # schedule. Replaces the hard-coded Saturday/Sunday check (holidays, shift work).
@@ -733,6 +752,7 @@ AWNING_UNUSED_KEYS = (
     CONF_POSITION_CLOSED,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
+    CONF_POSITION_OPEN_FROST,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_OPEN_STATE,
@@ -787,6 +807,12 @@ AWNING_UNUSED_KEYS = (
     CONF_TILT_CLOSED_STAGE2,
     CONF_KEEP_POSITION_CLOSED_STAGE2,
     CONF_KEEP_TILT_CLOSED_STAGE2,
+    CONF_INSECT_GUARD,
+    CONF_INSECT_GUARD_FROM,
+    CONF_INSECT_GUARD_TO,
+    CONF_INSECT_GUARD_ENTITY,
+    CONF_INSECT_GUARD_TEMP_ENTITY,
+    CONF_INSECT_GUARD_TEMP_MIN,
     CONF_REFERENCE_RUN,
     CONF_REFERENCE_RUN_DAYS,
     CONF_REFERENCE_RUN_TIME,
@@ -818,6 +844,7 @@ WINDOW_UNUSED_KEYS = (
     CONF_AREA_UP_ID,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
+    CONF_POSITION_OPEN_FROST,
     CONF_WINDOW_ENTITY_ID,
     CONF_WINDOW_ENTITY_ID_2,
     CONF_WINDOW_OPEN_STATE,
@@ -872,6 +899,12 @@ WINDOW_UNUSED_KEYS = (
     CONF_TILT_CLOSED_STAGE2,
     CONF_KEEP_POSITION_CLOSED_STAGE2,
     CONF_KEEP_TILT_CLOSED_STAGE2,
+    CONF_INSECT_GUARD,
+    CONF_INSECT_GUARD_FROM,
+    CONF_INSECT_GUARD_TO,
+    CONF_INSECT_GUARD_ENTITY,
+    CONF_INSECT_GUARD_TEMP_ENTITY,
+    CONF_INSECT_GUARD_TEMP_MIN,
     CONF_REFERENCE_RUN,
     CONF_REFERENCE_RUN_DAYS,
     CONF_REFERENCE_RUN_TIME,

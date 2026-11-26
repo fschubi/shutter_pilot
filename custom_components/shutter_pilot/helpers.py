@@ -25,6 +25,7 @@ from .const import (
     CONF_AREA_AZIMUTH_MAX,
     CONF_AREA_AZIMUTH_MIN,
     CONF_AREA_ID,
+    CONF_AREAS,
     CONF_AREA_AUTO_ENTITY_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_ELEVATION_MAX,
@@ -48,6 +49,8 @@ from .const import (
     CONF_SUN_GEOMETRY_OVERRIDE,
     CONF_POSITION_CLOSED_ALT,
     CONF_POSITION_CLOSED_FROST,
+    CONF_POSITION_OPEN_FROST,
+    ROLE_OPEN_FROST,
     CONF_POSITION_SUN_PROTECT_ALT,
     CONF_POSITION_SUN_PROTECT_ENTITY,
     CONF_SHADING_ENABLED,
@@ -1354,6 +1357,7 @@ _ROLE_POSITION_KEYS = {
     ),
     ROLE_CLOSED_ALT: (CONF_POSITION_CLOSED_ALT, 50),
     ROLE_CLOSED_FROST: (CONF_POSITION_CLOSED_FROST, 10),
+    ROLE_OPEN_FROST: (CONF_POSITION_OPEN_FROST, 80),
     ROLE_SUN_PROTECT_ALT: (CONF_POSITION_SUN_PROTECT_ALT, 30),
     ROLE_PRIVACY: (CONF_POSITION_PRIVACY, DEFAULT_POSITION_PRIVACY),
     ROLE_PRIVACY_SUN: (CONF_POSITION_PRIVACY_SUN, DEFAULT_POSITION_PRIVACY),
@@ -1384,6 +1388,60 @@ def has_alt_close_position(shutter: dict[str, Any]) -> bool:
 def has_frost_close_position(shutter: dict[str, Any]) -> bool:
     """True if this shutter defines a frost-protection closing position."""
     return _has_partial_close_position(shutter, CONF_POSITION_CLOSED_FROST)
+
+
+def has_frost_open_position(shutter: dict[str, Any]) -> bool:
+    """True if this shutter defines a frost-protection opening position."""
+    return _has_partial_close_position(shutter, CONF_POSITION_OPEN_FROST)
+
+
+def find_area(entry: ConfigEntry, area_id: Any) -> dict[str, Any] | None:
+    """The area config with this id, or None."""
+    wanted = str(area_id or "").strip()
+    areas = entry.options.get(CONF_AREAS, [])
+    if not wanted or not isinstance(areas, list):
+        return None
+    return next(
+        (
+            a
+            for a in areas
+            if isinstance(a, dict) and str(a.get(CONF_AREA_ID) or "").strip() == wanted
+        ),
+        None,
+    )
+
+
+def frost_opening_applies(
+    hass: HomeAssistant, entry: ConfigEntry, shutter: dict[str, Any], data: dict[str, Any]
+) -> bool:
+    """Frost would stop this shutter short of the top right now.
+
+    For the drives that are not an ordinary opening but would still run the
+    blind into its box (second opening stage, insect guard): they hold back
+    while the frost opening position applies.
+    """
+    area = find_area(entry, shutter.get(CONF_AREA_UP_ID))
+    return resolve_open_role(hass, area, shutter, data) == ROLE_OPEN_FROST
+
+
+def resolve_open_role(
+    hass: HomeAssistant,
+    area: dict[str, Any] | None,
+    shutter: dict[str, Any],
+    data: dict[str, Any],
+) -> str:
+    """Pick how far this shutter opens: fully, or frost-safe.
+
+    The counterpart of resolve_close_role() and the same area condition
+    (MartyBr, simon42 #268): a floor-length door that runs all the way into
+    its box can freeze up there under snow, so in frost it stops short. The
+    area is the one that drives the shutter *up*.
+    """
+    if area is None or not has_frost_open_position(shutter):
+        return ROLE_OPEN
+    if frost_condition_met(hass, area, data):
+        return ROLE_OPEN_FROST
+    return ROLE_OPEN
 
 
 def resolve_close_role(
@@ -1597,6 +1655,8 @@ _ROLE_TILT_KEYS = {
     ROLE_VENTILATION: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_CLOSED_ALT: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
     ROLE_CLOSED_FROST: (CONF_TILT_CLOSED, DEFAULT_TILT_CLOSED),
+    # Frost changes how far the blind goes up, not the slat angle.
+    ROLE_OPEN_FROST: (CONF_TILT_OPEN, DEFAULT_TILT_OPEN),
     # The second shading position is still shading: same slat angle.
     ROLE_SUN_PROTECT_ALT: (CONF_TILT_SUN_PROTECT, DEFAULT_TILT_SUN_PROTECT),
     ROLE_PRIVACY: (CONF_TILT_PRIVACY, DEFAULT_TILT_PRIVACY),
@@ -1728,6 +1788,7 @@ _ROLE_KEEP_TILT_KEYS = {
     ROLE_CLOSED: CONF_KEEP_TILT_CLOSED,
     ROLE_CLOSED_ALT: CONF_KEEP_TILT_CLOSED,
     ROLE_CLOSED_FROST: CONF_KEEP_TILT_CLOSED,
+    ROLE_OPEN_FROST: CONF_KEEP_TILT_OPEN,
     ROLE_SUN_PROTECT: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_VENTILATION: CONF_KEEP_TILT_SUN_PROTECT,
     ROLE_SUN_PROTECT_ALT: CONF_KEEP_TILT_SUN_PROTECT,

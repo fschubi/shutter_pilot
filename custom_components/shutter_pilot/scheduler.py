@@ -31,6 +31,7 @@ from .helpers import (
     automated_up_blocked,
     remember_drive_after_close,
     resolve_close_role,
+    resolve_open_role,
     clear_manual_override_for_covers,
     clear_stale_window_cycle_after_automated_up,
     filter_shutters_by_area,
@@ -125,7 +126,10 @@ async def setup_schedulers(hass: HomeAssistant, entry: ConfigEntry) -> None:
             # Some shutters should only close part way – against frost, or on a
             # mild evening. The area decides when, the shutter decides how far.
             shutter_role = role
-            if not direction_up:
+            if direction_up:
+                # Bei Frost nicht bis in den Kasten (MartyBr, simon42 #268).
+                shutter_role = resolve_open_role(hass, area_cfg, shutter, data)
+            else:
                 shutter_role = resolve_close_role(hass, area_cfg, shutter, data)
                 if shutter_role != ROLE_CLOSED:
                     _LOGGER.info(

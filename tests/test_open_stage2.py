@@ -232,3 +232,18 @@ async def test_without_the_hook_nothing_ever_runs(hass, calls, monkeypatch):
     shutter = {k: v for k, v in SHUTTER.items() if k != CONF_OPEN_STAGE2}
     _, data = await _setup(hass, shutter)
     assert "open_stage2" not in data.get("_minute_callbacks", {})
+
+
+async def test_frost_holds_the_second_stage(hass, calls, monkeypatch):
+    """MartyBr #268: bei Frost morgens nicht in den Kasten - Stufe 2 auch nicht.
+    Nicht als erledigt vermerkt: endet der Frost am selben Tag, kommt sie noch."""
+    from custom_components.shutter_pilot import open_stage2
+
+    frost = {"on": True}
+    monkeypatch.setattr(open_stage2, "frost_opening_applies", lambda *a: frost["on"])
+    _, data = await _setup(hass)
+    await _tick(hass, data, monkeypatch, 10, 0)
+    assert calls["pos"] == []
+    frost["on"] = False
+    await _tick(hass, data, monkeypatch, 12, 0)
+    assert _positions(calls) == [100]

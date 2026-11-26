@@ -72,6 +72,8 @@ from .helpers import (
     set_sun_protect_active,
     sun_extra_conditions_met,
     sun_protect_conditions_met,
+    find_area,
+    resolve_open_role,
 )
 from .window_helper import get_effective_close_position, is_window_open_or_tilted
 
@@ -316,8 +318,15 @@ async def setup_elevation_listener(hass: HomeAssistant, entry: ConfigEntry) -> N
             # aufgerissen, sobald der Raum abkuehlt. Die Ruhestellung kommt
             # deshalb aus der Geraeteart, genau wie beim Schutz.
             role = rest_role(shutter)
-            pos = role_position(shutter, role)
-            tilt = get_tilt_for_role(shutter, role)
+            drive_role = (
+                resolve_open_role(
+                    hass, find_area(entry, shutter.get(CONF_AREA_UP_ID)), shutter, data
+                )
+                if role == ROLE_OPEN
+                else role
+            )
+            pos = role_position(shutter, drive_role)
+            tilt = get_tilt_for_role(shutter, drive_role)
             _LOGGER.info(
                 "[sun-protect] area=%s: release (%s) → %s -> %s",
                 area_id, reason, cover_entity,

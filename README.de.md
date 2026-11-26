@@ -915,7 +915,7 @@ Zwei getrennte Funktionen, die sich nicht gegenseitig brauchen:
 | | Frostschutz beim Schließen | Frostsperre |
 | --- | --- | --- |
 | Wo eingestellt | Bedingung im **Bereich**, Frostschutz-Position am Rollladen unter *Positionen* | Sensor unter **Einstellungen**, Haken am Rollladen unter *Frostsperre* |
-| Was passiert | Abends schließt der Rollladen nur bis zur Frostschutz-Position, sonst fährt alles wie geplant | Der Rollladen fährt gar nicht mehr automatisch, optional einmal auf eine Position |
+| Was passiert | Abends schließt der Rollladen nur bis zur Frostschutz-Position, morgens öffnet er optional nur bis zu einer eigenen, sonst fährt alles wie geplant | Der Rollladen fährt gar nicht mehr automatisch, optional einmal auf eine Position |
 | Wofür | Lamellen sollen nicht am Rahmen festfrieren | Eis oder Schnee: der Antrieb soll gar nicht laufen |
 
 Wer nur eine davon will, lässt die andere leer. Bei einem Temperatursensor fragen beide immer „kälter als"; den Haken „Bedeutung umkehren" gibt es dort deshalb nicht, nur bei Binärsensoren und Zustandslisten.
@@ -931,6 +931,8 @@ Anders als bei allen übrigen Bedingungen wird hier **nach unten** verglichen: D
 
 Frostschutz gewinnt gegen das abweichende Schließen – Schutz geht vor Komfort. Beides wirkt im Zeit-, Sonnen- und Helligkeitsmodus. Ein Rollladen ohne gesetzte Frostposition schließt unverändert ganz, selbst wenn die Bedingung des Bereichs erfüllt ist.
 
+**Frostschutz beim Öffnen:** Oben kann ein Rollladen genauso festfrieren, etwa eine bodentiefe Terrassentür, die bei Schnee ganz im Kasten steckt. Mit dem Haken **Frostschutz-Position beim Öffnen hinterlegen** am Rollladen fährt er bei Frost morgens nur bis zu dieser Position, z. B. 85 %, statt ganz hoch. Es gilt dieselbe Bedingung wie beim Schließen, und zwar die des Bereichs, der den Rollladen **hochfährt**. Das wirkt bei der Morgenfahrt im Zeit-, Sonnen- und Helligkeitsmodus, beim Nachholen nach dem Sichtschutz und bei der Freigabe am Ende der Beschattung. Die zweite Öffnungsstufe und der Insektenschutz warten, solange es friert. Endet der Frost tagsüber, bleibt der Rollladen auf seiner Position bis zur nächsten Fahrt.
+
 ## Frostsperre
 
 Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren** will – eingefrorene Lamellen, vereiste Führungsschienen, Schnee auf den Lamellen – nutzt die **Frostsperre**:
@@ -938,7 +940,7 @@ Der Frostschutz oben kürzt nur die Abendfahrt. Wer bei Frost **gar nicht fahren
 1. Unter **Einstellungen → Frostsperre für Rollläden** den Außentemperatursensor eintragen und die zwei Schwellen setzen, z. B. *Sperren unter 2 °C, freigeben über 4 °C*. Ein ausgefallener Sensor sperrt nie, sonst legt ein leerer Akku das Haus für den ganzen Winter still.
 2. Am **Rollladen** den Haken **Frostsperre für diesen Rollladen** setzen. Optional eine **Position bei Frost** (und Lamellen), die er beim Einsetzen des Frosts anfährt; ohne Position bleibt er einfach stehen.
 
-Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungs- oder Schließstufe oder Referenzfahrt. Einzige Ausnahme ist die Position bei Frost, die beim Einsetzen des Frosts einmal angefahren wird. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
+Solange gesperrt ist, fährt der Rollladen **keine automatische Fahrt**: weder Zeitplan noch Beschattung, Lüften, Fensterkontakt, Sichtschutz, zweite Öffnungs- oder Schließstufe, Insektenschutz oder Referenzfahrt. Einzige Ausnahme ist die Position bei Frost, die beim Einsetzen des Frosts einmal angefahren wird. **Von Hand** (Dashboard-Knöpfe, Dienste, am Antrieb) geht immer alles.
 
 Mit **Nach dem Frost nachholen** (Vorgabe an) fährt der Rollladen nach der Freigabe dorthin, wo der Zeitplan ihn jetzt haben will, etwa morgens offen. Wurde er in der Zwischenzeit von Hand gefahren, bleibt er stehen; bei offenem Fenster oder ausgeschalteter Automatik wird ebenfalls nichts nachgeholt. Die Frostposition wird nicht auf ein offenes Fenster gefahren, nicht über den Sichtschutz und nicht gegen den Windschutz; die Sperre gilt trotzdem. Die Frostfahrt selbst respektiert den Hauptschalter und die Automatik-Schalter: ist die Automatik aus, hält die Sperre nur still und fährt nicht. Die Sperre übersteht einen Neustart und ein Neuladen der Integration, es wird also nichts doppelt gefahren. Fällt der Sensor mitten im Frost aus, beendet das eine laufende Sperre nicht.
 
@@ -1007,6 +1009,18 @@ Das Gegenstück für den Abend: Mit dem Haken **Zweite Schließstufe** bleibt di
 | Bedingungs-Entität „an“ | Nachtmodus, niemand mehr wach |
 
 Ist keiner gesetzt, fährt die Stufe nie. Ist es bei der Abendfahrt schon lange genug dunkel, folgt sie direkt danach. Sie vollendet nur eine Abendfahrt, die wirklich auf die normale Schließposition gefahren ist – am lauen Abend oder bei Frost bleibt der Rollladen auf seiner Teilposition – und lässt ihn nach einer Handfahrt seit der Abendfahrt, bei offenem Fenster oder offener Tür, aktivem Sichtschutz, Sperre oder ausgeschalteter Automatik in Ruhe. Die Morgenfahrt setzt sie für die nächste Nacht zurück.
+
+### Insektenschutz
+
+Wespen nisten gern in Raffstore-Kästen, die lange nicht ganz hochfahren, etwa weil der Behang den ganzen Sommer in der Beschattung steht. Mit dem Haken **Insektenschutz** fährt der Rollladen einmal am Tag kurz bis zum oberen Anschlag und gleich wieder dorthin zurück, wo er stand, Lamellen eingeschlossen. Das gilt auch aus der Beschattung heraus.
+
+| Einstellung | Vorgabe | Wofür |
+| --- | --- | --- |
+| Zeitfenster | 11:00–16:00 | wann die Fahrt kommen darf |
+| Temperatursensor + „erst ab“ | leer, 15 °C | nur in der Wespensaison, nie bei Frost |
+| Bedingung | leer | z. B. niemand zu Hause, damit sie niemanden stört |
+
+Der Insektenschutz entfällt an einem Tag, an dem der Rollladen ohnehin ganz oben war. Er wartet bei offenem Fenster, aktivem Sichtschutz, einer Sperre, Sturm, Frostsperre, der Frostschutz-Position beim Öffnen oder ausgeschalteter Automatik und kommt dann später im Zeitfenster. Bei umgekehrter Skala (offen = 0) fährt er Richtung 0. Ein toter Sensor hält ihn zurück.
 
 ### Referenzfahrt
 

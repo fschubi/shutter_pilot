@@ -898,7 +898,7 @@ Two separate features that do not depend on each other:
 | | Frost protection when closing | Frost lock |
 | --- | --- | --- |
 | Where | condition in the **area**, frost-protection position on the shutter under *Positions* | sensor under **Settings**, tick on the shutter under *Frost lock* |
-| What happens | in the evening the shutter closes only to the frost-protection position, everything else runs as scheduled | the shutter makes no automatic drive at all, optionally drives to one position once |
+| What happens | in the evening the shutter closes only to the frost-protection position, in the morning it optionally opens only to one of its own, everything else runs as scheduled | the shutter makes no automatic drive at all, optionally drives to one position once |
 | What for | slats should not freeze to the frame | ice or snow: the motor should not run at all |
 
 If you want only one of them, leave the other empty. With a temperature sensor both always ask "colder than"; there is no "Invert meaning" box for them, only for binary sensors and state lists.
@@ -914,6 +914,8 @@ Unlike every other condition this one compares **downwards**: frost protection k
 
 Frost protection wins over partial closing — protection beats comfort. Both apply in time, sun and brightness mode. A shutter without a frost position still closes fully, even when the area's condition is met.
 
+**Frost protection when opening:** a shutter can freeze at the top just as well, for example a floor-length patio door that sits all the way in its box under snow. With **Set a frost-protection opening position** ticked on the shutter, in frost it only goes up to that position in the morning, e.g. 85 %, instead of fully up. The same condition as for closing applies – the one of the area that drives the shutter **up**. This covers the morning drive in time, sun and brightness mode, the catch-up after privacy and the release at the end of shading. The second opening stage and the insect guard wait while it freezes. If the frost ends during the day, the shutter stays at its position until the next drive.
+
 ## Frost lock
 
 The frost protection above only shortens the evening drive. If you want **no driving at all** in frost – frozen slats, iced guide rails, snow on the louvres – use the **frost lock**:
@@ -921,7 +923,7 @@ The frost protection above only shortens the evening drive. If you want **no dri
 1. Under **Settings → Frost lock for shutters** enter the outdoor temperature sensor and set the two thresholds, e.g. *lock below 2 °C, release above 4 °C*. A failed sensor never locks, otherwise a flat battery would stop the whole house for the winter.
 2. On the **shutter** tick **Frost lock for this shutter**. Optionally a **position in frost** (and slats) it drives to when the frost sets in; without one it simply stays where it is.
 
-While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy, second opening or closing stage or reference run. The one exception is the frost position, driven to once when the frost sets in. **By hand** (dashboard buttons, services, at the motor) everything always works.
+While locked the shutter makes **no automatic drive**: no schedule, shading, ventilation, window contact, privacy, second opening or closing stage, insect guard or reference run. The one exception is the frost position, driven to once when the frost sets in. **By hand** (dashboard buttons, services, at the motor) everything always works.
 
 With **Catch up after the frost** (default on) the shutter drives to where the schedule wants it now once released, for instance open in the morning. If it was driven by hand meanwhile it stays put; with an open window or the automation off nothing is caught up either. The frost position is not driven onto an open window, over privacy or against the storm guard; the lock still holds. The frost drive itself respects the master switch and the automation switches: with automation off the lock only holds still and does not drive. The hold survives a restart and a reload of the integration, so nothing is driven twice. A sensor that drops out during the frost does not end a running lock.
 
@@ -991,6 +993,18 @@ The evening counterpart: with **Second closing stage** ticked the ordinary eveni
 | Condition entity "on" | night mode, nobody up any more |
 
 With none of them set the stage never runs. If it has already been dark long enough at the evening drive, it follows straight after. It only completes an evening drive that really reached the ordinary closed position - on a mild evening or in frost the shutter stays at its part-way position - and leaves the shutter alone after a hand move since the evening drive, with an open window or door, active privacy, a lock or the automation switched off. The morning opening resets it for the next night.
+
+### Insect guard
+
+Wasps like to nest in the boxes of venetian blinds that do not go fully up for a long time – a blind that spends all summer in shading, for instance. With **Insect guard** ticked the shutter goes briefly to its top stop once a day and straight back to where it stood, slats included. That includes coming out of shading.
+
+| Setting | Default | What for |
+| --- | --- | --- |
+| Time window | 11:00–16:00 | when the run may come |
+| Temperature sensor + "only from" | empty, 15 °C | only in wasp season, never in frost |
+| Condition | empty | e.g. nobody home, so it disturbs no one |
+
+The insect guard is skipped on a day the shutter was fully up anyway. It waits with an open window, active privacy, a lock, storm, frost lock, the frost-protection opening position or the automation switched off, and then comes later in the window. With an inverted scale (open = 0) it goes towards 0. A dead sensor holds it back.
 
 ### Reference run
 

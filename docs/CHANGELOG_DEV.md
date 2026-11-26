@@ -4,6 +4,31 @@ Vollständiges Fortschritts-Log von Shutter Pilot, ausgelagert aus `CLAUDE.md`, 
 
 Bei Fragen zur Historie: hier nachlesen oder `grep`/`graphify` benutzen, bevor eine Vermutung über eine frühere Entscheidung geäußert wird.
 
+### 2026-11-15 – 2.39.0: Forum nach dem Urlaub (#249–#253)
+
+Fünf neue Beiträge seit dem 06.11., zwei davon mit Arbeit. **Claus (#249):** Diele im
+Helligkeitsmodus, Hoch-Fenster 05–12 Uhr, Sensor ist ein Template (0 lx bei Licht an). Um 15:35
+Abendfahrt, um 15:40 (Licht aus, 1000 lx) wieder hoch. Ursache `_pending_up` in `brightness.py`:
+die Vormerkung „im Fenster dunkel, heute noch hochfahren" entstand auch *nach* der Morgenfahrt,
+eingelöst wird sie nur von einer Fahrt, die es dann nicht mehr gibt (`_run_up` liefert False,
+alles ist oben) – sie blieb bis Mitternacht und galt abends als „im Fenster". Fix: vorgemerkt
+wird nur, solange `_up_outstanding(area_id)` (ein Rollladen des Hoch-Bereichs nicht in
+`covers_driven_up`); die Abendfahrt beendet sie (`_forget_pending_up` je gefahrenem Rollladen
+über dessen **Hoch**-Bereich, dazu der Bereich selbst, sobald die Runter-Bedingung hält – auch
+wenn nichts zu fahren war). Der Export war nach einem Neuladen gezogen, die Vormerkung selbst
+ist darin nicht belegt; der Ablauf ist aus den Einstellungen nachgestellt. Export zeigt sie
+jetzt unter „Laufender Zustand". **heinzel (#252):** will im Winter kurz aus der Tür, zieht sie
+zu und ist nach 30 s (Obergrenze der Entprellung) ausgesperrt. Neu `window_close_delay_minutes`
+(0–120, Vorgabe 0), in `_close_delay_seconds()` auf die Entprellung addiert – derselbe Task,
+dasselbe Abbrechen beim Wiederöffnen. Bewusst ein eigenes Feld statt einer höheren Obergrenze:
+die Entprellung fragt „war das wirklich zu?", das hier „ich komme gleich wieder". bjoerg (#253)
+empfahl den Griffsensor, das bleibt die sauberere Lösung. **Nicht abgedeckt:** Neustart/Neuladen
+bricht die Wartezeit ab, der Zyklus bleibt dann „triggered" bei geschlossenem Fenster.
+Frankchief (#250): nur Frage (zwei Himmelsrichtungen → Geometrie am Rollladen überschreiben).
+Panel: Regler, i18n 2 Schlüssel ×11 (je 549). **Verifiziert:** `pytest` 1080 grün (6 + 11 neue);
+Gegenprobe: ohne den Fix fallen 4 der 6 Vormerkungs-Tests. Nicht im Browser, nicht im echten
+Home Assistant geprüft. **Geplant, nicht gebaut:** Einfach-/Expertenmodus im Panel.
+
 ### 2026-11-06 – 2.38.2: Frostsperre nachgeprüft (eurofinder, simon42 #244)
 
 eurofinder fragte, wozu „Bedeutung umkehren" bei der Frostsperre da ist, und sah beim Abwählen

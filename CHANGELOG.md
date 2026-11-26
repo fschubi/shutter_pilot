@@ -4,7 +4,23 @@ Alle wichtigen Änderungen an Shutter Pilot werden in dieser Datei dokumentiert.
 
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
-## [2.41.0]
+## [2.42.0]
+
+### Neu
+- **Insektenschutz** (Claus, simon42 #267). Gegen Wespennester im Raffstore-Kasten fährt der
+  Rollladen einmal am Tag kurz bis zum oberen Anschlag und zurück, Lamellen eingeschlossen und
+  auch aus der Beschattung heraus. Einstellbar sind ein Zeitfenster (Vorgabe 11–16 Uhr), ein
+  Temperatursensor mit Mindestwert (Vorgabe 15 °C, also nur in der Wespensaison) und eine
+  Bedingung wie „niemand zu Hause“. Entfällt, wenn der Rollladen an dem Tag ohnehin ganz oben
+  war. Wartet bei offenem Fenster, Sichtschutz, Sperre, Sturm, Frost oder ausgeschalteter
+  Automatik.
+- **Frostschutz beim Öffnen** (MartyBr, simon42 #268). Bei Frost fährt der Rollladen morgens nur
+  bis zu einer eigenen Position (z. B. 85 %), statt ganz in den Kasten, wo er bei Schnee
+  festfrieren kann. Es gilt dieselbe Frost-Bedingung wie beim Schließen. Das wirkt bei der
+  Morgenfahrt, beim Nachholen nach dem Sichtschutz und bei der Freigabe nach der Beschattung;
+  die zweite Öffnungsstufe wartet, solange es friert.
+
+
 
 ### Neu
 - **Zweite Schließstufe** (Claus, simon42 #267), das Gegenstück zur zweiten Öffnungsstufe. Die

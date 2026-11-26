@@ -39,6 +39,7 @@ custom_components/shutter_pilot/
   awning_dusk.py     Markisen: bei Dämmerung einfahren, nie automatisch wieder aus
   open_stage2.py     Zweite Öffnungsstufe: später ganz hoch
   close_stage2.py    Zweite Schließstufe: bei Dunkelheit in die Nachtstellung
+  insect_guard.py    Insektenschutz: einmal am Tag kurz ganz hoch und zurück
   schedule_times.py  Zeitmathematik: Wochenende, Jitter, Zeitklammern
   window_trigger.py  Reaktion auf Fensterkontakte
   window_helper.py   Fensterzustand und Aussperrschutz
@@ -52,7 +53,7 @@ custom_components/shutter_pilot/
   switch/sensor/binary_sensor.py   Entitäten
   services.py        Dienste (Gruppenaktionen)
   frontend/shutter-pilot-panel.js  Das komplette Panel (~4800 Z., ein File)
-tests/               pytest-Suite (1134 Tests)
+tests/               pytest-Suite (1162 Tests)
 tests/panel/         Panel in Node rendern – laeuft in der CI mit
 ```
 
@@ -273,7 +274,7 @@ Rollläden · Markisen · Dachfenster · Einstellungen. Besonderheiten, die man 
 - **i18n**: 11 Sprachen (de, en, fr, es, it, nl, da, sv, pl, pt, nb) im Objekt
   `I18N`. Jeder neue sichtbare Text braucht einen Schlüssel in **allen** elf;
   `t()` fällt sonst auf Englisch zurück. Seit 2.7.1 sind alle elf **vollständig**
-  (Stand 2.41.0: je 584 Schlüssel) – das gilt es zu halten. Prüfskript: alle
+  (Stand 2.42.0: je 594 Schlüssel) – das gilt es zu halten. Prüfskript: alle
   Sprachmengen gegen `de` halten, ist in zwanzig Zeilen geschrieben.
 
 ### WebSocket-API
@@ -303,7 +304,7 @@ Befehl dazu: **nicht vergessen**.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
-.venv/bin/pytest            # 1134 Tests, ~45 s
+.venv/bin/pytest            # 1162 Tests, ~55 s
 ```
 
 `.venv/` ist in `.gitignore`. In `pytest.ini` steht `-q` schon in `addopts` –
@@ -332,12 +333,34 @@ mich"), nicht als Commit-Log.
 
 ## Projektstand
 
-Version **2.41.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
+Version **2.42.0**, im Forum aktiv genutzt. Seit 18.10.2026 im
 **HACS-Default-Store** (PR [hacs/default#9592](https://github.com/hacs/default/pull/9592), von frenck gemergt).
 
 ## Fortschritts-Log
 
 Vollständige Historie (ältere Einträge) steht in `docs/CHANGELOG_DEV.md` – hier nur die letzten fünf, damit diese Datei nicht wieder über das Kontextlimit wächst. Neuer Eintrag kommt hier dazu; wird die Liste hier zu lang, wandert der älteste nach `docs/CHANGELOG_DEV.md`.
+
+### 2026-11-26 – 2.42.0: Insektenschutz (Claus #267), Frostschutz beim Öffnen (MartyBr #268)
+
+**Insektenschutz** (`insect_guard.py`, Callback `insect_guard`, Vorlage Referenzfahrt): je
+Rollladen `insect_guard`, Fenster `insect_guard_from`/`_to` (11–16, über Mitternacht = Wrap),
+`insect_guard_temp_entity` + `_temp_min` (15, ≥; leer = kein Kriterium, tot = nein),
+`insect_guard_entity` (leer = ja, tot = nein). Einmal am Tag bis `top_position()` (100, bei
+umgekehrter Skala 0), warten wie Referenzfahrt, zurück auf `resting_position` + Lamellen – auch
+aus der Beschattung (Claus' Fall). Schon oben = erledigt. `Store` je Entry (Neustart fährt nicht
+doppelt); ohne Position: erledigt ohne Fahrt. Sperren: `automation_allowed`, Sichtschutz, Fenster,
+Fensterzyklus, `frost_opening_applies`. **Frostschutz beim Öffnen**: `ROLE_OPEN_FROST`,
+`position_open_frost` (Rückfall 80, Lamellen = `tilt_open`), `helpers.resolve_open_role()` mit
+der Frost-Bedingung des **Hoch**-Bereichs; eingebaut in `scheduler.drive_shutters` (Zeit/Sonne),
+`brightness._run_up`, Sichtschutz-Nachholen, Beschattungsfreigabe (`elevation`, nur wenn
+`rest_role` = offen). `find_area(entry, id)` und `frost_opening_applies()` neu; zweite
+Öffnungsstufe wartet (ohne „erledigt"). Panel: beide `_adv`, 10 Schlüssel ×11 (je 594),
+Schlüssel in `AWNING_/WINDOW_UNUSED_KEYS`. **Verifiziert:** `pytest` 1162 grün
+(`test_insect_guard.py` 16, `test_frost_open.py` 10, +1 in `test_open_stage2.py`,
+`tests/panel/insect_frost.mjs`); Gegenproben: sechs Brüche im Insektenschutz und die
+Scheduler-Zeile je ≥1 Test; altes Panel → 10 FAIL. **Nicht abgedeckt:** Frostende tagsüber
+holt die volle Öffnung nicht nach; Dienste/Knöpfe (von Hand) fahren weiter ganz auf. Nicht im
+Browser, nicht im echten HA geprüft.
 
 ### 2026-11-26 – 2.41.0: Zweite Schließstufe (Claus, simon42 #267)
 
@@ -425,31 +448,6 @@ Festschreiben in `save_shutter` fällt je mindestens ein Test. Im Browser mit ec
 Stub-`hass`, ohne HA-Theme): Einstieg bis `quick_setup`, einfache Formulare, Marke, Hinweis,
 Umschalten. **Nicht geprüft:** im echten Home Assistant, mobil, HA-Theme (hell/dunkel).
 **Neues Feld künftig:** in `_adv`/`_xsec` einstufen, sonst steht es in beiden Ansichten.
-
-### 2026-11-15 – 2.39.0: Forum nach dem Urlaub (#249–#253)
-
-Fünf neue Beiträge seit dem 06.11., zwei davon mit Arbeit. **Claus (#249):** Diele im
-Helligkeitsmodus, Hoch-Fenster 05–12 Uhr, Sensor ist ein Template (0 lx bei Licht an). Um 15:35
-Abendfahrt, um 15:40 (Licht aus, 1000 lx) wieder hoch. Ursache `_pending_up` in `brightness.py`:
-die Vormerkung „im Fenster dunkel, heute noch hochfahren" entstand auch *nach* der Morgenfahrt,
-eingelöst wird sie nur von einer Fahrt, die es dann nicht mehr gibt (`_run_up` liefert False,
-alles ist oben) – sie blieb bis Mitternacht und galt abends als „im Fenster". Fix: vorgemerkt
-wird nur, solange `_up_outstanding(area_id)` (ein Rollladen des Hoch-Bereichs nicht in
-`covers_driven_up`); die Abendfahrt beendet sie (`_forget_pending_up` je gefahrenem Rollladen
-über dessen **Hoch**-Bereich, dazu der Bereich selbst, sobald die Runter-Bedingung hält – auch
-wenn nichts zu fahren war). Der Export war nach einem Neuladen gezogen, die Vormerkung selbst
-ist darin nicht belegt; der Ablauf ist aus den Einstellungen nachgestellt. Export zeigt sie
-jetzt unter „Laufender Zustand". **heinzel (#252):** will im Winter kurz aus der Tür, zieht sie
-zu und ist nach 30 s (Obergrenze der Entprellung) ausgesperrt. Neu `window_close_delay_minutes`
-(0–120, Vorgabe 0), in `_close_delay_seconds()` auf die Entprellung addiert – derselbe Task,
-dasselbe Abbrechen beim Wiederöffnen. Bewusst ein eigenes Feld statt einer höheren Obergrenze:
-die Entprellung fragt „war das wirklich zu?", das hier „ich komme gleich wieder". bjoerg (#253)
-empfahl den Griffsensor, das bleibt die sauberere Lösung. **Nicht abgedeckt:** Neustart/Neuladen
-bricht die Wartezeit ab, der Zyklus bleibt dann „triggered" bei geschlossenem Fenster.
-Frankchief (#250): nur Frage (zwei Himmelsrichtungen → Geometrie am Rollladen überschreiben).
-Panel: Regler, i18n 2 Schlüssel ×11 (je 549). **Verifiziert:** `pytest` 1080 grün (6 + 11 neue);
-Gegenprobe: ohne den Fix fallen 4 der 6 Vormerkungs-Tests. Nicht im Browser, nicht im echten
-Home Assistant geprüft. **Geplant, nicht gebaut:** Einfach-/Expertenmodus im Panel.
 
 ## graphify
 

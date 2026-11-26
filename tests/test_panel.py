@@ -288,6 +288,13 @@ def test_close_stage2_form() -> None:
     assert "FAIL" not in result.stdout
 
 
+def test_insect_guard_and_frost_opening_form() -> None:
+    """Insektenschutz (Claus #267) und Frostschutz beim Oeffnen (MartyBr #268)."""
+    result = _run("insect_frost.mjs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "FAIL" not in result.stdout
+
+
 def test_panel_slider_fallbacks_match_the_backend() -> None:
     """Der Spiegel im Panel darf nicht von helpers.py wegdriften."""
     import json

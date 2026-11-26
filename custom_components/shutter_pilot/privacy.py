@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    CONF_AREA_UP_ID,
     CONF_AREA_DOWN_ID,
     CONF_AREA_ID,
     CONF_AREAS,
@@ -46,6 +47,8 @@ from .helpers import (
     resting_position,
     role_position,
     set_cover_position,
+    find_area,
+    resolve_open_role,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,8 +163,11 @@ async def setup_privacy(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ):
             return
         if missed:
-            pos = role_position(shutter, ROLE_OPEN)
-            tilt = get_tilt_for_role(shutter, ROLE_OPEN)
+            open_role = resolve_open_role(
+                hass, find_area(entry, shutter.get(CONF_AREA_UP_ID)), shutter, data
+            )
+            pos = role_position(shutter, open_role)
+            tilt = get_tilt_for_role(shutter, open_role)
             data.setdefault("covers_driven_up", set()).add(cover)
             data.setdefault("covers_driven_down", set()).discard(cover)
             reason = "Privacy end - held opening"

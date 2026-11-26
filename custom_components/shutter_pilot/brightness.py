@@ -74,6 +74,7 @@ from .helpers import (
     set_cover_position,
     should_skip_automated_up,
     sun_protect_area_ids_from_options,
+    resolve_open_role,
 )
 from .window_helper import (
     get_deferred_close_position,
@@ -452,8 +453,9 @@ async def setup_brightness_listener(hass: HomeAssistant, entry: ConfigEntry) -> 
                     cover_entity,
                 )
                 continue
-            pos = role_position(shutter, ROLE_OPEN)
-            tilt = get_tilt_for_role(shutter, ROLE_OPEN)
+            open_role = resolve_open_role(hass, area, shutter, data)
+            pos = role_position(shutter, open_role)
+            tilt = get_tilt_for_role(shutter, open_role)
             # Wie im Scheduler: erst nach should_skip_automated_up, eigener
             # Haken. Die Fahrt gilt als beschlossen und wartet nur aufs Fenster.
             if shutter.get(CONF_DRIVE_AFTER_CLOSE_UP, False) and (

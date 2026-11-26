@@ -37,6 +37,7 @@ from .const import (
 )
 from .helpers import (
     automation_allowed,
+    frost_opening_applies,
     get_tilt_for_role,
     is_cover_sun_protected,
     is_system_enabled,
@@ -121,6 +122,11 @@ async def setup_open_stage2(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if is_cover_sun_protected(data, cover):
             return False
         if _hand_moved_today(cover, now):
+            return False
+        # Frost stops the morning short of the box; going "fully up" later
+        # would undo exactly that. Not marked done: once the frost is over
+        # the same day, the second stage still comes.
+        if frost_opening_applies(hass, entry, shutter, data):
             return False
         return _condition_met(hass, shutter)
 
